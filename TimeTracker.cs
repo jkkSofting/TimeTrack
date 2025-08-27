@@ -135,6 +135,41 @@ public sealed class TimeTracker : IDisposable
         }
     }
 
+    public void DeleteProject(string projektname)
+    {
+        if (string.IsNullOrWhiteSpace(projektname))
+            throw new ArgumentException("Projektname darf nicht leer sein.", nameof(projektname));
+
+        using (var tx = _conn.BeginTransaction())
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.Transaction = tx;
+
+            // Projekt-ID holen (und prüfen, ob es existiert)
+            cmd.CommandText = "SELECT id FROM projects WHERE projektname = @name LIMIT 1;";
+            cmd.Parameters.AddWithValue("@name", projektname);
+            var o = cmd.ExecuteScalar();
+
+            if (o == null || o == DBNull.Value)
+            {
+                // Nix zu löschen. Wir tun so, als wär das Absicht.
+                tx.Rollback();
+                return;
+            }
+
+            int id = Convert.ToInt32(o, CultureInfo.InvariantCulture);
+
+            // Löschen (time_entries gehen dank ON DELETE CASCADE automatisch mit weg)
+            cmd.Parameters.Clear();
+            cmd.CommandText = "DELETE FROM projects WHERE id = @id;";
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.ExecuteNonQuery();
+
+            tx.Commit();
+        }
+    }
+
+
     public IEnumerable<ProjectRow> GetProjects()
     {
         using (var cmd = _conn.CreateCommand())

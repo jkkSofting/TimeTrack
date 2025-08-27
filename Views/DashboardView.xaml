@@ -7,36 +7,234 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodel="clr-namespace:Zeitmanagement.ViewModel"
     d:DataContext="{d:DesignInstance Type=viewmodel:DashboardViewModel}"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
+    d:DesignHeight="720"
+    d:DesignWidth="1200"
     mc:Ignorable="d">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition />
-            <ColumnDefinition />
-            <ColumnDefinition />
-        </Grid.ColumnDefinitions>
-        <StackPanel Grid.Column="0">
-            <TextBlock
-                FontSize="150"
-                Text="{Binding ProjectsCounter, FallbackValue='90'}"
-                TextAlignment="Center" />
-            <TextBlock FontSize="30" Text="Projekte" />
-        </StackPanel>
-        <StackPanel Grid.Column="1">
-            <TextBlock
-                FontSize="150"
-                Text="{Binding BookingsCounter, FallbackValue='900'}"
-                TextAlignment="Center" />
-            <TextBlock FontSize="30" Text="Buchungen" />
-        </StackPanel>
-        <StackPanel Grid.Column="2">
-            <TextBlock
-                FontSize="150"
-                Text="{Binding HoursCounter, FallbackValue='90'}"
-                TextAlignment="Center" />
-            <TextBlock FontSize="30" Text="Stunden gearbeitet" />
-        </StackPanel>
 
+    <!--  ========= THEME & RESOURCES =========  -->
+    <UserControl.Resources>
+        <!--  Palette  -->
+        <Color x:Key="ColBgDark">#0B1020</Color>
+        <Color x:Key="ColCard">#1A2238</Color>
+        <Color x:Key="ColAccent">#5AC8FA</Color>
+        <Color x:Key="ColAccent2">#8E8BFF</Color>
+        <Color x:Key="ColText">#F5F7FB</Color>
+        <Color x:Key="ColTextMuted">#B7C0D8</Color>
+
+        <SolidColorBrush x:Key="BrushBg" Color="{StaticResource ColBgDark}" />
+        <SolidColorBrush x:Key="BrushCard" Color="{StaticResource ColCard}" />
+        <SolidColorBrush x:Key="BrushText" Color="{StaticResource ColText}" />
+        <SolidColorBrush x:Key="BrushTextMuted" Color="{StaticResource ColTextMuted}" />
+        <SolidColorBrush x:Key="BrushAccent" Color="{StaticResource ColAccent}" />
+        <SolidColorBrush x:Key="BrushAccent2" Color="{StaticResource ColAccent2}" />
+
+        <!--  Hintergrund-Gradient  -->
+        <LinearGradientBrush x:Key="BgGradient" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Offset="0" Color="#0B1020" />
+            <GradientStop Offset="1" Color="#121A33" />
+        </LinearGradientBrush>
+
+        <!--  Glassy Card Style  -->
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="Background" Value="{StaticResource BrushCard}" />
+            <Setter Property="Padding" Value="18" />
+            <Setter Property="Margin" Value="8" />
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect
+                        BlurRadius="18"
+                        Opacity="0.4"
+                        ShadowDepth="3"
+                        Color="#000000" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Titel + Untertitel  -->
+        <Style x:Key="Title" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style x:Key="Subtitle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource BrushTextMuted}" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+
+        <!--  Icon-Badge  -->
+        <Style x:Key="IconBadge" TargetType="Border">
+            <Setter Property="Width" Value="44" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Offset="0" Color="#2B355A" />
+                        <GradientStop Offset="1" Color="#1D284B" />
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect
+                        BlurRadius="12"
+                        Opacity="0.45"
+                        ShadowDepth="2"
+                        Color="#000000" />
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Padding" Value="8" />
+        </Style>
+
+        <!--  Converter  -->
+        <local:NumberFormatterConverter x:Key="Fmt" />
+
+        <!--  StatCard Template  -->
+        <DataTemplate x:Key="StatCardTemplate">
+            <Border Style="{StaticResource Card}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!--  Icon  -->
+                    <Border Style="{StaticResource IconBadge}">
+                        <Viewbox Stretch="Uniform">
+                            <!--  Simple icon via PathGeometry; ersetzbar  -->
+                            <Path Data="{Binding IconGeometry}" Fill="{StaticResource BrushAccent}" />
+                        </Viewbox>
+                    </Border>
+
+                    <!--  Content  -->
+                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                        <TextBlock Style="{StaticResource Subtitle}" Text="{Binding Caption}" />
+                        <local:CountUpTextBlock
+                            Margin="0,2,0,2"
+                            DurationMilliseconds="900"
+                            FontSize="46"
+                            FontWeight="Bold"
+                            Foreground="{StaticResource BrushText}"
+                            FormatString="{Binding FormatString}"
+                            TargetValue="{Binding Value}" />
+                        <TextBlock Style="{StaticResource Subtitle}">
+                            <Run Text="{Binding Subnote}" />
+                        </TextBlock>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <!--  ========= LAYOUT =========  -->
+    <Grid Background="{StaticResource BgGradient}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--  Header  -->
+        <DockPanel Grid.Row="0" Margin="16,12,16,8">
+            <StackPanel DockPanel.Dock="Left">
+                <TextBlock
+                    FontSize="28"
+                    Style="{StaticResource Title}"
+                    Text="Dashboard" />
+                <TextBlock Style="{StaticResource Subtitle}" Text="{Binding HeaderSubtitle}" />
+            </StackPanel>
+        </DockPanel>
+
+        <!--  Main: 3 Stat Cards + sekundäre Reihe  -->
+        <Grid Grid.Row="1" Margin="16,4,16,12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  Row 1: Big Stats  -->
+            <ContentPresenter
+                Grid.Row="0"
+                Grid.Column="0"
+                Content="{Binding StatProjects}"
+                ContentTemplate="{StaticResource StatCardTemplate}" />
+            <ContentPresenter
+                Grid.Row="0"
+                Grid.Column="1"
+                Content="{Binding StatBookings}"
+                ContentTemplate="{StaticResource StatCardTemplate}" />
+            <ContentPresenter
+                Grid.Row="0"
+                Grid.Column="2"
+                Content="{Binding StatHours}"
+                ContentTemplate="{StaticResource StatCardTemplate}" />
+
+            <!--  Row 2: Zusatzinfos  -->
+            <Border
+                Grid.Row="1"
+                Grid.ColumnSpan="3"
+                Margin="8,12,8,0"
+                Style="{StaticResource Card}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Margin="8">
+                        <TextBlock Style="{StaticResource Subtitle}" Text="Heutige Stunden (Summe)" />
+                        <local:CountUpTextBlock
+                            DurationMilliseconds="800"
+                            FontSize="28"
+                            FontWeight="SemiBold"
+                            Foreground="{StaticResource BrushText}"
+                            FormatString="0.## h"
+                            TargetValue="{Binding TodayHours}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="8">
+                        <TextBlock Style="{StaticResource Subtitle}" Text="Ø Stunden/Tag (letzte 7 Tage)" />
+                        <local:CountUpTextBlock
+                            DurationMilliseconds="800"
+                            FontSize="28"
+                            FontWeight="SemiBold"
+                            Foreground="{StaticResource BrushText}"
+                            FormatString="0.## h"
+                            TargetValue="{Binding AvgHoursLast7Days}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Margin="8">
+                        <TextBlock Style="{StaticResource Subtitle}" Text="Top-Projekt (letzte 30 Tage)" />
+                        <TextBlock
+                            FontSize="24"
+                            FontWeight="SemiBold"
+                            Foreground="{StaticResource BrushText}"
+                            Text="{Binding TopProjectName}" />
+                        <TextBlock Style="{StaticResource Subtitle}">
+                            <Run Text="{Binding TopProjectHours, Converter={StaticResource Fmt}, ConverterParameter=h}" />
+                        </TextBlock>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!--  Footer  -->
+        <DockPanel Grid.Row="2" Margin="16,0,16,16">
+            <TextBlock Foreground="{StaticResource BrushTextMuted}" Text="Zeitmanagement • Stand: " />
+            <TextBlock
+                Margin="4,0,0,0"
+                Foreground="{StaticResource BrushTextMuted}"
+                Text="{Binding NowStamp}" />
+        </DockPanel>
     </Grid>
 </UserControl>
