@@ -8,8 +8,7 @@ namespace Zeitmanagement.MVVM
         private readonly Action<object> _executeHandler;
         private readonly Predicate<object> _canExecuteHandler;
 
-        public DelegateCommand(Action<object> execute) : this(execute, null)
-        { }
+        public DelegateCommand(Action<object> execute) : this(execute, null) { }
 
         public DelegateCommand(Action<object> execute, Predicate<object> canExecute)
         {
@@ -23,33 +22,23 @@ namespace Zeitmanagement.MVVM
             remove { CommandManager.RequerySuggested -= value; }
         }
 
-        public void Execute(object parameter)
-        {
-            _executeHandler(parameter);
-        }
+        public void Execute(object parameter) => _executeHandler(parameter);
 
-        public bool CanExecute(object parameter)
-        {
-            if (_canExecuteHandler == null) return true;
-            return _canExecuteHandler(parameter);
-        }
+        public bool CanExecute(object parameter) =>
+            _canExecuteHandler == null || _canExecuteHandler(parameter);
 
-        //public void RaiseCanExecuteChanged()
-        //{
-        //    CanExecuteChanged?.Invoke(this, new EventArgs());
-        //}
+        public void RaiseCanExecuteChanged()
+        {
+            CommandManager.InvalidateRequerySuggested();
+        }
     }
-
-
-
 
     public class DelegateCommand<T> : ICommand
     {
         private readonly Action<T> _executeHandler;
         private readonly Predicate<T> _canExecuteHandler;
 
-        public DelegateCommand(Action<T> execute) : this(execute, null)
-        { }
+        public DelegateCommand(Action<T> execute) : this(execute, null) { }
 
         public DelegateCommand(Action<T> execute, Predicate<T> canExecute)
         {
@@ -63,16 +52,15 @@ namespace Zeitmanagement.MVVM
             remove { CommandManager.RequerySuggested -= value; }
         }
 
-        public void Execute(object parameter)
-        {
-            _executeHandler((T)parameter);
-        }
+        public void Execute(object parameter) => _executeHandler((T)parameter);
 
-        public bool CanExecute(object parameter)
+        public bool CanExecute(object parameter) =>
+            _canExecuteHandler == null || _canExecuteHandler((T)parameter);
+
+        // Auch hier:
+        public void RaiseCanExecuteChanged()
         {
-            if (_canExecuteHandler == null) return true;
-            return _canExecuteHandler((T)parameter);
+            CommandManager.InvalidateRequerySuggested();
         }
     }
-
 }

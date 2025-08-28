@@ -13,7 +13,7 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
 
-        <!--  Farben wie im Dashboard  -->
+        <!--  Farben  -->
         <Color x:Key="ColBgDark">#0B1020</Color>
         <Color x:Key="ColCard">#1A2238</Color>
         <Color x:Key="ColText">#F5F7FB</Color>
@@ -35,7 +35,7 @@
             <Setter Property="CornerRadius" Value="18" />
             <Setter Property="Background" Value="{StaticResource BrushCard}" />
             <Setter Property="Padding" Value="16" />
-            <Setter Property="Margin" Value="10" />
+            <Setter Property="Margin" Value="16" />
             <Setter Property="Effect">
                 <Setter.Value>
                     <DropShadowEffect
@@ -47,7 +47,7 @@
             </Setter>
         </Style>
 
-        <!--  Modernes TextBox-Style  -->
+        <!--  Inputs  -->
         <Style TargetType="TextBox">
             <Setter Property="Foreground" Value="{StaticResource BrushText}" />
             <Setter Property="Background" Value="#233055" />
@@ -57,7 +57,7 @@
             <Setter Property="Margin" Value="4" />
         </Style>
 
-        <!--  Button  -->
+        <!--  Buttons  -->
         <Style TargetType="Button">
             <Setter Property="Foreground" Value="{StaticResource BrushText}" />
             <Setter Property="Background" Value="#2D3A63" />
@@ -68,7 +68,7 @@
             <Setter Property="Cursor" Value="Hand" />
         </Style>
 
-        <!--  DataGrid minimal dunkel  -->
+        <!--  DataGrid  -->
         <Style TargetType="DataGrid">
             <Setter Property="Foreground" Value="{StaticResource BrushText}" />
             <Setter Property="Background" Value="Transparent" />
@@ -108,7 +108,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!--  Header + Aktionen  -->
+        <!--  Header  -->
         <Border
             Grid.Row="0"
             Margin="16,16,16,8"
@@ -133,7 +133,7 @@
                     VerticalAlignment="Center"
                     Orientation="Horizontal">
                     <TextBox
-                        Width="240"
+                        Width="260"
                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                         ToolTip="Suchen (Name, Kunde, Kostenträger)" />
                     <Button Command="{Binding ToggleAddPanelCommand}" Content="Neu" />
@@ -142,7 +142,7 @@
             </Grid>
         </Border>
 
-        <!--  Hauptkarte: Add-Flyout + DataGrid  -->
+        <!--  Hauptkarte  -->
         <Border
             Grid.Row="1"
             Margin="16,8,16,16"
@@ -150,10 +150,11 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <!--  Add Panel (ein-/ausblendbar)  -->
+                <!--  Add Panel  -->
                 <Border
                     Grid.Row="0"
                     Margin="0,0,0,8"
@@ -161,7 +162,6 @@
                     Background="#1F2A4D"
                     CornerRadius="12"
                     Visibility="{Binding IsAddPanelOpen, Converter={StaticResource BoolToVis}}">
-
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="2*" />
@@ -170,9 +170,9 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBox Grid.Column="0" Text="{Binding NewProjektname}" />
-                        <TextBox Grid.Column="1" Text="{Binding NewKunde}" />
-                        <TextBox Grid.Column="2" Text="{Binding NewKostentraeger}" />
+                        <TextBox Grid.Column="0" Text="{Binding NewProjektname, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Grid.Column="1" Text="{Binding NewKunde, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Grid.Column="2" Text="{Binding NewKostentraeger, UpdateSourceTrigger=PropertyChanged}" />
 
                         <StackPanel
                             Grid.Column="3"
@@ -184,9 +184,45 @@
                     </Grid>
                 </Border>
 
+                <!--  Edit Panel  -->
+                <Border
+                    Grid.Row="1"
+                    Margin="0,0,0,8"
+                    Padding="12"
+                    Background="#1F2A4D"
+                    CornerRadius="12"
+                    Visibility="{Binding IsEditPanelOpen, Converter={StaticResource BoolToVis}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox
+                            Grid.Column="0"
+                            Text="{Binding EditProjektname, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox
+                            Grid.Column="1"
+                            Text="{Binding EditKunde, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox
+                            Grid.Column="2"
+                            Text="{Binding EditKostentraeger, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <StackPanel
+                            Grid.Column="3"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal">
+                            <Button Command="{Binding SaveEditProjectCommand}" Content="Speichern" />
+                            <Button Command="{Binding CancelEditProjectCommand}" Content="Abbrechen" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
                 <!--  Tabelle  -->
                 <DataGrid
-                    Grid.Row="1"
+                    Grid.Row="2"
                     AutoGenerateColumns="False"
                     CanUserAddRows="False"
                     IsReadOnly="True"
@@ -212,11 +248,15 @@
                             Width="*"
                             Binding="{Binding Stunden, StringFormat=0.##}"
                             Header="Stunden" />
-
-                        <DataGridTemplateColumn Width="*" Header="Aktionen">
+                        <DataGridTemplateColumn Width="2*" Header="Aktionen">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                                        <Button
+                                            MinHeight="30"
+                                            Command="{Binding DataContext.StartEditProjectCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            Content="Bearbeiten" />
                                         <Button
                                             MinHeight="30"
                                             Command="{Binding DataContext.DeleteProjectCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"

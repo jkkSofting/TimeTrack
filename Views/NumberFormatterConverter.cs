@@ -10,9 +10,10 @@ namespace Zeitmanagement.Views
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value == null) return "";
+            string valueDecimal = value.ToString().Replace(",", ".");
             double d;
-            if (!double.TryParse(value.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out d))
-                return value.ToString();
+            if (!double.TryParse(valueDecimal, NumberStyles.Any, CultureInfo.InvariantCulture, out d))
+                return valueDecimal;
 
             string suffix = parameter as string ?? "";
             string s;

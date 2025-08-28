@@ -191,25 +191,104 @@ public sealed class TimeTracker : IDisposable
         }
     }
 
+    public void UpdateProject(string originalProjektname, string newProjektname, string kunde, string kostentraeger)
+    {
+        if (string.IsNullOrWhiteSpace(originalProjektname)) throw new ArgumentException("leer", nameof(originalProjektname));
+        if (string.IsNullOrWhiteSpace(newProjektname)) throw new ArgumentException("leer", nameof(newProjektname));
+        if (string.IsNullOrWhiteSpace(kunde)) throw new ArgumentException("leer", nameof(kunde));
+        if (string.IsNullOrWhiteSpace(kostentraeger)) throw new ArgumentException("leer", nameof(kostentraeger));
+
+        using (var tx = _conn.BeginTransaction())
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.Transaction = tx;
+
+            // Sicherstellen, dass das Original existiert
+            cmd.CommandText = "SELECT id FROM projects WHERE projektname = @orig LIMIT 1;";
+            cmd.Parameters.AddWithValue("@orig", originalProjektname);
+            var o = cmd.ExecuteScalar();
+            if (o == null || o == DBNull.Value)
+            {
+                tx.Rollback();
+                throw new InvalidOperationException($"Projekt '{originalProjektname}' existiert nicht.");
+            }
+
+            // Optional: prüfen, ob der neue Name schon existiert (und nicht derselbe Datensatz ist)
+            cmd.Parameters.Clear();
+            cmd.CommandText = "SELECT id FROM projects WHERE projektname = @new LIMIT 1;";
+            cmd.Parameters.AddWithValue("@new", newProjektname);
+            var existing = cmd.ExecuteScalar();
+
+            // Wenn ein anderer Datensatz den neuen Namen hat -> sauberer Fehler
+            var originalId = Convert.ToInt32(o, CultureInfo.InvariantCulture);
+            if (existing != null && existing != DBNull.Value && Convert.ToInt32(existing, CultureInfo.InvariantCulture) != originalId)
+            {
+                tx.Rollback();
+                throw new InvalidOperationException($"Projektname '{newProjektname}' ist bereits vergeben.");
+            }
+
+            // Update
+            cmd.Parameters.Clear();
+            cmd.CommandText = @"
+            UPDATE projects
+               SET projektname = @pname,
+                   kunde = @kunde,
+                   kostentraeger = @kost
+             WHERE id = @id;";
+            cmd.Parameters.AddWithValue("@pname", newProjektname);
+            cmd.Parameters.AddWithValue("@kunde", kunde);
+            cmd.Parameters.AddWithValue("@kost", kostentraeger);
+            cmd.Parameters.AddWithValue("@id", originalId);
+            cmd.ExecuteNonQuery();
+
+            tx.Commit();
+        }
+    }
+
+
     // ---------- Buchungen ----------
+
+    private static readonly string[] TimeFormats = { @"h\:mm", @"hh\:mm" };
+
+    private static TimeSpan ParseTime(string s)
+    {
+        if (string.IsNullOrWhiteSpace(s))
+            throw new ArgumentException("Zeitstring fehlt.", nameof(s));
+
+        var input = s.Trim();
+
+        if (!TimeSpan.TryParseExact(input, TimeFormats, CultureInfo.InvariantCulture, out var ts))
+            throw new ArgumentException("Ungültiges Zeitformat. Erlaubt sind h:mm oder hh:mm.", nameof(s));
+
+        if (ts < TimeSpan.Zero || ts >= TimeSpan.FromHours(24))
+            throw new ArgumentOutOfRangeException(nameof(s), "Zeit muss zwischen 00:00 und 23:59 liegen.");
+
+        return ts;
+    }
+
+    // Wenn du die alte EnsureTimeFormat behalten willst:
+    private static void EnsureTimeFormat(string s) { _ = ParseTime(s); }
 
     public void AddTimeEntry(
         DateTime datumOhneZeit,   // nur Datumsteil
-        string startHHmm,         // "HH:mm"
-        string endHHmm,           // "HH:mm"
+        string startHHmm,         // "h:mm" oder "hh:mm"
+        string endHHmm,           // "h:mm" oder "hh:mm"
         string projektname,
         string beschreibung = null)
     {
         if (string.IsNullOrWhiteSpace(projektname))
             throw new ArgumentException("Projektname fehlt.", nameof(projektname));
 
-        EnsureTimeFormat(startHHmm);
-        EnsureTimeFormat(endHHmm);
-
+        // parse & validieren
         var startSpan = ParseTime(startHHmm);
         var endSpan = ParseTime(endHHmm);
+
         if (endSpan <= startSpan)
             throw new ArgumentException("Endzeit muss nach Startzeit liegen. Nicht diskutierbar.");
+
+        // für DB konsistent auf hh:mm normalisieren
+        var startNorm = startSpan.ToString(@"hh\:mm", CultureInfo.InvariantCulture);
+        var endNorm = endSpan.ToString(@"hh\:mm", CultureInfo.InvariantCulture);
 
         var dateStr = datumOhneZeit.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         int projectId = GetProjectIdByName(projektname);
@@ -222,16 +301,16 @@ public sealed class TimeTracker : IDisposable
             cmd.Transaction = tx;
             cmd.CommandText =
             @"
-            INSERT INTO time_entries (datum, startzeit, endzeit, projekt_id, beschreibung)
-            VALUES (@d, @s, @e, @pid, @b);
-            ";
+        INSERT INTO time_entries (datum, startzeit, endzeit, projekt_id, beschreibung)
+        VALUES (@d, @s, @e, @pid, @b);
+        ";
             cmd.Parameters.AddWithValue("@d", dateStr);
-            cmd.Parameters.AddWithValue("@s", startHHmm);
-            cmd.Parameters.AddWithValue("@e", endHHmm);
+            cmd.Parameters.AddWithValue("@s", startNorm);
+            cmd.Parameters.AddWithValue("@e", endNorm);
             cmd.Parameters.AddWithValue("@pid", projectId);
             cmd.Parameters.AddWithValue("@b", (object)beschreibung ?? DBNull.Value);
-            cmd.ExecuteNonQuery();
 
+            cmd.ExecuteNonQuery();
             tx.Commit(); // Trigger machen die Summen
         }
     }
@@ -382,17 +461,17 @@ public sealed class TimeTracker : IDisposable
         }
     }
 
-    private static void EnsureTimeFormat(string hhmm)
-    {
-        TimeSpan _;
-        if (!TimeSpan.TryParseExact(hhmm, @"hh\:mm", CultureInfo.InvariantCulture, out _))
-            throw new ArgumentException($"Zeit muss HH:mm sein (bekommen: '{hhmm}').");
-    }
+    //private static void EnsureTimeFormat(string hhmm)
+    //{
+    //    TimeSpan _;
+    //    if (!TimeSpan.TryParseExact(hhmm, @"hh\:mm", CultureInfo.InvariantCulture, out _))
+    //        throw new ArgumentException($"Zeit muss HH:mm sein (bekommen: '{hhmm}').");
+    //}
 
-    private static TimeSpan ParseTime(string hhmm)
-    {
-        return TimeSpan.ParseExact(hhmm, @"hh\:mm", CultureInfo.InvariantCulture);
-    }
+    //private static TimeSpan ParseTime(string hhmm)
+    //{
+    //    return TimeSpan.ParseExact(hhmm, @"hh\:mm", CultureInfo.InvariantCulture);
+    //}
 
     public void Dispose()
     {

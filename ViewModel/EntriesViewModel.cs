@@ -218,8 +218,12 @@ namespace Zeitmanagement.ViewModel
         // --- Helpers ---
         private static bool IsHHmm(string s)
         {
-            TimeSpan _;
-            return TimeSpan.TryParseExact(s, @"hh\:mm", CultureInfo.InvariantCulture, out _);
+            return TimeSpan.TryParseExact(
+                s,
+                new[] { @"hh\:mm", @"h\:mm" },  // erlaubt beides
+                CultureInfo.InvariantCulture,
+                out _
+            );
         }
 
         private static double CalcHours(string startHHmm, string endHHmm)
