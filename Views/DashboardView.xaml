@@ -203,14 +203,14 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Margin="8">
-                        <TextBlock Style="{StaticResource Subtitle}" Text="Ø Stunden/Tag (letzte 7 Tage)" />
+                        <TextBlock Style="{StaticResource Subtitle}" Text="Ø Stunden/Tag (letzte 5 Werktage)" />
                         <local:CountUpTextBlock
                             DurationMilliseconds="800"
                             FontSize="28"
                             FontWeight="SemiBold"
                             Foreground="{StaticResource BrushText}"
                             FormatString="0.## h"
-                            TargetValue="{Binding AvgHoursLast7Days}" />
+                            TargetValue="{Binding AvgHoursLast5Days}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2" Margin="8">

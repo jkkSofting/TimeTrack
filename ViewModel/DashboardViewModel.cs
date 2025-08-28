@@ -22,8 +22,8 @@ namespace Zeitmanagement.ViewModel
         private double _todayHours;
         public double TodayHours { get => _todayHours; set => SetProperty(ref _todayHours, value); }
 
-        private double _avgHoursLast7Days;
-        public double AvgHoursLast7Days { get => _avgHoursLast7Days; set => SetProperty(ref _avgHoursLast7Days, value); }
+        private double _avgHoursLast5Days;
+        public double AvgHoursLast5Days { get => _avgHoursLast5Days; set => SetProperty(ref _avgHoursLast5Days, value); }
 
         private string _topProjectName;
         public string TopProjectName { get => _topProjectName; set => SetProperty(ref _topProjectName, value); }
@@ -115,9 +115,25 @@ namespace Zeitmanagement.ViewModel
 
             // Ø letzte 7 Tage
             double sum7 = 0;
-            for (int i = 0; i < 7; i++)
-                sum7 += SumHoursForDate(DateTime.Today.AddDays(-i));
-            AvgHoursLast7Days = Math.Round(sum7 / 7.0, 2);
+            double sumWorkdays = 0;
+            int countedDays = 0;
+            DateTime current = DateTime.Today;
+
+            while (countedDays < 5)
+            {
+                // Nur Montag–Freitag nehmen
+                if (current.DayOfWeek != DayOfWeek.Saturday &&
+                    current.DayOfWeek != DayOfWeek.Sunday)
+                {
+                    sumWorkdays += SumHoursForDate(current);
+                    countedDays++;
+                }
+
+                current = current.AddDays(-1);
+            }
+
+            AvgHoursLast5Days = Math.Round(sumWorkdays / 5.0, 2);
+
 
             // Top-Projekt (30 Tage)
             if (projectHours30.Count > 0)
