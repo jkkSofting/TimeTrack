@@ -268,6 +268,106 @@ public sealed class TimeTracker : IDisposable
         }
     }
 
+    public IEnumerable<TimeEntryRow> GetTimeEntriesForDate(DateTime date)
+    {
+        string d = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = @"
+            SELECT te.id, te.datum, te.startzeit, te.endzeit, te.beschreibung, p.projektname
+              FROM time_entries te
+              JOIN projects p ON p.id = te.projekt_id
+             WHERE te.datum = @d
+             ORDER BY te.startzeit;";
+            cmd.Parameters.AddWithValue("@d", d);
+
+            using (var r = cmd.ExecuteReader())
+            {
+                while (r.Read())
+                {
+                    yield return new TimeEntryRow
+                    {
+                        Id = r.GetInt32(0),
+                        Datum = DateTime.ParseExact(r.GetString(1), "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                        Startzeit = r.GetString(2),
+                        Endzeit = r.GetString(3),
+                        Beschreibung = r.IsDBNull(4) ? null : r.GetString(4),
+                        Projektname = r.GetString(5)
+                    };
+                }
+            }
+        }
+    }
+
+    public void UpdateTimeEntry(int id, DateTime datumOhneZeit, string startHHmm, string endHHmm, string projektname, string beschreibung = null)
+    {
+        if (id <= 0) throw new ArgumentOutOfRangeException(nameof(id));
+        if (string.IsNullOrWhiteSpace(projektname)) throw new ArgumentException("Projektname fehlt.", nameof(projektname));
+
+        EnsureTimeFormat(startHHmm);
+        EnsureTimeFormat(endHHmm);
+
+        var startSpan = ParseTime(startHHmm);
+        var endSpan = ParseTime(endHHmm);
+        if (endSpan <= startSpan)
+            throw new ArgumentException("Endzeit muss nach Startzeit liegen.");
+
+        int projectId = GetProjectIdByName(projektname);
+        if (projectId <= 0) throw new InvalidOperationException($"Projekt '{projektname}' existiert nicht.");
+
+        string d = datumOhneZeit.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+        using (var tx = _conn.BeginTransaction())
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.Transaction = tx;
+
+            // Alte Projekt-ID ermitteln, damit Trigger-Update auch für altes Projekt passiert (falls Projekt gewechselt)
+            cmd.CommandText = "SELECT projekt_id FROM time_entries WHERE id = @id;";
+            cmd.Parameters.AddWithValue("@id", id);
+            object oldPidObj = cmd.ExecuteScalar();
+            if (oldPidObj == null || oldPidObj == DBNull.Value)
+            {
+                tx.Rollback();
+                throw new InvalidOperationException($"TimeEntry mit Id={id} existiert nicht.");
+            }
+            int oldPid = Convert.ToInt32(oldPidObj, CultureInfo.InvariantCulture);
+
+            // Update
+            cmd.Parameters.Clear();
+            cmd.CommandText = @"
+            UPDATE time_entries
+               SET datum = @d, startzeit = @s, endzeit = @e, projekt_id = @pid, beschreibung = @b
+             WHERE id = @id;";
+            cmd.Parameters.AddWithValue("@d", d);
+            cmd.Parameters.AddWithValue("@s", startHHmm);
+            cmd.Parameters.AddWithValue("@e", endHHmm);
+            cmd.Parameters.AddWithValue("@pid", projectId);
+            cmd.Parameters.AddWithValue("@b", (object)beschreibung ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.ExecuteNonQuery();
+
+            // Trigger te_au kümmert sich bereits um NEW/OLD Projekte.
+            tx.Commit();
+        }
+    }
+
+    public void DeleteTimeEntry(int id)
+    {
+        if (id <= 0) throw new ArgumentOutOfRangeException(nameof(id));
+
+        using (var tx = _conn.BeginTransaction())
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.Transaction = tx;
+            cmd.CommandText = "DELETE FROM time_entries WHERE id = @id;";
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.ExecuteNonQuery();
+            tx.Commit(); // Trigger aktualisieren Summen
+        }
+    }
+
+
     // ---------- Helpers ----------
 
     private int GetProjectIdByName(string projektname)
@@ -313,9 +413,12 @@ public sealed class TimeTracker : IDisposable
 
     public class TimeEntryRow
     {
-        public DateTime Datum { get; set; }   // nur Datum
-        public string Startzeit { get; set; } // HH:mm
-        public string Endzeit { get; set; }   // HH:mm
+        public int Id { get; set; }            // <— NEU
+        public DateTime Datum { get; set; }
+        public string Startzeit { get; set; }
+        public string Endzeit { get; set; }
         public string Beschreibung { get; set; }
+        public string Projektname { get; set; } // <— NEU (für Anzeige)
     }
+
 }

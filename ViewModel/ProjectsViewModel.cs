@@ -52,10 +52,10 @@ namespace Zeitmanagement.ViewModel
             ProjectsView = CollectionViewSource.GetDefaultView(Projects);
             ProjectsView.Filter = FilterProject;
 
-            RefreshCommand = new RelayCommand(_ => Refresh());
-            ToggleAddPanelCommand = new RelayCommand(_ => IsAddPanelOpen = !IsAddPanelOpen);
-            AddProjectCommand = new RelayCommand(_ => AddProject(), _ => CanAddProject());
-            DeleteProjectCommand = new RelayCommand(p => DeleteProject(p as ProjectItemVM), p => p is ProjectItemVM);
+            RefreshCommand = new DelegateCommand(_ => Refresh());
+            ToggleAddPanelCommand = new DelegateCommand(_ => IsAddPanelOpen = !IsAddPanelOpen);
+            AddProjectCommand = new DelegateCommand(_ => AddProject(), _ => CanAddProject());
+            DeleteProjectCommand = new DelegateCommand(p => DeleteProject(p as ProjectItemVM), p => p is ProjectItemVM);
 
             Refresh();
         }
@@ -157,25 +157,5 @@ namespace Zeitmanagement.ViewModel
         private int _buchungen;
         private double _stunden;
         
-    }
-
-    internal sealed class RelayCommand : ICommand
-    {
-        private readonly Action<object> _exec;
-        private readonly Func<object, bool> _can;
-
-        public RelayCommand(Action<object> exec, Func<object, bool> can = null)
-        {
-            _exec = exec ?? throw new ArgumentNullException(nameof(exec));
-            _can = can;
-        }
-
-        public bool CanExecute(object parameter) => _can?.Invoke(parameter) ?? true;
-        public void Execute(object parameter) => _exec(parameter);
-        public event EventHandler CanExecuteChanged
-        {
-            add { CommandManager.RequerySuggested += value; }
-            remove { CommandManager.RequerySuggested -= value; }
-        }
     }
 }
