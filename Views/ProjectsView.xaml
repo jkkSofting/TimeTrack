@@ -218,6 +218,7 @@
                                 <DataTemplate>
                                     <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
                                         <Button
+                                            MinHeight="30"
                                             Command="{Binding DataContext.DeleteProjectCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             CommandParameter="{Binding}"
                                             Content="Löschen" />

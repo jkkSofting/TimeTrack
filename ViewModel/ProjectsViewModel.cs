@@ -42,10 +42,10 @@ namespace Zeitmanagement.ViewModel
         public string HeaderSubtitle { get => _headerSubtitle; set => SetProperty(ref _headerSubtitle, value); }
 
         // Commands
-        public ICommand RefreshCommand { get; }
-        public ICommand ToggleAddPanelCommand { get; }
-        public ICommand AddProjectCommand { get; }
-        public ICommand DeleteProjectCommand { get; }
+        public DelegateCommand RefreshCommand { get; }
+        public DelegateCommand ToggleAddPanelCommand { get; }
+        public DelegateCommand AddProjectCommand { get; }
+        public DelegateCommand DeleteProjectCommand { get; }
 
         public ProjectsViewModel()
         {

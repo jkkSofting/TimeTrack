@@ -29,6 +29,85 @@
             <GradientStop Offset="1" Color="#121A33" />
         </LinearGradientBrush>
 
+
+        <!--  Accent für die blauen Pillen (anpassbar)  -->
+        <SolidColorBrush x:Key="BrushAccent" Color="#1F2A4D" />
+
+        <!--  Pillenkarte  -->
+        <Style x:Key="SummaryPill" TargetType="Border">
+            <Setter Property="CornerRadius" Value="28" />
+            <Setter Property="Background" Value="{StaticResource BrushAccent}" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Margin" Value="6" />
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect
+                        BlurRadius="12"
+                        Opacity="0.35"
+                        ShadowDepth="2"
+                        Color="#000000" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Karte für ein Zusammenfassungsobjekt (Name, Hours, Count)  -->
+        <DataTemplate x:Key="SummaryCardTemplate">
+            <Border Style="{StaticResource SummaryPill}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <!--  Titel mittig  -->
+                    <TextBlock
+                        Grid.Row="0"
+                        Margin="0,0,0,8"
+                        HorizontalAlignment="Center"
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Foreground="{StaticResource BrushText}"
+                        Text="{Binding Name}" />
+                    <!--  Zahlen/Labels  -->
+                    <Grid Grid.Row="1" Margin="8,0,8,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" HorizontalAlignment="Left">
+                            <TextBlock
+                                HorizontalAlignment="Left"
+                                FontSize="16"
+                                FontWeight="SemiBold"
+                                Foreground="{StaticResource BrushText}"
+                                Text="{Binding Count}" />
+                            <TextBlock
+                                Foreground="{StaticResource BrushText}"
+                                Opacity="0.9"
+                                Text="BUCHUNGEN" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                            <TextBlock
+                                HorizontalAlignment="Right"
+                                FontSize="16"
+                                FontWeight="SemiBold"
+                                Foreground="{StaticResource BrushText}"
+                                Text="{Binding Hours, StringFormat=0.##}" />
+                            <TextBlock
+                                HorizontalAlignment="Right"
+                                Foreground="{StaticResource BrushText}"
+                                Opacity="0.9"
+                                Text="STUNDEN" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+
+
+
         <!--  Card  -->
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="CornerRadius" Value="18" />
@@ -370,10 +449,12 @@
                                     <DataTemplate>
                                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
                                             <Button
+                                                MinHeight="30"
                                                 Command="{Binding DataContext.EditEntryCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                 CommandParameter="{Binding}"
                                                 Content="Bearbeiten" />
                                             <Button
+                                                MinHeight="30"
                                                 Command="{Binding DataContext.DeleteEntryCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                 CommandParameter="{Binding}"
                                                 Content="Löschen" />
@@ -428,84 +509,74 @@
                 </Grid>
 
                 <!--  RIGHT: Sidebar Summaries  -->
-                <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                    <Border Padding="12" Style="{StaticResource Card}">
-                        <StackPanel>
+                <!--  RIGHT: Sidebar Summaries (neu)  -->
+                <Grid Grid.Column="1" Margin="12,0,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!--  Stunden je Projekt  -->
+                    <Border
+                        Grid.Row="0"
+                        Padding="12"
+                        Style="{StaticResource Card}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
                             <TextBlock
+                                Grid.Row="0"
                                 FontWeight="SemiBold"
                                 Foreground="{StaticResource BrushText}"
                                 Text="Stunden je Projekt" />
-                            <ListView
-                                Margin="0,8,0,0"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                ItemsSource="{Binding SumByProject}">
-                                <ListView.ItemContainerStyle>
-                                    <Style TargetType="ListViewItem">
-                                        <Setter Property="Background" Value="#202B4E" />
-                                        <Setter Property="Margin" Value="0,2,0,2" />
-                                        <Setter Property="Padding" Value="8,6" />
-                                        <Style.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Background" Value="#26345E" />
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </ListView.ItemContainerStyle>
-                                <ListView.View>
-                                    <GridView>
-                                        <GridViewColumn
-                                            Width="160"
-                                            DisplayMemberBinding="{Binding Name}"
-                                            Header="Projekt" />
-                                        <GridViewColumn
-                                            Width="60"
-                                            DisplayMemberBinding="{Binding Hours}"
-                                            Header="h" />
-                                        <GridViewColumn
-                                            Width="90"
-                                            DisplayMemberBinding="{Binding Count}"
-                                            Header="Buchungen" />
-                                    </GridView>
-                                </ListView.View>
-                            </ListView>
-                        </StackPanel>
+
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemTemplate="{StaticResource SummaryCardTemplate}" ItemsSource="{Binding SumByProject}">
+                                    <!--  einspaltig untereinander; bei Wunsch auf WrapPanel wechseln  -->
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
                     </Border>
 
+                    <!--  Stunden je Kostenträger  -->
                     <Border
+                        Grid.Row="1"
                         Margin="0,8,0,0"
                         Padding="12"
                         Style="{StaticResource Card}">
-                        <StackPanel>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
                             <TextBlock
+                                Grid.Row="0"
                                 FontWeight="SemiBold"
                                 Foreground="{StaticResource BrushText}"
                                 Text="Stunden je Kostenträger" />
-                            <ListView
-                                Margin="0,8,0,0"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                ItemsSource="{Binding SumByKTR}">
-                                <ListView.View>
-                                    <GridView>
-                                        <GridViewColumn
-                                            Width="160"
-                                            DisplayMemberBinding="{Binding Name}"
-                                            Header="KTR" />
-                                        <GridViewColumn
-                                            Width="60"
-                                            DisplayMemberBinding="{Binding Hours}"
-                                            Header="h" />
-                                        <GridViewColumn
-                                            Width="90"
-                                            DisplayMemberBinding="{Binding Count}"
-                                            Header="Buchungen" />
-                                    </GridView>
-                                </ListView.View>
-                            </ListView>
-                        </StackPanel>
+
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemTemplate="{StaticResource SummaryCardTemplate}" ItemsSource="{Binding SumByKTR}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
                     </Border>
-                </StackPanel>
+                </Grid>
+
 
             </Grid>
         </Border>

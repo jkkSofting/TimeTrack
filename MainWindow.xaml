@@ -7,9 +7,11 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodel="clr-namespace:Zeitmanagement.ViewModel"
     Title="MainWindow"
-    Width="800"
-    Height="450"
+    MinWidth="1800"
+    MinHeight="800"
     d:DataContext="{d:DesignInstance Type=viewmodel:MainViewModel}"
+    ResizeMode="CanResize"
+    WindowState="Maximized"
     mc:Ignorable="d">
     <Grid>
         <Grid.ColumnDefinitions>
