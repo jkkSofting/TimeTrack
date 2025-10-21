@@ -29,7 +29,6 @@
             <GradientStop Offset="1" Color="#121A33" />
         </LinearGradientBrush>
 
-
         <!--  Accent für die blauen Pillen (anpassbar)  -->
         <SolidColorBrush x:Key="BrushAccent" Color="#1F2A4D" />
 
@@ -104,9 +103,6 @@
                 </Grid>
             </Border>
         </DataTemplate>
-
-
-
 
         <!--  Card  -->
         <Style x:Key="Card" TargetType="Border">
@@ -351,6 +347,33 @@
                     <DatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource NiceDatePicker}" />
                     <Button Command="{Binding TodayCommand}" Content="Heute" />
                     <Button Command="{Binding RefreshCommand}" Content="Aktualisieren" />
+
+                    <!--  === HEUTE-KPI: Stunden + Buchungen ===  -->
+                    <Border
+                        Margin="8,0,0,0"
+                        Padding="10,6"
+                        Background="{StaticResource BrushAccent}"
+                        CornerRadius="18">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                Margin="0,0,6,0"
+                                Foreground="{StaticResource BrushTextMuted}"
+                                Text="Heute:" />
+                            <TextBlock
+                                FontWeight="SemiBold"
+                                Foreground="{StaticResource BrushText}"
+                                Text="{Binding TodayTotalHours, StringFormat=0.## h}" />
+                            <TextBlock
+                                Margin="8,0,0,0"
+                                Foreground="{StaticResource BrushTextMuted}"
+                                Text="(" />
+                            <TextBlock
+                                FontWeight="SemiBold"
+                                Foreground="{StaticResource BrushText}"
+                                Text="{Binding TodayEntryCount}" />
+                            <TextBlock Foreground="{StaticResource BrushTextMuted}" Text=" Buchungen)" />
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </Grid>
         </Border>
@@ -509,7 +532,6 @@
                 </Grid>
 
                 <!--  RIGHT: Sidebar Summaries  -->
-                <!--  RIGHT: Sidebar Summaries (neu)  -->
                 <Grid Grid.Column="1" Margin="12,0,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
@@ -535,7 +557,6 @@
 
                             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                                 <ItemsControl ItemTemplate="{StaticResource SummaryCardTemplate}" ItemsSource="{Binding SumByProject}">
-                                    <!--  einspaltig untereinander; bei Wunsch auf WrapPanel wechseln  -->
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <StackPanel />
@@ -576,8 +597,6 @@
                         </Grid>
                     </Border>
                 </Grid>
-
-
             </Grid>
         </Border>
     </Grid>

@@ -26,6 +26,7 @@ namespace Zeitmanagement.ViewModel
             {
                 SetProperty(ref _selectedDate, value);
                 Refresh();
+                
             }
         }
 
@@ -35,6 +36,24 @@ namespace Zeitmanagement.ViewModel
         {
             get => _headerSubtitle;
             set => SetProperty(ref _headerSubtitle, value);
+        }
+
+        // --- HEUTE KPIs ---
+        private double _todayTotalHours;
+        private int _todayEntryCount;
+
+        /// <summary>Gesamtstunden aller Buchungen am heutigen Datum.</summary>
+        public double TodayTotalHours
+        {
+            get => _todayTotalHours;
+            private set => SetProperty(ref _todayTotalHours, value);
+        }
+
+        /// <summary>Anzahl der heutigen Buchungen.</summary>
+        public int TodayEntryCount
+        {
+            get => _todayEntryCount;
+            private set => SetProperty(ref _todayEntryCount, value);
         }
 
         // --- Add-Form ---
@@ -55,7 +74,7 @@ namespace Zeitmanagement.ViewModel
         public string EditEnd { get => _editEnd; set => SetProperty(ref _editEnd, value); }
         public string EditBeschreibung { get => _editBeschreibung; set => SetProperty(ref _editBeschreibung, value); }
 
-        // --- Commands (DelegateCommand aus deinem MVVM) ---
+        // --- Commands ---
         public DelegateCommand RefreshCommand { get; }
         public DelegateCommand TodayCommand { get; }
         public DelegateCommand AddEntryCommand { get; }
@@ -81,6 +100,9 @@ namespace Zeitmanagement.ViewModel
             // sinnvolle Defaults fürs Hinzufügen
             NewStart = "09:00";
             NewEnd = "10:00";
+
+            // initial laden
+            Refresh();
         }
 
         public override void Refresh()
@@ -147,6 +169,13 @@ namespace Zeitmanagement.ViewModel
             {
                 SumByKTR.Add(it);
             }
+
+            // --- HEUTE-KPIs (unabhängig von SelectedDate) ---
+            var today = DateTime.Today;
+            var todayEntries = db.GetTimeEntriesForDate(today).ToList();
+            TodayEntryCount = todayEntries.Count;
+            TodayTotalHours = Math.Round(
+                todayEntries.Sum(te => CalcHours(te.Startzeit, te.Endzeit)), 2);
         }
 
         // --- Add ---
@@ -220,10 +249,9 @@ namespace Zeitmanagement.ViewModel
         {
             return TimeSpan.TryParseExact(
                 s,
-                new[] { @"hh\:mm", @"h\:mm" },  // erlaubt beides
+                new[] { @"hh\:mm", @"h\:mm" },
                 CultureInfo.InvariantCulture,
-                out _
-            );
+                out _);
         }
 
         private static double CalcHours(string startHHmm, string endHHmm)
@@ -235,7 +263,6 @@ namespace Zeitmanagement.ViewModel
 
             return (end - start).TotalHours;
         }
-
     }
 
     internal sealed class EntryItemVM : BindableBase
