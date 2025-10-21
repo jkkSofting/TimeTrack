@@ -7,8 +7,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodel="clr-namespace:Zeitmanagement.ViewModel"
     Title="TimeTrack"
-    MinWidth="1800"
-    MinHeight="800"
+    Width="1800"
+    Height="800"
     d:DataContext="{d:DesignInstance Type=viewmodel:MainViewModel}"
     ResizeMode="CanResize"
     WindowState="Maximized"
@@ -18,7 +18,7 @@
             <ColumnDefinition MaxWidth="150" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <Grid Background="#10004C">
+        <Grid Background="#1A2238">
             <Grid.RowDefinitions>
                 <RowDefinition />
                 <RowDefinition Height="Auto" />

@@ -1,0 +1,8 @@
+Wichtige Hinweise zur Installation
+==================================
+
+1. Bitte schließen Sie alle anderen Programme, bevor Sie mit der Installation fortfahren.
+2. Administratorrechte sind erforderlich.
+3. Diese Software darf nur in Übereinstimmung mit der Lizenzvereinbarung verwendet werden.
+
+Drücken Sie 'Weiter', um die Installation zu starten.

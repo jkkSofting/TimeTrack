@@ -76,6 +76,13 @@ namespace Zeitmanagement.ViewModel
             Refresh();
         }
 
+        private static readonly string[] AllowedTimeFormats = { @"h\:mm", @"hh\:mm", "Hmm", "HHmm" };
+
+        private static bool TryParseTimeSpan(string input, out TimeSpan time)
+        {
+            return TimeSpan.TryParseExact(input, AllowedTimeFormats, CultureInfo.InvariantCulture, out time);
+        }
+
         public override void Refresh()
         {
             Projects.Clear();
@@ -83,31 +90,48 @@ namespace Zeitmanagement.ViewModel
             var db = MainViewModel.DbInstance;
             var projects = db.GetProjects().ToList();
 
+
             foreach (var p in projects)
             {
-                // Hole Buchungen für dieses Projekt (falls du sie in der DB nicht schon aggregierst)
-                var entries = MainViewModel.DbInstance.GetTimeEntriesForProject(p.Projektname);
-                int count = 0;
-                double hours = 0;
-
-                foreach (var e in entries)
+                try
                 {
-                    count++;
-                    var fmt = "HH:mm";
-                    var cult = CultureInfo.InvariantCulture;
-                    var start = DateTime.ParseExact(e.Startzeit, fmt, cult);
-                    var end = DateTime.ParseExact(e.Endzeit, fmt, cult);
-                    hours += (end - start).TotalHours;
+                    var entries = MainViewModel.DbInstance.GetTimeEntriesForProject(p.Projektname);
+                    int count = 0;
+                    double hours = 0;
+
+                    foreach (var entry in entries)
+                    {
+                        if (!TryParseTimeSpan(entry.Startzeit, out var start) ||
+                            !TryParseTimeSpan(entry.Endzeit, out var end))
+                        {
+                            Console.WriteLine($"Ungültige Zeit in Eintrag {count + 1}: '{entry.Startzeit}' -> '{entry.Endzeit}'");
+                            continue;
+                        }
+
+                        var duration = end - start;
+                        if (duration.TotalHours < 0) // über Mitternacht
+                            duration = duration.Add(TimeSpan.FromDays(1));
+
+                        hours += duration.TotalHours;
+                        count++;
+                    }
+
+
+                    Projects.Add(new ProjectItemVM
+                    {
+                        Projektname = p.Projektname,
+                        Kunde = p.Kunde,
+                        Kostentraeger = p.Kostentraeger,
+                        Buchungen = count,
+                        Stunden = Math.Round(hours, 2)
+                    });
                 }
-
-                Projects.Add(new ProjectItemVM
+                catch (Exception e)
                 {
-                    Projektname = p.Projektname,
-                    Kunde = p.Kunde,
-                    Kostentraeger = p.Kostentraeger,
-                    Buchungen = count,
-                    Stunden = Math.Round(hours, 2)
-                });
+                    Console.WriteLine(e.Message);
+                }
+                // Hole Buchungen für dieses Projekt (falls du sie in der DB nicht schon aggregierst)
+                
             }
 
             ProjectsView.Refresh();

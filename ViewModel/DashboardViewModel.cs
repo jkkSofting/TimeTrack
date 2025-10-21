@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Windows;
 using Zeitmanagement.MVVM;
 
 namespace Zeitmanagement.ViewModel
@@ -66,6 +67,13 @@ namespace Zeitmanagement.ViewModel
             NowStamp = DateTime.Now.ToString("dd.MM.yyyy HH:mm");
         }
 
+        private static readonly string[] AllowedTimeFormats = { @"h\:mm", @"hh\:mm", "Hmm", "HHmm" };
+
+        private static bool TryParseTimeSpan(string input, out TimeSpan time)
+        {
+            return TimeSpan.TryParseExact(input, AllowedTimeFormats, CultureInfo.InvariantCulture, out time);
+        }
+
         public override void Refresh()
         {
             var db = MainViewModel.DbInstance;
@@ -83,20 +91,28 @@ namespace Zeitmanagement.ViewModel
             foreach (var p in projects)
             {
                 var entries = db.GetTimeEntriesForProject(p.Projektname);
-                foreach (var e in entries)
+                foreach (var entry in entries)
                 {
+                    entryCounter++;
+
+
+                    if (!TryParseTimeSpan(entry.Startzeit, out var start) ||
+                        !TryParseTimeSpan(entry.Endzeit, out var end))
+                    {
+                        Console.WriteLine($"Ungültige Zeit in Eintrag {entryCounter + 1}: '{entry.Startzeit}' -> '{entry.Endzeit}'");
+                        continue;
+                    }
+
                     entryCounter++;
 
                     var fmt = "HH:mm";
                     var culture = CultureInfo.InvariantCulture;
-                    var start = DateTime.ParseExact(e.Startzeit, fmt, culture);
-                    var end = DateTime.ParseExact(e.Endzeit, fmt, culture);
                     var diffH = (end - start).TotalHours;
 
                     totalHours += diffH;
 
                     // Datumsfeld annehmen: e.Datum (DateTime). Falls String – anpassen.
-                    DateTime date = e.Datum; // <- falls dein Modell string hat: DateTime.Parse(e.Datum, …)
+                    DateTime date = entry.Datum; // <- falls dein Modell string hat: DateTime.Parse(e.Datum, …)
 
                     if (date >= cutoff30)
                     {
@@ -165,17 +181,27 @@ namespace Zeitmanagement.ViewModel
             foreach (var p in all)
             {
                 var entries = db.GetTimeEntriesForProject(p.Projektname);
-                foreach (var e in entries)
-                {
-                    if (e.Datum.Date != date.Date) continue;
 
-                    var fmt = "HH:mm";
-                    var culture = CultureInfo.InvariantCulture;
-                    var start = DateTime.ParseExact(e.Startzeit, fmt, culture);
-                    var end = DateTime.ParseExact(e.Endzeit, fmt, culture);
+                int counter = 0;
+                foreach (var entry in entries)
+                {
+                    counter++;
+                    if (!TryParseTimeSpan(entry.Startzeit, out var start) ||
+                        !TryParseTimeSpan(entry.Endzeit, out var end))
+                    {
+                        Console.WriteLine($"Ungültige Zeit in Eintrag {counter + 1}: '{entry.Startzeit}' -> '{entry.Endzeit}'");
+                        continue;
+                    }
+
+                    if (entry.Datum.Date != date.Date) continue;
+
                     sum += (end - start).TotalHours;
                 }
             }
+
+            
+
+
             return sum;
         }
     }

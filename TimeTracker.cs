@@ -15,12 +15,27 @@ public sealed class TimeTracker : IDisposable
     private readonly SQLiteConnection _conn;
     private bool _disposed;
 
-    public TimeTracker(string dbFilePath = "timetracker.db")
+    public TimeTracker(string dbFilePath = @"C:\ProgramData\Kaltenmark-Engineering\TimeTracker\timetracker.db")
     {
         if (string.IsNullOrWhiteSpace(dbFilePath))
             throw new ArgumentException("dbFilePath darf nicht leer sein.", nameof(dbFilePath));
 
         _dbPath = dbFilePath;
+
+        // Ordner prüfen / erstellen
+        var directory = Path.GetDirectoryName(_dbPath);
+        if (!Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        // Falls Datei fehlt: anlegen (SQLite macht das beim Open auch, aber so ist es klarer)
+        if (!File.Exists(_dbPath))
+        {
+            SQLiteConnection.CreateFile(_dbPath);
+        }
+
+        // Connection String
         var cs = new SQLiteConnectionStringBuilder
         {
             DataSource = _dbPath,
@@ -28,10 +43,14 @@ public sealed class TimeTracker : IDisposable
             JournalMode = SQLiteJournalModeEnum.Wal
         }.ToString();
 
+        // Verbindung aufbauen
         _conn = new SQLiteConnection(cs);
         _conn.Open();
+
+        // sicherstellen, dass Tabellen da sind
         EnsureSchema();
     }
+
 
     private void EnsureSchema()
     {

@@ -228,11 +228,14 @@ namespace Zeitmanagement.ViewModel
 
         private static double CalcHours(string startHHmm, string endHHmm)
         {
-            var fmt = @"hh\:mm";
-            var start = TimeSpan.ParseExact(startHHmm, fmt, CultureInfo.InvariantCulture);
-            var end = TimeSpan.ParseExact(endHHmm, fmt, CultureInfo.InvariantCulture);
+            var formats = new[] { @"h\:mm", @"hh\:mm", "Hmm", "HHmm" };
+
+            var start = TimeSpan.ParseExact(startHHmm, formats, CultureInfo.InvariantCulture);
+            var end = TimeSpan.ParseExact(endHHmm, formats, CultureInfo.InvariantCulture);
+
             return (end - start).TotalHours;
         }
+
     }
 
     internal sealed class EntryItemVM : BindableBase
