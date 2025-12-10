@@ -1,0 +1,465 @@
+﻿<UserControl
+    x:Class="Zeitmanagement.Views.QuickSelectView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Zeitmanagement.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewModel="clr-namespace:Zeitmanagement.ViewModel"
+    d:DataContext="{d:DesignInstance Type=viewModel:QuickSelectViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <!--  ========== RESOURCES / THEME ==========  -->
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+        <!--  Farben  -->
+        <Color x:Key="ColBgDark">#0B1020</Color>
+        <Color x:Key="ColCard">#1A2238</Color>
+        <Color x:Key="ColText">#F5F7FB</Color>
+        <Color x:Key="ColTextMuted">#B7C0D8</Color>
+
+        <SolidColorBrush x:Key="BrushText" Color="{StaticResource ColText}" />
+        <SolidColorBrush x:Key="BrushTextMuted" Color="{StaticResource ColTextMuted}" />
+        <SolidColorBrush x:Key="BrushCard" Color="{StaticResource ColCard}" />
+
+        <LinearGradientBrush x:Key="BgGradient" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Offset="0" Color="#0B1020" />
+            <GradientStop Offset="1" Color="#121A33" />
+        </LinearGradientBrush>
+
+        <!--  Accent für die blauen Pillen (anpassbar)  -->
+        <SolidColorBrush x:Key="BrushAccent" Color="#1F2A4D" />
+
+        <!--  Pillenkarte  -->
+        <Style x:Key="SummaryPill" TargetType="Border">
+            <Setter Property="CornerRadius" Value="28" />
+            <Setter Property="Background" Value="{StaticResource BrushAccent}" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Margin" Value="6" />
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect
+                        BlurRadius="12"
+                        Opacity="0.35"
+                        ShadowDepth="2"
+                        Color="#000000" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Karte für ein Zusammenfassungsobjekt (Name, Hours, Count)  -->
+        <DataTemplate x:Key="SummaryCardTemplate">
+            <Border Style="{StaticResource SummaryPill}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <!--  Titel mittig  -->
+                    <TextBlock
+                        Grid.Row="0"
+                        Margin="0,0,0,8"
+                        HorizontalAlignment="Center"
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Foreground="{StaticResource BrushText}"
+                        Text="{Binding Name}" />
+                    <!--  Zahlen/Labels  -->
+                    <Grid Grid.Row="1" Margin="8,0,8,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" HorizontalAlignment="Left">
+                            <TextBlock
+                                HorizontalAlignment="Left"
+                                FontSize="16"
+                                FontWeight="SemiBold"
+                                Foreground="{StaticResource BrushText}"
+                                Text="{Binding Count}" />
+                            <TextBlock
+                                Foreground="{StaticResource BrushText}"
+                                Opacity="0.9"
+                                Text="BUCHUNGEN" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                            <TextBlock
+                                HorizontalAlignment="Right"
+                                FontSize="16"
+                                FontWeight="SemiBold"
+                                Foreground="{StaticResource BrushText}"
+                                Text="{Binding Hours, StringFormat=0.##}" />
+                            <TextBlock
+                                HorizontalAlignment="Right"
+                                Foreground="{StaticResource BrushText}"
+                                Opacity="0.9"
+                                Text="STUNDEN" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!--  Card  -->
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="Background" Value="{StaticResource BrushCard}" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Margin" Value="10" />
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect
+                        BlurRadius="18"
+                        Opacity="0.4"
+                        ShadowDepth="3"
+                        Color="#000000" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Inputs  -->
+        <Style TargetType="TextBox">
+            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
+            <Setter Property="Background" Value="#233055" />
+            <Setter Property="BorderBrush" Value="#33406A" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="Margin" Value="4" />
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
+            <Setter Property="Background" Value="#2D3A63" />
+            <Setter Property="BorderBrush" Value="#42507C" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <!--  DataGrid (dark)  -->
+        <Style TargetType="DataGrid">
+            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="GridLinesVisibility" Value="None" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="RowHeight" Value="36" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalGridLinesBrush" Value="#30406B" />
+            <Setter Property="VerticalGridLinesBrush" Value="#30406B" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="CanUserAddRows" Value="False" />
+        </Style>
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#1E2A4A" />
+            <Setter Property="Foreground" Value="{StaticResource BrushTextMuted}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="BorderBrush" Value="#2A3861" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Padding" Value="8,6" />
+        </Style>
+        <Style TargetType="DataGridRow">
+            <Setter Property="Background" Value="#202B4E" />
+            <Setter Property="BorderBrush" Value="#2A3861" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#26345E" />
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#2C3A69" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!--  Pretty ComboBox  -->
+        <Style
+            x:Key="NiceCombo"
+            BasedOn="{StaticResource {x:Type ComboBox}}"
+            TargetType="ComboBox">
+            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
+            <Setter Property="Background" Value="#233055" />
+            <Setter Property="BorderBrush" Value="#33406A" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton
+                                x:Name="ToggleButton"
+                                ClickMode="Press"
+                                Focusable="False">
+                                <Grid>
+                                    <Border
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="8" />
+                                    <DockPanel Margin="8,4">
+                                        <ContentPresenter
+                                            Margin="2,0,24,0"
+                                            VerticalAlignment="Center"
+                                            Content="{TemplateBinding SelectionBoxItem}" />
+                                        <Path
+                                            Width="10"
+                                            Height="6"
+                                            HorizontalAlignment="Right"
+                                            Data="M 0 0 L 5 5 L 10 0"
+                                            Fill="{StaticResource BrushTextMuted}" />
+                                    </DockPanel>
+                                </Grid>
+                            </ToggleButton>
+                            <Popup
+                                x:Name="Popup"
+                                AllowsTransparency="True"
+                                Focusable="False"
+                                IsOpen="{TemplateBinding IsDropDownOpen}"
+                                Placement="Bottom"
+                                PopupAnimation="Slide">
+                                <Border
+                                    Background="#233055"
+                                    BorderBrush="#33406A"
+                                    BorderThickness="1"
+                                    CornerRadius="8">
+                                    <ScrollViewer>
+                                        <StackPanel IsItemsHost="True" />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Foreground" Value="{StaticResource BrushText}" />
+                        <Setter Property="Padding" Value="8,4" />
+                        <Setter Property="Background" Value="Transparent" />
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#2A3A67" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#334579" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Pretty DatePicker  -->
+        <Style
+            x:Key="NiceDatePicker"
+            BasedOn="{StaticResource {x:Type DatePicker}}"
+            TargetType="DatePicker">
+            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
+            <Setter Property="BorderBrush" Value="#33406A" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type DatePicker}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <DatePickerTextBox
+                                x:Name="PART_TextBox"
+                                Grid.Column="0"
+                                Background="#233055"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Foreground="{StaticResource BrushText}" />
+
+                            <Button
+                                Grid.Column="1"
+                                Padding="10,6"
+                                Background="#2D3A63"
+                                BorderBrush="#42507C"
+                                BorderThickness="1"
+                                Focusable="False">
+                                <Path
+                                    Width="14"
+                                    Height="14"
+                                    Data="M6,0 L8,0 8,6 14,6 14,8 8,8 8,14 6,14 6,8 0,8 0,6 6,6 z"
+                                    Fill="{StaticResource BrushText}"
+                                    Stretch="Uniform" />
+                            </Button>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="CalendarStyle">
+                <Setter.Value>
+                    <Style TargetType="Calendar">
+                        <Setter Property="Foreground" Value="{StaticResource BrushText}" />
+                        <Setter Property="Background" Value="#233055" />
+                        <Setter Property="BorderBrush" Value="#33406A" />
+                        <Setter Property="BorderThickness" Value="1" />
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <!--  ========== LAYOUT ==========  -->
+    <Grid Background="{StaticResource BgGradient}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--  Header  -->
+        <Border
+            Grid.Row="0"
+            Margin="16,16,16,8"
+            Style="{StaticResource Card}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Vertical">
+                    <TextBlock
+                        FontSize="24"
+                        FontWeight="SemiBold"
+                        Foreground="{StaticResource BrushText}"
+                        Text="Quick Select" />
+                    <TextBlock Foreground="{StaticResource BrushTextMuted}" Text="{Binding HeaderSubtitle}" />
+                </StackPanel>
+
+                <StackPanel
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal">
+                    <Button
+                        MinWidth="100"
+                        Command="{Binding RefreshCommand}"
+                        Content="Pause" />
+
+                    <!--  === HEUTE-KPI: Stunden + Buchungen ===  -->
+                    <Border
+                        Margin="8,0,0,0"
+                        Padding="10,6"
+                        Background="{StaticResource BrushAccent}"
+                        CornerRadius="18">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                Margin="0,0,6,0"
+                                Foreground="{StaticResource BrushTextMuted}"
+                                Text="Heute:" />
+                            <TextBlock
+                                FontWeight="SemiBold"
+                                Foreground="{StaticResource BrushText}"
+                                Text="{Binding TodayTotalHours, StringFormat=0.## h}" />
+                            <TextBlock
+                                Margin="8,0,0,0"
+                                Foreground="{StaticResource BrushTextMuted}"
+                                Text="(" />
+                            <TextBlock
+                                FontWeight="SemiBold"
+                                Foreground="{StaticResource BrushText}"
+                                Text="{Binding TodayEntryCount}" />
+                            <TextBlock Foreground="{StaticResource BrushTextMuted}" Text=" Buchungen)" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!--  Body  -->
+        <Border
+            Grid.Row="1"
+            Margin="16,8,16,16"
+            Style="{StaticResource Card}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!--  LEFT: Add + Grid + Edit  -->
+                <ListView Background="Transparent" ItemsSource="{Binding QuickSelectItems}" />
+
+                <!--  RIGHT: Sidebar Summaries  -->
+                <Grid Grid.Column="1" Margin="12,0,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!--  Stunden je Projekt  -->
+                    <Border
+                        Grid.Row="0"
+                        Padding="12"
+                        Style="{StaticResource Card}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock
+                                Grid.Row="0"
+                                FontWeight="SemiBold"
+                                Foreground="{StaticResource BrushText}"
+                                Text="Stunden je Projekt" />
+
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemTemplate="{StaticResource SummaryCardTemplate}" ItemsSource="{Binding SumByProject}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <!--  Stunden je Kostenträger  -->
+                    <Border
+                        Grid.Row="1"
+                        Margin="0,8,0,0"
+                        Padding="12"
+                        Style="{StaticResource Card}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock
+                                Grid.Row="0"
+                                FontWeight="SemiBold"
+                                Foreground="{StaticResource BrushText}"
+                                Text="Stunden je Kostenträger" />
+
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemTemplate="{StaticResource SummaryCardTemplate}" ItemsSource="{Binding SumByKTR}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

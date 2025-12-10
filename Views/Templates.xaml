@@ -15,4 +15,12 @@
     <DataTemplate DataType="{x:Type vm:EntriesViewModel}">
         <views:EntriesView />
     </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:QuickSelectViewModel}">
+        <views:QuickSelectView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:QuickSelectItemViewModel}">
+        <views:QuickSelectItemView />
+    </DataTemplate>
 </ResourceDictionary>

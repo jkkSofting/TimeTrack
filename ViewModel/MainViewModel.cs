@@ -16,6 +16,7 @@ namespace Zeitmanagement.ViewModel
         private readonly BaseViewModel _dashboardView;
         private readonly BaseViewModel _projectView;
         private readonly BaseViewModel _entriesView;
+        private readonly BaseViewModel _quickSelectView;
 
         private object _rightSide;
 
@@ -53,6 +54,7 @@ namespace Zeitmanagement.ViewModel
             _dashboardView = new DashboardViewModel();
             _projectView = new ProjectsViewModel();
             _entriesView = new EntriesViewModel();
+            _quickSelectView = new QuickSelectViewModel();
 
             SelectViewCommandExecute("dashboard");
 
@@ -88,6 +90,9 @@ namespace Zeitmanagement.ViewModel
                 case "projects":
                     RightSide = _projectView;
                     break;
+                case "quickselect":
+                    RightSide = _quickSelectView;
+                    break;  
                 default:
                     break;
             }

@@ -52,6 +52,15 @@
                     CommandParameter="Projects"
                     Content="Projektübersicht"
                     Foreground="White" />
+                <Button
+                    Height="30"
+                    MaxWidth="140"
+                    Margin="5"
+                    Background="#00000000"
+                    Command="{Binding SelectViewCommand}"
+                    CommandParameter="QuickSelect"
+                    Content="Quick Select"
+                    Foreground="White" />
             </StackPanel>
             <TextBlock
                 Grid.Row="1"
