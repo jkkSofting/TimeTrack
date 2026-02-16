@@ -344,10 +344,13 @@
                     Grid.Column="1"
                     VerticalAlignment="Center"
                     Orientation="Horizontal">
+                    <Button Command="{Binding GoToLastDayCommand}" Content="-" />
                     <TextBox
-                        Width="160"
+                        Width="80"
                         Text="{Binding SelectedDate, UpdateSourceTrigger=PropertyChanged}"
+                        TextAlignment="Center"
                         ToolTip="Datum TT.MM.YYYY" />
+                    <Button Command="{Binding GoToNextDayCommand}" Content="+" />
                     <!--<DatePicker
                         SelectedDate="{Binding SelectedDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                         Style="{StaticResource NiceDatePicker}"

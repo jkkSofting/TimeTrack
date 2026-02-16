@@ -151,12 +151,44 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
                 <!--  Add Panel  -->
                 <Border
                     Grid.Row="0"
+                    Margin="0,0,0,8"
+                    Padding="3"
+                    Background="#1F2A4D"
+                    CornerRadius="12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox
+                            Grid.Column="0"
+                            Width="80"
+                            Text="{Binding StartDate, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox
+                            Grid.Column="1"
+                            Width="80"
+                            Text="{Binding EndDate, UpdateSourceTrigger=PropertyChanged}" />
+                        <StackPanel
+                            Grid.Column="3"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal">
+                            <Button Command="{Binding FilterProjectsCommand}" Content="Filtern" />
+                            <Button Command="{Binding ResetProjectsFilterCommand}" Content="Zurücksetzen" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border
+                    Grid.Row="1"
                     Margin="0,0,0,8"
                     Padding="12"
                     Background="#1F2A4D"
@@ -186,7 +218,7 @@
 
                 <!--  Edit Panel  -->
                 <Border
-                    Grid.Row="1"
+                    Grid.Row="2"
                     Margin="0,0,0,8"
                     Padding="12"
                     Background="#1F2A4D"
@@ -200,15 +232,9 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBox
-                            Grid.Column="0"
-                            Text="{Binding EditProjektname, UpdateSourceTrigger=PropertyChanged}" />
-                        <TextBox
-                            Grid.Column="1"
-                            Text="{Binding EditKunde, UpdateSourceTrigger=PropertyChanged}" />
-                        <TextBox
-                            Grid.Column="2"
-                            Text="{Binding EditKostentraeger, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Grid.Column="0" Text="{Binding EditProjektname, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Grid.Column="1" Text="{Binding EditKunde, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Grid.Column="2" Text="{Binding EditKostentraeger, UpdateSourceTrigger=PropertyChanged}" />
 
                         <StackPanel
                             Grid.Column="3"
@@ -222,7 +248,7 @@
 
                 <!--  Tabelle  -->
                 <DataGrid
-                    Grid.Row="2"
+                    Grid.Row="3"
                     AutoGenerateColumns="False"
                     CanUserAddRows="False"
                     IsReadOnly="True"

@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "TimeTracker"
-#define MyAppVersion "1.0"
+#define MyAppVersion "2026.08.0"
 #define MyAppPublisher "Kaltenmark-Engineering"
 #define MyAppURL "https://sites.google.com/view/janick-kaltenmark/startseite"
 #define MyAppExeName "Zeitmanagement.exe"
@@ -31,6 +31,7 @@ OutputBaseFilename=TimeTracker
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
+ArchitecturesInstallIn64BitMode=x64
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -40,11 +41,7 @@ Name: "german"; MessagesFile: "compiler:Languages\German.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Users\jkk\source\repos\Zeitmanagement\bin\Debug\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\jkk\source\repos\Zeitmanagement\bin\Debug\System.Data.SQLite.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\jkk\source\repos\Zeitmanagement\bin\Debug\Zeitmanagement.exe.config"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\jkk\source\repos\Zeitmanagement\bin\Debug\x86\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "C:\Users\jkk\source\repos\Zeitmanagement\bin\Debug\x64\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\Users\jkk\source\repos\Zeitmanagement\bin\Release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

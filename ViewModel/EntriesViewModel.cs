@@ -90,6 +90,8 @@ namespace Zeitmanagement.ViewModel
         public DelegateCommand SaveEditCommand { get; }
         public DelegateCommand CancelEditCommand { get; }
         public DelegateCommand DeleteEntryCommand { get; }
+        public DelegateCommand GoToNextDayCommand { get; }
+        public DelegateCommand GoToLastDayCommand { get; }
 
         public EntriesViewModel()
         {
@@ -103,6 +105,22 @@ namespace Zeitmanagement.ViewModel
             SaveEditCommand = new DelegateCommand(_ => SaveEdit(), _ => IsEditPanelOpen);
             CancelEditCommand = new DelegateCommand(_ => CancelEdit());
             DeleteEntryCommand = new DelegateCommand(o => DeleteEntry(o as EntryItemVM), o => o is EntryItemVM);
+
+            GoToNextDayCommand = new DelegateCommand(_ =>
+            {
+                var date = DateTime.TryParseExact(SelectedDate, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt)
+                    ? dt
+                    : DateTime.Today;
+                SelectedDate = date.AddDays(1).ToString("dd.MM.yyyy");
+            });
+
+            GoToLastDayCommand = new DelegateCommand(_ =>
+            {
+                var date = DateTime.TryParseExact(SelectedDate, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt)
+                    ? dt
+                    : DateTime.Today;
+                SelectedDate = date.AddDays(-1).ToString("dd.MM.yyyy");
+            });
 
             // sinnvolle Defaults fürs Hinzufügen
             NewStart = "09:00";
@@ -183,8 +201,8 @@ namespace Zeitmanagement.ViewModel
             }
 
             // --- HEUTE-KPIs (unabhängig von SelectedDate) ---
-            var today = DateTime.Today;
-            var todayEntries = db.GetTimeEntriesForDate(today).ToList();
+
+            var todayEntries = db.GetTimeEntriesForDate(date).ToList();
             TodayEntryCount = todayEntries.Count;
             TodayTotalHours = Math.Round(
                 todayEntries.Sum(te => CalcHours(te.Startzeit, te.Endzeit)), 2);
