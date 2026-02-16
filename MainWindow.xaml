@@ -6,7 +6,7 @@
     xmlns:local="clr-namespace:Zeitmanagement"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodel="clr-namespace:Zeitmanagement.ViewModel"
-    Title="TimeTrack"
+    Title="{Binding WindowTitle}"
     Width="1800"
     Height="800"
     d:DataContext="{d:DesignInstance Type=viewmodel:MainViewModel}"

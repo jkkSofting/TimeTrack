@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,6 +20,8 @@ namespace Zeitmanagement.ViewModel
         private readonly BaseViewModel _quickSelectView;
 
         private object _rightSide;
+
+        private string _windowTitle;
 
         private static readonly Lazy<TimeTracker> instance =
             new Lazy<TimeTracker>(() => new TimeTracker());
@@ -43,6 +46,10 @@ namespace Zeitmanagement.ViewModel
 
         public MainViewModel()
         {
+            var version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
+            WindowTitle = "TimeTrack v" + version;
+
             _timer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(1)
@@ -74,6 +81,11 @@ namespace Zeitmanagement.ViewModel
         }
 
         public DelegateCommand SelectViewCommand{ get; set; }
+        public string WindowTitle
+        {
+            get => _windowTitle;
+            set => SetProperty(ref _windowTitle, value);
+        }
 
         private void SelectViewCommandExecute(object obj)
         {

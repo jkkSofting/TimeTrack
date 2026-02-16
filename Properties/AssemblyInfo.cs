@@ -10,9 +10,9 @@ using System.Windows;
 [assembly: AssemblyTitle("Zeitmanagement")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Softing AG")]
+[assembly: AssemblyCompany("Janick Kaltenmark")]
 [assembly: AssemblyProduct("Zeitmanagement")]
-[assembly: AssemblyCopyright("Copyright © Softing AG 2025")]
+[assembly: AssemblyCopyright("Copyright © Janick Kaltenmark 2025")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -48,5 +48,5 @@ using System.Windows;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.1")]
+[assembly: AssemblyFileVersion("1.1")]

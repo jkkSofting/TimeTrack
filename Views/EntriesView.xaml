@@ -344,7 +344,14 @@
                     Grid.Column="1"
                     VerticalAlignment="Center"
                     Orientation="Horizontal">
-                    <DatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource NiceDatePicker}" />
+                    <TextBox
+                        Width="160"
+                        Text="{Binding SelectedDate, UpdateSourceTrigger=PropertyChanged}"
+                        ToolTip="Datum TT.MM.YYYY" />
+                    <!--<DatePicker
+                        SelectedDate="{Binding SelectedDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        Style="{StaticResource NiceDatePicker}"
+                        Visibility="Collapsed" />-->
                     <Button Command="{Binding TodayCommand}" Content="Heute" />
                     <Button Command="{Binding RefreshCommand}" Content="Aktualisieren" />
 

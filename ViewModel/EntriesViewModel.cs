@@ -11,27 +11,30 @@ namespace Zeitmanagement.ViewModel
     {
         // --- Tabellen-Daten ---
         public ObservableCollection<EntryItemVM> Entries { get; } = new ObservableCollection<EntryItemVM>();
+
         public ObservableCollection<string> ProjectNames { get; } = new ObservableCollection<string>();
 
         // --- Sidebar-Übersichten ---
         public ObservableCollection<SummaryItem> SumByProject { get; } = new ObservableCollection<SummaryItem>();
+
         public ObservableCollection<SummaryItem> SumByKTR { get; } = new ObservableCollection<SummaryItem>();
 
         // --- Datumsauswahl ---
-        private DateTime _selectedDate = DateTime.Today;
-        public DateTime SelectedDate
+        private string _selectedDate = DateTime.Today.ToString("dd.MM.yyyy");
+
+        public string SelectedDate
         {
             get => _selectedDate;
             set
             {
                 SetProperty(ref _selectedDate, value);
                 Refresh();
-                
             }
         }
 
         // --- Header-Text ---
         private string _headerSubtitle = "Buchungen pro Tag verwalten (hinzufügen, bearbeiten, löschen)";
+
         public string HeaderSubtitle
         {
             get => _headerSubtitle;
@@ -40,6 +43,7 @@ namespace Zeitmanagement.ViewModel
 
         // --- HEUTE KPIs ---
         private double _todayTotalHours;
+
         private int _todayEntryCount;
 
         /// <summary>Gesamtstunden aller Buchungen am heutigen Datum.</summary>
@@ -58,6 +62,7 @@ namespace Zeitmanagement.ViewModel
 
         // --- Add-Form ---
         private string _newProjektname, _newStart, _newEnd, _newBeschreibung;
+
         public string NewProjektname { get => _newProjektname; set => SetProperty(ref _newProjektname, value); }
         public string NewStart { get => _newStart; set => SetProperty(ref _newStart, value); }
         public string NewEnd { get => _newEnd; set => SetProperty(ref _newEnd, value); }
@@ -65,6 +70,7 @@ namespace Zeitmanagement.ViewModel
 
         // --- Edit-Form ---
         private bool _isEditPanelOpen;
+
         private int _editId;
         private string _editProjektname, _editStart, _editEnd, _editBeschreibung;
 
@@ -76,6 +82,7 @@ namespace Zeitmanagement.ViewModel
 
         // --- Commands ---
         public DelegateCommand RefreshCommand { get; }
+
         public DelegateCommand TodayCommand { get; }
         public DelegateCommand AddEntryCommand { get; }
         public DelegateCommand ResetNewFormCommand { get; }
@@ -87,7 +94,7 @@ namespace Zeitmanagement.ViewModel
         public EntriesViewModel()
         {
             RefreshCommand = new DelegateCommand(_ => Refresh());
-            TodayCommand = new DelegateCommand(_ => SelectedDate = DateTime.Today);
+            TodayCommand = new DelegateCommand(_ => SelectedDate = DateTime.Today.ToString("dd.MM.yyyy"));
 
             AddEntryCommand = new DelegateCommand(_ => AddEntry(), _ => CanAdd());
             ResetNewFormCommand = new DelegateCommand(_ => ResetNewForm());
@@ -116,7 +123,12 @@ namespace Zeitmanagement.ViewModel
 
             // Einträge des ausgewählten Tages neu laden
             Entries.Clear();
-            foreach (var e in db.GetTimeEntriesForDate(SelectedDate))
+
+            var date = DateTime.TryParseExact(SelectedDate, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt)
+                ? dt
+                : DateTime.Today;
+
+            foreach (var e in db.GetTimeEntriesForDate(date))
             {
                 var dur = CalcHours(e.Startzeit, e.Endzeit);
                 Entries.Add(new EntryItemVM
@@ -188,7 +200,10 @@ namespace Zeitmanagement.ViewModel
 
         private void AddEntry()
         {
-            MainViewModel.DbInstance.AddTimeEntry(SelectedDate, NewStart, NewEnd, NewProjektname, NewBeschreibung);
+            var selectedDate = DateTime.TryParseExact(SelectedDate, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt)
+                ? dt
+                : DateTime.Today;
+            MainViewModel.DbInstance.AddTimeEntry(selectedDate, NewStart, NewEnd, NewProjektname, NewBeschreibung);
             ResetNewForm();
             Refresh();
         }
@@ -226,7 +241,11 @@ namespace Zeitmanagement.ViewModel
 
         private void SaveEdit()
         {
-            MainViewModel.DbInstance.UpdateTimeEntry(_editId, SelectedDate, EditStart, EditEnd, EditProjektname, EditBeschreibung);
+            var selectedDate = DateTime.TryParseExact(SelectedDate, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt)
+                ? dt
+                : DateTime.Today;
+
+            MainViewModel.DbInstance.UpdateTimeEntry(_editId, selectedDate, EditStart, EditEnd, EditProjektname, EditBeschreibung);
             IsEditPanelOpen = false;
             Refresh();
         }
