@@ -1,10 +1,13 @@
 Installation abgeschlossen
 ==========================
 
-Vielen Dank, dass Sie unser Programm installiert haben!
+TimeTracker wurde erfolgreich installiert.
 
-- Starten Sie die Anwendung über das Startmenü oder das Desktop-Symbol.
-- Eine vollständige Dokumentation finden Sie im Ordner "docs".
-- Bei Problemen wenden Sie sich bitte an support@example.com.
+Sie können das Programm jetzt über das Startmenü starten oder, falls
+ausgewählt, über das Desktop-Symbol öffnen.
 
-Viel Erfolg mit unserer Software!
+Beim ersten Start legt die Anwendung die benötigten lokalen Datenbanken
+und Ordner automatisch an.
+
+Wenn Sie ein Desktop-Symbol erstellt haben, finden Sie das Programm
+zusätzlich dort.

@@ -1,0 +1,18 @@
+Endbenutzer-Lizenzvereinbarung (EULA)
+=====================================
+
+Mit der Installation und Nutzung von TimeTracker stimmen Sie den folgenden
+Bedingungen zu:
+
+1. Die Software darf auf Geräten installiert und genutzt werden, für die Sie
+   berechtigt sind.
+2. Eine Weitergabe, Wiederveröffentlichung, Zerlegung oder Entschlüsselung
+   der Software ist nur mit ausdrücklicher schriftlicher Zustimmung erlaubt.
+3. Die Software wird ohne ausdrückliche oder stillschweigende Garantien
+   bereitgestellt, soweit gesetzlich zulässig.
+4. Der Entwickler und der Rechteinhaber haften nicht für Datenverluste,
+   Betriebsunterbrechungen oder mittelbare Schäden, soweit gesetzlich zulässig.
+5. Für Support, Updates und weitere Informationen gilt die angegebene
+   Projekt- oder Herstellerseite.
+
+Wenn Sie diesen Bedingungen nicht zustimmen, brechen Sie die Installation ab.
