@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:Zeitmanagement.Views"
     xmlns:viewmodel="clr-namespace:Zeitmanagement.ViewModel"
     d:DataContext="{d:DesignInstance Type=viewmodel:ProjectsViewModel}"
     d:DesignHeight="720"
@@ -12,6 +13,7 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <local:DecimalHoursToHHmmConverter x:Key="HoursToHHmm" />
 
         <!--  Farben  -->
         <Color x:Key="ColBgDark">#0B1020</Color>
@@ -272,7 +274,7 @@
                             Header="Buchungen" />
                         <DataGridTextColumn
                             Width="*"
-                            Binding="{Binding Stunden, StringFormat=0.##}"
+                            Binding="{Binding Stunden, Converter={StaticResource HoursToHHmm}}"
                             Header="Stunden" />
                         <DataGridTemplateColumn Width="2*" Header="Aktionen">
                             <DataGridTemplateColumn.CellTemplate>

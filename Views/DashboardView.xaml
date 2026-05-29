@@ -92,6 +92,7 @@
 
         <!--  Converter  -->
         <local:NumberFormatterConverter x:Key="Fmt" />
+        <local:DecimalHoursToHHmmConverter x:Key="HoursToHHmm" />
 
         <!--  StatCard Template  -->
         <DataTemplate x:Key="StatCardTemplate">
@@ -200,6 +201,7 @@
                             Foreground="{StaticResource BrushText}"
                             FormatString="0.## h"
                             TargetValue="{Binding TodayHours}" />
+                        <TextBlock Style="{StaticResource Subtitle}" Text="{Binding TodayHours, Converter={StaticResource HoursToHHmm}}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Margin="8">
@@ -211,6 +213,7 @@
                             Foreground="{StaticResource BrushText}"
                             FormatString="0.## h"
                             TargetValue="{Binding AvgHoursLast5Days}" />
+                        <TextBlock Style="{StaticResource Subtitle}" Text="{Binding AvgHoursLast5Days, Converter={StaticResource HoursToHHmm}}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2" Margin="8">
@@ -221,7 +224,7 @@
                             Foreground="{StaticResource BrushText}"
                             Text="{Binding TopProjectName}" />
                         <TextBlock Style="{StaticResource Subtitle}">
-                            <Run Text="{Binding TopProjectHours, Converter={StaticResource Fmt}, ConverterParameter=h}" />
+                            <Run Text="{Binding TopProjectHours, Converter={StaticResource HoursToHHmm}}" />
                         </TextBlock>
                     </StackPanel>
                 </Grid>

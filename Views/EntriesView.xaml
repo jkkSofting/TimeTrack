@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:Zeitmanagement.Views"
     xmlns:viewmodel="clr-namespace:Zeitmanagement.ViewModel"
     d:DataContext="{d:DesignInstance Type=viewmodel:EntriesViewModel}"
     d:DesignHeight="720"
@@ -13,6 +14,7 @@
     <!--  ========== RESOURCES / THEME ==========  -->
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <local:DecimalHoursToHHmmConverter x:Key="HoursToHHmm" />
 
         <!--  Farben  -->
         <Color x:Key="ColBgDark">#0B1020</Color>
@@ -92,7 +94,7 @@
                                 FontSize="16"
                                 FontWeight="SemiBold"
                                 Foreground="{StaticResource BrushText}"
-                                Text="{Binding Hours, StringFormat=0.##}" />
+                                Text="{Binding Hours, Converter={StaticResource HoursToHHmm}}" />
                             <TextBlock
                                 HorizontalAlignment="Right"
                                 Foreground="{StaticResource BrushText}"
@@ -372,7 +374,7 @@
                             <TextBlock
                                 FontWeight="SemiBold"
                                 Foreground="{StaticResource BrushText}"
-                                Text="{Binding TodayTotalHours, StringFormat=0.## h}" />
+                                Text="{Binding TodayTotalHours, Converter={StaticResource HoursToHHmm}}" />
                             <TextBlock
                                 Margin="8,0,0,0"
                                 Foreground="{StaticResource BrushTextMuted}"
@@ -470,7 +472,7 @@
                                 Header="Ende" />
                             <DataGridTextColumn
                                 Width="*"
-                                Binding="{Binding Dauer, StringFormat=0.##}"
+                                Binding="{Binding Dauer, Converter={StaticResource HoursToHHmm}}"
                                 Header="Dauer (h)" />
                             <DataGridTextColumn
                                 Width="2*"

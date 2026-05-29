@@ -12,7 +12,7 @@ using System.Windows;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Janick Kaltenmark")]
 [assembly: AssemblyProduct("Zeitmanagement")]
-[assembly: AssemblyCopyright("Copyright © Janick Kaltenmark 2025")]
+[assembly: AssemblyCopyright("Copyright © Janick Kaltenmark 2026")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -48,5 +48,5 @@ using System.Windows;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("2026.08.0")]
-[assembly: AssemblyFileVersion("2026.08.0")]
+[assembly: AssemblyVersion("2026.22.0")]
+[assembly: AssemblyFileVersion("2026.22.0")]
