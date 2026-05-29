@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.Windows;
 using System.Windows.Media;
 using Zeitmanagement.MVVM;
 
@@ -106,7 +107,7 @@ namespace Zeitmanagement.ViewModel
             for (var d = start; d <= end; d = d.AddDays(1))
             {
                 var entries = db.GetTimeEntriesForDate(d).ToList();
-                var segments = new ObservableCollection<Segment>();
+                var rawSegments = new List<(string Project, double Mins)>();
                 double totalMinutes = 0;
 
                 foreach (var e in entries)
@@ -125,18 +126,25 @@ namespace Zeitmanagement.ViewModel
                         colorIndex++;
                     }
 
-                    segments.Add(new Segment
-                    {
-                        ProjectName = e.Projektname,
-                        Minutes = mins,
-                        Brush = projectColors[e.Projektname]
-                    });
+                    rawSegments.Add((e.Projektname, mins));
                     totalMinutes += mins;
                 }
 
-                // compute proportions
-                foreach (var seg in segments)
-                    seg.Fraction = totalMinutes > 0 ? seg.Minutes / totalMinutes : 0;
+                // Build segments with Canvas offsets relative to total worked time (1000 units = full bar)
+                var segments = new ObservableCollection<Segment>();
+                double cursor = 0;
+                foreach (var (project, mins) in rawSegments)
+                {
+                    double width = totalMinutes > 0 ? mins / totalMinutes * 1000.0 : 0;
+                    segments.Add(new Segment
+                    {
+                        ProjectName = project,
+                        StartMinute = cursor,
+                        Minutes = width,
+                        Brush = projectColors[project]
+                    });
+                    cursor += width;
+                }
 
                 int switchCount = 0;
                 for (int i = 1; i < segments.Count; i++)
@@ -162,8 +170,8 @@ namespace Zeitmanagement.ViewModel
         internal class Segment
         {
             public string ProjectName { get; set; }
+            public double StartMinute { get; set; }
             public double Minutes { get; set; }
-            public double Fraction { get; set; }
             public SolidColorBrush Brush { get; set; }
         }
 

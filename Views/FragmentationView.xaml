@@ -96,23 +96,30 @@
                                 <TextBlock Text="{Binding DateLabel}" FontSize="14" FontWeight="SemiBold"
                                            Foreground="{StaticResource BrushText}" VerticalAlignment="Center" />
 
-                                <!-- Segmented bar -->
-                                <Border Grid.Column="1" CornerRadius="8" Background="{StaticResource BrushEmpty}"
-                                        Height="32" ClipToBounds="True">
-                                    <ItemsControl ItemsSource="{Binding Segments}">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <UniformGrid Rows="1" />
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border Background="{Binding Brush}" ToolTip="{Binding ProjectName}"
-                                                        Margin="0.5,0" />
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </Border>
+                                <!-- Segmented bar: Canvas = 1440 units wide (full day), Viewbox stretches it -->
+                                <Viewbox Grid.Column="1" Stretch="Fill" StretchDirection="Both" Height="32">
+                                    <Canvas Width="1000" Height="32" Background="{StaticResource BrushEmpty}">
+                                        <ItemsControl ItemsSource="{Binding Segments}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <Canvas Width="1000" Height="32" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemContainerStyle>
+                                                <Style TargetType="ContentPresenter">
+                                                    <Setter Property="Canvas.Left" Value="{Binding StartMinute}" />
+                                                    <Setter Property="Canvas.Top" Value="0" />
+                                                </Style>
+                                            </ItemsControl.ItemContainerStyle>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="{Binding Brush}" Width="{Binding Minutes}" Height="32"
+                                                            ToolTip="{Binding ProjectName}" />
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Canvas>
+                                </Viewbox>
 
                                 <!-- Stats -->
                                 <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="12,0,0,0">

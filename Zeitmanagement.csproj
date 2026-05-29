@@ -78,6 +78,7 @@
       <DependentUpon>DashboardView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\DecimalHoursToHHmmConverter.cs" />
+    <Compile Include="Views\DoubleToGridLengthConverter.cs" />
     <Compile Include="Views\EntriesView.xaml.cs">
       <DependentUpon>EntriesView.xaml</DependentUpon>
     </Compile>
