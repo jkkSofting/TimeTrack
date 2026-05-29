@@ -68,6 +68,7 @@
     <Compile Include="ViewModel\BaseViewModel.cs" />
     <Compile Include="ViewModel\DashboardViewModel.cs" />
     <Compile Include="ViewModel\EntriesViewModel.cs" />
+    <Compile Include="ViewModel\FragmentationViewModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ProjectsViewModel.cs" />
     <Compile Include="ViewModel\QuickSelectItemViewModel.cs" />
@@ -79,6 +80,9 @@
     <Compile Include="Views\DecimalHoursToHHmmConverter.cs" />
     <Compile Include="Views\EntriesView.xaml.cs">
       <DependentUpon>EntriesView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\FragmentationView.xaml.cs">
+      <DependentUpon>FragmentationView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\NumberFormatterConverter.cs" />
     <Compile Include="Views\ProjectsView.xaml.cs">
@@ -108,6 +112,9 @@
     </Page>
     <Page Include="Views\EntriesView.xaml">
       <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\FragmentationView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\ProjectsView.xaml">

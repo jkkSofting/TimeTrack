@@ -23,4 +23,8 @@
     <DataTemplate DataType="{x:Type vm:QuickSelectItemViewModel}">
         <views:QuickSelectItemView />
     </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:FragmentationViewModel}">
+        <views:FragmentationView />
+    </DataTemplate>
 </ResourceDictionary>

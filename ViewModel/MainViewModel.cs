@@ -18,6 +18,7 @@ namespace Zeitmanagement.ViewModel
         private readonly BaseViewModel _projectView;
         private readonly BaseViewModel _entriesView;
         private readonly BaseViewModel _quickSelectView;
+        private readonly BaseViewModel _fragmentationView;
 
         private object _rightSide;
 
@@ -62,6 +63,7 @@ namespace Zeitmanagement.ViewModel
             _projectView = new ProjectsViewModel();
             _entriesView = new EntriesViewModel();
             _quickSelectView = new QuickSelectViewModel();
+            _fragmentationView = new FragmentationViewModel();
 
             SelectViewCommandExecute("dashboard");
 
@@ -104,7 +106,10 @@ namespace Zeitmanagement.ViewModel
                     break;
                 case "quickselect":
                     RightSide = _quickSelectView;
-                    break;  
+                    break;
+                case "fragmentation":
+                    RightSide = _fragmentationView;
+                    break;
                 default:
                     break;
             }
