@@ -67,7 +67,9 @@
                         FontSize="18"
                         FontWeight="SemiBold"
                         Foreground="{StaticResource BrushText}"
-                        Text="{Binding Name}" />
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="NoWrap" />
                     <!--  Zahlen/Labels  -->
                     <Grid Grid.Row="1" Margin="8,0,8,0">
                         <Grid.ColumnDefinitions>
