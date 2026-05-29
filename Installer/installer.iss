@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "TimeTracker"
-#define MyAppVersion "2026.08.0"
+#define MyAppVersion "2026.22.0"
 #define MyAppPublisher "Kaltenmark-Engineering"
 #define MyAppURL "https://sites.google.com/view/janick-kaltenmark/startseite"
 #define MyAppExeName "Zeitmanagement.exe"
@@ -27,7 +27,7 @@ InfoAfterFile=C:\Users\jkk\source\repos\Zeitmanagement\Installer\post-install.tx
 ;PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=C:\Users\jkk\source\repos\Zeitmanagement\Installer\Output
-OutputBaseFilename=TimeTracker
+OutputBaseFilename=TimeTracker-{#MyAppVersion}
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
