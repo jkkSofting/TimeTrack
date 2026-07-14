@@ -175,85 +175,6 @@
             </Style.Triggers>
         </Style>
 
-        <!--  Pretty ComboBox  -->
-        <Style
-            x:Key="NiceCombo"
-            BasedOn="{StaticResource {x:Type ComboBox}}"
-            TargetType="ComboBox">
-            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
-            <Setter Property="Background" Value="#233055" />
-            <Setter Property="BorderBrush" Value="#33406A" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="6" />
-            <Setter Property="Margin" Value="4" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBox">
-                        <Grid>
-                            <ToggleButton
-                                x:Name="ToggleButton"
-                                ClickMode="Press"
-                                Focusable="False">
-                                <Grid>
-                                    <Border
-                                        Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                        CornerRadius="8" />
-                                    <DockPanel Margin="8,4">
-                                        <ContentPresenter
-                                            Margin="2,0,24,0"
-                                            VerticalAlignment="Center"
-                                            Content="{TemplateBinding SelectionBoxItem}" />
-                                        <Path
-                                            Width="10"
-                                            Height="6"
-                                            HorizontalAlignment="Right"
-                                            Data="M 0 0 L 5 5 L 10 0"
-                                            Fill="{StaticResource BrushTextMuted}" />
-                                    </DockPanel>
-                                </Grid>
-                            </ToggleButton>
-                            <Popup
-                                x:Name="Popup"
-                                AllowsTransparency="True"
-                                Focusable="False"
-                                IsOpen="{TemplateBinding IsDropDownOpen}"
-                                Placement="Bottom"
-                                PopupAnimation="Slide">
-                                <Border
-                                    Background="#233055"
-                                    BorderBrush="#33406A"
-                                    BorderThickness="1"
-                                    CornerRadius="8">
-                                    <ScrollViewer>
-                                        <StackPanel IsItemsHost="True" />
-                                    </ScrollViewer>
-                                </Border>
-                            </Popup>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="ItemContainerStyle">
-                <Setter.Value>
-                    <Style TargetType="ComboBoxItem">
-                        <Setter Property="Foreground" Value="{StaticResource BrushText}" />
-                        <Setter Property="Padding" Value="8,4" />
-                        <Setter Property="Background" Value="Transparent" />
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#2A3A67" />
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="#334579" />
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <!--  Pretty DatePicker  -->
         <Style
             x:Key="NiceDatePicker"
@@ -331,7 +252,8 @@
                     Grid.Column="0"
                     Width="400"
                     ItemsSource="{Binding AvailableProjects}"
-                    SelectedItem="{Binding SelectedProject, Mode=TwoWay}" />
+                    SelectedItem="{Binding SelectedProject, Mode=TwoWay}"
+                    Style="{StaticResource NiceCombo}" />
 
                 <TextBox
                     Grid.Column="1"

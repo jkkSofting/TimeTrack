@@ -62,7 +62,7 @@
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- Mode selector -->
                     <ComboBox ItemsSource="{Binding ViewModes}" SelectedItem="{Binding SelectedMode}"
-                              Width="100" Margin="0,0,16,0" FontSize="14" />
+                              Width="100" Margin="0,0,16,0" FontSize="14" Style="{StaticResource NiceCombo}" />
 
                     <!-- Navigation -->
                     <Button Content="◀" Command="{Binding PreviousCommand}"

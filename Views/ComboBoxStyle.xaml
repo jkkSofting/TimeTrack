@@ -1,0 +1,102 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <SolidColorBrush x:Key="NiceComboText" Color="#F5F7FB" />
+    <SolidColorBrush x:Key="NiceComboTextMuted" Color="#B7C0D8" />
+
+    <!--  App-wide dark ComboBox style. The ComboBoxItem/ToggleButton content presenters set
+          TextElement.Foreground explicitly because the default theme's templates for those
+          controls don't template-bind Foreground, so a plain Style Setter alone leaves the
+          text black regardless of the Style's Foreground value.  -->
+    <Style x:Key="NiceCombo" BasedOn="{StaticResource {x:Type ComboBox}}" TargetType="ComboBox">
+        <Setter Property="Foreground" Value="{StaticResource NiceComboText}" />
+        <Setter Property="Background" Value="#233055" />
+        <Setter Property="BorderBrush" Value="#33406A" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="6" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <ToggleButton
+                            x:Name="ToggleButton"
+                            ClickMode="Press"
+                            Focusable="False"
+                            IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border
+                                        Background="#233055"
+                                        BorderBrush="#33406A"
+                                        BorderThickness="1"
+                                        CornerRadius="8">
+                                        <DockPanel Margin="10,6">
+                                            <Path
+                                                Width="10"
+                                                Height="6"
+                                                DockPanel.Dock="Right"
+                                                VerticalAlignment="Center"
+                                                Data="M 0 0 L 5 5 L 10 0"
+                                                Fill="{StaticResource NiceComboTextMuted}" />
+                                            <ContentPresenter
+                                                Margin="2,0,8,0"
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Center"
+                                                Content="{Binding SelectionBoxItem, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                ContentTemplate="{Binding SelectionBoxItemTemplate, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                TextElement.Foreground="{StaticResource NiceComboText}" />
+                                        </DockPanel>
+                                    </Border>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                        <Popup
+                            x:Name="Popup"
+                            AllowsTransparency="True"
+                            Focusable="False"
+                            IsOpen="{TemplateBinding IsDropDownOpen}"
+                            Placement="Bottom"
+                            PopupAnimation="Slide">
+                            <Border
+                                MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                Background="#233055"
+                                BorderBrush="#33406A"
+                                BorderThickness="1"
+                                CornerRadius="8">
+                                <ScrollViewer MaxHeight="240">
+                                    <StackPanel IsItemsHost="True" />
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="ComboBoxItem">
+                    <Setter Property="Padding" Value="8,6" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ComboBoxItem">
+                                <Border x:Name="bd" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+                                    <ContentPresenter TextElement.Foreground="{StaticResource NiceComboText}" />
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bd" Property="Background" Value="#2A3A67" />
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="bd" Property="Background" Value="#334579" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

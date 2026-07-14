@@ -16,6 +16,8 @@ namespace Zeitmanagement.ViewModel
             Value = value;
             Label = label;
         }
+
+        public override string ToString() => Label;
     }
 
     internal class SettingsViewModel : BaseViewModel
