@@ -19,6 +19,7 @@ namespace Zeitmanagement.ViewModel
         private readonly BaseViewModel _entriesView;
         private readonly BaseViewModel _quickSelectView;
         private readonly BaseViewModel _fragmentationView;
+        private readonly BaseViewModel _settingsView;
 
         private object _rightSide;
 
@@ -35,6 +36,12 @@ namespace Zeitmanagement.ViewModel
             get => _rightSide;
             set => SetProperty(ref _rightSide, value);
         }
+
+        /// <summary>
+        /// Exposes the shared Quick Select view model so the app-startup logic can open the
+        /// floating window against the same instance the Quick Select view is bound to.
+        /// </summary>
+        public QuickSelectViewModel QuickSelectViewModel => (QuickSelectViewModel)_quickSelectView;
 
         private string _clock;
         public string Clock
@@ -64,6 +71,7 @@ namespace Zeitmanagement.ViewModel
             _entriesView = new EntriesViewModel();
             _quickSelectView = new QuickSelectViewModel();
             _fragmentationView = new FragmentationViewModel();
+            _settingsView = new SettingsViewModel();
 
             SelectViewCommandExecute("dashboard");
 
@@ -109,6 +117,9 @@ namespace Zeitmanagement.ViewModel
                     break;
                 case "fragmentation":
                     RightSide = _fragmentationView;
+                    break;
+                case "settings":
+                    RightSide = _settingsView;
                     break;
                 default:
                     break;

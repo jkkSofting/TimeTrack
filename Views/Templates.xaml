@@ -27,4 +27,8 @@
     <DataTemplate DataType="{x:Type vm:FragmentationViewModel}">
         <views:FragmentationView />
     </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+        <views:SettingsView />
+    </DataTemplate>
 </ResourceDictionary>

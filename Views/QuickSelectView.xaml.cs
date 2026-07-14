@@ -18,6 +18,16 @@ namespace Zeitmanagement.Views
 
         private void OpenFloatingWindow_Click(object sender, RoutedEventArgs e)
         {
+            ShowFloatingWindow(DataContext, Window.GetWindow(this));
+        }
+
+        /// <summary>
+        /// Opens the floating Quick Switch window, or brings the existing one to the front if
+        /// it's already open. Shared between the manual button click and app-startup handling
+        /// so at most one instance ever exists.
+        /// </summary>
+        public static void ShowFloatingWindow(object dataContext, Window owner)
+        {
             if (_floatingWindow != null)
             {
                 // Already open - just bring it back to the front.
@@ -28,12 +38,10 @@ namespace Zeitmanagement.Views
                 return;
             }
 
-            var owner = Window.GetWindow(this);
-
             _floatingWindow = new FloatingQuickSelectWindow
             {
                 // Share the Quick Select view model so both views stay in sync.
-                DataContext = DataContext,
+                DataContext = dataContext,
                 Owner = owner
             };
 

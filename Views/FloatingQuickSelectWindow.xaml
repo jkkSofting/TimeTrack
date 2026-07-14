@@ -12,7 +12,6 @@
     ResizeMode="CanMinimize"
     ShowInTaskbar="True"
     SizeToContent="Height"
-    Topmost="True"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
     <Window.Resources>

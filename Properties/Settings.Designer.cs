@@ -34,5 +34,29 @@ namespace Zeitmanagement.Properties {
                 this["QuickSelectProjects"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Normal")]
+        public string StartupMode {
+            get {
+                return ((string)(this["StartupMode"]));
+            }
+            set {
+                this["StartupMode"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool FloatingWindowAlwaysOnTop {
+            get {
+                return ((bool)(this["FloatingWindowAlwaysOnTop"]));
+            }
+            set {
+                this["FloatingWindowAlwaysOnTop"] = value;
+            }
+        }
     }
 }

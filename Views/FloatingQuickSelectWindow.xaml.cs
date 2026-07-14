@@ -11,6 +11,7 @@ namespace Zeitmanagement.Views
         public FloatingQuickSelectWindow()
         {
             InitializeComponent();
+            Topmost = Properties.Settings.Default.FloatingWindowAlwaysOnTop;
         }
     }
 }
