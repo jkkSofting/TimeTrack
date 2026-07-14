@@ -51,7 +51,12 @@ namespace Zeitmanagement.ViewModel
             set => SetProperty(ref _start, value);
         }
 
-        public bool IsActive;
+        private bool _isActive;
+        public bool IsActive
+        {
+            get => _isActive;
+            set => SetProperty(ref _isActive, value);
+        }
 
         public DelegateCommand StartTimerCommand { get; set; }
         public DelegateCommand EndTimerCommand { get; set; }

@@ -1,17 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Zeitmanagement.Views
 {
@@ -20,9 +8,34 @@ namespace Zeitmanagement.Views
     /// </summary>
     public partial class QuickSelectView : UserControl
     {
+        // Shared across view re-instantiations so at most one floating window exists.
+        private static FloatingQuickSelectWindow _floatingWindow;
+
         public QuickSelectView()
         {
             InitializeComponent();
+        }
+
+        private void OpenFloatingWindow_Click(object sender, RoutedEventArgs e)
+        {
+            if (_floatingWindow != null)
+            {
+                // Already open - just bring it back to the front.
+                if (_floatingWindow.WindowState == WindowState.Minimized)
+                    _floatingWindow.WindowState = WindowState.Normal;
+
+                _floatingWindow.Activate();
+                return;
+            }
+
+            _floatingWindow = new FloatingQuickSelectWindow
+            {
+                // Share the Quick Select view model so both views stay in sync.
+                DataContext = DataContext,
+                Owner = Window.GetWindow(this)
+            };
+            _floatingWindow.Closed += (s, args) => _floatingWindow = null;
+            _floatingWindow.Show();
         }
     }
 }

@@ -345,6 +345,11 @@
                     VerticalAlignment="Center"
                     Orientation="Horizontal">
                     <Button
+                        MinWidth="150"
+                        Click="OpenFloatingWindow_Click"
+                        Content="📌 Floating-Fenster"
+                        ToolTip="Kleines, immer sichtbares Fenster zum schnellen Wechseln öffnen" />
+                    <Button
                         MinWidth="100"
                         Command="{Binding RefreshCommand}"
                         Content="Pause" />
