@@ -85,6 +85,7 @@
     <Compile Include="Views\FragmentationView.xaml.cs">
       <DependentUpon>FragmentationView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\NullToVisibilityConverter.cs" />
     <Compile Include="Views\NumberFormatterConverter.cs" />
     <Compile Include="Views\ProjectsView.xaml.cs">
       <DependentUpon>ProjectsView.xaml</DependentUpon>

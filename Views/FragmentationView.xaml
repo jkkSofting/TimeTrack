@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:Zeitmanagement.Views"
     xmlns:viewmodel="clr-namespace:Zeitmanagement.ViewModel"
     d:DataContext="{d:DesignInstance Type=viewmodel:FragmentationViewModel}"
     d:DesignHeight="720"
@@ -39,12 +40,14 @@
 
         <!-- Empty bar placeholder -->
         <SolidColorBrush x:Key="BrushEmpty" Color="#2A3050" />
+        <local:NullToVisibilityConverter x:Key="NullToCollapsed" />
     </UserControl.Resources>
 
     <Grid Background="{StaticResource BgGradient}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
@@ -113,8 +116,26 @@
                                             </ItemsControl.ItemContainerStyle>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Border Background="{Binding Brush}" Width="{Binding Minutes}" Height="32"
-                                                            ToolTip="{Binding ProjectName}" />
+                                                    <Button Width="{Binding Minutes}" Height="32"
+                                                            ToolTip="{Binding ProjectName}"
+                                                            Command="{Binding DataContext.SelectSegmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}">
+                                                        <Button.Template>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border Background="{Binding Brush}" Cursor="Hand">
+                                                                    <Border.Style>
+                                                                        <Style TargetType="Border">
+                                                                            <Style.Triggers>
+                                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                                    <Setter Property="Opacity" Value="0.8" />
+                                                                                </Trigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </Border.Style>
+                                                                </Border>
+                                                            </ControlTemplate>
+                                                        </Button.Template>
+                                                    </Button>
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
@@ -137,8 +158,29 @@
             </ItemsControl>
         </ScrollViewer>
 
+        <!-- ═══ DETAIL PANEL ═══ -->
+        <Border Grid.Row="2" Style="{StaticResource Card}"
+                Visibility="{Binding SelectedSegment, Converter={StaticResource NullToCollapsed}}"
+                DataContext="{Binding}">
+            <StackPanel DataContext="{Binding SelectedSegment}">
+                <TextBlock FontSize="18" FontWeight="Bold" Foreground="{StaticResource BrushText}">
+                    <Run Text="{Binding ProjectName, Mode=OneWay}" />
+                </TextBlock>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <TextBlock FontSize="14" Foreground="{StaticResource BrushTextMuted}" Text="Zeit: " />
+                    <TextBlock FontSize="14" Foreground="{StaticResource BrushText}">
+                        <Run Text="{Binding StartTime, Mode=OneWay}" /> – <Run Text="{Binding EndTime, Mode=OneWay}" />
+                    </TextBlock>
+                    <TextBlock FontSize="14" Foreground="{StaticResource BrushTextMuted}" Margin="24,0,0,0" Text="Dauer: " />
+                    <TextBlock FontSize="14" Foreground="{StaticResource BrushText}" Text="{Binding DurationHours, StringFormat='{}{0:F2}h', Mode=OneWay}" />
+                </StackPanel>
+                <TextBlock FontSize="13" Foreground="{StaticResource BrushTextMuted}" Margin="0,8,0,0"
+                           Text="{Binding Description, Mode=OneWay, TargetNullValue='(keine Beschreibung)'}" TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
         <!-- ═══ LEGEND ═══ -->
-        <Border Grid.Row="2" Style="{StaticResource Card}">
+        <Border Grid.Row="3" Style="{StaticResource Card}">
             <ItemsControl ItemsSource="{Binding Legend}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>

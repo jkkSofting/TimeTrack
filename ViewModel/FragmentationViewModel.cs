@@ -56,11 +56,20 @@ namespace Zeitmanagement.ViewModel
 
         public DelegateCommand PreviousCommand { get; }
         public DelegateCommand NextCommand { get; }
+        public DelegateCommand SelectSegmentCommand { get; }
+
+        private Segment _selectedSegment;
+        public Segment SelectedSegment
+        {
+            get => _selectedSegment;
+            set => SetProperty(ref _selectedSegment, value);
+        }
 
         public FragmentationViewModel()
         {
             PreviousCommand = new DelegateCommand(_ => Navigate(-1));
             NextCommand = new DelegateCommand(_ => Navigate(1));
+            SelectSegmentCommand = new DelegateCommand(o => SelectedSegment = o as Segment);
         }
 
         private void Navigate(int direction)
@@ -107,7 +116,7 @@ namespace Zeitmanagement.ViewModel
             for (var d = start; d <= end; d = d.AddDays(1))
             {
                 var entries = db.GetTimeEntriesForDate(d).ToList();
-                var rawSegments = new List<(string Project, double Mins)>();
+                var rawSegments = new List<(string Project, double Mins, string Start, string End, string Desc)>();
                 double totalMinutes = 0;
 
                 foreach (var e in entries)
@@ -126,14 +135,14 @@ namespace Zeitmanagement.ViewModel
                         colorIndex++;
                     }
 
-                    rawSegments.Add((e.Projektname, mins));
+                    rawSegments.Add((e.Projektname, mins, e.Startzeit, e.Endzeit, e.Beschreibung));
                     totalMinutes += mins;
                 }
 
                 // Build segments with Canvas offsets relative to total worked time (1000 units = full bar)
                 var segments = new ObservableCollection<Segment>();
                 double cursor = 0;
-                foreach (var (project, mins) in rawSegments)
+                foreach (var (project, mins, startT, endT, desc) in rawSegments)
                 {
                     double width = totalMinutes > 0 ? mins / totalMinutes * 1000.0 : 0;
                     segments.Add(new Segment
@@ -141,7 +150,11 @@ namespace Zeitmanagement.ViewModel
                         ProjectName = project,
                         StartMinute = cursor,
                         Minutes = width,
-                        Brush = projectColors[project]
+                        Brush = projectColors[project],
+                        StartTime = startT,
+                        EndTime = endT,
+                        Description = desc,
+                        DurationHours = mins / 60.0
                     });
                     cursor += width;
                 }
@@ -173,6 +186,10 @@ namespace Zeitmanagement.ViewModel
             public double StartMinute { get; set; }
             public double Minutes { get; set; }
             public SolidColorBrush Brush { get; set; }
+            public string StartTime { get; set; }
+            public string EndTime { get; set; }
+            public string Description { get; set; }
+            public double DurationHours { get; set; }
         }
 
         internal class DayRow
