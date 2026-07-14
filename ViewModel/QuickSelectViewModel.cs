@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Threading;
 using Zeitmanagement.MVVM;
 
@@ -242,7 +244,33 @@ namespace Zeitmanagement.ViewModel
 
         private void UpdateDatabase(QuickSelectItemViewModel selectedItem)
         {
-            MainViewModel.DbInstance.AddTimeEntry(DateTime.Today, selectedItem.Start, selectedItem.End, selectedItem.SelectedProject, "Quick Select");
+            // A pause/switch within the same clock minute (Start == End, both formatted to
+            // minute resolution) would otherwise be rejected by the DB layer as a zero-duration
+            // booking. Round up to a minimum 1-minute entry instead of losing it.
+            if (string.Equals(selectedItem.Start, selectedItem.End, StringComparison.Ordinal))
+            {
+                selectedItem.End = BumpByOneMinute(selectedItem.End);
+            }
+
+            try
+            {
+                MainViewModel.DbInstance.AddTimeEntry(DateTime.Today, selectedItem.Start, selectedItem.End, selectedItem.SelectedProject, "Quick Select");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Buchung konnte nicht gespeichert werden", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private static string BumpByOneMinute(string hhmm)
+        {
+            if (!TimeSpan.TryParseExact(hhmm, @"hh\:mm", CultureInfo.InvariantCulture, out var t))
+                return hhmm;
+
+            if (t < new TimeSpan(23, 59, 0))
+                t = t.Add(TimeSpan.FromMinutes(1));
+
+            return t.ToString(@"hh\:mm", CultureInfo.InvariantCulture);
         }
 
         private void SaveProjectnames()

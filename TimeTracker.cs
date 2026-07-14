@@ -303,7 +303,7 @@ public sealed class TimeTracker : IDisposable
         var endSpan = ParseTime(endHHmm);
 
         if (endSpan <= startSpan)
-            throw new ArgumentException("Endzeit muss nach Startzeit liegen. Nicht diskutierbar.");
+            throw new ArgumentException("Endzeit muss nach Startzeit liegen.");
 
         // für DB konsistent auf hh:mm normalisieren
         var startNorm = startSpan.ToString(@"hh\:mm", CultureInfo.InvariantCulture);
@@ -312,7 +312,7 @@ public sealed class TimeTracker : IDisposable
         var dateStr = datumOhneZeit.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         int projectId = GetProjectIdByName(projektname);
         if (projectId <= 0)
-            throw new InvalidOperationException($"Projekt '{projektname}' existiert nicht. Erst anlegen.");
+            throw new InvalidOperationException($"Projekt '{projektname}' existiert nicht. Bitte zuerst anlegen.");
 
         using (var tx = _conn.BeginTransaction())
         using (var cmd = _conn.CreateCommand())

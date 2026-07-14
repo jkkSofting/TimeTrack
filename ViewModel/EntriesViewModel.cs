@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Windows;
 using Zeitmanagement.MVVM;
 
 namespace Zeitmanagement.ViewModel
@@ -102,7 +103,7 @@ namespace Zeitmanagement.ViewModel
             ResetNewFormCommand = new DelegateCommand(_ => ResetNewForm());
 
             EditEntryCommand = new DelegateCommand(o => BeginEdit(o as EntryItemVM), o => o is EntryItemVM);
-            SaveEditCommand = new DelegateCommand(_ => SaveEdit(), _ => IsEditPanelOpen);
+            SaveEditCommand = new DelegateCommand(_ => SaveEdit(), _ => CanSaveEdit());
             CancelEditCommand = new DelegateCommand(_ => CancelEdit());
             DeleteEntryCommand = new DelegateCommand(o => DeleteEntry(o as EntryItemVM), o => o is EntryItemVM);
 
@@ -213,7 +214,8 @@ namespace Zeitmanagement.ViewModel
         {
             return !string.IsNullOrWhiteSpace(NewProjektname)
                    && IsHHmm(NewStart)
-                   && IsHHmm(NewEnd);
+                   && IsHHmm(NewEnd)
+                   && IsStartBeforeEnd(NewStart, NewEnd);
         }
 
         private void AddEntry()
@@ -221,7 +223,15 @@ namespace Zeitmanagement.ViewModel
             var selectedDate = DateTime.TryParseExact(SelectedDate, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt)
                 ? dt
                 : DateTime.Today;
-            MainViewModel.DbInstance.AddTimeEntry(selectedDate, NewStart, NewEnd, NewProjektname, NewBeschreibung);
+            try
+            {
+                MainViewModel.DbInstance.AddTimeEntry(selectedDate, NewStart, NewEnd, NewProjektname, NewBeschreibung);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Buchung konnte nicht hinzugefügt werden", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             ResetNewForm();
             Refresh();
         }
@@ -257,13 +267,29 @@ namespace Zeitmanagement.ViewModel
             IsEditPanelOpen = true;
         }
 
+        private bool CanSaveEdit()
+        {
+            return IsEditPanelOpen
+                   && IsHHmm(EditStart)
+                   && IsHHmm(EditEnd)
+                   && IsStartBeforeEnd(EditStart, EditEnd);
+        }
+
         private void SaveEdit()
         {
             var selectedDate = DateTime.TryParseExact(SelectedDate, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt)
                 ? dt
                 : DateTime.Today;
 
-            MainViewModel.DbInstance.UpdateTimeEntry(_editId, selectedDate, EditStart, EditEnd, EditProjektname, EditBeschreibung);
+            try
+            {
+                MainViewModel.DbInstance.UpdateTimeEntry(_editId, selectedDate, EditStart, EditEnd, EditProjektname, EditBeschreibung);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Buchung konnte nicht gespeichert werden", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             IsEditPanelOpen = false;
             Refresh();
         }
@@ -289,6 +315,14 @@ namespace Zeitmanagement.ViewModel
                 new[] { @"hh\:mm", @"h\:mm" },
                 CultureInfo.InvariantCulture,
                 out _);
+        }
+
+        private static bool IsStartBeforeEnd(string startHHmm, string endHHmm)
+        {
+            var formats = new[] { @"hh\:mm", @"h\:mm" };
+            return TimeSpan.TryParseExact(startHHmm, formats, CultureInfo.InvariantCulture, out var start)
+                   && TimeSpan.TryParseExact(endHHmm, formats, CultureInfo.InvariantCulture, out var end)
+                   && start < end;
         }
 
         private static double CalcHours(string startHHmm, string endHHmm)
