@@ -117,6 +117,10 @@ namespace Zeitmanagement.ViewModel
             private set => SetProperty(ref _activeElapsedText, value);
         }
 
+        // The exact moment the current booking started, used for the elapsed-time display so it
+        // stays correct across midnight instead of re-deriving a start time from today's date.
+        private DateTime? _activeStartedAt;
+
         private void StopActiveExecute(object obj)
         {
             var active = QuickSelectItems.FirstOrDefault(q => q.IsActive);
@@ -125,11 +129,9 @@ namespace Zeitmanagement.ViewModel
                 return;
             }
 
-            active.End = DateTime.Now.ToString("HH:mm");
-            active.IsActive = false;
-            UpdateDatabase(active);
-
-            UpdateActiveState();
+            // Route through the same booking-switch logic the Start/Stop buttons and the
+            // floating window's combo box use, so there's a single place that ends a booking.
+            SetBookingInformation(active.SelectedProject);
         }
 
         /// <summary>
@@ -178,14 +180,13 @@ namespace Zeitmanagement.ViewModel
 
         private void UpdateElapsed()
         {
-            var active = QuickSelectItems.FirstOrDefault(q => q.IsActive);
-            if (active == null || string.IsNullOrEmpty(active.Start) || !TimeSpan.TryParse(active.Start, out var startTod))
+            if (_activeStartedAt == null)
             {
                 ActiveElapsedText = "";
                 return;
             }
 
-            var elapsed = DateTime.Now - (DateTime.Today + startTod);
+            var elapsed = DateTime.Now - _activeStartedAt.Value;
             if (elapsed < TimeSpan.Zero) elapsed = TimeSpan.Zero;
 
             ActiveElapsedText = $"{(int)elapsed.TotalHours:00}:{elapsed.Minutes:00}:{elapsed.Seconds:00}";
@@ -195,6 +196,8 @@ namespace Zeitmanagement.ViewModel
 
         private void SetBookingInformation(string selectedProject)
         {
+            var now = DateTime.Now;
+
             var calledProject = QuickSelectItems.FirstOrDefault(q => q.SelectedProject != null && q.SelectedProject.Equals(selectedProject));
 
             if (calledProject == null)
@@ -207,27 +210,30 @@ namespace Zeitmanagement.ViewModel
             if (lastActiveProject != null)
             {
                 //Do stuff to end last active project
-                lastActiveProject.End = DateTime.Now.ToString("HH:mm");
+                lastActiveProject.End = now.ToString("HH:mm");
                 lastActiveProject.IsActive = false;
 
                 UpdateDatabase(lastActiveProject);
 
-                calledProject.Start = DateTime.Now.ToString("HH:mm");
+                calledProject.Start = now.ToString("HH:mm");
                 calledProject.IsActive = true;
+                _activeStartedAt = now;
             }
             else
             {
                 if (calledProject.IsActive)
                 {
-                    calledProject.End = DateTime.Now.ToString("HH:mm");
+                    calledProject.End = now.ToString("HH:mm");
                     calledProject.IsActive = false;
+                    _activeStartedAt = null;
 
                     UpdateDatabase(calledProject);
                 }
                 else
                 {
-                    calledProject.Start = DateTime.Now.ToString("HH:mm");
+                    calledProject.Start = now.ToString("HH:mm");
                     calledProject.IsActive = true;
+                    _activeStartedAt = now;
                 }
             }
 
@@ -255,8 +261,10 @@ namespace Zeitmanagement.ViewModel
             Properties.Settings.Default.QuickSelectProjects = serialized;
             Properties.Settings.Default.Save();
 
-            // Keep the floating window's quick-switch list in sync with the configured slots.
+            // Keep the floating window's quick-switch list - and, in case the renamed slot was
+            // the one currently running, its active-booking display - in sync with the slots.
             UpdateConfiguredProjects();
+            UpdateActiveState();
         }
 
         public void LoadProjectnames()

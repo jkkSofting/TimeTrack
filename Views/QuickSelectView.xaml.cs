@@ -28,12 +28,22 @@ namespace Zeitmanagement.Views
                 return;
             }
 
+            var owner = Window.GetWindow(this);
+
             _floatingWindow = new FloatingQuickSelectWindow
             {
                 // Share the Quick Select view model so both views stay in sync.
                 DataContext = DataContext,
-                Owner = Window.GetWindow(this)
+                Owner = owner
             };
+
+            if (owner == null)
+            {
+                // WindowStartupLocation.CenterOwner (set in XAML) requires an Owner - fall back
+                // to centering on screen if we couldn't resolve one.
+                _floatingWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            }
+
             _floatingWindow.Closed += (s, args) => _floatingWindow = null;
             _floatingWindow.Show();
         }
