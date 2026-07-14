@@ -41,14 +41,25 @@ namespace Zeitmanagement.Views
             _floatingWindow = new FloatingQuickSelectWindow
             {
                 // Share the Quick Select view model so both views stay in sync.
-                DataContext = dataContext,
-                Owner = owner
+                DataContext = dataContext
             };
 
-            if (owner == null)
+            // Deliberately not setting Owner: WPF minimizes/hides owned windows whenever their
+            // owner is minimized, which would take the floating window down with the main
+            // window. Instead, position it manually so it still starts out centered on the
+            // main window while remaining fully independent. If the owner is minimized (e.g.
+            // StartupMode.MinimizedWithFloating), its Left/Top/ActualWidth/ActualHeight are not
+            // meaningful, so fall back to centering on screen.
+            if (owner != null && owner.WindowState != WindowState.Minimized)
             {
-                // WindowStartupLocation.CenterOwner (set in XAML) requires an Owner - fall back
-                // to centering on screen if we couldn't resolve one.
+                _floatingWindow.Loaded += (s, args) =>
+                {
+                    _floatingWindow.Left = owner.Left + (owner.ActualWidth - _floatingWindow.ActualWidth) / 2;
+                    _floatingWindow.Top = owner.Top + (owner.ActualHeight - _floatingWindow.ActualHeight) / 2;
+                };
+            }
+            else
+            {
                 _floatingWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             }
 

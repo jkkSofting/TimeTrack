@@ -12,7 +12,7 @@
     ResizeMode="CanMinimize"
     ShowInTaskbar="True"
     SizeToContent="Height"
-    WindowStartupLocation="CenterOwner"
+    WindowStartupLocation="Manual"
     mc:Ignorable="d">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
