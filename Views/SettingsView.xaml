@@ -87,6 +87,7 @@
     <Grid Background="{StaticResource BgGradient}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -105,7 +106,7 @@
         <!--  Body  -->
         <Border
             Grid.Row="1"
-            Margin="16,8,16,16"
+            Margin="16,8,16,8"
             Style="{StaticResource Card}"
             VerticalAlignment="Top">
             <StackPanel MaxWidth="480" HorizontalAlignment="Left">
@@ -148,6 +149,80 @@
                         Content="Verwerfen"
                         Style="{StaticResource FlatButton}" />
                 </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!--  Backup  -->
+        <Border
+            Grid.Row="2"
+            Margin="16,8,16,16"
+            Style="{StaticResource Card}"
+            VerticalAlignment="Top">
+            <StackPanel MaxWidth="480" HorizontalAlignment="Left">
+                <TextBlock
+                    FontSize="18"
+                    FontWeight="SemiBold"
+                    Foreground="{StaticResource BrushText}"
+                    Text="Datensicherung" />
+
+                <StackPanel
+                    Margin="0,14,0,0"
+                    HorizontalAlignment="Left"
+                    Orientation="Horizontal">
+                    <Button
+                        MinWidth="170"
+                        Command="{Binding CreateBackupCommand}"
+                        Content="Sicherung jetzt erstellen"
+                        Style="{StaticResource PrimaryFlatButton}" />
+                    <Button
+                        MinWidth="170"
+                        Margin="8,0,0,0"
+                        Command="{Binding BrowseBackupCommand}"
+                        Content="Sicherung durchsuchen..."
+                        Style="{StaticResource FlatButton}" />
+                </StackPanel>
+
+                <TextBlock
+                    Margin="2,18,0,4"
+                    Foreground="{StaticResource BrushTextMuted}"
+                    Text="Vorhandene Sicherungen" />
+
+                <ItemsControl ItemsSource="{Binding AvailableBackups}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border
+                                Margin="0,0,0,6"
+                                Padding="10,8"
+                                Background="#20294A"
+                                BorderBrush="#33406E"
+                                BorderThickness="1"
+                                CornerRadius="8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        Foreground="{StaticResource BrushText}"
+                                        Text="{Binding CreatedAt, StringFormat='dd.MM.yyyy HH:mm:ss'}" />
+                                    <Button
+                                        Grid.Column="1"
+                                        MinWidth="110"
+                                        Command="{Binding DataContext.RestoreBackupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Content="Wiederherstellen"
+                                        Style="{StaticResource FlatButton}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </StackPanel>
         </Border>
     </Grid>

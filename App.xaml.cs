@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -19,6 +20,8 @@ namespace Zeitmanagement
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            OfferBackupRestoreIfDbMissing();
 
             var startupMode = ParseStartupMode(Zeitmanagement.Properties.Settings.Default.StartupMode);
 
@@ -42,6 +45,27 @@ namespace Zeitmanagement
         private static StartupMode ParseStartupMode(string value)
         {
             return Enum.TryParse(value, out StartupMode mode) ? mode : StartupMode.Normal;
+        }
+
+        private static void OfferBackupRestoreIfDbMissing()
+        {
+            if (File.Exists(BackupHelper.DbFilePath))
+                return;
+
+            var latest = BackupHelper.GetAvailableBackups().FirstOrDefault();
+            if (latest == null)
+                return;
+
+            var result = MessageBox.Show(
+                $"Es wurde keine Datenbank gefunden. Eine Sicherung vom {latest.CreatedAt:g} wurde gefunden.\n\nMöchten Sie diese Sicherung laden?\n\nJa = Sicherung laden\nNein = neue, leere Datenbank erstellen",
+                "Datenbank wiederherstellen",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                BackupHelper.RestoreBackup(latest.FullPath);
+            }
         }
     }
 }

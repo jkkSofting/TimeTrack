@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Data.SQLite;
+using Zeitmanagement.Helpers;
 
 public sealed class TimeTracker : IDisposable
 {
@@ -15,7 +16,7 @@ public sealed class TimeTracker : IDisposable
     private readonly SQLiteConnection _conn;
     private bool _disposed;
 
-    public TimeTracker(string dbFilePath = @"C:\ProgramData\Kaltenmark-Engineering\TimeTracker\timetracker.db")
+    public TimeTracker(string dbFilePath = BackupHelper.DbFilePath)
     {
         if (string.IsNullOrWhiteSpace(dbFilePath))
             throw new ArgumentException("dbFilePath darf nicht leer sein.", nameof(dbFilePath));
@@ -497,6 +498,19 @@ public sealed class TimeTracker : IDisposable
         if (_disposed) return;
         _disposed = true;
         _conn?.Dispose();
+    }
+
+    /// <summary>
+    /// Flushes all data still sitting in the WAL file into the main database file,
+    /// so a plain file copy of the database is complete and consistent.
+    /// </summary>
+    public void Checkpoint()
+    {
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = "PRAGMA wal_checkpoint(FULL);";
+            cmd.ExecuteNonQuery();
+        }
     }
 
     // ---------- DTOs ----------

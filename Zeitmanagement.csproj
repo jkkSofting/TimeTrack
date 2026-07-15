@@ -66,6 +66,7 @@
     </ApplicationDefinition>
     <Compile Include="TimeTracker.cs" />
     <Compile Include="Helpers\AutostartHelper.cs" />
+    <Compile Include="Helpers\BackupHelper.cs" />
     <Compile Include="Helpers\StartupMode.cs" />
     <Compile Include="ViewModel\BaseViewModel.cs" />
     <Compile Include="ViewModel\DashboardViewModel.cs" />
