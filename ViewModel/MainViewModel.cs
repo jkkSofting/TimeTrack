@@ -66,7 +66,7 @@ namespace Zeitmanagement.ViewModel
             _timer.Start();
 
 
-            _dashboardView = new DashboardViewModel();
+            _dashboardView = new DashboardViewModel(OpenDay);
             _projectView = new ProjectsViewModel();
             _entriesView = new EntriesViewModel();
             _quickSelectView = new QuickSelectViewModel();
@@ -126,6 +126,15 @@ namespace Zeitmanagement.ViewModel
             }
 
             ((BaseViewModel)RightSide).Refresh();
+        }
+
+        /// <summary>
+        /// Öffnet den angegebenen Tag in der Stundenbuchungs-Ansicht (aus der Dashboard-Heatmap heraus).
+        /// </summary>
+        private void OpenDay(DateTime date)
+        {
+            ((EntriesViewModel)_entriesView).SelectedDate = date.ToString("dd.MM.yyyy");
+            SelectViewCommandExecute("hours");
         }
 
     }

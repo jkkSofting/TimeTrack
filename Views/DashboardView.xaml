@@ -141,6 +141,73 @@
 
         <!--  Header  -->
         <DockPanel Grid.Row="0" Margin="16,12,16,8">
+
+            <!--  Spaß-Vergleich (oben rechts)  -->
+            <Border
+                DockPanel.Dock="Right"
+                Padding="16,10"
+                VerticalAlignment="Center"
+                Background="{StaticResource BrushCard}"
+                CornerRadius="14">
+                <Border.Effect>
+                    <DropShadowEffect
+                        BlurRadius="16"
+                        Opacity="0.35"
+                        ShadowDepth="2"
+                        Color="#000000" />
+                </Border.Effect>
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource Subtitle}" Text="Zum Vergleich hast du so lange gearbeitet wie" />
+                        <StackPanel Margin="0,2,0,0" Orientation="Horizontal">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontSize="26"
+                                FontWeight="Bold"
+                                Foreground="{StaticResource BrushAccent}"
+                                Text="{Binding ComparisonFactorText}" />
+                            <TextBlock
+                                Width="300"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                Foreground="{StaticResource BrushText}"
+                                Text="{Binding ComparisonCaption}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!--  Neu würfeln  -->
+                    <Button
+                        Width="40"
+                        Height="40"
+                        Margin="14,0,0,0"
+                        VerticalAlignment="Center"
+                        Command="{Binding NextComparisonCommand}"
+                        Cursor="Hand"
+                        ToolTip="Neuer Vergleich">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border
+                                    x:Name="bg"
+                                    Background="#22344F"
+                                    CornerRadius="10">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        FontSize="18"
+                                        Text="🎲" />
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bg" Property="Background" Value="#2E4A70" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </StackPanel>
+            </Border>
+
             <StackPanel DockPanel.Dock="Left">
                 <TextBlock
                     FontSize="28"
@@ -153,6 +220,7 @@
         <!--  Main: 3 Stat Cards + sekundäre Reihe  -->
         <Grid Grid.Row="1" Margin="16,4,16,12">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
@@ -228,6 +296,155 @@
                         </TextBlock>
                     </StackPanel>
                 </Grid>
+            </Border>
+
+            <!--  Row 3: Aktivitäts-Heatmap (GitHub-Style)  -->
+            <Border
+                Grid.Row="2"
+                Grid.ColumnSpan="3"
+                Margin="8,12,8,0"
+                Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock
+                        Margin="0,0,0,12"
+                        Style="{StaticResource Subtitle}"
+                        Text="Aktivität (letzte 12 Monate)" />
+
+                    <ScrollViewer
+                        HorizontalScrollBarVisibility="Auto"
+                        VerticalScrollBarVisibility="Disabled">
+                        <StackPanel Orientation="Horizontal">
+
+                            <!--  Wochentags-Labels (Wochenstart = Montag)  -->
+                            <StackPanel Margin="0,0,6,0" VerticalAlignment="Top">
+                                <Border Height="16" />
+                                <TextBlock
+                                    Height="17"
+                                    FontSize="10"
+                                    Foreground="{StaticResource BrushTextMuted}"
+                                    Text="Mo"
+                                    VerticalAlignment="Center" />
+                                <TextBlock Height="17" Text="" />
+                                <TextBlock
+                                    Height="17"
+                                    FontSize="10"
+                                    Foreground="{StaticResource BrushTextMuted}"
+                                    Text="Mi"
+                                    VerticalAlignment="Center" />
+                                <TextBlock Height="17" Text="" />
+                                <TextBlock
+                                    Height="17"
+                                    FontSize="10"
+                                    Foreground="{StaticResource BrushTextMuted}"
+                                    Text="Fr"
+                                    VerticalAlignment="Center" />
+                                <TextBlock Height="17" Text="" />
+                                <TextBlock Height="17" Text="" />
+                            </StackPanel>
+
+                            <!--  Wochen-Spalten  -->
+                            <ItemsControl ItemsSource="{Binding HeatColumns}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel VerticalAlignment="Top">
+                                            <!--  Monatslabel: Canvas, damit langer Text überläuft ohne die Rasterbreite zu ändern  -->
+                                            <Canvas Width="17" Height="16">
+                                                <TextBlock
+                                                    Canvas.Left="0"
+                                                    Canvas.Top="2"
+                                                    FontSize="10"
+                                                    Foreground="{StaticResource BrushTextMuted}"
+                                                    Text="{Binding MonthLabel}" />
+                                            </Canvas>
+                                            <ItemsControl ItemsSource="{Binding Days}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Button
+                                                            Width="13"
+                                                            Height="13"
+                                                            Margin="2"
+                                                            Command="{Binding DataContext.OpenDayCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            Cursor="Hand"
+                                                            ToolTip="{Binding Tooltip}">
+                                                            <Button.Template>
+                                                                <ControlTemplate TargetType="Button">
+                                                                    <Border
+                                                                        x:Name="cell"
+                                                                        Background="{Binding Fill}"
+                                                                        BorderBrush="Transparent"
+                                                                        BorderThickness="1"
+                                                                        CornerRadius="3" />
+                                                                    <ControlTemplate.Triggers>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter TargetName="cell" Property="BorderBrush" Value="#CCFFFFFF" />
+                                                                        </Trigger>
+                                                                    </ControlTemplate.Triggers>
+                                                                </ControlTemplate>
+                                                            </Button.Template>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!--  Legende  -->
+                    <StackPanel
+                        Margin="0,10,0,0"
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal">
+                        <TextBlock
+                            Margin="0,0,6,0"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource Subtitle}"
+                            Text="Weniger" />
+                        <Border
+                            Width="13"
+                            Height="13"
+                            Margin="2"
+                            Background="{Binding HeatLevel0}"
+                            CornerRadius="3" />
+                        <Border
+                            Width="13"
+                            Height="13"
+                            Margin="2"
+                            Background="{Binding HeatLevel1}"
+                            CornerRadius="3" />
+                        <Border
+                            Width="13"
+                            Height="13"
+                            Margin="2"
+                            Background="{Binding HeatLevel2}"
+                            CornerRadius="3" />
+                        <Border
+                            Width="13"
+                            Height="13"
+                            Margin="2"
+                            Background="{Binding HeatLevel3}"
+                            CornerRadius="3" />
+                        <Border
+                            Width="13"
+                            Height="13"
+                            Margin="2"
+                            Background="{Binding HeatLevel4}"
+                            CornerRadius="3" />
+                        <TextBlock
+                            Margin="6,0,0,0"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource Subtitle}"
+                            Text="Mehr" />
+                    </StackPanel>
+                </StackPanel>
             </Border>
         </Grid>
 

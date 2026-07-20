@@ -398,6 +398,43 @@ public sealed class TimeTracker : IDisposable
         }
     }
 
+    /// <summary>
+    /// Liefert die pro Tag summierten Arbeitsstunden im Zeitraum [fromInclusive, toInclusive].
+    /// Nur Tage mit Buchungen sind enthalten. Ein einziger, indexgestützter Query.
+    /// </summary>
+    public Dictionary<DateTime, double> GetDailyHours(DateTime fromInclusive, DateTime toInclusive)
+    {
+        var result = new Dictionary<DateTime, double>();
+
+        string from = fromInclusive.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        string to = toInclusive.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = @"
+            SELECT datum,
+                   SUM((julianday(datetime(datum || ' ' || endzeit)) -
+                        julianday(datetime(datum || ' ' || startzeit))) * 24.0) AS stunden
+              FROM time_entries
+             WHERE datum >= @from AND datum <= @to
+             GROUP BY datum;";
+            cmd.Parameters.AddWithValue("@from", from);
+            cmd.Parameters.AddWithValue("@to", to);
+
+            using (var r = cmd.ExecuteReader())
+            {
+                while (r.Read())
+                {
+                    if (r.IsDBNull(0) || r.IsDBNull(1)) continue;
+                    var date = DateTime.ParseExact(r.GetString(0), "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                    result[date.Date] = r.GetDouble(1);
+                }
+            }
+        }
+
+        return result;
+    }
+
     public void UpdateTimeEntry(int id, DateTime datumOhneZeit, string startHHmm, string endHHmm, string projektname, string beschreibung = null)
     {
         if (id <= 0) throw new ArgumentOutOfRangeException(nameof(id));
