@@ -61,6 +61,16 @@ namespace Zeitmanagement.ViewModel
             private set => SetProperty(ref _todayEntryCount, value);
         }
 
+        // --- Pausen ---
+        private double _totalBreakHours;
+
+        /// <summary>Summe aller Pausen (Lücken zwischen aufeinanderfolgenden Buchungen) am ausgewählten Tag.</summary>
+        public double TotalBreakHours
+        {
+            get => _totalBreakHours;
+            private set => SetProperty(ref _totalBreakHours, value);
+        }
+
         // --- Add-Form ---
         private string _newProjektname, _newStart, _newEnd, _newBeschreibung;
 
@@ -160,6 +170,28 @@ namespace Zeitmanagement.ViewModel
                     Dauer = Math.Round(dur, 2)
                 });
             }
+
+            // --- Pausen (Lücken) zwischen aufeinanderfolgenden Buchungen berechnen ---
+            // Entries sind bereits nach Startzeit sortiert (SQL ORDER BY startzeit).
+            // Die Lücke wird der jeweils vorherigen Buchung als "GapAfter" zugeordnet,
+            // damit sie über die RowDetails direkt zwischen den beiden Zeilen erscheint.
+            double totalBreak = 0;
+            for (int i = 1; i < Entries.Count; i++)
+            {
+                if (!TryParseTime(Entries[i - 1].Endzeit, out var prevEnd)
+                    || !TryParseTime(Entries[i].Startzeit, out var curStart))
+                    continue;
+
+                var gap = curStart - prevEnd;
+                if (gap > TimeSpan.Zero)
+                {
+                    Entries[i - 1].GapAfterHours = gap.TotalHours;
+                    Entries[i - 1].GapAfterText = FormatGap(gap);
+                    Entries[i - 1].HasGapAfter = true;
+                    totalBreak += gap.TotalHours;
+                }
+            }
+            TotalBreakHours = Math.Round(totalBreak, 2);
 
             // Defaults im Add-Panel
             if (string.IsNullOrEmpty(NewProjektname) && ProjectNames.Count > 0)
@@ -334,6 +366,21 @@ namespace Zeitmanagement.ViewModel
 
             return (end - start).TotalHours;
         }
+
+        private static bool TryParseTime(string hhmm, out TimeSpan value)
+        {
+            var formats = new[] { @"h\:mm", @"hh\:mm", "Hmm", "HHmm" };
+            return TimeSpan.TryParseExact(hhmm, formats, CultureInfo.InvariantCulture, out value);
+        }
+
+        private static string FormatGap(TimeSpan gap)
+        {
+            int totalMinutes = (int)Math.Round(gap.TotalMinutes);
+            if (totalMinutes < 60)
+                return totalMinutes + " min";
+
+            return (totalMinutes / 60) + ":" + (totalMinutes % 60).ToString("00") + " h";
+        }
     }
 
     internal sealed class EntryItemVM : BindableBase
@@ -341,6 +388,9 @@ namespace Zeitmanagement.ViewModel
         private int _id;
         private string _projektname, _start, _end, _beschreibung;
         private double _dauer;
+        private double _gapAfterHours;
+        private bool _hasGapAfter;
+        private string _gapAfterText;
 
         public int Id { get => _id; set => SetProperty(ref _id, value); }
         public string Projektname { get => _projektname; set => SetProperty(ref _projektname, value); }
@@ -348,6 +398,15 @@ namespace Zeitmanagement.ViewModel
         public string Endzeit { get => _end; set => SetProperty(ref _end, value); }
         public string Beschreibung { get => _beschreibung; set => SetProperty(ref _beschreibung, value); }
         public double Dauer { get => _dauer; set => SetProperty(ref _dauer, value); }
+
+        /// <summary>Länge der Pause nach dieser Buchung in Stunden (0 = keine Pause).</summary>
+        public double GapAfterHours { get => _gapAfterHours; set => SetProperty(ref _gapAfterHours, value); }
+
+        /// <summary>True, wenn es nach dieser Buchung eine Lücke zur nächsten gibt.</summary>
+        public bool HasGapAfter { get => _hasGapAfter; set => SetProperty(ref _hasGapAfter, value); }
+
+        /// <summary>Formatierte Pausenlänge, z. B. "15 min" oder "1:30 h".</summary>
+        public string GapAfterText { get => _gapAfterText; set => SetProperty(ref _gapAfterText, value); }
     }
 
     internal sealed class SummaryItem : BindableBase

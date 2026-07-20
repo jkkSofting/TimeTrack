@@ -309,6 +309,26 @@
                             <TextBlock Foreground="{StaticResource BrushTextMuted}" Text=" Buchungen)" />
                         </StackPanel>
                     </Border>
+
+                    <!--  === PAUSEN-KPI: Summe der Lücken zwischen Buchungen ===  -->
+                    <Border
+                        Margin="8,0,0,0"
+                        Padding="10,6"
+                        Background="#3A2A16"
+                        CornerRadius="18">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                Margin="0,0,6,0"
+                                VerticalAlignment="Center"
+                                Foreground="#FFB454"
+                                Text="&#x23F8; Pausen:" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontWeight="SemiBold"
+                                Foreground="#FFB454"
+                                Text="{Binding TotalBreakHours, Converter={StaticResource HoursToHHmm}}" />
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </Grid>
         </Border>
@@ -380,7 +400,59 @@
                     </Border>
 
                     <!--  Tabelle  -->
-                    <DataGrid Grid.Row="1" ItemsSource="{Binding Entries}">
+                    <DataGrid
+                        Grid.Row="1"
+                        ItemsSource="{Binding Entries}"
+                        RowDetailsVisibilityMode="Visible">
+                        <!--  Pausen-Band zwischen zwei Buchungen (RowDetails erscheint unter der Zeile)  -->
+                        <DataGrid.RowDetailsTemplate>
+                            <DataTemplate>
+                                <Border
+                                    Background="#241A0E"
+                                    Visibility="{Binding HasGapAfter, Converter={StaticResource BoolToVis}}">
+                                    <Grid Margin="12,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border
+                                            Grid.Column="0"
+                                            Height="1"
+                                            VerticalAlignment="Center"
+                                            Background="#5A421F" />
+
+                                        <StackPanel
+                                            Grid.Column="1"
+                                            Margin="12,0"
+                                            Orientation="Horizontal">
+                                            <TextBlock
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                FontSize="14"
+                                                Foreground="#FFB454"
+                                                Text="&#x23F8;" />
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                Foreground="#C9A15A"
+                                                Text="Pause " />
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                FontWeight="SemiBold"
+                                                Foreground="#FFB454"
+                                                Text="{Binding GapAfterText}" />
+                                        </StackPanel>
+
+                                        <Border
+                                            Grid.Column="2"
+                                            Height="1"
+                                            VerticalAlignment="Center"
+                                            Background="#5A421F" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </DataGrid.RowDetailsTemplate>
                         <DataGrid.Columns>
                             <DataGridTextColumn
                                 Width="2*"
