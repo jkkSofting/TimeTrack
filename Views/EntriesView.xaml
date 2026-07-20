@@ -171,6 +171,11 @@
             <Setter Property="BorderBrush" Value="#2A3861" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
             <Style.Triggers>
+                <!--  Buchung, die eine andere überschneidet, rot hervorheben  -->
+                <DataTrigger Binding="{Binding IsOverlapping}" Value="True">
+                    <Setter Property="Background" Value="#3A1620" />
+                    <Setter Property="BorderBrush" Value="#7A2A3A" />
+                </DataTrigger>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="#26345E" />
                 </Trigger>
@@ -329,6 +334,34 @@
                                 Text="{Binding TotalBreakHours, Converter={StaticResource HoursToHHmm}}" />
                         </StackPanel>
                     </Border>
+
+                    <!--  === WARNUNG: Überschneidungen (nur sichtbar bei Problemen) ===  -->
+                    <Border
+                        Margin="8,0,0,0"
+                        Padding="10,6"
+                        Background="#3A1620"
+                        BorderBrush="#7A2A3A"
+                        BorderThickness="1"
+                        CornerRadius="18"
+                        ToolTip="Es gibt Buchungen, die sich zeitlich überschneiden."
+                        Visibility="{Binding HasOverlaps, Converter={StaticResource BoolToVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                Margin="0,0,6,0"
+                                VerticalAlignment="Center"
+                                Foreground="#FF6B81"
+                                Text="&#x26A0;" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontWeight="SemiBold"
+                                Foreground="#FF6B81"
+                                Text="{Binding OverlapCount}" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Foreground="#E6889A"
+                                Text=" Überschneidung(en)" />
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </Grid>
         </Border>
@@ -407,50 +440,99 @@
                         <!--  Pausen-Band zwischen zwei Buchungen (RowDetails erscheint unter der Zeile)  -->
                         <DataGrid.RowDetailsTemplate>
                             <DataTemplate>
-                                <Border
-                                    Background="#241A0E"
-                                    Visibility="{Binding HasGapAfter, Converter={StaticResource BoolToVis}}">
-                                    <Grid Margin="12,6">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <!--  Pausen-Band  -->
+                                    <Border
+                                        Background="#241A0E"
+                                        Visibility="{Binding HasGapAfter, Converter={StaticResource BoolToVis}}">
+                                        <Grid Margin="12,6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
 
-                                        <Border
-                                            Grid.Column="0"
-                                            Height="1"
-                                            VerticalAlignment="Center"
-                                            Background="#5A421F" />
+                                            <Border
+                                                Grid.Column="0"
+                                                Height="1"
+                                                VerticalAlignment="Center"
+                                                Background="#5A421F" />
 
-                                        <StackPanel
-                                            Grid.Column="1"
-                                            Margin="12,0"
-                                            Orientation="Horizontal">
-                                            <TextBlock
-                                                Margin="0,0,6,0"
-                                                VerticalAlignment="Center"
-                                                FontSize="14"
-                                                Foreground="#FFB454"
-                                                Text="&#x23F8;" />
-                                            <TextBlock
-                                                VerticalAlignment="Center"
-                                                Foreground="#C9A15A"
-                                                Text="Pause " />
-                                            <TextBlock
-                                                VerticalAlignment="Center"
-                                                FontWeight="SemiBold"
-                                                Foreground="#FFB454"
-                                                Text="{Binding GapAfterText}" />
-                                        </StackPanel>
+                                            <StackPanel
+                                                Grid.Column="1"
+                                                Margin="12,0"
+                                                Orientation="Horizontal">
+                                                <TextBlock
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="14"
+                                                    Foreground="#FFB454"
+                                                    Text="&#x23F8;" />
+                                                <TextBlock
+                                                    VerticalAlignment="Center"
+                                                    Foreground="#C9A15A"
+                                                    Text="Pause " />
+                                                <TextBlock
+                                                    VerticalAlignment="Center"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="#FFB454"
+                                                    Text="{Binding GapAfterText}" />
+                                            </StackPanel>
 
-                                        <Border
-                                            Grid.Column="2"
-                                            Height="1"
-                                            VerticalAlignment="Center"
-                                            Background="#5A421F" />
-                                    </Grid>
-                                </Border>
+                                            <Border
+                                                Grid.Column="2"
+                                                Height="1"
+                                                VerticalAlignment="Center"
+                                                Background="#5A421F" />
+                                        </Grid>
+                                    </Border>
+
+                                    <!--  Überschneidungs-Warnung  -->
+                                    <Border
+                                        Background="#3A1620"
+                                        Visibility="{Binding HasOverlapAfter, Converter={StaticResource BoolToVis}}">
+                                        <Grid Margin="12,6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Border
+                                                Grid.Column="0"
+                                                Height="1"
+                                                VerticalAlignment="Center"
+                                                Background="#7A2A3A" />
+
+                                            <StackPanel
+                                                Grid.Column="1"
+                                                Margin="12,0"
+                                                Orientation="Horizontal">
+                                                <TextBlock
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="14"
+                                                    Foreground="#FF6B81"
+                                                    Text="&#x26A0;" />
+                                                <TextBlock
+                                                    VerticalAlignment="Center"
+                                                    Foreground="#E6889A"
+                                                    Text="Überschneidung " />
+                                                <TextBlock
+                                                    VerticalAlignment="Center"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="#FF6B81"
+                                                    Text="{Binding OverlapAfterText}" />
+                                            </StackPanel>
+
+                                            <Border
+                                                Grid.Column="2"
+                                                Height="1"
+                                                VerticalAlignment="Center"
+                                                Background="#7A2A3A" />
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
                             </DataTemplate>
                         </DataGrid.RowDetailsTemplate>
                         <DataGrid.Columns>

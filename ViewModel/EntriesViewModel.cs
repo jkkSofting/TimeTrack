@@ -71,6 +71,25 @@ namespace Zeitmanagement.ViewModel
             private set => SetProperty(ref _totalBreakHours, value);
         }
 
+        // --- Warnungen / Überschneidungen ---
+        private int _overlapCount;
+
+        private bool _hasOverlaps;
+
+        /// <summary>Anzahl der Zeitüberschneidungen zwischen aufeinanderfolgenden Buchungen am ausgewählten Tag.</summary>
+        public int OverlapCount
+        {
+            get => _overlapCount;
+            private set => SetProperty(ref _overlapCount, value);
+        }
+
+        /// <summary>True, wenn mindestens eine Überschneidung vorliegt (steuert die Warnanzeige).</summary>
+        public bool HasOverlaps
+        {
+            get => _hasOverlaps;
+            private set => SetProperty(ref _hasOverlaps, value);
+        }
+
         // --- Add-Form ---
         private string _newProjektname, _newStart, _newEnd, _newBeschreibung;
 
@@ -176,6 +195,7 @@ namespace Zeitmanagement.ViewModel
             // Die Lücke wird der jeweils vorherigen Buchung als "GapAfter" zugeordnet,
             // damit sie über die RowDetails direkt zwischen den beiden Zeilen erscheint.
             double totalBreak = 0;
+            int overlaps = 0;
             for (int i = 1; i < Entries.Count; i++)
             {
                 if (!TryParseTime(Entries[i - 1].Endzeit, out var prevEnd)
@@ -190,8 +210,18 @@ namespace Zeitmanagement.ViewModel
                     Entries[i - 1].HasGapAfter = true;
                     totalBreak += gap.TotalHours;
                 }
+                else if (gap < TimeSpan.Zero)
+                {
+                    // Diese Buchung beginnt, bevor die vorherige endet -> Überschneidung.
+                    Entries[i - 1].OverlapAfterText = FormatGap(prevEnd - curStart);
+                    Entries[i - 1].HasOverlapAfter = true;
+                    Entries[i].IsOverlapping = true;
+                    overlaps++;
+                }
             }
             TotalBreakHours = Math.Round(totalBreak, 2);
+            OverlapCount = overlaps;
+            HasOverlaps = overlaps > 0;
 
             // Defaults im Add-Panel
             if (string.IsNullOrEmpty(NewProjektname) && ProjectNames.Count > 0)
@@ -255,6 +285,10 @@ namespace Zeitmanagement.ViewModel
             var selectedDate = DateTime.TryParseExact(SelectedDate, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt)
                 ? dt
                 : DateTime.Today;
+
+            if (!ConfirmIfOverlapping(NewStart, NewEnd, -1))
+                return;
+
             try
             {
                 MainViewModel.DbInstance.AddTimeEntry(selectedDate, NewStart, NewEnd, NewProjektname, NewBeschreibung);
@@ -313,6 +347,9 @@ namespace Zeitmanagement.ViewModel
                 ? dt
                 : DateTime.Today;
 
+            if (!ConfirmIfOverlapping(EditStart, EditEnd, _editId))
+                return;
+
             try
             {
                 MainViewModel.DbInstance.UpdateTimeEntry(_editId, selectedDate, EditStart, EditEnd, EditProjektname, EditBeschreibung);
@@ -367,6 +404,44 @@ namespace Zeitmanagement.ViewModel
             return (end - start).TotalHours;
         }
 
+        /// <summary>
+        /// Prüft, ob der angegebene Zeitraum sich mit bestehenden Buchungen des Tages überschneidet.
+        /// Bei Überschneidung wird eine Rückfrage angezeigt. Gibt true zurück, wenn fortgefahren werden soll.
+        /// </summary>
+        /// <param name="excludeId">Id der Buchung, die ignoriert werden soll (beim Bearbeiten), sonst -1.</param>
+        private bool ConfirmIfOverlapping(string startHHmm, string endHHmm, int excludeId)
+        {
+            if (!TryParseTime(startHHmm, out var start) || !TryParseTime(endHHmm, out var end))
+                return true; // Formatfehler werden separat abgefangen
+
+            var conflicts = new List<string>();
+            foreach (var e in Entries)
+            {
+                if (e.Id == excludeId)
+                    continue;
+
+                if (!TryParseTime(e.Startzeit, out var eStart) || !TryParseTime(e.Endzeit, out var eEnd))
+                    continue;
+
+                // Überschneidung, wenn sich die Intervalle berühren/überlappen.
+                if (start < eEnd && eStart < end)
+                    conflicts.Add($"• {e.Projektname}  ({e.Startzeit}–{e.Endzeit})");
+            }
+
+            if (conflicts.Count == 0)
+                return true;
+
+            var result = MessageBox.Show(
+                "Diese Buchung überschneidet sich mit:\n\n"
+                + string.Join("\n", conflicts)
+                + "\n\nTrotzdem speichern?",
+                "Zeitüberschneidung",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            return result == MessageBoxResult.Yes;
+        }
+
         private static bool TryParseTime(string hhmm, out TimeSpan value)
         {
             var formats = new[] { @"h\:mm", @"hh\:mm", "Hmm", "HHmm" };
@@ -391,6 +466,9 @@ namespace Zeitmanagement.ViewModel
         private double _gapAfterHours;
         private bool _hasGapAfter;
         private string _gapAfterText;
+        private bool _hasOverlapAfter;
+        private string _overlapAfterText;
+        private bool _isOverlapping;
 
         public int Id { get => _id; set => SetProperty(ref _id, value); }
         public string Projektname { get => _projektname; set => SetProperty(ref _projektname, value); }
@@ -407,6 +485,15 @@ namespace Zeitmanagement.ViewModel
 
         /// <summary>Formatierte Pausenlänge, z. B. "15 min" oder "1:30 h".</summary>
         public string GapAfterText { get => _gapAfterText; set => SetProperty(ref _gapAfterText, value); }
+
+        /// <summary>True, wenn die nächste Buchung beginnt, bevor diese endet (Überschneidung).</summary>
+        public bool HasOverlapAfter { get => _hasOverlapAfter; set => SetProperty(ref _hasOverlapAfter, value); }
+
+        /// <summary>Formatierte Länge der Überschneidung mit der nächsten Buchung.</summary>
+        public string OverlapAfterText { get => _overlapAfterText; set => SetProperty(ref _overlapAfterText, value); }
+
+        /// <summary>True, wenn diese Buchung beginnt, bevor die vorherige endet (wird als Warnung hervorgehoben).</summary>
+        public bool IsOverlapping { get => _isOverlapping; set => SetProperty(ref _isOverlapping, value); }
     }
 
     internal sealed class SummaryItem : BindableBase
