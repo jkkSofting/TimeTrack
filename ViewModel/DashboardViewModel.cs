@@ -198,6 +198,8 @@ namespace Zeitmanagement.ViewModel
             // --- Musik ---
             new DurationFact("von Beethovens 9. Sinfonie", 1.1),
             new DurationFact("aller Beatles-Studioalben am Stück", 10.4),
+            new DurationFact("aller Ed Sheeran Studio- und Haupt-Tracks am Stück", 10),
+            new DurationFact("aller auf Spotify verfügbaren Songs", 5500000),
 
             // --- Reisen & Raumfahrt ---
             new DurationFact("eines Transatlantikflugs (Frankfurt–New York)", 8.5),
@@ -212,11 +214,94 @@ namespace Zeitmanagement.ViewModel
             new DurationFact("des Baus der Elbphilharmonie", 9 * 365 * 24.0),            // 2007–2016
             new DurationFact("des Baus der Cheops-Pyramide", 20 * 365 * 24.0),           // ~20 Jahre
             new DurationFact("des Baus des Kölner Doms", 632 * 365 * 24.0),              // 1248–1880
+            new DurationFact("des Baus der Chinesischen Mauer (Gesamtbauphase)", 2000.0 * 365 * 24.0),       // über 2.000 Jahre (verschiedene Dynastien)
+            new DurationFact("des Baus des Kolosseums in Rom", 10.0 * 365 * 24.0),                          // ~70–80 n. Chr. (10 Jahre)
+            new DurationFact("des Baus des Taj Mahal", 22.0 * 365 * 24.0),                                  // 1631–1653 (~22 Jahre)
+            new DurationFact("des Baus der Sagrada Família (Stand 2026)", 144.0 * 365 * 24.0),               // 1882–heute (~144 Jahre)
+            new DurationFact("des Baus des Burj Khalifa", 6.0 * 365 * 24.0),                                // 2004–2010 (6 Jahre)
+            new DurationFact("des Baus der Golden Gate Bridge", 4.3 * 365 * 24.0),                          // Jan 1933 – Mai 1937 (~4,3 Jahre)
+            new DurationFact("des Baus des Sydney Opera House", 14.0 * 365 * 24.0),                         // 1959–1973 (14 Jahre)
+            new DurationFact("des Baus des Gotthard-Basistunnels", 17.0 * 365 * 24.0),                      // 1999–2016 (17 Jahre)
+            new DurationFact("des Baus des Panama-Kanals", 33.0 * 365 * 24.0),                               // 1881–1914 (inkl. französischer & US-Phase)
+
+            // --- Geschichte ---
+            new DurationFact("des Arabischen Frühlings", 2 * 365 * 24.0),                  // Dec 2010 – Dec 2012
+            new DurationFact("der Französischen Revolution", 10.5 * 365 * 24.0),           // May 1789 – Nov 1799
+            new DurationFact("der Amerikanischen Revolution", 18.5 * 365 * 24.0),          // Dec 1773 – Sep 1783
+            new DurationFact("der Glorreichen Revolution", 0.5 * 365 * 24.0),              // Nov 1688 – May 1689
+            new DurationFact("der Haïtianischen Revolution", 12.3 * 365 * 24.0),           // Aug 1791 – Jan 1804
+            new DurationFact("der Mexikanischen Revolution", 10.5 * 365 * 24.0),           // Nov 1910 – May 1921
+            new DurationFact("der Russischen Revolution", 0.7 * 365 * 24.0),               // Mar 1917 – Nov 1917
+            new DurationFact("der Nelkenrevolution in Portugal", 1 * 365 * 24.0),          // Apr 1974 – Apr 1975
+            new DurationFact("der Friedlichen Revolution in der DDR", 1.0 * 365 * 24.0),   // Sep 1989 – Oct 1990
+
+            // Monarchen
+            new DurationFact("der Regierungszeit von Queen Elizabeth II.", 70.6 * 365 * 24.0),           // Feb 1952 – Sep 2022
+            new DurationFact("der Regierungszeit von König Ludwig XIV.", 72.3 * 365 * 24.0),            // May 1643 – Sep 1715
+            new DurationFact("der Regierungszeit von Kaiser Franz Joseph I.", 68.0 * 365 * 24.0),         // Dec 1848 – Nov 1916
+
+            // Deutsche Kanzler & Staatsmänner
+            new DurationFact("der Kanzlerschaft von Helmut Kohl", 16.1 * 365 * 24.0),                   // Oct 1982 – Oct 1998
+            new DurationFact("der Kanzlerschaft von Angela Merkel", 16.0 * 365 * 24.0),                 // Nov 2005 – Dec 2021
+            new DurationFact("der Kanzlerschaft von Konrad Adenauer", 14.1 * 365 * 24.0),               // Sep 1949 – Oct 1963
+            new DurationFact("der Amtszeit von Otto von Bismarck als Reichskanzler", 19.2 * 365 * 24.0),  // Mar 1871 – Mar 1890
+
+            // US-Präsidenten
+            new DurationFact("der Präsidentschaft von Franklin D. Roosevelt", 12.1 * 365 * 24.0),         // Mar 1933 – Apr 1945
+            new DurationFact("einer regulären US-Präsidentschaft (2 Amtszeiten)", 8.0 * 365 * 24.0),     // 8 Jahre (z.B. Obama, Bush, Clinton)
+            new DurationFact("der Präsidentschaft von William Henry Harrison", (31.0 / 365.0) * 365 * 24.0), // 31 Tage (Mar 1841 – Apr 1841)
+
+            // Längste & kürzeste Amtszeiten der Moderne
+            new DurationFact("des Pontifikats von Pius IX.", 31.7 * 365 * 24.0),           // Jun 1846 – Feb 1878 (längstes historisch nachgewiesenes Pontifikat)
+            new DurationFact("des Pontifikats von Johannes Paul II.", 26.4 * 365 * 24.0),    // Oct 1978 – Apr 2005
+            new DurationFact("des Pontifikats von Leo XIII.", 25.4 * 365 * 24.0),           // Feb 1878 – Jul 1903
+            new DurationFact("des Pontifikats von Johannes Paul I.", (33.0 / 365.0) * 365 * 24.0), // 33 Tage (Aug 1978 – Sep 1978)
+            new DurationFact("des Pontifikats von Urban VII.", (13.0 / 365.0) * 365 * 24.0),       // 13 Tage (15. Sep 1590 – 27. Sep 1590; kürzestes Pontifikat der Geschichte)
+
+            // Bekannte Päpste der Neuzeit
+            new DurationFact("des Pontifikats von Benedikt XVI.", 7.8 * 365 * 24.0),         // Apr 2005 – Feb 2013
+            new DurationFact("des Pontifikats von Franziskus", 13.3 * 365 * 24.0),           // Mar 2013 – Jul 2026
 
             // --- Alltag ---
             new DurationFact("einer Kaffeepause", 0.25),
             new DurationFact("eines 8-Stunden-Arbeitstags", 8.0),
             new DurationFact("einer guten Nachtruhe", 8.0),
+            new DurationFact("der Zersetzung einer Plastiktüte", 15*365*24.0), // ~15 Jahre
+            new DurationFact("der Reifedauer eines Parmesan-Laibs", 12*30*24.0), // ~12 Monate
+            new DurationFact("der Reifedauer eines jungen Gouda-Laibs", 6*7*24.0), // ~6 Wochen
+            new DurationFact("der Reifedauer eines Maasdammer-Laibs", 5*7*24.0), // ~5 Wochen
+            new DurationFact("der Reifedauer eines Emmentaler-Laibs", 100*24.0), // ~100 Tage
+
+            // --- Technik ---
+            new DurationFact("der Umlaufzeit des Merkur um die Sonne", 88 * 24.0),
+            new DurationFact("der Umlaufzeit der Erde um die Sonne", 365 * 24.0),
+            new DurationFact("der Umlaufzeit des Pluto um die Sonne", 248 * 365 * 24.0),
+            new DurationFact("der Umlaufzeit des Neptun um die Sonne", 164.8 * 365 * 24.0),
+            new DurationFact("der Umlaufzeit des Voyager-1-Raumfahrzeugs um die Sonne", 225 * 365 * 24.0), // ~225 Jahre
+            new DurationFact("der Umlaufzeit der Venus um die Sonne", 224.7 * 24.0),
+            new DurationFact("der Umlaufzeit des Saturn um die Sonne", 29.5 * 365 * 24.0),
+            new DurationFact("der Umlaufzeit des Jupiter um die Sonne", 11.86 * 365 * 24.0),
+            new DurationFact("der Umlaufzeit des Uranus um die Sonne", 84.0 * 365 * 24.0),
+            new DurationFact("der Umlaufzeit des Mars um die Sonne", 1.88 * 365 * 24.0),
+
+            // --- Obst und Gemüse ---
+            // Schnelles Gemüse (Wochen)
+            new DurationFact("des Wachstums von Radieschen (Aussaat bis Ernte)", (4.0 * 7.0 * 24.0) / 8760.0),      // ca. 3–5 Wochen
+            new DurationFact("des Wachstums von Pflpflanzsalat / Kopfsalat", (7.0 * 7.0 * 24.0) / 8760.0),   // ca. 6–8 Wochen
+            new DurationFact("des Wachstums von Spinat", (6.0 * 7.0 * 24.0) / 8760.0),                               // ca. 6–8 Wochen
+
+            // Mittleres Gemüse (Monate)
+            new DurationFact("des Wachstums von Karotten / Möhren", (12.0 * 7.0 * 24.0) / 8760.0),                   // ca. 10–14 Wochen
+            new DurationFact("des Wachstums von Frühkartoffeln", (14.0 * 7.0 * 24.0) / 8760.0),                     // ca. 3–4 Monate (90–110 Tage)
+            new DurationFact("des Wachstums von Spätkartoffeln", (20.0 * 7.0 * 24.0) / 8760.0),                     // ca. 4,5–5 Monate (140–160 Tage)
+            new DurationFact("des Wachstums von Tomaten (Aussaat bis zur ersten Reife)", 5.0 * 30.0 * 24.0 / 8760.0),// ca. 4–5 Monate (Vorzucht + Auspflanzen)
+            new DurationFact("des Wachstums von Speisekürbissen (Hokkaido/Butternut)", 4.0 * 30.0 * 24.0 / 8760.0), // ca. 4 Monate
+
+            // Beeren & Obstgehölze (Bis zur ERSTEN nennenswerten Ernte nach Pflanzung)
+            new DurationFact("bis zur ersten Ernte bei einer Erdbeerpflanze", 0.3 * 365 * 24.0),                    // ca. 3–4 Monate (bei Frühjahrspflanzung)
+            new DurationFact("bis zur ersten Ernte bei einem Himbeerstrauch", 1.0 * 365 * 24.0),                    // ca. 1 Jahr
+            new DurationFact("bis zur ersten Ernte bei einem Apfelbaum (Veredelter Halbstamm)", 3.5 * 365 * 24.0), // ca. 3–4 Jahre
+            new DurationFact("bis zur ersten Ernte bei einem Walnussbaum", 8.0 * 365 * 24.0)                        // ca. 8–10 Jahre
         };
 
         private static readonly Random ComparisonRng = new Random();
