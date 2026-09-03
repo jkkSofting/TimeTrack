@@ -82,10 +82,20 @@
             <Setter Property="Margin" Value="0,6" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
+            <Setter Property="Background" Value="#233055" />
+            <Setter Property="BorderBrush" Value="#33406A" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
     </UserControl.Resources>
 
     <Grid Background="{StaticResource BgGradient}">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -152,9 +162,62 @@
             </StackPanel>
         </Border>
 
-        <!--  Backup  -->
+        <!--  Automatisierung  -->
         <Border
             Grid.Row="2"
+            Margin="16,8,16,8"
+            Style="{StaticResource Card}"
+            VerticalAlignment="Top">
+            <StackPanel MaxWidth="480" HorizontalAlignment="Left">
+                <TextBlock
+                    FontSize="18"
+                    FontWeight="SemiBold"
+                    Foreground="{StaticResource BrushText}"
+                    Text="Automatisierung" />
+
+                <CheckBox
+                    Margin="0,14,0,0"
+                    Content="Buchung bei Sperrbildschirm/Ruhemodus automatisch beenden"
+                    IsChecked="{Binding AutoStopOnLockEnabled, Mode=TwoWay}" />
+
+                <StackPanel
+                    Margin="0,6,0,0"
+                    Orientation="Horizontal"
+                    IsEnabled="{Binding AutoStopOnLockEnabled}">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Foreground="{StaticResource BrushTextMuted}"
+                        Text="Verzögerung bei Sperrbildschirm (Minuten):" />
+                    <TextBox
+                        Width="60"
+                        Margin="8,0,0,0"
+                        Text="{Binding AutoStopOnLockMinutes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+
+                <CheckBox
+                    Margin="0,18,0,0"
+                    Content="Erinnern, wenn kein Projekt ausgewählt ist"
+                    IsChecked="{Binding ReminderNudgeEnabled, Mode=TwoWay}" />
+
+                <StackPanel
+                    Margin="0,6,0,0"
+                    Orientation="Horizontal"
+                    IsEnabled="{Binding ReminderNudgeEnabled}">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Foreground="{StaticResource BrushTextMuted}"
+                        Text="Erinnerungsintervall (Minuten):" />
+                    <TextBox
+                        Width="60"
+                        Margin="8,0,0,0"
+                        Text="{Binding ReminderNudgeIntervalMinutes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!--  Backup  -->
+        <Border
+            Grid.Row="3"
             Margin="16,8,16,16"
             Style="{StaticResource Card}"
             VerticalAlignment="Top">

@@ -58,5 +58,53 @@ namespace Zeitmanagement.Properties {
                 this["FloatingWindowAlwaysOnTop"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AutoStopOnLockEnabled {
+            get {
+                return ((bool)(this["AutoStopOnLockEnabled"]));
+            }
+            set {
+                this["AutoStopOnLockEnabled"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("15")]
+        public int AutoStopOnLockMinutes {
+            get {
+                return ((int)(this["AutoStopOnLockMinutes"]));
+            }
+            set {
+                this["AutoStopOnLockMinutes"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ReminderNudgeEnabled {
+            get {
+                return ((bool)(this["ReminderNudgeEnabled"]));
+            }
+            set {
+                this["ReminderNudgeEnabled"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("20")]
+        public int ReminderNudgeIntervalMinutes {
+            get {
+                return ((int)(this["ReminderNudgeIntervalMinutes"]));
+            }
+            set {
+                this["ReminderNudgeIntervalMinutes"] = value;
+            }
+        }
     }
 }

@@ -17,6 +17,8 @@ namespace Zeitmanagement
     /// </summary>
     public partial class App : Application
     {
+        private TrayNotificationService _trayService;
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
@@ -35,11 +37,23 @@ namespace Zeitmanagement
 
             mainWindow.Show();
 
+            var mainViewModel = (MainViewModel)mainWindow.DataContext;
+
             if (startupMode == StartupMode.NormalWithFloating || startupMode == StartupMode.MinimizedWithFloating)
             {
-                var mainViewModel = (MainViewModel)mainWindow.DataContext;
                 QuickSelectView.ShowFloatingWindow(mainViewModel.QuickSelectViewModel, mainWindow);
             }
+
+            _trayService = new TrayNotificationService(mainWindow);
+            mainViewModel.QuickSelectViewModel.NotificationRequested += (title, message) => _trayService.ShowBalloon(title, message);
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            _trayService?.Dispose();
+            (MainWindow?.DataContext as MainViewModel)?.QuickSelectViewModel?.Shutdown();
+
+            base.OnExit(e);
         }
 
         private static StartupMode ParseStartupMode(string value)

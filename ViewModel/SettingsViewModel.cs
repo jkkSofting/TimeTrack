@@ -47,6 +47,34 @@ namespace Zeitmanagement.ViewModel
             set => SetProperty(ref _floatingWindowAlwaysOnTop, value);
         }
 
+        private bool _autoStopOnLockEnabled;
+        public bool AutoStopOnLockEnabled
+        {
+            get => _autoStopOnLockEnabled;
+            set => SetProperty(ref _autoStopOnLockEnabled, value);
+        }
+
+        private int _autoStopOnLockMinutes;
+        public int AutoStopOnLockMinutes
+        {
+            get => _autoStopOnLockMinutes;
+            set => SetProperty(ref _autoStopOnLockMinutes, Math.Max(1, value));
+        }
+
+        private bool _reminderNudgeEnabled;
+        public bool ReminderNudgeEnabled
+        {
+            get => _reminderNudgeEnabled;
+            set => SetProperty(ref _reminderNudgeEnabled, value);
+        }
+
+        private int _reminderNudgeIntervalMinutes;
+        public int ReminderNudgeIntervalMinutes
+        {
+            get => _reminderNudgeIntervalMinutes;
+            set => SetProperty(ref _reminderNudgeIntervalMinutes, Math.Max(1, value));
+        }
+
         public IReadOnlyList<StartupModeOption> StartupModeOptions { get; } = new List<StartupModeOption>
         {
             new StartupModeOption(StartupMode.Normal, "Normal starten"),
@@ -79,6 +107,10 @@ namespace Zeitmanagement.ViewModel
             AutostartEnabled = AutostartHelper.IsEnabled();
             FloatingWindowAlwaysOnTop = Properties.Settings.Default.FloatingWindowAlwaysOnTop;
             SelectedStartupMode = ParseStartupMode(Properties.Settings.Default.StartupMode);
+            AutoStopOnLockEnabled = Properties.Settings.Default.AutoStopOnLockEnabled;
+            AutoStopOnLockMinutes = Properties.Settings.Default.AutoStopOnLockMinutes;
+            ReminderNudgeEnabled = Properties.Settings.Default.ReminderNudgeEnabled;
+            ReminderNudgeIntervalMinutes = Properties.Settings.Default.ReminderNudgeIntervalMinutes;
 
             AvailableBackups.Clear();
             foreach (var backup in BackupHelper.GetAvailableBackups())
@@ -168,6 +200,10 @@ namespace Zeitmanagement.ViewModel
         {
             Properties.Settings.Default.StartupMode = SelectedStartupMode.ToString();
             Properties.Settings.Default.FloatingWindowAlwaysOnTop = FloatingWindowAlwaysOnTop;
+            Properties.Settings.Default.AutoStopOnLockEnabled = AutoStopOnLockEnabled;
+            Properties.Settings.Default.AutoStopOnLockMinutes = AutoStopOnLockMinutes;
+            Properties.Settings.Default.ReminderNudgeEnabled = ReminderNudgeEnabled;
+            Properties.Settings.Default.ReminderNudgeIntervalMinutes = ReminderNudgeIntervalMinutes;
             Properties.Settings.Default.Save();
 
             try

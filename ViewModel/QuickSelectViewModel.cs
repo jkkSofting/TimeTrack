@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using Zeitmanagement.Helpers;
 using Zeitmanagement.MVVM;
 
 namespace Zeitmanagement.ViewModel
@@ -27,6 +28,12 @@ namespace Zeitmanagement.ViewModel
         private readonly DispatcherTimer _statusTimer;
 
         public DelegateCommand StopActiveCommand { get; }
+
+        /// <summary>
+        /// Raised when the user should be notified via a tray balloon: an auto-stop happened,
+        /// or no booking has been running for a while. (title, message)
+        /// </summary>
+        public event Action<string, string> NotificationRequested;
 
         public QuickSelectViewModel()
         {
@@ -57,6 +64,8 @@ namespace Zeitmanagement.ViewModel
             _statusTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _statusTimer.Tick += (s, e) => UpdateElapsed();
             _statusTimer.Start();
+
+            InitializeSessionAutomation();
         }
 
         public override void Refresh()
@@ -192,6 +201,123 @@ namespace Zeitmanagement.ViewModel
             if (elapsed < TimeSpan.Zero) elapsed = TimeSpan.Zero;
 
             ActiveElapsedText = $"{(int)elapsed.TotalHours:00}:{elapsed.Minutes:00}:{elapsed.Seconds:00}";
+        }
+
+        #endregion
+
+        #region Session-based automation (auto-stop on lock/sleep, idle reminder)
+
+        private SessionActivityMonitor _sessionMonitor;
+        private DispatcherTimer _lockAutoStopTimer;
+        private DispatcherTimer _nudgeCheckTimer;
+        private bool _isLocked;
+        private bool _isSuspended;
+        private DateTime _lastActiveOrNudge = DateTime.Now;
+
+        private void InitializeSessionAutomation()
+        {
+            _sessionMonitor = new SessionActivityMonitor();
+            _sessionMonitor.Locked += OnSessionLocked;
+            _sessionMonitor.Unlocked += OnSessionUnlocked;
+            _sessionMonitor.Suspending += OnSessionSuspending;
+            _sessionMonitor.Resumed += OnSessionResumed;
+
+            // One-shot: (re)started on lock, stopped on unlock/suspend, fires the delayed
+            // auto-stop for the lock-screen case.
+            _lockAutoStopTimer = new DispatcherTimer();
+            _lockAutoStopTimer.Tick += (s, e) =>
+            {
+                _lockAutoStopTimer.Stop();
+                AutoStopActiveBooking("Sperrbildschirm");
+            };
+
+            _nudgeCheckTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
+            _nudgeCheckTimer.Tick += (s, e) => CheckNudge();
+            _nudgeCheckTimer.Start();
+        }
+
+        private void OnSessionLocked()
+        {
+            _isLocked = true;
+            _lockAutoStopTimer.Stop();
+
+            if (Properties.Settings.Default.AutoStopOnLockEnabled && IsAnyActive)
+            {
+                var minutes = Math.Max(1, Properties.Settings.Default.AutoStopOnLockMinutes);
+                _lockAutoStopTimer.Interval = TimeSpan.FromMinutes(minutes);
+                _lockAutoStopTimer.Start();
+            }
+        }
+
+        private void OnSessionUnlocked()
+        {
+            _isLocked = false;
+            _lockAutoStopTimer.Stop();
+            _lastActiveOrNudge = DateTime.Now;
+        }
+
+        private void OnSessionSuspending()
+        {
+            _lockAutoStopTimer.Stop();
+
+            if (Properties.Settings.Default.AutoStopOnLockEnabled && IsAnyActive)
+            {
+                AutoStopActiveBooking("Ruhemodus");
+            }
+
+            _isSuspended = true;
+        }
+
+        private void OnSessionResumed()
+        {
+            _isSuspended = false;
+            _lastActiveOrNudge = DateTime.Now;
+        }
+
+        private void AutoStopActiveBooking(string reason)
+        {
+            var active = QuickSelectItems.FirstOrDefault(q => q.IsActive);
+            if (active == null)
+                return;
+
+            var project = active.SelectedProject;
+
+            // Reuses the same booking-end/persistence logic as the manual "Buchung stoppen"
+            // button and the floating window's combo box.
+            StopActiveExecute(null);
+
+            NotificationRequested?.Invoke("Buchung beendet", $"\"{project}\" wurde automatisch beendet ({reason}).");
+        }
+
+        private void CheckNudge()
+        {
+            if (!Properties.Settings.Default.ReminderNudgeEnabled || _isLocked || _isSuspended)
+                return;
+
+            if (IsAnyActive)
+            {
+                _lastActiveOrNudge = DateTime.Now;
+                return;
+            }
+
+            var intervalMinutes = Math.Max(1, Properties.Settings.Default.ReminderNudgeIntervalMinutes);
+            if (DateTime.Now - _lastActiveOrNudge < TimeSpan.FromMinutes(intervalMinutes))
+                return;
+
+            _lastActiveOrNudge = DateTime.Now;
+            NotificationRequested?.Invoke("Kein Projekt ausgewählt", "Aktuell läuft keine Buchung.");
+        }
+
+        /// <summary>
+        /// Stops all timers and unsubscribes from Windows session events. Called from
+        /// <see cref="App"/>'s shutdown handling since this view model outlives any single view.
+        /// </summary>
+        public void Shutdown()
+        {
+            _statusTimer?.Stop();
+            _lockAutoStopTimer?.Stop();
+            _nudgeCheckTimer?.Stop();
+            _sessionMonitor?.Dispose();
         }
 
         #endregion
