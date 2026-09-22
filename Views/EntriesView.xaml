@@ -185,6 +185,107 @@
             </Style.Triggers>
         </Style>
 
+        <!--  Zeilen der "Tatsächliche Arbeitszeit"-Tabelle: wegen Überschneidung verschobene Buchungen dezent hervorheben  -->
+        <Style x:Key="SequencedRow" TargetType="DataGridRow">
+            <Setter Property="Background" Value="#202B4E" />
+            <Setter Property="BorderBrush" Value="#2A3861" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsShifted}" Value="True">
+                    <Setter Property="Background" Value="#22284A" />
+                    <Setter Property="BorderBrush" Value="#3A4A8A" />
+                </DataTrigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#26345E" />
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#2C3A69" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!--  Zusammenfassen-Toggle (tatsächliche Arbeitszeit statt Summe aller Buchungen)  -->
+        <Style x:Key="MergeToggle" TargetType="ToggleButton">
+            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
+            <Setter Property="Background" Value="#2D3A63" />
+            <Setter Property="BorderBrush" Value="#42507C" />
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border
+                            x:Name="bd"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#6C7BAF" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#3A7BD5" />
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#5B9BE8" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Pausen-Band zwischen zwei Buchungen (RowDetails) in der normalen Buchungen-Tabelle.  -->
+        <DataTemplate x:Key="PauseBandTemplate">
+            <Border
+                Background="#241A0E"
+                Visibility="{Binding HasGapAfter, Converter={StaticResource BoolToVis}}">
+                <Grid Margin="12,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border
+                        Grid.Column="0"
+                        Height="1"
+                        VerticalAlignment="Center"
+                        Background="#5A421F" />
+
+                    <StackPanel
+                        Grid.Column="1"
+                        Margin="12,0"
+                        Orientation="Horizontal">
+                        <TextBlock
+                            Margin="0,0,6,0"
+                            VerticalAlignment="Center"
+                            FontSize="14"
+                            Foreground="#FFB454"
+                            Text="&#x23F8;" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Foreground="#C9A15A"
+                            Text="Pause " />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontWeight="SemiBold"
+                            Foreground="#FFB454"
+                            Text="{Binding GapAfterText}" />
+                    </StackPanel>
+
+                    <Border
+                        Grid.Column="2"
+                        Height="1"
+                        VerticalAlignment="Center"
+                        Background="#5A421F" />
+                </Grid>
+            </Border>
+        </DataTemplate>
+
         <!--  Pretty DatePicker  -->
         <Style
             x:Key="NiceDatePicker"
@@ -288,12 +389,20 @@
                     <Button Command="{Binding TodayCommand}" Content="Heute" />
                     <Button Command="{Binding RefreshCommand}" Content="Aktualisieren" />
 
-                    <!--  === HEUTE-KPI: Stunden + Buchungen ===  -->
+                    <ToggleButton
+                        Margin="8,0,0,0"
+                        Content="&#x21C6; Tatsächliche Arbeitszeit"
+                        IsChecked="{Binding IsMergedView, Mode=TwoWay}"
+                        Style="{StaticResource MergeToggle}"
+                        ToolTip="Überschneidende Buchungen werden nacheinander eingeplant (nicht gleichzeitig gezählt), inkl. gesetzlicher Mittagspause und Warnung bei zu langem Arbeitstag." />
+
+                    <!--  === HEUTE-KPI: Stunden + Buchungen (Summe aller Buchungen) ===  -->
                     <Border
                         Margin="8,0,0,0"
                         Padding="10,6"
                         Background="{StaticResource BrushAccent}"
-                        CornerRadius="18">
+                        CornerRadius="18"
+                        Visibility="{Binding IsRawView, Converter={StaticResource BoolToVis}}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock
                                 Margin="0,0,6,0"
@@ -315,6 +424,86 @@
                         </StackPanel>
                     </Border>
 
+                    <!--  === TATSÄCHLICH-KPI: Dauer des Arbeitstages nach Auflösung der Überschneidungen ===  -->
+                    <Border
+                        Margin="8,0,0,0"
+                        Padding="10,6"
+                        Background="#153A2E"
+                        BorderBrush="#2E6E52"
+                        BorderThickness="1"
+                        CornerRadius="18"
+                        ToolTip="Tatsächliche Dauer des Arbeitstages: Überschneidende Buchungen wurden nacheinander statt gleichzeitig eingeplant (erste Buchung bis letztes, ggf. verschobenes Ende)."
+                        Visibility="{Binding IsMergedView, Converter={StaticResource BoolToVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                Margin="0,0,6,0"
+                                Foreground="#7FE0B8"
+                                Text="Tatsächlich:" />
+                            <TextBlock
+                                FontWeight="SemiBold"
+                                Foreground="#7FE0B8"
+                                Text="{Binding ActualWorkedHours, Converter={StaticResource HoursToHHmm}}" />
+                            <TextBlock
+                                Margin="8,0,0,0"
+                                Foreground="#7FE0B8"
+                                Opacity="0.75"
+                                Text="(" />
+                            <TextBlock
+                                FontWeight="SemiBold"
+                                Foreground="#7FE0B8"
+                                Text="{Binding MergedEntries.Count}" />
+                            <TextBlock Foreground="#7FE0B8" Opacity="0.75" Text=" Buchungen)" />
+                        </StackPanel>
+                    </Border>
+
+                    <!--  === MITTAGSPAUSE-KPI: gesetzlich notwendige Pause anhand der Gesamtarbeitszeit ===  -->
+                    <Border
+                        Margin="8,0,0,0"
+                        Padding="10,6"
+                        Background="#3A2A16"
+                        BorderBrush="#6A4A22"
+                        BorderThickness="1"
+                        CornerRadius="18"
+                        ToolTip="Notwendige Mittagspause: bis 6h keine, über 6h bis 9h 30 Minuten, über 9h Arbeitszeit weitere 15 Minuten (45 insgesamt)."
+                        Visibility="{Binding ShowMandatoryBreakPill, Converter={StaticResource BoolToVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                Margin="0,0,6,0"
+                                VerticalAlignment="Center"
+                                Foreground="#FFB454"
+                                Text="&#x1F37D; Mittagspause:" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontWeight="SemiBold"
+                                Foreground="#FFB454"
+                                Text="{Binding MandatoryBreakMinutes, StringFormat={}{0} min}" />
+                        </StackPanel>
+                    </Border>
+
+                    <!--  === ÜBERLASTUNGS-WARNUNG: Tagesdauer überschreitet 10h + Mittagspause ===  -->
+                    <Border
+                        Margin="8,0,0,0"
+                        Padding="10,6"
+                        Background="#3A1620"
+                        BorderBrush="#7A2A3A"
+                        BorderThickness="1"
+                        CornerRadius="18"
+                        ToolTip="Die tatsächliche Dauer des Arbeitstages überschreitet 10 Stunden zzgl. der notwendigen Mittagspause."
+                        Visibility="{Binding ShowOverworkWarningPill, Converter={StaticResource BoolToVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                Margin="0,0,6,0"
+                                VerticalAlignment="Center"
+                                Foreground="#FF6B81"
+                                Text="&#x26A0;" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontWeight="SemiBold"
+                                Foreground="#FF6B81"
+                                Text="Über 10h + Pause" />
+                        </StackPanel>
+                    </Border>
+
                     <!--  === PAUSEN-KPI: Summe der Lücken zwischen Buchungen ===  -->
                     <Border
                         Margin="8,0,0,0"
@@ -331,7 +520,14 @@
                                 VerticalAlignment="Center"
                                 FontWeight="SemiBold"
                                 Foreground="#FFB454"
+                                Visibility="{Binding IsRawView, Converter={StaticResource BoolToVis}}"
                                 Text="{Binding TotalBreakHours, Converter={StaticResource HoursToHHmm}}" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontWeight="SemiBold"
+                                Foreground="#FFB454"
+                                Visibility="{Binding IsMergedView, Converter={StaticResource BoolToVis}}"
+                                Text="{Binding TotalMergedBreakHours, Converter={StaticResource HoursToHHmm}}" />
                         </StackPanel>
                     </Border>
 
@@ -432,60 +628,70 @@
                         </Grid>
                     </Border>
 
-                    <!--  Tabelle  -->
+                    <!--
+                        Tabelle: Buchungen nacheinander eingeplant (tatsächliche Arbeitszeit). Jede Buchung
+                        bleibt eine eigene Zeile mit unveränderter Dauer; überschneidende Buchungen wurden
+                        hinter die vorherige verschoben (markiert durch das Verschoben-Symbol) statt zu
+                        einem Block zusammengefasst zu werden.
+                    -->
+                    <DataGrid
+                        Grid.Row="1"
+                        ItemsSource="{Binding MergedEntries}"
+                        RowStyle="{StaticResource SequencedRow}"
+                        Visibility="{Binding IsMergedView, Converter={StaticResource BoolToVis}}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="30" Header="">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            FontWeight="Bold"
+                                            Foreground="#7C9BFF"
+                                            Text="&#x2192;"
+                                            Visibility="{Binding IsShifted, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock.ToolTip>
+                                                <TextBlock>
+                                                    <Run Text="Wegen Überschneidung verschoben — ursprünglich geplant um " /><Run Text="{Binding OriginalStartzeit, Mode=OneWay}" /></TextBlock>
+                                            </TextBlock.ToolTip>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn
+                                Width="2*"
+                                Binding="{Binding Projektname}"
+                                Header="Projekt" />
+                            <DataGridTextColumn
+                                Width="*"
+                                Binding="{Binding Startzeit}"
+                                Header="Start" />
+                            <DataGridTextColumn
+                                Width="*"
+                                Binding="{Binding Endzeit}"
+                                Header="Ende" />
+                            <DataGridTextColumn
+                                Width="*"
+                                Binding="{Binding Dauer, Converter={StaticResource HoursToHHmm}}"
+                                Header="Dauer (h)" />
+                            <DataGridTextColumn
+                                Width="2*"
+                                Binding="{Binding Beschreibung}"
+                                Header="Beschreibung" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!--  Tabelle: einzelne Buchungen  -->
                     <DataGrid
                         Grid.Row="1"
                         ItemsSource="{Binding Entries}"
-                        RowDetailsVisibilityMode="Visible">
+                        RowDetailsVisibilityMode="Visible"
+                        Visibility="{Binding IsRawView, Converter={StaticResource BoolToVis}}">
                         <!--  Pausen-Band zwischen zwei Buchungen (RowDetails erscheint unter der Zeile)  -->
                         <DataGrid.RowDetailsTemplate>
                             <DataTemplate>
                                 <StackPanel>
-                                    <!--  Pausen-Band  -->
-                                    <Border
-                                        Background="#241A0E"
-                                        Visibility="{Binding HasGapAfter, Converter={StaticResource BoolToVis}}">
-                                        <Grid Margin="12,6">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-
-                                            <Border
-                                                Grid.Column="0"
-                                                Height="1"
-                                                VerticalAlignment="Center"
-                                                Background="#5A421F" />
-
-                                            <StackPanel
-                                                Grid.Column="1"
-                                                Margin="12,0"
-                                                Orientation="Horizontal">
-                                                <TextBlock
-                                                    Margin="0,0,6,0"
-                                                    VerticalAlignment="Center"
-                                                    FontSize="14"
-                                                    Foreground="#FFB454"
-                                                    Text="&#x23F8;" />
-                                                <TextBlock
-                                                    VerticalAlignment="Center"
-                                                    Foreground="#C9A15A"
-                                                    Text="Pause " />
-                                                <TextBlock
-                                                    VerticalAlignment="Center"
-                                                    FontWeight="SemiBold"
-                                                    Foreground="#FFB454"
-                                                    Text="{Binding GapAfterText}" />
-                                            </StackPanel>
-
-                                            <Border
-                                                Grid.Column="2"
-                                                Height="1"
-                                                VerticalAlignment="Center"
-                                                Background="#5A421F" />
-                                        </Grid>
-                                    </Border>
+                                    <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource PauseBandTemplate}" />
 
                                     <!--  Überschneidungs-Warnung  -->
                                     <Border

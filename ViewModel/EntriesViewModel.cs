@@ -13,6 +13,9 @@ namespace Zeitmanagement.ViewModel
         // --- Tabellen-Daten ---
         public ObservableCollection<EntryItemVM> Entries { get; } = new ObservableCollection<EntryItemVM>();
 
+        /// <summary>Buchungen des ausgewählten Tages, nacheinander eingeplant (Überschneidungen aufgelöst).</summary>
+        public ObservableCollection<SequencedEntryVM> MergedEntries { get; } = new ObservableCollection<SequencedEntryVM>();
+
         public ObservableCollection<string> ProjectNames { get; } = new ObservableCollection<string>();
 
         // --- Sidebar-Übersichten ---
@@ -89,6 +92,92 @@ namespace Zeitmanagement.ViewModel
             get => _hasOverlaps;
             private set => SetProperty(ref _hasOverlaps, value);
         }
+
+        // --- Zusammenfassen-Toggle (tatsächliche Arbeitszeit statt Summe aller Buchungen) ---
+        private bool _isMergedView;
+
+        /// <summary>
+        /// True, wenn überschneidende Buchungen nacheinander eingeplant angezeigt werden sollen
+        /// (Überschneidungen werden aufgelöst, indem die spätere Buchung nach hinten verschoben wird),
+        /// damit sichtbar wird, wie lange der Arbeitstag tatsächlich gedauert hat.
+        /// </summary>
+        public bool IsMergedView
+        {
+            get => _isMergedView;
+            set
+            {
+                if (SetProperty(ref _isMergedView, value))
+                {
+                    RaisePropertyChanged(nameof(IsRawView));
+                    RaisePropertyChanged(nameof(ShowMandatoryBreakPill));
+                    RaisePropertyChanged(nameof(ShowOverworkWarningPill));
+                }
+            }
+        }
+
+        /// <summary>Komplement zu <see cref="IsMergedView"/>, praktisch für Visibility-Bindings.</summary>
+        public bool IsRawView => !IsMergedView;
+
+        private double _actualWorkedHours;
+
+        /// <summary>
+        /// Tatsächliche Dauer des Arbeitstages (erste Buchung bis letztes, ggf. verschobenes Ende), nachdem
+        /// überschneidende Buchungen nacheinander statt gleichzeitig eingeplant wurden.
+        /// </summary>
+        public double ActualWorkedHours
+        {
+            get => _actualWorkedHours;
+            private set => SetProperty(ref _actualWorkedHours, value);
+        }
+
+        private double _totalMergedBreakHours;
+
+        /// <summary>Summe der echten Lücken (ohne Buchung) zwischen den nacheinander eingeplanten Buchungen.</summary>
+        public double TotalMergedBreakHours
+        {
+            get => _totalMergedBreakHours;
+            private set => SetProperty(ref _totalMergedBreakHours, value);
+        }
+
+        private int _mandatoryBreakMinutes;
+
+        /// <summary>
+        /// Gesetzlich notwendige Mittagspause anhand der Gesamtarbeitszeit: bis 6h keine, &gt;6h bis 9h
+        /// 30 Minuten, über 9h weitere 15 Minuten (also 45 insgesamt).
+        /// </summary>
+        public int MandatoryBreakMinutes
+        {
+            get => _mandatoryBreakMinutes;
+            private set
+            {
+                if (SetProperty(ref _mandatoryBreakMinutes, value))
+                {
+                    RaisePropertyChanged(nameof(HasMandatoryBreak));
+                    RaisePropertyChanged(nameof(ShowMandatoryBreakPill));
+                }
+            }
+        }
+
+        public bool HasMandatoryBreak => MandatoryBreakMinutes > 0;
+
+        /// <summary>Steuert die Sichtbarkeit der Mittagspausen-Kachel (nur in der zusammengefassten Ansicht).</summary>
+        public bool ShowMandatoryBreakPill => IsMergedView && HasMandatoryBreak;
+
+        private bool _showOverworkWarning;
+
+        /// <summary>True, wenn die tatsächliche Tagesdauer 10h + notwendige Mittagspause überschreitet.</summary>
+        public bool ShowOverworkWarning
+        {
+            get => _showOverworkWarning;
+            private set
+            {
+                if (SetProperty(ref _showOverworkWarning, value))
+                    RaisePropertyChanged(nameof(ShowOverworkWarningPill));
+            }
+        }
+
+        /// <summary>Steuert die Sichtbarkeit der Überlastungs-Warnung (nur in der zusammengefassten Ansicht).</summary>
+        public bool ShowOverworkWarningPill => IsMergedView && ShowOverworkWarning;
 
         // --- Add-Form ---
         private string _newProjektname, _newStart, _newEnd, _newBeschreibung;
@@ -222,6 +311,8 @@ namespace Zeitmanagement.ViewModel
             TotalBreakHours = Math.Round(totalBreak, 2);
             OverlapCount = overlaps;
             HasOverlaps = overlaps > 0;
+
+            RebuildSequencedView();
 
             // Defaults im Add-Panel
             if (string.IsNullOrEmpty(NewProjektname) && ProjectNames.Count > 0)
@@ -448,6 +539,92 @@ namespace Zeitmanagement.ViewModel
             return TimeSpan.TryParseExact(hhmm, formats, CultureInfo.InvariantCulture, out value);
         }
 
+        /// <summary>
+        /// Plant die Buchungen des ausgewählten Tages der Reihe nach ein, um die tatsächliche Dauer des
+        /// Arbeitstages zu ermitteln:
+        /// 1) Buchungen chronologisch nach ursprünglicher Startzeit hintereinanderlegen.
+        /// 2) Überschneidet eine Buchung die vorherige, wird sie (mit unveränderter Dauer) direkt hinter
+        ///    das Ende der vorherigen verschoben und entsprechend markiert (<see cref="SequencedEntryVM.IsShifted"/>).
+        ///    Jede nachfolgende Buchung hängt sich an diese verschobene Buchung an, weil der "Cursor"
+        ///    (Ende der zuletzt eingeplanten Buchung) für den nächsten Vergleich weiterläuft.
+        /// 3) Notwendige Mittagspause anhand der Gesamtarbeitszeit ermitteln (bis 6h keine, &gt;6h bis 9h
+        ///    30 Min, über 9h weitere 15 Min).
+        /// 4) Warnen, wenn die tatsächliche Tagesdauer 10h + Mittagspause überschreitet.
+        /// </summary>
+        private void RebuildSequencedView()
+        {
+            MergedEntries.Clear();
+
+            var sorted = new List<(TimeSpan Start, TimeSpan End, EntryItemVM Entry)>();
+            foreach (var e in Entries)
+            {
+                if (TryParseTime(e.Startzeit, out var s) && TryParseTime(e.Endzeit, out var en) && en > s)
+                    sorted.Add((s, en, e));
+            }
+            sorted.Sort((a, b) => a.Start.CompareTo(b.Start));
+
+            TimeSpan? cursor = null;
+            TimeSpan firstStart = TimeSpan.Zero;
+            bool isFirst = true;
+            double naturalGapMinutes = 0;
+
+            foreach (var iv in sorted)
+            {
+                var duration = iv.End - iv.Start;
+                TimeSpan actualStart;
+                bool isShifted;
+
+                if (cursor.HasValue && iv.Start < cursor.Value)
+                {
+                    // Überschneidung: diese Buchung (und damit alle folgenden) hinter die vorherige schieben.
+                    actualStart = cursor.Value;
+                    isShifted = true;
+                }
+                else
+                {
+                    actualStart = iv.Start;
+                    isShifted = false;
+                    if (cursor.HasValue)
+                        naturalGapMinutes += (iv.Start - cursor.Value).TotalMinutes;
+                }
+
+                if (isFirst)
+                {
+                    firstStart = actualStart;
+                    isFirst = false;
+                }
+
+                var actualEnd = actualStart + duration;
+                cursor = actualEnd;
+
+                MergedEntries.Add(new SequencedEntryVM
+                {
+                    Projektname = iv.Entry.Projektname,
+                    Startzeit = actualStart.ToString(@"hh\:mm", CultureInfo.InvariantCulture),
+                    Endzeit = actualEnd.ToString(@"hh\:mm", CultureInfo.InvariantCulture),
+                    Dauer = Math.Round(duration.TotalHours, 2),
+                    Beschreibung = iv.Entry.Beschreibung,
+                    IsShifted = isShifted,
+                    OriginalStartzeit = iv.Start.ToString(@"hh\:mm", CultureInfo.InvariantCulture)
+                });
+            }
+
+            double grossWorkHours = MergedEntries.Sum(x => x.Dauer);
+
+            // --- Notwendige Mittagspause anhand der Gesamtarbeitszeit: bis 6h keine, >6h bis 9h 30 Min, ---
+            // --- über 9h weitere 15 Min (45 insgesamt).                                                 ---
+            int requiredBreakMinutes = grossWorkHours > 9 ? 45 : grossWorkHours > 6 ? 30 : 0;
+
+            double gesamtzeitHours = cursor.HasValue ? (cursor.Value - firstStart).TotalHours : 0;
+
+            TotalMergedBreakHours = Math.Round(naturalGapMinutes / 60.0, 2);
+            MandatoryBreakMinutes = requiredBreakMinutes;
+            ActualWorkedHours = Math.Round(gesamtzeitHours, 2);
+
+            // --- Warnung: tatsächliche Tagesdauer überschreitet 10h + notwendige Mittagspause ---
+            ShowOverworkWarning = gesamtzeitHours > 10.0 + requiredBreakMinutes / 60.0;
+        }
+
         private static string FormatGap(TimeSpan gap)
         {
             int totalMinutes = (int)Math.Round(gap.TotalMinutes);
@@ -494,6 +671,31 @@ namespace Zeitmanagement.ViewModel
 
         /// <summary>True, wenn diese Buchung beginnt, bevor die vorherige endet (wird als Warnung hervorgehoben).</summary>
         public bool IsOverlapping { get => _isOverlapping; set => SetProperty(ref _isOverlapping, value); }
+    }
+
+    /// <summary>
+    /// Eine Buchung in der "Tatsächliche Arbeitszeit"-Ansicht, nachdem Überschneidungen aufgelöst wurden:
+    /// Start/Ende sind ggf. nach hinten verschoben (<see cref="IsShifted"/>), die Dauer bleibt unverändert.
+    /// Jede Buchung bleibt eine eigene Zeile — es werden keine Buchungen unterschiedlicher Projekte
+    /// zusammengefasst.
+    /// </summary>
+    internal sealed class SequencedEntryVM : BindableBase
+    {
+        private string _projektname, _start, _end, _beschreibung, _originalStart;
+        private double _dauer;
+        private bool _isShifted;
+
+        public string Projektname { get => _projektname; set => SetProperty(ref _projektname, value); }
+        public string Startzeit { get => _start; set => SetProperty(ref _start, value); }
+        public string Endzeit { get => _end; set => SetProperty(ref _end, value); }
+        public double Dauer { get => _dauer; set => SetProperty(ref _dauer, value); }
+        public string Beschreibung { get => _beschreibung; set => SetProperty(ref _beschreibung, value); }
+
+        /// <summary>True, wenn diese Buchung wegen einer Überschneidung nach hinten verschoben wurde.</summary>
+        public bool IsShifted { get => _isShifted; set => SetProperty(ref _isShifted, value); }
+
+        /// <summary>Ursprünglich gebuchte Startzeit, bevor wegen einer Überschneidung verschoben wurde.</summary>
+        public string OriginalStartzeit { get => _originalStart; set => SetProperty(ref _originalStart, value); }
     }
 
     internal sealed class SummaryItem : BindableBase
