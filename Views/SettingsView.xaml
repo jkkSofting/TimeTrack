@@ -11,6 +11,8 @@
     d:DesignWidth="800"
     mc:Ignorable="d">
     <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
         <Color x:Key="ColCard">#1A2238</Color>
         <Color x:Key="ColText">#F5F7FB</Color>
         <Color x:Key="ColTextMuted">#B7C0D8</Color>
@@ -95,6 +97,7 @@
 
     <Grid Background="{StaticResource BgGradient}">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -215,9 +218,57 @@
             </StackPanel>
         </Border>
 
-        <!--  Backup  -->
+        <!--  Updates  -->
         <Border
             Grid.Row="3"
+            Margin="16,8,16,8"
+            Style="{StaticResource Card}"
+            VerticalAlignment="Top">
+            <StackPanel MaxWidth="480" HorizontalAlignment="Left">
+                <TextBlock
+                    FontSize="18"
+                    FontWeight="SemiBold"
+                    Foreground="{StaticResource BrushText}"
+                    Text="Updates" />
+
+                <CheckBox
+                    Margin="0,14,0,0"
+                    Content="Regelmäßig automatisch nach Updates suchen"
+                    IsChecked="{Binding AutoUpdateCheckEnabled, Mode=TwoWay}" />
+
+                <TextBlock
+                    Margin="2,14,0,0"
+                    Foreground="{StaticResource BrushTextMuted}"
+                    Text="{Binding CurrentVersionText, StringFormat='Installierte Version: {0}'}" />
+
+                <TextBlock
+                    Margin="2,4,0,0"
+                    Foreground="{StaticResource BrushText}"
+                    Text="{Binding UpdateStatusText}" />
+
+                <StackPanel
+                    Margin="0,14,0,0"
+                    HorizontalAlignment="Left"
+                    Orientation="Horizontal">
+                    <Button
+                        MinWidth="170"
+                        Command="{Binding CheckForUpdateCommand}"
+                        Content="Nach Updates suchen"
+                        Style="{StaticResource FlatButton}" />
+                    <Button
+                        MinWidth="170"
+                        Margin="8,0,0,0"
+                        Command="{Binding InstallUpdateCommand}"
+                        Content="Update installieren"
+                        Style="{StaticResource PrimaryFlatButton}"
+                        Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVis}}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!--  Backup  -->
+        <Border
+            Grid.Row="4"
             Margin="16,8,16,16"
             Style="{StaticResource Card}"
             VerticalAlignment="Top">

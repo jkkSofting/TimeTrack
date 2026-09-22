@@ -23,5 +23,8 @@
     <Setting Name="ReminderNudgeIntervalMinutes" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">20</Value>
     </Setting>
+    <Setting Name="AutoUpdateCheckEnabled" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

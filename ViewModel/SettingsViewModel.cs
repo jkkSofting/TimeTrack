@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Win32;
 using Zeitmanagement.Helpers;
@@ -75,6 +77,37 @@ namespace Zeitmanagement.ViewModel
             set => SetProperty(ref _reminderNudgeIntervalMinutes, Math.Max(1, value));
         }
 
+        private bool _autoUpdateCheckEnabled;
+        public bool AutoUpdateCheckEnabled
+        {
+            get => _autoUpdateCheckEnabled;
+            set => SetProperty(ref _autoUpdateCheckEnabled, value);
+        }
+
+        public string CurrentVersionText { get; } =
+            Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
+        private string _updateStatusText = "Noch nicht geprüft.";
+        public string UpdateStatusText
+        {
+            get => _updateStatusText;
+            set => SetProperty(ref _updateStatusText, value);
+        }
+
+        private bool _isUpdateAvailable;
+        public bool IsUpdateAvailable
+        {
+            get => _isUpdateAvailable;
+            set => SetProperty(ref _isUpdateAvailable, value);
+        }
+
+        private bool _isCheckingForUpdate;
+        public bool IsCheckingForUpdate
+        {
+            get => _isCheckingForUpdate;
+            set => SetProperty(ref _isCheckingForUpdate, value);
+        }
+
         public IReadOnlyList<StartupModeOption> StartupModeOptions { get; } = new List<StartupModeOption>
         {
             new StartupModeOption(StartupMode.Normal, "Normal starten"),
@@ -90,6 +123,8 @@ namespace Zeitmanagement.ViewModel
         public DelegateCommand CreateBackupCommand { get; }
         public DelegateCommand RestoreBackupCommand { get; }
         public DelegateCommand BrowseBackupCommand { get; }
+        public DelegateCommand CheckForUpdateCommand { get; }
+        public DelegateCommand InstallUpdateCommand { get; }
 
         public SettingsViewModel()
         {
@@ -98,6 +133,10 @@ namespace Zeitmanagement.ViewModel
             CreateBackupCommand = new DelegateCommand(_ => CreateBackup());
             RestoreBackupCommand = new DelegateCommand(param => RestoreAndRestart((param as BackupHelper.BackupFile)?.FullPath));
             BrowseBackupCommand = new DelegateCommand(_ => BrowseBackup());
+            CheckForUpdateCommand = new DelegateCommand(async _ => await CheckForUpdate());
+            InstallUpdateCommand = new DelegateCommand(async _ => await InstallUpdate());
+
+            UpdateService.UpdateAvailable += _ => ShowUpdate(UpdateService.LatestUpdate);
 
             Refresh();
         }
@@ -111,11 +150,67 @@ namespace Zeitmanagement.ViewModel
             AutoStopOnLockMinutes = Properties.Settings.Default.AutoStopOnLockMinutes;
             ReminderNudgeEnabled = Properties.Settings.Default.ReminderNudgeEnabled;
             ReminderNudgeIntervalMinutes = Properties.Settings.Default.ReminderNudgeIntervalMinutes;
+            AutoUpdateCheckEnabled = Properties.Settings.Default.AutoUpdateCheckEnabled;
+            ShowUpdate(UpdateService.LatestUpdate);
 
             AvailableBackups.Clear();
             foreach (var backup in BackupHelper.GetAvailableBackups())
             {
                 AvailableBackups.Add(backup);
+            }
+        }
+
+        private void ShowUpdate(UpdateChecker.UpdateInfo update)
+        {
+            IsUpdateAvailable = update != null;
+            UpdateStatusText = update != null
+                ? $"Version {update.VersionText} ist verfügbar."
+                : "Sie verwenden die aktuelle Version.";
+        }
+
+        private async Task CheckForUpdate()
+        {
+            IsCheckingForUpdate = true;
+            UpdateStatusText = "Suche nach Updates...";
+
+            var update = await UpdateService.CheckNowAsync();
+            ShowUpdate(update);
+
+            IsCheckingForUpdate = false;
+        }
+
+        private async Task InstallUpdate()
+        {
+            var update = UpdateService.LatestUpdate;
+            if (update == null)
+                return;
+
+            var result = MessageBox.Show(
+                $"TimeTrack {update.VersionText} wird heruntergeladen und installiert. Die Anwendung wird dazu beendet.\n\nFortfahren?",
+                "Update installieren",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+
+            try
+            {
+                UpdateStatusText = "Update wird heruntergeladen...";
+                IsCheckingForUpdate = true;
+
+                await UpdateService.DownloadAndInstallAsync(update);
+            }
+            catch (Exception ex)
+            {
+                IsCheckingForUpdate = false;
+                UpdateStatusText = "Update fehlgeschlagen.";
+
+                MessageBox.Show(
+                    $"Update konnte nicht installiert werden:\n{ex.Message}",
+                    "Fehler",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
             }
         }
 
@@ -204,6 +299,7 @@ namespace Zeitmanagement.ViewModel
             Properties.Settings.Default.AutoStopOnLockMinutes = AutoStopOnLockMinutes;
             Properties.Settings.Default.ReminderNudgeEnabled = ReminderNudgeEnabled;
             Properties.Settings.Default.ReminderNudgeIntervalMinutes = ReminderNudgeIntervalMinutes;
+            Properties.Settings.Default.AutoUpdateCheckEnabled = AutoUpdateCheckEnabled;
             Properties.Settings.Default.Save();
 
             try

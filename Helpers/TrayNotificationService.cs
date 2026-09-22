@@ -16,6 +16,7 @@ namespace Zeitmanagement.Helpers
     {
         private readonly Window _mainWindow;
         private readonly Forms.NotifyIcon _notifyIcon;
+        private Action _pendingBalloonClickAction;
 
         public TrayNotificationService(Window mainWindow)
         {
@@ -34,11 +35,12 @@ namespace Zeitmanagement.Helpers
             };
 
             _notifyIcon.DoubleClick += (s, e) => RestoreMainWindow();
-            _notifyIcon.BalloonTipClicked += (s, e) => OpenQuickSwitch();
+            _notifyIcon.BalloonTipClicked += (s, e) => (_pendingBalloonClickAction ?? OpenQuickSwitch)();
         }
 
-        public void ShowBalloon(string title, string message)
+        public void ShowBalloon(string title, string message, Action onClick = null)
         {
+            _pendingBalloonClickAction = onClick;
             _notifyIcon.ShowBalloonTip(6000, title, message, Forms.ToolTipIcon.Info);
         }
 

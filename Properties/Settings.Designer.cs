@@ -106,5 +106,17 @@ namespace Zeitmanagement.Properties {
                 this["ReminderNudgeIntervalMinutes"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AutoUpdateCheckEnabled {
+            get {
+                return ((bool)(this["AutoUpdateCheckEnabled"]));
+            }
+            set {
+                this["AutoUpdateCheckEnabled"] = value;
+            }
+        }
     }
 }

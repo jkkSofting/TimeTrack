@@ -46,6 +46,19 @@ namespace Zeitmanagement
 
             _trayService = new TrayNotificationService(mainWindow);
             mainViewModel.QuickSelectViewModel.NotificationRequested += (title, message) => _trayService.ShowBalloon(title, message);
+
+            UpdateService.UpdateAvailable += update => _trayService.ShowBalloon(
+                "Update verfügbar",
+                $"TimeTrack {update.VersionText} ist verfügbar. Klicken, um es in den Einstellungen zu installieren.",
+                onClick: () =>
+                {
+                    mainWindow.Show();
+                    if (mainWindow.WindowState == WindowState.Minimized)
+                        mainWindow.WindowState = WindowState.Normal;
+                    mainWindow.Activate();
+                    mainViewModel.SelectViewCommand.Execute("settings");
+                });
+            UpdateService.Start();
         }
 
         protected override void OnExit(ExitEventArgs e)
