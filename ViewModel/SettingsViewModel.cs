@@ -186,7 +186,7 @@ namespace Zeitmanagement.ViewModel
                 return;
 
             var result = MessageBox.Show(
-                $"TimeTrack {update.VersionText} wird heruntergeladen und installiert. Die Anwendung wird dazu beendet.\n\nFortfahren?",
+                $"TimeTrack {update.VersionText} wird heruntergeladen und im Hintergrund installiert. Die Anwendung wird dazu kurz beendet und danach automatisch neu gestartet. Windows fragt dabei einmal nach der Administratorfreigabe (UAC).\n\nFortfahren?",
                 "Update installieren",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);

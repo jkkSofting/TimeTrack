@@ -78,14 +78,21 @@ namespace Zeitmanagement.Helpers
         }
 
         /// <summary>
-        /// Downloads the installer for the given update and launches it, then shuts the running
-        /// app down so the installer can overwrite its files.
+        /// Downloads the installer for the given update and runs it fully silently (no wizard
+        /// pages, no "finished" screen), then shuts the running app down so the installer can
+        /// overwrite its files and relaunch it once done. Still needs one UAC prompt, since the
+        /// installer writes to Program Files.
         /// </summary>
         public static async Task DownloadAndInstallAsync(UpdateChecker.UpdateInfo update)
         {
             var installerPath = await UpdateChecker.DownloadInstallerAsync(update).ConfigureAwait(true);
 
-            Process.Start(new ProcessStartInfo(installerPath) { UseShellExecute = true });
+            var startInfo = new ProcessStartInfo(installerPath)
+            {
+                Arguments = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /LANG=german",
+                UseShellExecute = true
+            };
+            Process.Start(startInfo);
             Application.Current.Shutdown();
         }
     }
