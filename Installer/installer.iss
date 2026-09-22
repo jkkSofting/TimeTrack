@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "TimeTracker"
-#define MyAppVersion "2026.30.0"
+#define MyAppVersion "2026.39.0"
 #define MyAppPublisher "Kaltenmark-Engineering"
 #define MyAppURL "https://sites.google.com/view/janick-kaltenmark/startseite"
 #define MyAppExeName "Zeitmanagement.exe"
