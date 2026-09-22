@@ -246,6 +246,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="2*" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <ComboBox
@@ -275,6 +276,13 @@
                     <Button Command="{Binding StartTimerCommand}" Content="Start" />
                     <Button Command="{Binding EndTimerCommand}" Content="Stop" />
                 </StackPanel>
+
+                <Button
+                    Grid.Column="5"
+                    VerticalAlignment="Center"
+                    Command="{Binding RemoveCommand}"
+                    Content="✕"
+                    ToolTip="Zeile entfernen" />
             </Grid>
         </Border>
     </Grid>

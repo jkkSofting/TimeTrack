@@ -23,6 +23,8 @@ namespace Zeitmanagement
         {
             base.OnStartup(e);
 
+            UpgradeSettingsIfNeeded();
+
             OfferBackupRestoreIfDbMissing();
 
             var startupMode = ParseStartupMode(Zeitmanagement.Properties.Settings.Default.StartupMode);
@@ -67,6 +69,22 @@ namespace Zeitmanagement
             (MainWindow?.DataContext as MainViewModel)?.QuickSelectViewModel?.Shutdown();
 
             base.OnExit(e);
+        }
+
+        /// <summary>
+        /// Each release bumps the assembly version, and .NET's user-scoped settings are stored
+        /// per version - so without this, every update would silently reset all user settings
+        /// (quick-select projects, startup mode, ...) back to their defaults. Runs once per
+        /// installed version and copies the previous version's settings forward.
+        /// </summary>
+        private static void UpgradeSettingsIfNeeded()
+        {
+            if (Zeitmanagement.Properties.Settings.Default.SettingsUpgraded)
+                return;
+
+            Zeitmanagement.Properties.Settings.Default.Upgrade();
+            Zeitmanagement.Properties.Settings.Default.SettingsUpgraded = true;
+            Zeitmanagement.Properties.Settings.Default.Save();
         }
 
         private static StartupMode ParseStartupMode(string value)

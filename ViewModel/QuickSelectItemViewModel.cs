@@ -12,14 +12,17 @@ namespace Zeitmanagement.ViewModel
     {
         private readonly Action<string> _updateDatabase;
         private readonly Action _saveProjectnames;
+        private readonly Action<QuickSelectItemViewModel> _removeRequested;
 
-        public QuickSelectItemViewModel(Action<string> updateDatabase, Action saveProjectnames)
+        public QuickSelectItemViewModel(Action<string> updateDatabase, Action saveProjectnames, Action<QuickSelectItemViewModel> removeRequested)
         {
             _updateDatabase = updateDatabase;
             _saveProjectnames = saveProjectnames;
+            _removeRequested = removeRequested;
 
             StartTimerCommand = new DelegateCommand(StartTimerCommandExecute, StartTimerCommandCanExecute);
             EndTimerCommand = new DelegateCommand(EndTimerCommandExecute, EndTimerCommandCanExecute);
+            RemoveCommand = new DelegateCommand(RemoveCommandExecute, RemoveCommandCanExecute);
         }
 
 
@@ -38,6 +41,15 @@ namespace Zeitmanagement.ViewModel
                 SetProperty(ref _selectedProject, value);
                 _saveProjectnames.Invoke();
             }
+        }
+
+        /// <summary>
+        /// Sets the selected project without notifying the parent view model, so restoring
+        /// saved slots on load doesn't trigger a save/reconcile cycle per row.
+        /// </summary>
+        internal void SetSelectedProjectSilently(string project)
+        {
+            SetProperty(ref _selectedProject, project ?? string.Empty, nameof(SelectedProject));
         }
 
         public string End
@@ -60,6 +72,7 @@ namespace Zeitmanagement.ViewModel
 
         public DelegateCommand StartTimerCommand { get; set; }
         public DelegateCommand EndTimerCommand { get; set; }
+        public DelegateCommand RemoveCommand { get; set; }
 
 
         public void StartTimerCommandExecute(object obj)
@@ -84,6 +97,16 @@ namespace Zeitmanagement.ViewModel
         public bool EndTimerCommandCanExecute(object obj)
         {
             return IsActive;
+        }
+
+        public void RemoveCommandExecute(object obj)
+        {
+            _removeRequested?.Invoke(this);
+        }
+
+        public bool RemoveCommandCanExecute(object obj)
+        {
+            return !IsActive && !string.IsNullOrWhiteSpace(SelectedProject);
         }
     }
 }

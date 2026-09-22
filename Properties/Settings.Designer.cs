@@ -118,5 +118,17 @@ namespace Zeitmanagement.Properties {
                 this["AutoUpdateCheckEnabled"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SettingsUpgraded {
+            get {
+                return ((bool)(this["SettingsUpgraded"]));
+            }
+            set {
+                this["SettingsUpgraded"] = value;
+            }
+        }
     }
 }

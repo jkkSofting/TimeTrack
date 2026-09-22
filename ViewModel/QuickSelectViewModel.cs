@@ -41,22 +41,6 @@ namespace Zeitmanagement.ViewModel
 
             StopActiveCommand = new DelegateCommand(StopActiveExecute, _ => IsAnyActive);
 
-            QuickSelectItems.Clear();
-            for (int i = 0; i < 10; i++)
-            {
-                var item = new QuickSelectItemViewModel(SetBookingInformation, SaveProjectnames);
-
-                var availableProjects = db.GetProjects();
-
-                foreach (var project in availableProjects)
-                {
-                    item.AvailableProjects.Add(project.Projektname);
-                }
-
-                QuickSelectItems.Add(item);
-
-            }
-
             LoadProjectnames();
             UpdateActiveState();
 
@@ -399,20 +383,61 @@ namespace Zeitmanagement.ViewModel
             return t.ToString(@"hh\:mm", CultureInfo.InvariantCulture);
         }
 
+        /// <summary>
+        /// Builds a new slot with the current project list, wired to the shared booking/save/
+        /// remove callbacks.
+        /// </summary>
+        private QuickSelectItemViewModel CreateQuickSelectItem()
+        {
+            var item = new QuickSelectItemViewModel(SetBookingInformation, SaveProjectnames, RemoveQuickSelectItem);
+
+            foreach (var project in db.GetProjects())
+            {
+                item.AvailableProjects.Add(project.Projektname);
+            }
+
+            return item;
+        }
+
+        /// <summary>
+        /// Enforces the "one trailing empty row" invariant: any empty row that isn't last is
+        /// dropped, and a fresh empty row is appended whenever the last row has been filled in.
+        /// </summary>
+        private void EnsureTrailingEmptyRow()
+        {
+            for (int i = QuickSelectItems.Count - 2; i >= 0; i--)
+            {
+                if (string.IsNullOrWhiteSpace(QuickSelectItems[i].SelectedProject))
+                    QuickSelectItems.RemoveAt(i);
+            }
+
+            if (QuickSelectItems.Count == 0 || !string.IsNullOrWhiteSpace(QuickSelectItems[QuickSelectItems.Count - 1].SelectedProject))
+            {
+                QuickSelectItems.Add(CreateQuickSelectItem());
+            }
+        }
+
+        /// <summary>
+        /// Handles the row's delete button: clearing the project lets <see cref="SaveProjectnames"/>
+        /// reconcile the row away via <see cref="EnsureTrailingEmptyRow"/>.
+        /// </summary>
+        private void RemoveQuickSelectItem(QuickSelectItemViewModel item)
+        {
+            if (item.IsActive) return;
+
+            item.SelectedProject = string.Empty;
+        }
+
         private void SaveProjectnames()
         {
-            // Save the currently selected project names for each QuickSelectItemViewModel
-            // We'll use Application Settings for persistence (Properties.Settings.Default)
-            // Store as a semicolon-separated string
+            EnsureTrailingEmptyRow();
 
+            // Only the filled-in slots are persisted; the trailing empty row is re-created on load.
             var selectedProjects = QuickSelectItems
-                .Select(item => item.SelectedProject ?? string.Empty)
-                .ToArray();
+                .Select(item => item.SelectedProject)
+                .Where(p => !string.IsNullOrWhiteSpace(p));
 
-            string serialized = string.Join(";", selectedProjects);
-
-            // Save to settings (ensure you have a string property named QuickSelectProjects in your settings)
-            Properties.Settings.Default.QuickSelectProjects = serialized;
+            Properties.Settings.Default.QuickSelectProjects = string.Join(";", selectedProjects);
             Properties.Settings.Default.Save();
 
             // Keep the floating window's quick-switch list - and, in case the renamed slot was
@@ -423,16 +448,22 @@ namespace Zeitmanagement.ViewModel
 
         public void LoadProjectnames()
         {
-            // Load the saved project names and assign them to the QuickSelectItems
-            string serialized = Properties.Settings.Default.QuickSelectProjects;
-            if (string.IsNullOrEmpty(serialized))
-                return;
+            QuickSelectItems.Clear();
 
-            var selectedProjects = serialized.Split(';');
-            for (int i = 0; i < QuickSelectItems.Count && i < selectedProjects.Length; i++)
+            string serialized = Properties.Settings.Default.QuickSelectProjects;
+            var savedProjects = string.IsNullOrEmpty(serialized)
+                ? Enumerable.Empty<string>()
+                : serialized.Split(';').Where(p => !string.IsNullOrWhiteSpace(p));
+
+            foreach (var project in savedProjects)
             {
-                QuickSelectItems[i].SelectedProject = selectedProjects[i];
+                var item = CreateQuickSelectItem();
+                item.SetSelectedProjectSilently(project);
+                QuickSelectItems.Add(item);
             }
+
+            EnsureTrailingEmptyRow();
+            UpdateConfiguredProjects();
         }
     }
 }
