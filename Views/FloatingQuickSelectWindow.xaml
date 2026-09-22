@@ -96,14 +96,10 @@
             </Setter>
         </Style>
 
-        <!--  Status-Punkt: grün wenn aktiv, grau wenn nicht  -->
-        <Style x:Key="StatusDot" TargetType="Ellipse">
-            <Setter Property="Fill" Value="#5B6785" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsAnyActive}" Value="True">
-                    <Setter Property="Fill" Value="#3DD68C" />
-                </DataTrigger>
-            </Style.Triggers>
+        <!--  Kleiner "Stop"-Button innerhalb eines Slots  -->
+        <Style x:Key="SlotStopButton" TargetType="Button" BasedOn="{StaticResource FlatButton}">
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="FontSize" Value="12" />
         </Style>
 
     </Window.Resources>
@@ -126,67 +122,109 @@
                     ToolTip="Fenster immer im Vordergrund halten" />
             </Grid>
 
-            <!--  Schnellwechsel  -->
+            <!--  Laufende Projekte (bis zu 4 parallele Slots)  -->
             <TextBlock
                 Margin="2,12,0,4"
                 Foreground="{StaticResource BrushTextMuted}"
-                Text="Projekt wechseln" />
-            <ComboBox
-                ItemsSource="{Binding ConfiguredProjects}"
-                SelectedItem="{Binding ActiveProjectName, Mode=TwoWay}"
-                Style="{StaticResource NiceCombo}" />
+                Text="Laufende Projekte" />
 
-            <!--  Aktueller Status  -->
-            <Border
-                Margin="0,12,0,0"
-                Padding="12,10"
-                Background="{StaticResource BrushAccent}"
-                CornerRadius="12">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+            <TextBlock
+                Margin="2,4,0,4"
+                FontStyle="Italic"
+                Foreground="{StaticResource BrushTextMuted}"
+                Text="Keine Buchung aktiv"
+                Visibility="{Binding NoActiveSlots, Converter={StaticResource BoolToVis}}" />
 
-                    <Ellipse
-                        Grid.Column="0"
-                        Width="12"
-                        Height="12"
-                        Margin="0,0,10,0"
-                        VerticalAlignment="Center"
-                        Style="{StaticResource StatusDot}" />
+            <ItemsControl ItemsSource="{Binding ActiveSlots}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border
+                            Margin="0,0,0,8"
+                            Padding="12,10"
+                            Background="{StaticResource BrushAccent}"
+                            CornerRadius="12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock
-                            FontSize="15"
-                            FontWeight="SemiBold"
-                            Foreground="{StaticResource BrushText}"
-                            Text="{Binding ActiveStatusText}"
-                            TextTrimming="CharacterEllipsis" />
-                        <TextBlock
-                            FontSize="11"
-                            Foreground="{StaticResource BrushTextMuted}"
-                            Text="{Binding ActiveSinceText}"
-                            Visibility="{Binding IsAnyActive, Converter={StaticResource BoolToVis}}" />
-                    </StackPanel>
+                                <Ellipse
+                                    Grid.Column="0"
+                                    Width="12"
+                                    Height="12"
+                                    Margin="0,0,10,0"
+                                    VerticalAlignment="Center"
+                                    Fill="#3DD68C" />
 
-                    <TextBlock
-                        Grid.Column="2"
-                        VerticalAlignment="Center"
-                        FontFamily="Consolas"
-                        FontSize="15"
-                        Foreground="{StaticResource BrushText}"
-                        Text="{Binding ActiveElapsedText}" />
-                </Grid>
-            </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        Foreground="{StaticResource BrushText}"
+                                        Text="{Binding SelectedProject}"
+                                        TextTrimming="CharacterEllipsis" />
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="{StaticResource BrushTextMuted}"
+                                        Text="{Binding Start, StringFormat=seit {0}}" />
+                                </StackPanel>
 
-            <!--  Stop  -->
-            <Button
-                Margin="0,12,0,0"
-                Command="{Binding StopActiveCommand}"
-                Content="Buchung stoppen"
-                Style="{StaticResource FlatButton}" />
+                                <TextBlock
+                                    Grid.Column="2"
+                                    Margin="8,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Consolas"
+                                    FontSize="14"
+                                    Foreground="{StaticResource BrushText}"
+                                    Text="{Binding ElapsedText}" />
+
+                                <Button
+                                    Grid.Column="3"
+                                    VerticalAlignment="Center"
+                                    Command="{Binding EndTimerCommand}"
+                                    Content="Stop"
+                                    Style="{StaticResource SlotStopButton}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!--  Neues Projekt parallel starten (bis zu MaxActiveSlots)  -->
+            <TextBlock
+                Margin="2,8,0,4"
+                Foreground="{StaticResource BrushTextMuted}"
+                Text="Projekt starten"
+                Visibility="{Binding CanStartMoreSlots, Converter={StaticResource BoolToVis}}" />
+            <Grid Visibility="{Binding CanStartMoreSlots, Converter={StaticResource BoolToVis}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <ComboBox
+                    Grid.Column="0"
+                    ItemsSource="{Binding ConfiguredProjects}"
+                    SelectedItem="{Binding PendingNewProject, Mode=TwoWay}"
+                    Style="{StaticResource NiceCombo}" />
+
+                <Button
+                    Grid.Column="1"
+                    Margin="6,4,4,4"
+                    Command="{Binding StartNewSlotCommand}"
+                    Content="Start"
+                    Style="{StaticResource FlatButton}" />
+            </Grid>
+
+            <TextBlock
+                Margin="2,8,0,0"
+                FontStyle="Italic"
+                Foreground="{StaticResource BrushTextMuted}"
+                Text="Maximal 4 Projekte gleichzeitig aktiv"
+                Visibility="{Binding MaxSlotsReached, Converter={StaticResource BoolToVis}}" />
         </StackPanel>
     </Border>
 </Window>

@@ -70,6 +70,39 @@ namespace Zeitmanagement.ViewModel
             set => SetProperty(ref _isActive, value);
         }
 
+        /// <summary>
+        /// The exact moment this slot's booking started, used for the elapsed-time display so
+        /// it stays correct across midnight instead of re-deriving a start time from today's
+        /// date. Null while the slot isn't running.
+        /// </summary>
+        public DateTime? StartedAt { get; set; }
+
+        private string _elapsedText = "";
+        /// <summary>
+        /// Live "HH:mm:ss" elapsed time since <see cref="StartedAt"/>, refreshed periodically
+        /// by the owning view model via <see cref="RefreshElapsed"/> so multiple slots can run
+        /// in parallel, each with their own ticking display.
+        /// </summary>
+        public string ElapsedText
+        {
+            get => _elapsedText;
+            private set => SetProperty(ref _elapsedText, value);
+        }
+
+        public void RefreshElapsed()
+        {
+            if (StartedAt == null)
+            {
+                ElapsedText = "";
+                return;
+            }
+
+            var elapsed = DateTime.Now - StartedAt.Value;
+            if (elapsed < TimeSpan.Zero) elapsed = TimeSpan.Zero;
+
+            ElapsedText = $"{(int)elapsed.TotalHours:00}:{elapsed.Minutes:00}:{elapsed.Seconds:00}";
+        }
+
         public DelegateCommand StartTimerCommand { get; set; }
         public DelegateCommand EndTimerCommand { get; set; }
         public DelegateCommand RemoveCommand { get; set; }

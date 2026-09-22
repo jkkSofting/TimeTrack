@@ -17,17 +17,29 @@ namespace Zeitmanagement.ViewModel
         public ObservableCollection<QuickSelectItemViewModel> QuickSelectItems { get; set; } = new ObservableCollection<QuickSelectItemViewModel>();
 
         /// <summary>
-        /// Distinct list of the projects that are currently configured in the quick-select
-        /// slots. Serves as the item source for the floating window's combo box so the user
-        /// can switch quickly between the projects they use.
+        /// Distinct list of the projects that are currently configured in the main window's
+        /// Quick Select slots. Serves as the item source for the floating window's "start a
+        /// project" combo box, so only projects the user has already set up there can be picked
+        /// as one of the (up to <see cref="MaxActiveSlots"/>) parallel-running slots.
         /// </summary>
         public ObservableCollection<string> ConfiguredProjects { get; } = new ObservableCollection<string>();
+
+        /// <summary>
+        /// The projects currently running, in parallel, up to <see cref="MaxActiveSlots"/> at a
+        /// time. Serves as the item source for the floating window's slot list.
+        /// </summary>
+        public ObservableCollection<QuickSelectItemViewModel> ActiveSlots { get; } = new ObservableCollection<QuickSelectItemViewModel>();
+
+        /// <summary>
+        /// How many projects a user may track in parallel at once.
+        /// </summary>
+        public const int MaxActiveSlots = 4;
 
         TimeTracker db;
 
         private readonly DispatcherTimer _statusTimer;
 
-        public DelegateCommand StopActiveCommand { get; }
+        public DelegateCommand StartNewSlotCommand { get; }
 
         /// <summary>
         /// Raised when the user should be notified via a tray balloon: an auto-stop happened,
@@ -39,7 +51,7 @@ namespace Zeitmanagement.ViewModel
         {
             db = MainViewModel.DbInstance;
 
-            StopActiveCommand = new DelegateCommand(StopActiveExecute, _ => IsAnyActive);
+            StartNewSlotCommand = new DelegateCommand(StartNewSlotExecute, StartNewSlotCanExecute);
 
             LoadProjectnames();
             UpdateActiveState();
@@ -59,79 +71,93 @@ namespace Zeitmanagement.ViewModel
 
         #region Floating window state
 
-        private string _activeProjectName;
-        /// <summary>
-        /// The project whose timer is currently running. Assigning a new value (e.g. from the
-        /// floating window's combo box) switches the running booking to that project.
-        /// </summary>
-        public string ActiveProjectName
-        {
-            get => _activeProjectName;
-            set
-            {
-                if (string.Equals(_activeProjectName, value)) return;
-
-                if (!string.IsNullOrEmpty(value))
-                {
-                    // Switch the running booking to the chosen project.
-                    SetBookingInformation(value);
-                }
-                else
-                {
-                    // Selection was merely cleared in the UI - resync, don't change bookings.
-                    UpdateActiveState();
-                }
-            }
-        }
-
         private bool _isAnyActive;
         public bool IsAnyActive
         {
             get => _isAnyActive;
-            private set => SetProperty(ref _isAnyActive, value);
-        }
-
-        private string _activeStatusText = "Keine Buchung aktiv";
-        public string ActiveStatusText
-        {
-            get => _activeStatusText;
-            private set => SetProperty(ref _activeStatusText, value);
-        }
-
-        private string _activeSinceText = "";
-        public string ActiveSinceText
-        {
-            get => _activeSinceText;
-            private set => SetProperty(ref _activeSinceText, value);
-        }
-
-        private string _activeElapsedText = "";
-        public string ActiveElapsedText
-        {
-            get => _activeElapsedText;
-            private set => SetProperty(ref _activeElapsedText, value);
-        }
-
-        // The exact moment the current booking started, used for the elapsed-time display so it
-        // stays correct across midnight instead of re-deriving a start time from today's date.
-        private DateTime? _activeStartedAt;
-
-        private void StopActiveExecute(object obj)
-        {
-            var active = QuickSelectItems.FirstOrDefault(q => q.IsActive);
-            if (active == null)
+            private set
             {
-                return;
+                if (SetProperty(ref _isAnyActive, value))
+                    RaisePropertyChanged(nameof(NoActiveSlots));
             }
-
-            // Route through the same booking-switch logic the Start/Stop buttons and the
-            // floating window's combo box use, so there's a single place that ends a booking.
-            SetBookingInformation(active.SelectedProject);
         }
 
         /// <summary>
-        /// Rebuilds <see cref="ConfiguredProjects"/> from the slots in place, so the combo box
-        /// keeps its current selection while stale entries are pruned and new ones added.
+        /// Inverse of <see cref="IsAnyActive"/>, for the floating window's "nothing running"
+        /// hint (plain bool properties keep the XAML free of extra converters).
+        /// </summary>
+        public bool NoActiveSlots => !IsAnyActive;
+
+        private bool _canStartMoreSlots = true;
+        /// <summary>
+        /// Whether fewer than <see cref="MaxActiveSlots"/> projects are currently running, so
+        /// the floating window's "start a project" controls should stay enabled.
+        /// </summary>
+        public bool CanStartMoreSlots
+        {
+            get => _canStartMoreSlots;
+            private set
+            {
+                if (SetProperty(ref _canStartMoreSlots, value))
+                    RaisePropertyChanged(nameof(MaxSlotsReached));
+            }
+        }
+
+        /// <summary>
+        /// Inverse of <see cref="CanStartMoreSlots"/>, for the floating window's "limit reached"
+        /// hint (plain bool properties keep the XAML free of extra converters).
+        /// </summary>
+        public bool MaxSlotsReached => !CanStartMoreSlots;
+
+        private string _pendingNewProject;
+        /// <summary>
+        /// The project currently picked in the floating window's "start a project" combo box,
+        /// waiting to be started via <see cref="StartNewSlotCommand"/>.
+        /// </summary>
+        public string PendingNewProject
+        {
+            get => _pendingNewProject;
+            set
+            {
+                SetProperty(ref _pendingNewProject, value);
+                StartNewSlotCommand.RaiseCanExecuteChanged();
+            }
+        }
+
+        private bool StartNewSlotCanExecute(object obj)
+        {
+            if (string.IsNullOrWhiteSpace(PendingNewProject)) return false;
+            if (ActiveSlots.Count >= MaxActiveSlots) return false;
+
+            var existing = QuickSelectItems.FirstOrDefault(q => q.SelectedProject == PendingNewProject);
+            return existing == null || !existing.IsActive;
+        }
+
+        private void StartNewSlotExecute(object obj)
+        {
+            var project = PendingNewProject;
+            if (string.IsNullOrWhiteSpace(project)) return;
+
+            // Reuse an existing slot for this project if the user already configured one in the
+            // main window's Quick Select list; otherwise create one so it's persisted the same
+            // way a manually-added row would be.
+            var slot = QuickSelectItems.FirstOrDefault(q => q.SelectedProject == project);
+            if (slot == null)
+            {
+                slot = CreateQuickSelectItem();
+                slot.SetSelectedProjectSilently(project);
+                QuickSelectItems.Insert(Math.Max(0, QuickSelectItems.Count - 1), slot);
+                SaveProjectnames();
+            }
+
+            SetBookingInformation(project);
+            PendingNewProject = null;
+        }
+
+        /// <summary>
+        /// Rebuilds <see cref="ConfiguredProjects"/> from the slots in place, so the floating
+        /// window's combo box keeps its current selection while stale entries are pruned and
+        /// new ones added.
         /// </summary>
         private void UpdateConfiguredProjects()
         {
@@ -155,36 +181,39 @@ namespace Zeitmanagement.ViewModel
         }
 
         /// <summary>
-        /// Recomputes the "currently active" display state from the slots.
+        /// Recomputes the "currently active" display state from the slots: which ones are
+        /// running in parallel (up to <see cref="MaxActiveSlots"/>) and whether another one can
+        /// still be started.
         /// </summary>
         private void UpdateActiveState()
         {
-            var active = QuickSelectItems.FirstOrDefault(q => q.IsActive);
+            var active = QuickSelectItems.Where(q => q.IsActive).ToList();
 
-            // Update the backing field directly (not via the property setter) to avoid
-            // re-triggering a booking switch.
-            SetProperty(ref _activeProjectName, active?.SelectedProject, nameof(ActiveProjectName));
+            for (int i = ActiveSlots.Count - 1; i >= 0; i--)
+            {
+                if (!active.Contains(ActiveSlots[i]))
+                    ActiveSlots.RemoveAt(i);
+            }
 
-            IsAnyActive = active != null;
-            ActiveStatusText = active != null ? active.SelectedProject : "Keine Buchung aktiv";
-            ActiveSinceText = active != null && !string.IsNullOrEmpty(active.Start) ? $"seit {active.Start}" : "";
+            foreach (var item in active)
+            {
+                if (!ActiveSlots.Contains(item))
+                    ActiveSlots.Add(item);
+            }
 
-            StopActiveCommand.RaiseCanExecuteChanged();
+            IsAnyActive = active.Count > 0;
+            CanStartMoreSlots = active.Count < MaxActiveSlots;
+
+            StartNewSlotCommand.RaiseCanExecuteChanged();
             UpdateElapsed();
         }
 
         private void UpdateElapsed()
         {
-            if (_activeStartedAt == null)
+            foreach (var item in ActiveSlots)
             {
-                ActiveElapsedText = "";
-                return;
+                item.RefreshElapsed();
             }
-
-            var elapsed = DateTime.Now - _activeStartedAt.Value;
-            if (elapsed < TimeSpan.Zero) elapsed = TimeSpan.Zero;
-
-            ActiveElapsedText = $"{(int)elapsed.TotalHours:00}:{elapsed.Minutes:00}:{elapsed.Seconds:00}";
         }
 
         #endregion
@@ -260,17 +289,22 @@ namespace Zeitmanagement.ViewModel
 
         private void AutoStopActiveBooking(string reason)
         {
-            var active = QuickSelectItems.FirstOrDefault(q => q.IsActive);
-            if (active == null)
+            // Snapshot first: SetBookingInformation mutates QuickSelectItems' IsActive flags as
+            // it goes, so iterating the live query would skip entries.
+            var activeProjects = QuickSelectItems.Where(q => q.IsActive).Select(q => q.SelectedProject).ToList();
+            if (activeProjects.Count == 0)
                 return;
 
-            var project = active.SelectedProject;
+            foreach (var project in activeProjects)
+            {
+                // Reuses the same booking-end/persistence logic as the manual per-slot stop
+                // button, so there's a single place that ends a booking.
+                SetBookingInformation(project);
+            }
 
-            // Reuses the same booking-end/persistence logic as the manual "Buchung stoppen"
-            // button and the floating window's combo box.
-            StopActiveExecute(null);
-
-            NotificationRequested?.Invoke("Buchung beendet", $"\"{project}\" wurde automatisch beendet ({reason}).");
+            var names = string.Join(", ", activeProjects.Select(p => $"\"{p}\""));
+            var verb = activeProjects.Count == 1 ? "wurde" : "wurden";
+            NotificationRequested?.Invoke("Buchung beendet", $"{names} {verb} automatisch beendet ({reason}).");
         }
 
         private void CheckNudge()
@@ -306,6 +340,11 @@ namespace Zeitmanagement.ViewModel
 
         #endregion
 
+        /// <summary>
+        /// Starts or stops the booking for <paramref name="selectedProject"/>'s slot. Unlike a
+        /// single-active model, this never touches other slots: several projects can run in
+        /// parallel, up to <see cref="MaxActiveSlots"/> at once.
+        /// </summary>
         private void SetBookingInformation(string selectedProject)
         {
             var now = DateTime.Now;
@@ -317,36 +356,30 @@ namespace Zeitmanagement.ViewModel
                 return;
             }
 
-            var lastActiveProject = QuickSelectItems.LastOrDefault(q => q.IsActive && !q.SelectedProject.Equals(selectedProject));
-
-            if (lastActiveProject != null)
+            if (calledProject.IsActive)
             {
-                //Do stuff to end last active project
-                lastActiveProject.End = now.ToString("HH:mm");
-                lastActiveProject.IsActive = false;
+                calledProject.End = now.ToString("HH:mm");
+                calledProject.IsActive = false;
+                calledProject.StartedAt = null;
 
-                UpdateDatabase(lastActiveProject);
-
-                calledProject.Start = now.ToString("HH:mm");
-                calledProject.IsActive = true;
-                _activeStartedAt = now;
+                UpdateDatabase(calledProject);
             }
             else
             {
-                if (calledProject.IsActive)
+                var activeCount = QuickSelectItems.Count(q => q.IsActive);
+                if (activeCount >= MaxActiveSlots)
                 {
-                    calledProject.End = now.ToString("HH:mm");
-                    calledProject.IsActive = false;
-                    _activeStartedAt = null;
+                    MessageBox.Show(
+                        $"Es können maximal {MaxActiveSlots} Projekte gleichzeitig laufen. Bitte zuerst ein anderes Projekt stoppen.",
+                        "Maximal erreicht",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    return;
+                }
 
-                    UpdateDatabase(calledProject);
-                }
-                else
-                {
-                    calledProject.Start = now.ToString("HH:mm");
-                    calledProject.IsActive = true;
-                    _activeStartedAt = now;
-                }
+                calledProject.Start = now.ToString("HH:mm");
+                calledProject.IsActive = true;
+                calledProject.StartedAt = now;
             }
 
             UpdateActiveState();
@@ -440,8 +473,8 @@ namespace Zeitmanagement.ViewModel
             Properties.Settings.Default.QuickSelectProjects = string.Join(";", selectedProjects);
             Properties.Settings.Default.Save();
 
-            // Keep the floating window's quick-switch list - and, in case the renamed slot was
-            // the one currently running, its active-booking display - in sync with the slots.
+            // Keep the floating window's project list - and, in case the renamed slot was one of
+            // the currently-running ones, its active-slots display - in sync with the slots.
             UpdateConfiguredProjects();
             UpdateActiveState();
         }
@@ -464,6 +497,7 @@ namespace Zeitmanagement.ViewModel
 
             EnsureTrailingEmptyRow();
             UpdateConfiguredProjects();
+            UpdateActiveState();
         }
     }
 }
