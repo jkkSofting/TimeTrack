@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "TimeTracker"
-#define MyAppVersion "2026.29.2"
+#define MyAppVersion "2026.30.0"
 #define MyAppPublisher "Kaltenmark-Engineering"
 #define MyAppURL "https://sites.google.com/view/janick-kaltenmark/startseite"
 #define MyAppExeName "Zeitmanagement.exe"
@@ -21,9 +21,6 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\{#MyAppName}
 DisableDirPage=yes
 DisableProgramGroupPage=yes
-LicenseFile=C:\Users\jkk\source\repos\Zeitmanagement\Installer\license.txt
-InfoBeforeFile=C:\Users\jkk\source\repos\Zeitmanagement\Installer\pre-install.txt
-InfoAfterFile=C:\Users\jkk\source\repos\Zeitmanagement\Installer\post-install.txt
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
