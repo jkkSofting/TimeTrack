@@ -13,7 +13,7 @@ namespace Zeitmanagement.Helpers
     /// </summary>
     internal static class UpdateService
     {
-        private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(6);
+        private static readonly TimeSpan CheckInterval = TimeSpan.FromMinutes(10);
         private static readonly TimeSpan FirstCheckDelay = TimeSpan.FromSeconds(5);
 
         private static DispatcherTimer _timer;
