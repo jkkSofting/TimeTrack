@@ -5,6 +5,22 @@ erkennt, müssen bei jedem Release **alle** der folgenden Schritte durchgeführt
 Update-Check fragt `GET https://api.github.com/repos/jkkSofting/TimeTrack/releases/latest` ab
 und vergleicht dessen `tag_name` mit der lokal installierten `AssemblyVersion`.
 
+## Kurzform: `Scripts\Release.ps1`
+
+Führt alle Schritte unten automatisch aus (Version bumpen, Release-Build, Installer
+kompilieren, committen/taggen/pushen, GitHub Release samt `.exe`-Anhang anlegen):
+
+```powershell
+.\Scripts\Release.ps1 -Version 2026.40.0
+.\Scripts\Release.ps1 -Version 2026.40.0 -Notes "Kurze Beschreibung der Änderungen"
+```
+
+Voraussetzungen: Visual Studio (MSBuild), Inno Setup 6 (`ISCC.exe`), und ein im Git Credential
+Manager gecachter GitHub-Login für `jkkSofting` (wird per `git credential fill` gelesen, siehe
+`-PushUser`-Parameter). Bricht bei jedem fehlgeschlagenen Schritt sofort ab, statt halbfertig
+weiterzumachen. Die manuellen Einzelschritte unten sind der Referenz-Ablauf, den das Skript
+nachbildet.
+
 ## 1. Version an beiden Stellen erhöhen
 
 Beide Dateien müssen exakt dieselbe Versionsnummer bekommen (Format `Jahr.Minor.Patch`, z. B.
