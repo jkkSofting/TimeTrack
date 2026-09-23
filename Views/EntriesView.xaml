@@ -238,54 +238,6 @@
             </Setter>
         </Style>
 
-        <!--  Pausen-Band zwischen zwei Buchungen (RowDetails) in der normalen Buchungen-Tabelle.  -->
-        <DataTemplate x:Key="PauseBandTemplate">
-            <Border
-                Background="#241A0E"
-                Visibility="{Binding HasGapAfter, Converter={StaticResource BoolToVis}}">
-                <Grid Margin="12,6">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
-                    <Border
-                        Grid.Column="0"
-                        Height="1"
-                        VerticalAlignment="Center"
-                        Background="#5A421F" />
-
-                    <StackPanel
-                        Grid.Column="1"
-                        Margin="12,0"
-                        Orientation="Horizontal">
-                        <TextBlock
-                            Margin="0,0,6,0"
-                            VerticalAlignment="Center"
-                            FontSize="14"
-                            Foreground="#FFB454"
-                            Text="&#x23F8;" />
-                        <TextBlock
-                            VerticalAlignment="Center"
-                            Foreground="#C9A15A"
-                            Text="Pause " />
-                        <TextBlock
-                            VerticalAlignment="Center"
-                            FontWeight="SemiBold"
-                            Foreground="#FFB454"
-                            Text="{Binding GapAfterText}" />
-                    </StackPanel>
-
-                    <Border
-                        Grid.Column="2"
-                        Height="1"
-                        VerticalAlignment="Center"
-                        Background="#5A421F" />
-                </Grid>
-            </Border>
-        </DataTemplate>
-
         <!--  Pretty DatePicker  -->
         <Style
             x:Key="NiceDatePicker"
@@ -681,108 +633,113 @@
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <!--  Tabelle: einzelne Buchungen  -->
-                    <DataGrid
-                        Grid.Row="1"
-                        ItemsSource="{Binding Entries}"
-                        RowDetailsVisibilityMode="Visible"
-                        Visibility="{Binding IsRawView, Converter={StaticResource BoolToVis}}">
-                        <!--  Pausen-Band zwischen zwei Buchungen (RowDetails erscheint unter der Zeile)  -->
-                        <DataGrid.RowDetailsTemplate>
-                            <DataTemplate>
-                                <StackPanel>
-                                    <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource PauseBandTemplate}" />
+                    <!--
+                        Git-Graph-Tagesverlauf (ersetzt die frühere Buchungen-Tabelle): der Trunk (Lane 0) läuft
+                        von der ersten Einstempelzeit bis zur letzten Endzeit von oben nach unten. Überschneidende
+                        Buchungen zweigen als parallele Branches ab, echte Pausen werden gestrichelt dargestellt.
+                        Klick auf einen Knoten öffnet die Buchung im Bearbeiten-Panel unten (inkl. Löschen dort).
+                    -->
+                    <Grid Grid.Row="1" Visibility="{Binding IsRawView, Converter={StaticResource BoolToVis}}">
+                        <TextBlock
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            FontSize="13"
+                            FontStyle="Italic"
+                            Foreground="{StaticResource BrushTextMuted}"
+                            Text="Keine Buchungen"
+                            Visibility="{Binding HasNoGraphEntries, Converter={StaticResource BoolToVis}}" />
 
-                                    <!--  Überschneidungs-Warnung  -->
-                                    <Border
-                                        Background="#3A1620"
-                                        Visibility="{Binding HasOverlapAfter, Converter={StaticResource BoolToVis}}">
-                                        <Grid Margin="12,6">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
+                        <ScrollViewer
+                            HorizontalScrollBarVisibility="Auto"
+                            VerticalScrollBarVisibility="Auto"
+                            Visibility="{Binding HasGraphEntries, Converter={StaticResource BoolToVis}}">
+                            <Grid
+                                Width="{Binding GraphWidth}"
+                                Height="{Binding GraphHeight}"
+                                Margin="6"
+                                HorizontalAlignment="Left">
 
-                                            <Border
-                                                Grid.Column="0"
-                                                Height="1"
-                                                VerticalAlignment="Center"
-                                                Background="#7A2A3A" />
+                                <!--  Kanten (Trunk / Branch / Pause)  -->
+                                <ItemsControl ItemsSource="{Binding GraphEdges}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <Canvas Width="{Binding GraphWidth}" Height="{Binding GraphHeight}" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Path
+                                                Data="{Binding Geometry}"
+                                                Stroke="{Binding Stroke}"
+                                                StrokeDashArray="{Binding Dashes}"
+                                                StrokeEndLineCap="Round"
+                                                StrokeLineJoin="Round"
+                                                StrokeStartLineCap="Round"
+                                                StrokeThickness="{Binding StrokeThickness}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
 
-                                            <StackPanel
-                                                Grid.Column="1"
-                                                Margin="12,0"
-                                                Orientation="Horizontal">
-                                                <TextBlock
-                                                    Margin="0,0,6,0"
-                                                    VerticalAlignment="Center"
-                                                    FontSize="14"
-                                                    Foreground="#FF6B81"
-                                                    Text="&#x26A0;" />
-                                                <TextBlock
-                                                    VerticalAlignment="Center"
-                                                    Foreground="#E6889A"
-                                                    Text="Überschneidung " />
-                                                <TextBlock
-                                                    VerticalAlignment="Center"
-                                                    FontWeight="SemiBold"
-                                                    Foreground="#FF6B81"
-                                                    Text="{Binding OverlapAfterText}" />
-                                            </StackPanel>
-
-                                            <Border
-                                                Grid.Column="2"
-                                                Height="1"
-                                                VerticalAlignment="Center"
-                                                Background="#7A2A3A" />
-                                        </Grid>
-                                    </Border>
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGrid.RowDetailsTemplate>
-                        <DataGrid.Columns>
-                            <DataGridTextColumn
-                                Width="2*"
-                                Binding="{Binding Projektname}"
-                                Header="Projekt" />
-                            <DataGridTextColumn
-                                Width="*"
-                                Binding="{Binding Startzeit}"
-                                Header="Start" />
-                            <DataGridTextColumn
-                                Width="*"
-                                Binding="{Binding Endzeit}"
-                                Header="Ende" />
-                            <DataGridTextColumn
-                                Width="*"
-                                Binding="{Binding Dauer, Converter={StaticResource HoursToHHmm}}"
-                                Header="Dauer (h)" />
-                            <DataGridTextColumn
-                                Width="2*"
-                                Binding="{Binding Beschreibung}"
-                                Header="Beschreibung" />
-
-                            <DataGridTemplateColumn Width="*" Header="Aktionen">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                                <!--  Knoten (Buchungsstart/-ende, Tagesendpunkte)  -->
+                                <ItemsControl ItemsSource="{Binding GraphNodes}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <Canvas Width="{Binding GraphWidth}" Height="{Binding GraphHeight}" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemContainerStyle>
+                                        <Style TargetType="ContentPresenter">
+                                            <Setter Property="Canvas.Left" Value="{Binding Left}" />
+                                            <Setter Property="Canvas.Top" Value="{Binding Top}" />
+                                        </Style>
+                                    </ItemsControl.ItemContainerStyle>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
                                             <Button
-                                                MinHeight="30"
-                                                Command="{Binding DataContext.EditEntryCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}"
-                                                Content="Bearbeiten" />
-                                            <Button
-                                                MinHeight="30"
-                                                Command="{Binding DataContext.DeleteEntryCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}"
-                                                Content="Löschen" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                                                Width="{Binding Diameter}"
+                                                Height="{Binding Diameter}"
+                                                Command="{Binding DataContext.EditEntryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding Entry}"
+                                                Focusable="False"
+                                                ToolTip="{Binding ToolTip}">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Ellipse
+                                                            Cursor="Hand"
+                                                            Fill="{Binding Fill}"
+                                                            Stroke="{StaticResource BrushCard}"
+                                                            StrokeThickness="1.5" />
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <!--  Labels (Projekt + Zeitspanne + Dauer + Beschreibung, bzw. Pausenlänge)  -->
+                                <ItemsControl ItemsSource="{Binding GraphLabels}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <Canvas Width="{Binding GraphWidth}" Height="{Binding GraphHeight}" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemContainerStyle>
+                                        <Style TargetType="ContentPresenter">
+                                            <Setter Property="Canvas.Left" Value="{Binding Left}" />
+                                            <Setter Property="Canvas.Top" Value="{Binding Top}" />
+                                        </Style>
+                                    </ItemsControl.ItemContainerStyle>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontSize="13">
+                                                <Run Text="{Binding ProjectRun}" FontWeight="SemiBold" Foreground="{Binding Brush}" />
+                                                <Run Text="{Binding DetailRun}" Foreground="{StaticResource BrushTextMuted}" /></TextBlock>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+                        </ScrollViewer>
+                    </Grid>
 
                     <!--  Edit Panel  -->
                     <Border
@@ -823,6 +780,7 @@
                                 Orientation="Horizontal">
                                 <Button Command="{Binding SaveEditCommand}" Content="Speichern" />
                                 <Button Command="{Binding CancelEditCommand}" Content="Abbrechen" />
+                                <Button Command="{Binding DeleteEditingEntryCommand}" Content="Löschen" />
                             </StackPanel>
                         </Grid>
                     </Border>

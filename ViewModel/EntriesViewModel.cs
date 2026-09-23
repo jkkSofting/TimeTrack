@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media;
 using Zeitmanagement.MVVM;
 
 namespace Zeitmanagement.ViewModel
@@ -22,6 +23,32 @@ namespace Zeitmanagement.ViewModel
         public ObservableCollection<SummaryItem> SumByProject { get; } = new ObservableCollection<SummaryItem>();
 
         public ObservableCollection<SummaryItem> SumByKTR { get; } = new ObservableCollection<SummaryItem>();
+
+        // --- Git-Graph-Timeline (visuelle Zusammenfassung des ausgewählten Tages) ---
+        public ObservableCollection<GraphEdge> GraphEdges { get; } = new ObservableCollection<GraphEdge>();
+        public ObservableCollection<GraphNode> GraphNodes { get; } = new ObservableCollection<GraphNode>();
+        public ObservableCollection<GraphLabel> GraphLabels { get; } = new ObservableCollection<GraphLabel>();
+
+        private double _graphWidth;
+        public double GraphWidth { get => _graphWidth; private set => SetProperty(ref _graphWidth, value); }
+
+        private double _graphHeight;
+        public double GraphHeight { get => _graphHeight; private set => SetProperty(ref _graphHeight, value); }
+
+        private bool _hasGraphEntries;
+
+        /// <summary>True, wenn der ausgewählte Tag Buchungen hat (steuert Graph- vs. Leer-Anzeige).</summary>
+        public bool HasGraphEntries
+        {
+            get => _hasGraphEntries;
+            private set
+            {
+                if (SetProperty(ref _hasGraphEntries, value))
+                    RaisePropertyChanged(nameof(HasNoGraphEntries));
+            }
+        }
+
+        public bool HasNoGraphEntries => !HasGraphEntries;
 
         // --- Datumsauswahl ---
         private string _selectedDate = DateTime.Today.ToString("dd.MM.yyyy");
@@ -209,6 +236,7 @@ namespace Zeitmanagement.ViewModel
         public DelegateCommand SaveEditCommand { get; }
         public DelegateCommand CancelEditCommand { get; }
         public DelegateCommand DeleteEntryCommand { get; }
+        public DelegateCommand DeleteEditingEntryCommand { get; }
         public DelegateCommand GoToNextDayCommand { get; }
         public DelegateCommand GoToLastDayCommand { get; }
 
@@ -224,6 +252,7 @@ namespace Zeitmanagement.ViewModel
             SaveEditCommand = new DelegateCommand(_ => SaveEdit(), _ => CanSaveEdit());
             CancelEditCommand = new DelegateCommand(_ => CancelEdit());
             DeleteEntryCommand = new DelegateCommand(o => DeleteEntry(o as EntryItemVM), o => o is EntryItemVM);
+            DeleteEditingEntryCommand = new DelegateCommand(_ => DeleteEditingEntry(), _ => IsEditPanelOpen);
 
             GoToNextDayCommand = new DelegateCommand(_ =>
             {
@@ -313,6 +342,7 @@ namespace Zeitmanagement.ViewModel
             HasOverlaps = overlaps > 0;
 
             RebuildSequencedView();
+            BuildGraph();
 
             // Defaults im Add-Panel
             if (string.IsNullOrEmpty(NewProjektname) && ProjectNames.Count > 0)
@@ -464,6 +494,14 @@ namespace Zeitmanagement.ViewModel
         {
             if (vm == null) return;
             MainViewModel.DbInstance.DeleteTimeEntry(vm.Id);
+            Refresh();
+        }
+
+        /// <summary>Löscht die Buchung, die gerade im Bearbeiten-Panel geöffnet ist.</summary>
+        private void DeleteEditingEntry()
+        {
+            MainViewModel.DbInstance.DeleteTimeEntry(_editId);
+            IsEditPanelOpen = false;
             Refresh();
         }
 
@@ -633,6 +671,279 @@ namespace Zeitmanagement.ViewModel
 
             return (totalMinutes / 60) + ":" + (totalMinutes % 60).ToString("00") + " h";
         }
+
+        // ── Git-Graph geometry construction ──
+        //
+        // The trunk (lane 0) represents the passage of time from the first clock-in to the
+        // last clock-out of the selected day, top to bottom. Entries that overlap an already
+        // active entry are pushed onto a side lane (a parallel "branch") for their duration
+        // and merge back into the trunk afterwards. Stretches where nothing at all is booked
+        // are drawn as a dashed trunk segment ("Pause"); stretches where the trunk itself is
+        // idle but a branch is still running are drawn as a thin neutral connector so the
+        // thread stays visually continuous without being mislabelled as a break.
+        private const double GraphPixelsPerMinute = 1.4;
+        private const double GraphLaneSpacing = 26;
+        private const double GraphTrunkX = 22;
+        private const double GraphNodeRadius = 5;
+        private const double GraphEndpointRadius = 7;
+        private const double GraphCurveReach = 14;
+        private const double GraphLabelGap = 16;
+        private const double GraphLabelColumnWidth = 320;
+        private const double GraphMinHeight = 8;
+        private const double GraphLabelLineHeight = 16;
+        private const double GraphMinNodeSpacing = 20;
+
+        private static readonly Color[] GraphPalette =
+        {
+            Color.FromRgb(0x5A, 0xC8, 0xFA), // blue
+            Color.FromRgb(0x8E, 0x8B, 0xFF), // purple
+            Color.FromRgb(0xFF, 0x6B, 0x6B), // red
+            Color.FromRgb(0x4E, 0xCA, 0x84), // green
+            Color.FromRgb(0xFF, 0xC1, 0x07), // yellow
+            Color.FromRgb(0xFF, 0x8A, 0x50), // orange
+            Color.FromRgb(0xE0, 0x5A, 0xA8), // pink
+            Color.FromRgb(0x00, 0xD9, 0xC0), // teal
+            Color.FromRgb(0xB3, 0x88, 0xFF), // lavender
+            Color.FromRgb(0x7E, 0xD3, 0x57), // lime
+        };
+
+        private static readonly SolidColorBrush GraphBreakBrush = CreateFrozenBrush(Color.FromRgb(0x6B, 0x73, 0x90));
+        private static readonly SolidColorBrush GraphEndpointBrush = CreateFrozenBrush(Color.FromRgb(0xF5, 0xF7, 0xFB));
+        private static readonly DoubleCollection GraphBreakDashes = CreateFrozenDashes(4, 3);
+
+        private static SolidColorBrush CreateFrozenBrush(Color c)
+        {
+            var b = new SolidColorBrush(c);
+            b.Freeze();
+            return b;
+        }
+
+        private static DoubleCollection CreateFrozenDashes(params double[] values)
+        {
+            var d = new DoubleCollection(values);
+            d.Freeze();
+            return d;
+        }
+
+        private static string N(double v) => v.ToString("F1", CultureInfo.InvariantCulture);
+
+        private static string LineData(double x1, double y1, double x2, double y2) =>
+            $"M{N(x1)},{N(y1)} L{N(x2)},{N(y2)}";
+
+        private static string FormatGraphDuration(TimeSpan span)
+        {
+            if (span.TotalHours >= 1)
+                return $"{(int)span.TotalHours}h {span.Minutes:00}m";
+            return $"{Math.Max(1, (int)span.TotalMinutes)}m";
+        }
+
+        private void BuildGraph()
+        {
+            GraphEdges.Clear();
+            GraphNodes.Clear();
+            GraphLabels.Clear();
+
+            var intervals = new List<(TimeSpan Start, TimeSpan End, EntryItemVM Source)>();
+            foreach (var e in Entries)
+            {
+                if (TryParseTime(e.Startzeit, out var s) && TryParseTime(e.Endzeit, out var en) && en > s)
+                    intervals.Add((s, en, e));
+            }
+            intervals.Sort((a, b) => a.Start != b.Start ? a.Start.CompareTo(b.Start) : a.End.CompareTo(b.End));
+
+            HasGraphEntries = intervals.Count > 0;
+            if (intervals.Count == 0)
+            {
+                GraphWidth = 0;
+                GraphHeight = 0;
+                return;
+            }
+
+            var dayEnd = intervals.Max(iv => iv.End);
+
+            // Time-to-pixel mapping: proportional to elapsed minutes, but every distinct
+            // start/end time point is guaranteed at least GraphMinNodeSpacing pixels from its
+            // neighbour. Without this, a cluster of short or overlapping bookings (e.g. several
+            // one-minute entries a few minutes apart) would place their nodes almost on top of
+            // each other, making them impossible to tell apart or click individually.
+            var timePoints = new List<TimeSpan>();
+            foreach (var iv in intervals)
+            {
+                timePoints.Add(iv.Start);
+                timePoints.Add(iv.End);
+            }
+            timePoints = timePoints.Distinct().OrderBy(t => t).ToList();
+
+            var yLookup = new Dictionary<TimeSpan, double>();
+            double cursorY = 0;
+            for (int ti = 0; ti < timePoints.Count; ti++)
+            {
+                if (ti == 0)
+                {
+                    yLookup[timePoints[ti]] = 0;
+                    continue;
+                }
+                double naturalGap = (timePoints[ti] - timePoints[ti - 1]).TotalMinutes * GraphPixelsPerMinute;
+                cursorY += Math.Max(GraphMinNodeSpacing, naturalGap);
+                yLookup[timePoints[ti]] = cursorY;
+            }
+            double Y(TimeSpan t) => yLookup[t];
+
+            // Lane assignment via interval-graph coloring (sweep by start time).
+            var active = new List<(int Lane, TimeSpan End)>();
+            var lanes = new int[intervals.Count];
+            int maxLane = 0;
+            for (int i = 0; i < intervals.Count; i++)
+            {
+                var iv = intervals[i];
+                active.RemoveAll(a => a.End <= iv.Start);
+                int lane = 0;
+                while (active.Any(a => a.Lane == lane)) lane++;
+                lanes[i] = lane;
+                active.Add((lane, iv.End));
+                if (lane > maxLane) maxLane = lane;
+            }
+
+            var projectColors = new Dictionary<string, SolidColorBrush>();
+            int colorIndex = 0;
+            SolidColorBrush ColorFor(string project)
+            {
+                if (!projectColors.TryGetValue(project, out var b))
+                {
+                    b = CreateFrozenBrush(GraphPalette[colorIndex % GraphPalette.Length]);
+                    projectColors[project] = b;
+                    colorIndex++;
+                }
+                return b;
+            }
+
+            double labelX = GraphTrunkX + (maxLane + 1) * GraphLaneSpacing + GraphLabelGap;
+
+            // Labels are collected here first and only added to the bound collection after a
+            // collision pass (see below): dense clusters of short/overlapping bookings would
+            // otherwise place several labels at nearly the same Y and render them on top of
+            // each other as unreadable, garbled text.
+            var labelBuilder = new List<GraphLabel>();
+
+            // Trunk gaps: stretches between consecutive lane-0 entries (and after the last one,
+            // if the overall day end was set by a branch entry) where the trunk carries nothing.
+            var lane0 = intervals.Where((iv, idx) => lanes[idx] == 0).OrderBy(iv => iv.Start).ToList();
+            var trunkGaps = new List<(TimeSpan GapStart, TimeSpan GapEnd)>();
+            for (int i = 1; i < lane0.Count; i++)
+                if (lane0[i].Start > lane0[i - 1].End)
+                    trunkGaps.Add((lane0[i - 1].End, lane0[i].Start));
+            if (lane0.Count > 0 && lane0[lane0.Count - 1].End < dayEnd)
+                trunkGaps.Add((lane0[lane0.Count - 1].End, dayEnd));
+
+            foreach (var (gapStart, gapEnd) in trunkGaps)
+            {
+                bool isTrueBreak = !intervals.Any(iv => iv.Start < gapEnd && iv.End > gapStart);
+                double y1 = Y(gapStart), y2 = Y(gapEnd);
+
+                GraphEdges.Add(new GraphEdge
+                {
+                    Geometry = LineData(GraphTrunkX, y1, GraphTrunkX, y2),
+                    Stroke = GraphBreakBrush,
+                    StrokeThickness = isTrueBreak ? 2.5 : 1.5,
+                    Dashes = isTrueBreak ? GraphBreakDashes : null
+                });
+
+                if (isTrueBreak && (gapEnd - gapStart).TotalMinutes >= 2)
+                {
+                    labelBuilder.Add(new GraphLabel
+                    {
+                        Left = labelX,
+                        Top = (y1 + y2) / 2 - 9,
+                        ProjectRun = "Pause",
+                        DetailRun = "  " + FormatGraphDuration(gapEnd - gapStart),
+                        Brush = GraphBreakBrush
+                    });
+                }
+            }
+
+            // Entries: trunk segments draw straight down; branch segments run straight down in
+            // their own lane (exactly between their two nodes) with short diagonal stubs tying
+            // them back to the trunk.
+            for (int i = 0; i < intervals.Count; i++)
+            {
+                var iv = intervals[i];
+                int lane = lanes[i];
+                double x = GraphTrunkX + lane * GraphLaneSpacing;
+                double y1 = Y(iv.Start), y2 = Y(iv.End);
+                var brush = ColorFor(iv.Source.Projektname);
+
+                if (lane == 0)
+                {
+                    GraphEdges.Add(new GraphEdge { Geometry = LineData(GraphTrunkX, y1, GraphTrunkX, y2), Stroke = brush, StrokeThickness = 3, Dashes = null });
+                }
+                else
+                {
+                    // The branch's own column runs exactly from y1 to y2 - precisely where its
+                    // two nodes sit - so the dots always land exactly on the line. Short diagonal
+                    // stubs (borrowing space from before/after the entry, never from inside it)
+                    // visually tie that column back to the trunk without moving the nodes off it.
+                    GraphEdges.Add(new GraphEdge { Geometry = LineData(GraphTrunkX, y1 - GraphCurveReach, x, y1), Stroke = brush, StrokeThickness = 3, Dashes = null });
+                    GraphEdges.Add(new GraphEdge { Geometry = LineData(x, y1, x, y2), Stroke = brush, StrokeThickness = 3, Dashes = null });
+                    GraphEdges.Add(new GraphEdge { Geometry = LineData(x, y2, GraphTrunkX, y2 + GraphCurveReach), Stroke = brush, StrokeThickness = 3, Dashes = null });
+                }
+
+                string tooltip = $"{iv.Source.Projektname}\n{iv.Source.Startzeit} – {iv.Source.Endzeit}";
+                GraphNodes.Add(new GraphNode { Left = x - GraphNodeRadius, Top = y1 - GraphNodeRadius, Diameter = GraphNodeRadius * 2, Fill = brush, ToolTip = tooltip, Entry = iv.Source });
+                GraphNodes.Add(new GraphNode { Left = x - GraphNodeRadius, Top = y2 - GraphNodeRadius, Diameter = GraphNodeRadius * 2, Fill = brush, ToolTip = tooltip, Entry = iv.Source });
+
+                string detail = $"  {iv.Source.Startzeit}–{iv.Source.Endzeit} · {FormatGraphDuration(iv.End - iv.Start)}";
+                if (!string.IsNullOrWhiteSpace(iv.Source.Beschreibung))
+                    detail += $" · {iv.Source.Beschreibung}";
+
+                labelBuilder.Add(new GraphLabel
+                {
+                    Left = labelX,
+                    Top = (y1 + y2) / 2 - 9,
+                    ProjectRun = iv.Source.Projektname,
+                    DetailRun = detail,
+                    Brush = brush
+                });
+            }
+
+            // Collision pass: sort by the vertical position each label would ideally sit at
+            // (which also puts them in chronological order), then push any label down that
+            // would otherwise overlap the one above it, so dense clusters stack legibly
+            // instead of overlapping into unreadable text.
+            labelBuilder.Sort((a, b) => a.Top.CompareTo(b.Top));
+            double nextFreeTop = double.NegativeInfinity;
+            foreach (var label in labelBuilder)
+            {
+                if (label.Top < nextFreeTop)
+                    label.Top = nextFreeTop;
+                nextFreeTop = label.Top + GraphLabelLineHeight;
+                GraphLabels.Add(label);
+            }
+
+            // Endpoint markers reinforce the "thread" framing: first clock-in and last clock-out.
+            var firstEntry = intervals[0];
+            var lastEntry = intervals.OrderByDescending(iv => iv.End).First();
+            GraphNodes.Add(new GraphNode
+            {
+                Left = GraphTrunkX - GraphEndpointRadius,
+                Top = 0 - GraphEndpointRadius,
+                Diameter = GraphEndpointRadius * 2,
+                Fill = GraphEndpointBrush,
+                ToolTip = $"Beginn {firstEntry.Source.Startzeit}"
+            });
+            GraphNodes.Add(new GraphNode
+            {
+                Left = GraphTrunkX - GraphEndpointRadius,
+                Top = Y(dayEnd) - GraphEndpointRadius,
+                Diameter = GraphEndpointRadius * 2,
+                Fill = GraphEndpointBrush,
+                ToolTip = $"Ende {lastEntry.Source.Endzeit}"
+            });
+
+            double labelsBottom = nextFreeTop == double.NegativeInfinity ? 0 : nextFreeTop;
+            double bottomPadding = Math.Max(GraphEndpointRadius, GraphCurveReach) + 4;
+            GraphWidth = labelX + GraphLabelColumnWidth;
+            GraphHeight = Math.Max(Math.Max(GraphMinHeight, Y(dayEnd)) + bottomPadding, labelsBottom);
+        }
     }
 
     internal sealed class EntryItemVM : BindableBase
@@ -707,5 +1018,37 @@ namespace Zeitmanagement.ViewModel
         public string Name { get => _name; set => SetProperty(ref _name, value); }
         public double Hours { get => _hours; set => SetProperty(ref _hours, value); }
         public int Count { get => _count; set => SetProperty(ref _count, value); }
+    }
+
+    /// <summary>Eine Kante (Trunk-, Branch- oder Pausen-Linie) der Git-Graph-Timeline.</summary>
+    internal sealed class GraphEdge
+    {
+        public string Geometry { get; set; }
+        public Brush Stroke { get; set; }
+        public double StrokeThickness { get; set; }
+        public DoubleCollection Dashes { get; set; }
+    }
+
+    /// <summary>Ein Knoten (Buchungsstart/-ende oder Tagesendpunkt) der Git-Graph-Timeline.</summary>
+    internal sealed class GraphNode
+    {
+        public double Left { get; set; }
+        public double Top { get; set; }
+        public double Diameter { get; set; }
+        public Brush Fill { get; set; }
+        public string ToolTip { get; set; }
+
+        /// <summary>Die zugehörige Buchung; null bei den Beginn-/Ende-Markern (nicht klickbar).</summary>
+        public EntryItemVM Entry { get; set; }
+    }
+
+    /// <summary>Ein Text-Label (Projekt + Zeitspanne + Dauer, oder Pausenlänge) neben einem Graph-Segment.</summary>
+    internal sealed class GraphLabel
+    {
+        public double Left { get; set; }
+        public double Top { get; set; }
+        public string ProjectRun { get; set; }
+        public string DetailRun { get; set; }
+        public Brush Brush { get; set; }
     }
 }
