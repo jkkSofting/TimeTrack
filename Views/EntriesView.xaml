@@ -171,11 +171,6 @@
             <Setter Property="BorderBrush" Value="#2A3861" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
             <Style.Triggers>
-                <!--  Buchung, die eine andere überschneidet, rot hervorheben  -->
-                <DataTrigger Binding="{Binding IsOverlapping}" Value="True">
-                    <Setter Property="Background" Value="#3A1620" />
-                    <Setter Property="BorderBrush" Value="#7A2A3A" />
-                </DataTrigger>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="#26345E" />
                 </Trigger>
@@ -637,7 +632,9 @@
                         Git-Graph-Tagesverlauf (ersetzt die frühere Buchungen-Tabelle): der Trunk (Lane 0) läuft
                         von der ersten Einstempelzeit bis zur letzten Endzeit von oben nach unten. Überschneidende
                         Buchungen zweigen als parallele Branches ab, echte Pausen werden gestrichelt dargestellt.
-                        Klick auf einen Knoten öffnet die Buchung im Bearbeiten-Panel unten (inkl. Löschen dort).
+                        Jede Buchung hat eine eigene Zeile: Knoten und Label stehen immer auf gleicher Höhe.
+                        Klick auf einen Knoten oder ein Label öffnet die Buchung im Bearbeiten-Panel unten
+                        (inkl. Löschen dort); die geöffnete Buchung bleibt im Graph hervorgehoben.
                     -->
                     <Grid Grid.Row="1" Visibility="{Binding IsRawView, Converter={StaticResource BoolToVis}}">
                         <TextBlock
@@ -650,90 +647,164 @@
                             Visibility="{Binding HasNoGraphEntries, Converter={StaticResource BoolToVis}}" />
 
                         <ScrollViewer
-                            HorizontalScrollBarVisibility="Auto"
+                            HorizontalScrollBarVisibility="Disabled"
                             VerticalScrollBarVisibility="Auto"
                             Visibility="{Binding HasGraphEntries, Converter={StaticResource BoolToVis}}">
-                            <Grid
-                                Width="{Binding GraphWidth}"
-                                Height="{Binding GraphHeight}"
-                                Margin="6"
-                                HorizontalAlignment="Left">
+                            <Grid Height="{Binding GraphHeight}" Margin="6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-                                <!--  Kanten (Trunk / Branch / Pause)  -->
-                                <ItemsControl ItemsSource="{Binding GraphEdges}">
+                                <!--  Graph: Kanten (Trunk / Branch / Pause) und Knoten (Buchungsstart/-ende, Tagesendpunkte)  -->
+                                <Grid Grid.Column="0" Width="{Binding GraphWidth}">
+                                    <ItemsControl ItemsSource="{Binding GraphEdges}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <Canvas />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Path
+                                                    Data="{Binding Geometry}"
+                                                    Stroke="{Binding Stroke}"
+                                                    StrokeDashArray="{Binding Dashes}"
+                                                    StrokeEndLineCap="Round"
+                                                    StrokeLineJoin="Round"
+                                                    StrokeStartLineCap="Round"
+                                                    StrokeThickness="{Binding StrokeThickness}" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <ItemsControl ItemsSource="{Binding GraphNodes}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <Canvas />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemContainerStyle>
+                                            <Style TargetType="ContentPresenter">
+                                                <Setter Property="Canvas.Left" Value="{Binding Left}" />
+                                                <Setter Property="Canvas.Top" Value="{Binding Top}" />
+                                            </Style>
+                                        </ItemsControl.ItemContainerStyle>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <!--  Margin="0" überschreibt den globalen Button-Margin, sonst säße der Knoten versetzt neben der Linie  -->
+                                                <Button
+                                                    Width="{Binding HitSize}"
+                                                    Height="{Binding HitSize}"
+                                                    Margin="0"
+                                                    Command="{Binding DataContext.EditEntryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding Entry}"
+                                                    Focusable="False"
+                                                    ToolTip="{Binding ToolTip}"
+                                                    ToolTipService.ShowOnDisabled="True">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <!--  Transparente Fläche: größere Klickfläche als der sichtbare Punkt  -->
+                                                            <Grid Background="Transparent">
+                                                                <Ellipse
+                                                                    x:Name="Dot"
+                                                                    Width="{Binding Diameter}"
+                                                                    Height="{Binding Diameter}"
+                                                                    Fill="{Binding Fill}"
+                                                                    Stroke="{Binding Stroke}"
+                                                                    StrokeThickness="2" />
+                                                            </Grid>
+                                                            <ControlTemplate.Triggers>
+                                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                    <Setter TargetName="Dot" Property="Stroke" Value="{StaticResource BrushText}" />
+                                                                </DataTrigger>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="Dot" Property="Stroke" Value="{StaticResource BrushText}" />
+                                                                </Trigger>
+                                                                <Trigger Property="IsEnabled" Value="False">
+                                                                    <Setter Property="Cursor" Value="Arrow" />
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Grid>
+
+                                <!--
+                                    Labels (Zeitspanne, Projekt, Dauer + Beschreibung bzw. Pausenlänge), eine Zeile je
+                                    Knoten. Die Spalte wächst mit dem Fenster; zu lange Beschreibungen werden gekürzt
+                                    (voller Text im Tooltip) statt einen horizontalen Scrollbalken zu erzwingen.
+                                -->
+                                <ItemsControl Grid.Column="1" ItemsSource="{Binding GraphLabels}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
-                                            <Canvas Width="{Binding GraphWidth}" Height="{Binding GraphHeight}" />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Path
-                                                Data="{Binding Geometry}"
-                                                Stroke="{Binding Stroke}"
-                                                StrokeDashArray="{Binding Dashes}"
-                                                StrokeEndLineCap="Round"
-                                                StrokeLineJoin="Round"
-                                                StrokeStartLineCap="Round"
-                                                StrokeThickness="{Binding StrokeThickness}" />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-
-                                <!--  Knoten (Buchungsstart/-ende, Tagesendpunkte)  -->
-                                <ItemsControl ItemsSource="{Binding GraphNodes}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <Canvas Width="{Binding GraphWidth}" Height="{Binding GraphHeight}" />
+                                            <Canvas />
                                         </ItemsPanelTemplate>
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemContainerStyle>
                                         <Style TargetType="ContentPresenter">
-                                            <Setter Property="Canvas.Left" Value="{Binding Left}" />
                                             <Setter Property="Canvas.Top" Value="{Binding Top}" />
+                                            <Setter Property="Width" Value="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}}" />
                                         </Style>
                                     </ItemsControl.ItemContainerStyle>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Button
-                                                Width="{Binding Diameter}"
-                                                Height="{Binding Diameter}"
+                                                Height="{Binding Height}"
+                                                Margin="0"
                                                 Command="{Binding DataContext.EditEntryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding Entry}"
                                                 Focusable="False"
-                                                ToolTip="{Binding ToolTip}">
+                                                ToolTip="{Binding ToolTip}"
+                                                ToolTipService.ShowOnDisabled="True">
                                                 <Button.Template>
                                                     <ControlTemplate TargetType="Button">
-                                                        <Ellipse
-                                                            Cursor="Hand"
-                                                            Fill="{Binding Fill}"
-                                                            Stroke="{StaticResource BrushCard}"
-                                                            StrokeThickness="1.5" />
+                                                        <Border
+                                                            x:Name="Row"
+                                                            Padding="8,0"
+                                                            Background="Transparent"
+                                                            BorderBrush="Transparent"
+                                                            BorderThickness="1"
+                                                            CornerRadius="6">
+                                                            <DockPanel VerticalAlignment="Center" LastChildFill="True">
+                                                                <TextBlock
+                                                                    Width="86"
+                                                                    DockPanel.Dock="Left"
+                                                                    FontSize="13"
+                                                                    Foreground="{StaticResource BrushTextMuted}"
+                                                                    Text="{Binding TimeText}" />
+                                                                <TextBlock
+                                                                    Margin="0,0,10,0"
+                                                                    DockPanel.Dock="Left"
+                                                                    FontSize="13"
+                                                                    FontWeight="SemiBold"
+                                                                    Foreground="{Binding Brush}"
+                                                                    Text="{Binding Title}" />
+                                                                <TextBlock
+                                                                    FontSize="13"
+                                                                    Foreground="{StaticResource BrushTextMuted}"
+                                                                    Text="{Binding Detail}"
+                                                                    TextTrimming="CharacterEllipsis" />
+                                                            </DockPanel>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="Row" Property="Background" Value="#243056" />
+                                                            </Trigger>
+                                                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                <Setter TargetName="Row" Property="Background" Value="#2C3A69" />
+                                                                <Setter TargetName="Row" Property="BorderBrush" Value="#42507C" />
+                                                            </DataTrigger>
+                                                            <Trigger Property="IsEnabled" Value="False">
+                                                                <Setter Property="Cursor" Value="Arrow" />
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
                                                     </ControlTemplate>
                                                 </Button.Template>
                                             </Button>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-
-                                <!--  Labels (Projekt + Zeitspanne + Dauer + Beschreibung, bzw. Pausenlänge)  -->
-                                <ItemsControl ItemsSource="{Binding GraphLabels}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <Canvas Width="{Binding GraphWidth}" Height="{Binding GraphHeight}" />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemContainerStyle>
-                                        <Style TargetType="ContentPresenter">
-                                            <Setter Property="Canvas.Left" Value="{Binding Left}" />
-                                            <Setter Property="Canvas.Top" Value="{Binding Top}" />
-                                        </Style>
-                                    </ItemsControl.ItemContainerStyle>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock FontSize="13">
-                                                <Run Text="{Binding ProjectRun}" FontWeight="SemiBold" Foreground="{Binding Brush}" />
-                                                <Run Text="{Binding DetailRun}" Foreground="{StaticResource BrushTextMuted}" /></TextBlock>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
