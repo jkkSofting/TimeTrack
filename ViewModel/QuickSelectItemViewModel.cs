@@ -38,8 +38,17 @@ namespace Zeitmanagement.ViewModel
             get => _selectedProject;
             set
             {
-                SetProperty(ref _selectedProject, value);
+                bool changed = SetProperty(ref _selectedProject, value);
                 _saveProjectnames.Invoke();
+
+                // Picking a project should be enough to start tracking it - no separate click
+                // on "Start" required. Only fires on an actual selection change of a stopped
+                // slot, so reselecting the same project or clearing it (row removal) doesn't
+                // toggle the booking.
+                if (changed && !IsActive && !string.IsNullOrWhiteSpace(value))
+                {
+                    _updateDatabase.Invoke(value);
+                }
             }
         }
 
