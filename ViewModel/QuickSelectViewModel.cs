@@ -119,8 +119,17 @@ namespace Zeitmanagement.ViewModel
             get => _pendingNewProject;
             set
             {
-                SetProperty(ref _pendingNewProject, value);
+                bool changed = SetProperty(ref _pendingNewProject, value);
                 StartNewSlotCommand.RaiseCanExecuteChanged();
+
+                // Picking a project in the floating window's combo box should start it right
+                // away - no separate click on "Start" required. StartNewSlotExecute resets
+                // PendingNewProject to null when it's done, which re-enters this setter, but
+                // StartNewSlotCanExecute then fails on the empty value and stops the recursion.
+                if (changed && StartNewSlotCanExecute(null))
+                {
+                    StartNewSlotExecute(null);
+                }
             }
         }
 
