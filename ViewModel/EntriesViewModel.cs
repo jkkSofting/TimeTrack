@@ -14,9 +14,6 @@ namespace Zeitmanagement.ViewModel
         // --- Tabellen-Daten ---
         public ObservableCollection<EntryItemVM> Entries { get; } = new ObservableCollection<EntryItemVM>();
 
-        /// <summary>Buchungen des ausgewählten Tages, nacheinander eingeplant (Überschneidungen aufgelöst).</summary>
-        public ObservableCollection<SequencedEntryVM> MergedEntries { get; } = new ObservableCollection<SequencedEntryVM>();
-
         public ObservableCollection<string> ProjectNames { get; } = new ObservableCollection<string>();
 
         // --- Sidebar-Übersichten ---
@@ -120,91 +117,29 @@ namespace Zeitmanagement.ViewModel
             private set => SetProperty(ref _hasOverlaps, value);
         }
 
-        // --- Zusammenfassen-Toggle (tatsächliche Arbeitszeit statt Summe aller Buchungen) ---
-        private bool _isMergedView;
+        // --- Arbeitstag: Beginn und Ende wie gebucht, tatsächliches Ende inkl. Überschneidungen und Pause ---
+        private bool _hasWorkDay;
+        private string _workDayStart, _workDayEnd, _actualDayEnd, _actualDayEndNote, _actualDayEndToolTip;
+
+        /// <summary>True, wenn der ausgewählte Tag gültige Buchungen hat (steuert die Arbeitstag-Kacheln).</summary>
+        public bool HasWorkDay { get => _hasWorkDay; private set => SetProperty(ref _hasWorkDay, value); }
+
+        /// <summary>Beginn der ersten Buchung des Tages (HH:mm).</summary>
+        public string WorkDayStart { get => _workDayStart; private set => SetProperty(ref _workDayStart, value); }
+
+        /// <summary>Spätestes gebuchtes Ende des Tages (HH:mm).</summary>
+        public string WorkDayEnd { get => _workDayEnd; private set => SetProperty(ref _workDayEnd, value); }
 
         /// <summary>
-        /// True, wenn überschneidende Buchungen nacheinander eingeplant angezeigt werden sollen
-        /// (Überschneidungen werden aufgelöst, indem die spätere Buchung nach hinten verschoben wird),
-        /// damit sichtbar wird, wie lange der Arbeitstag tatsächlich gedauert hat.
+        /// Tatsächliches Ende (HH:mm): gebuchtes Ende zzgl. parallel gebuchter Zeit (Überschneidungen
+        /// zählen nacheinander) und der noch fehlenden gesetzlichen Pause.
         /// </summary>
-        public bool IsMergedView
-        {
-            get => _isMergedView;
-            set
-            {
-                if (SetProperty(ref _isMergedView, value))
-                {
-                    RaisePropertyChanged(nameof(IsRawView));
-                    RaisePropertyChanged(nameof(ShowMandatoryBreakPill));
-                    RaisePropertyChanged(nameof(ShowOverworkWarningPill));
-                }
-            }
-        }
+        public string ActualDayEnd { get => _actualDayEnd; private set => SetProperty(ref _actualDayEnd, value); }
 
-        /// <summary>Komplement zu <see cref="IsMergedView"/>, praktisch für Visibility-Bindings.</summary>
-        public bool IsRawView => !IsMergedView;
+        /// <summary>Kurzinfo, was auf das gebuchte Ende aufgeschlagen wurde, z. B. "+30m Pause".</summary>
+        public string ActualDayEndNote { get => _actualDayEndNote; private set => SetProperty(ref _actualDayEndNote, value); }
 
-        private double _actualWorkedHours;
-
-        /// <summary>
-        /// Tatsächliche Dauer des Arbeitstages (erste Buchung bis letztes, ggf. verschobenes Ende), nachdem
-        /// überschneidende Buchungen nacheinander statt gleichzeitig eingeplant wurden.
-        /// </summary>
-        public double ActualWorkedHours
-        {
-            get => _actualWorkedHours;
-            private set => SetProperty(ref _actualWorkedHours, value);
-        }
-
-        private double _totalMergedBreakHours;
-
-        /// <summary>Summe der echten Lücken (ohne Buchung) zwischen den nacheinander eingeplanten Buchungen.</summary>
-        public double TotalMergedBreakHours
-        {
-            get => _totalMergedBreakHours;
-            private set => SetProperty(ref _totalMergedBreakHours, value);
-        }
-
-        private int _mandatoryBreakMinutes;
-
-        /// <summary>
-        /// Gesetzlich notwendige Mittagspause anhand der Gesamtarbeitszeit: bis 6h keine, &gt;6h bis 9h
-        /// 30 Minuten, über 9h weitere 15 Minuten (also 45 insgesamt).
-        /// </summary>
-        public int MandatoryBreakMinutes
-        {
-            get => _mandatoryBreakMinutes;
-            private set
-            {
-                if (SetProperty(ref _mandatoryBreakMinutes, value))
-                {
-                    RaisePropertyChanged(nameof(HasMandatoryBreak));
-                    RaisePropertyChanged(nameof(ShowMandatoryBreakPill));
-                }
-            }
-        }
-
-        public bool HasMandatoryBreak => MandatoryBreakMinutes > 0;
-
-        /// <summary>Steuert die Sichtbarkeit der Mittagspausen-Kachel (nur in der zusammengefassten Ansicht).</summary>
-        public bool ShowMandatoryBreakPill => IsMergedView && HasMandatoryBreak;
-
-        private bool _showOverworkWarning;
-
-        /// <summary>True, wenn die tatsächliche Tagesdauer 10h + notwendige Mittagspause überschreitet.</summary>
-        public bool ShowOverworkWarning
-        {
-            get => _showOverworkWarning;
-            private set
-            {
-                if (SetProperty(ref _showOverworkWarning, value))
-                    RaisePropertyChanged(nameof(ShowOverworkWarningPill));
-            }
-        }
-
-        /// <summary>Steuert die Sichtbarkeit der Überlastungs-Warnung (nur in der zusammengefassten Ansicht).</summary>
-        public bool ShowOverworkWarningPill => IsMergedView && ShowOverworkWarning;
+        public string ActualDayEndToolTip { get => _actualDayEndToolTip; private set => SetProperty(ref _actualDayEndToolTip, value); }
 
         // --- Add-Form ---
         private string _newProjektname, _newStart, _newEnd, _newBeschreibung;
@@ -314,35 +249,42 @@ namespace Zeitmanagement.ViewModel
                 });
             }
 
-            // --- Pausen und Überschneidungen berechnen ---
-            // Entries sind bereits nach Startzeit sortiert (SQL ORDER BY startzeit). Verglichen wird
-            // mit dem spätesten Ende aller bisherigen Buchungen, nicht nur der direkt vorherigen:
-            // die kann schon vor einer länger laufenden, parallelen Buchung enden. So zählt als
-            // Pause nur, wo gar nichts gebucht ist - genau wie im Git-Graph.
-            double totalBreak = 0;
-            int overlaps = 0;
-            TimeSpan? coveredUntil = null;
+            // --- Pausen, Arbeitszeit und Überschneidungen berechnen ---
+            // Verglichen wird mit dem spätesten Ende aller bisherigen Buchungen, nicht nur der direkt
+            // vorherigen: die kann schon vor einer länger laufenden, parallelen Buchung enden. So zählt
+            // als Pause nur, wo gar nichts gebucht ist - genau wie im Git-Graph. Die Arbeitszeit ist die
+            // Summe aller Buchungen, parallel gebuchte Zeit zählt also voll.
+            var intervals = new List<(TimeSpan Start, TimeSpan End)>();
             foreach (var e in Entries)
             {
-                if (!TryParseTime(e.Startzeit, out var curStart) || !TryParseTime(e.Endzeit, out var curEnd))
-                    continue;
+                if (TryParseTime(e.Startzeit, out var s) && TryParseTime(e.Endzeit, out var en) && en > s)
+                    intervals.Add((s, en));
+            }
+            intervals.Sort((a, b) => a.Start.CompareTo(b.Start));
 
+            var totalBreak = TimeSpan.Zero;
+            var workTime = TimeSpan.Zero;
+            int overlaps = 0;
+            TimeSpan? coveredUntil = null;
+            foreach (var iv in intervals)
+            {
                 if (coveredUntil.HasValue)
                 {
-                    if (curStart > coveredUntil.Value)
-                        totalBreak += (curStart - coveredUntil.Value).TotalHours;
-                    else if (curStart < coveredUntil.Value)
+                    if (iv.Start > coveredUntil.Value)
+                        totalBreak += iv.Start - coveredUntil.Value;
+                    else if (iv.Start < coveredUntil.Value)
                         overlaps++; // beginnt, während noch eine frühere Buchung läuft
                 }
 
-                if (!coveredUntil.HasValue || curEnd > coveredUntil.Value)
-                    coveredUntil = curEnd;
+                if (!coveredUntil.HasValue || iv.End > coveredUntil.Value)
+                    coveredUntil = iv.End;
+                workTime += iv.End - iv.Start;
             }
-            TotalBreakHours = Math.Round(totalBreak, 2);
+            TotalBreakHours = Math.Round(totalBreak.TotalHours, 2);
             OverlapCount = overlaps;
             HasOverlaps = overlaps > 0;
 
-            RebuildSequencedView();
+            UpdateWorkDay(intervals.Count > 0 ? intervals[0].Start : (TimeSpan?)null, coveredUntil, workTime, totalBreak);
             BuildGraph();
 
             // Defaults im Add-Panel
@@ -572,90 +514,51 @@ namespace Zeitmanagement.ViewModel
         }
 
         /// <summary>
-        /// Plant die Buchungen des ausgewählten Tages der Reihe nach ein, um die tatsächliche Dauer des
-        /// Arbeitstages zu ermitteln:
-        /// 1) Buchungen chronologisch nach ursprünglicher Startzeit hintereinanderlegen.
-        /// 2) Überschneidet eine Buchung die vorherige, wird sie (mit unveränderter Dauer) direkt hinter
-        ///    das Ende der vorherigen verschoben und entsprechend markiert (<see cref="SequencedEntryVM.IsShifted"/>).
-        ///    Jede nachfolgende Buchung hängt sich an diese verschobene Buchung an, weil der "Cursor"
-        ///    (Ende der zuletzt eingeplanten Buchung) für den nächsten Vergleich weiterläuft.
-        /// 3) Notwendige Mittagspause anhand der Gesamtarbeitszeit ermitteln (bis 6h keine, &gt;6h bis 9h
-        ///    30 Min, über 9h weitere 15 Min).
-        /// 4) Warnen, wenn die tatsächliche Tagesdauer 10h + Mittagspause überschreitet.
+        /// Setzt Beginn und Ende des Arbeitstages wie gebucht sowie das tatsächliche Ende. Dafür zählen
+        /// überschneidende Buchungen nacheinander statt gleichzeitig: Der Tag dauert so lange wie alle
+        /// Buchungen zusammen plus die gemachten Pausen, die parallel gebuchte Zeit wird also hinten
+        /// angehängt. Gemachte Pausen (Lücken ohne Buchung) bleiben dabei unangetastet. Zusätzlich wird
+        /// die noch fehlende gesetzliche Pause aufgeschlagen: bis 6h Arbeitszeit keine, über 6h bis 9h
+        /// 30 Minuten, über 9h 45 Minuten, abzüglich der bereits gemachten Pausen.
         /// </summary>
-        private void RebuildSequencedView()
+        /// <param name="bookedEnd">Spätestes gebuchtes Ende.</param>
+        /// <param name="work">Summe aller Buchungsdauern (parallel gebuchte Zeit voll gezählt).</param>
+        /// <param name="takenBreak">Summe der Lücken, in denen nichts gebucht ist.</param>
+        private void UpdateWorkDay(TimeSpan? start, TimeSpan? bookedEnd, TimeSpan work, TimeSpan takenBreak)
         {
-            MergedEntries.Clear();
-
-            var sorted = new List<(TimeSpan Start, TimeSpan End, EntryItemVM Entry)>();
-            foreach (var e in Entries)
+            HasWorkDay = start.HasValue && bookedEnd.HasValue;
+            if (!HasWorkDay)
             {
-                if (TryParseTime(e.Startzeit, out var s) && TryParseTime(e.Endzeit, out var en) && en > s)
-                    sorted.Add((s, en, e));
-            }
-            sorted.Sort((a, b) => a.Start.CompareTo(b.Start));
-
-            TimeSpan? cursor = null;
-            TimeSpan firstStart = TimeSpan.Zero;
-            bool isFirst = true;
-            double naturalGapMinutes = 0;
-
-            foreach (var iv in sorted)
-            {
-                var duration = iv.End - iv.Start;
-                TimeSpan actualStart;
-                bool isShifted;
-
-                if (cursor.HasValue && iv.Start < cursor.Value)
-                {
-                    // Überschneidung: diese Buchung (und damit alle folgenden) hinter die vorherige schieben.
-                    actualStart = cursor.Value;
-                    isShifted = true;
-                }
-                else
-                {
-                    actualStart = iv.Start;
-                    isShifted = false;
-                    if (cursor.HasValue)
-                        naturalGapMinutes += (iv.Start - cursor.Value).TotalMinutes;
-                }
-
-                if (isFirst)
-                {
-                    firstStart = actualStart;
-                    isFirst = false;
-                }
-
-                var actualEnd = actualStart + duration;
-                cursor = actualEnd;
-
-                MergedEntries.Add(new SequencedEntryVM
-                {
-                    Projektname = iv.Entry.Projektname,
-                    Startzeit = actualStart.ToString(@"hh\:mm", CultureInfo.InvariantCulture),
-                    Endzeit = actualEnd.ToString(@"hh\:mm", CultureInfo.InvariantCulture),
-                    Dauer = Math.Round(duration.TotalHours, 2),
-                    Beschreibung = iv.Entry.Beschreibung,
-                    IsShifted = isShifted,
-                    OriginalStartzeit = iv.Start.ToString(@"hh\:mm", CultureInfo.InvariantCulture)
-                });
+                WorkDayStart = WorkDayEnd = ActualDayEnd = ActualDayEndNote = ActualDayEndToolTip = null;
+                return;
             }
 
-            double grossWorkHours = MergedEntries.Sum(x => x.Dauer);
+            var required = TimeSpan.FromMinutes(work.TotalHours > 9 ? 45 : work.TotalHours > 6 ? 30 : 0);
+            var missingBreak = required > takenBreak ? required - takenBreak : TimeSpan.Zero;
+            var overlapExtra = start.Value + work + takenBreak - bookedEnd.Value;
+            var actualEnd = bookedEnd.Value + overlapExtra + missingBreak;
 
-            // --- Notwendige Mittagspause anhand der Gesamtarbeitszeit: bis 6h keine, >6h bis 9h 30 Min, ---
-            // --- über 9h weitere 15 Min (45 insgesamt).                                                 ---
-            int requiredBreakMinutes = grossWorkHours > 9 ? 45 : grossWorkHours > 6 ? 30 : 0;
+            WorkDayStart = FormatClock(start.Value);
+            WorkDayEnd = FormatClock(bookedEnd.Value);
+            ActualDayEnd = FormatClock(actualEnd);
 
-            double gesamtzeitHours = cursor.HasValue ? (cursor.Value - firstStart).TotalHours : 0;
+            string breakNote = required == TimeSpan.Zero ? "keine Pause nötig"
+                             : missingBreak > TimeSpan.Zero ? $"+{FormatSpan(missingBreak)} Pause"
+                             : "Pause schon gemacht";
+            ActualDayEndNote = overlapExtra > TimeSpan.Zero
+                ? $"+{FormatSpan(overlapExtra)} Überschneidung, {breakNote}"
+                : breakNote;
 
-            TotalMergedBreakHours = Math.Round(naturalGapMinutes / 60.0, 2);
-            MandatoryBreakMinutes = requiredBreakMinutes;
-            ActualWorkedHours = Math.Round(gesamtzeitHours, 2);
-
-            // --- Warnung: tatsächliche Tagesdauer überschreitet 10h + notwendige Mittagspause ---
-            ShowOverworkWarning = gesamtzeitHours > 10.0 + requiredBreakMinutes / 60.0;
+            ActualDayEndToolTip = $"Gebuchtes Ende: {FormatClock(bookedEnd.Value)}\n"
+                                + $"+ Überschneidungen: {FormatSpan(overlapExtra)} (parallel gebuchte Zeit zählt nacheinander)\n"
+                                + $"+ Fehlende Pause: {FormatSpan(missingBreak)}\n"
+                                + $"= Tatsächliches Ende: {FormatClock(actualEnd)}\n\n"
+                                + $"Arbeitszeit: {FormatSpan(work)}, nötige Pause: {FormatSpan(required)} (bis 6h keine, über 6h 30m, über 9h 45m)\n"
+                                + $"Gemachte Pausen: {FormatSpan(takenBreak)}";
         }
+
+        private static string FormatSpan(TimeSpan span) =>
+            span.TotalHours >= 1 ? $"{(int)span.TotalHours}h {span.Minutes:00}m" : $"{(int)span.TotalMinutes}m";
 
         // ── Git-Graph geometry construction ──
         //
@@ -1080,31 +983,6 @@ namespace Zeitmanagement.ViewModel
         public string Endzeit { get => _end; set => SetProperty(ref _end, value); }
         public string Beschreibung { get => _beschreibung; set => SetProperty(ref _beschreibung, value); }
         public double Dauer { get => _dauer; set => SetProperty(ref _dauer, value); }
-    }
-
-    /// <summary>
-    /// Eine Buchung in der "Tatsächliche Arbeitszeit"-Ansicht, nachdem Überschneidungen aufgelöst wurden:
-    /// Start/Ende sind ggf. nach hinten verschoben (<see cref="IsShifted"/>), die Dauer bleibt unverändert.
-    /// Jede Buchung bleibt eine eigene Zeile — es werden keine Buchungen unterschiedlicher Projekte
-    /// zusammengefasst.
-    /// </summary>
-    internal sealed class SequencedEntryVM : BindableBase
-    {
-        private string _projektname, _start, _end, _beschreibung, _originalStart;
-        private double _dauer;
-        private bool _isShifted;
-
-        public string Projektname { get => _projektname; set => SetProperty(ref _projektname, value); }
-        public string Startzeit { get => _start; set => SetProperty(ref _start, value); }
-        public string Endzeit { get => _end; set => SetProperty(ref _end, value); }
-        public double Dauer { get => _dauer; set => SetProperty(ref _dauer, value); }
-        public string Beschreibung { get => _beschreibung; set => SetProperty(ref _beschreibung, value); }
-
-        /// <summary>True, wenn diese Buchung wegen einer Überschneidung nach hinten verschoben wurde.</summary>
-        public bool IsShifted { get => _isShifted; set => SetProperty(ref _isShifted, value); }
-
-        /// <summary>Ursprünglich gebuchte Startzeit, bevor wegen einer Überschneidung verschoben wurde.</summary>
-        public string OriginalStartzeit { get => _originalStart; set => SetProperty(ref _originalStart, value); }
     }
 
     internal sealed class SummaryItem : BindableBase
