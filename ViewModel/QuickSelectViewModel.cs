@@ -123,9 +123,10 @@ namespace Zeitmanagement.ViewModel
                 StartNewSlotCommand.RaiseCanExecuteChanged();
 
                 // Picking a project in the floating window's combo box should start it right
-                // away - no separate click on "Start" required. StartNewSlotExecute resets
-                // PendingNewProject to null when it's done, which re-enters this setter, but
-                // StartNewSlotCanExecute then fails on the empty value and stops the recursion.
+                // away - no separate click on "Start" required. The selection is left in place
+                // afterwards (see StartNewSlotExecute) so that once the project is stopped again,
+                // it's still selected and a single click on "Start" restarts it - no need to
+                // reopen the combo box and pick it again.
                 if (changed && StartNewSlotCanExecute(null))
                 {
                     StartNewSlotExecute(null);
@@ -159,8 +160,11 @@ namespace Zeitmanagement.ViewModel
                 SaveProjectnames();
             }
 
-            SetBookingInformation(project);
-            PendingNewProject = null;
+            BeginOrResume(project);
+
+            // PendingNewProject is deliberately left set to the just-started project: once it's
+            // stopped again, the combo box still shows it selected and "Start" is enabled again,
+            // so restarting the same project is a single click instead of reopening the combo box.
         }
 
         /// <summary>
@@ -298,8 +302,8 @@ namespace Zeitmanagement.ViewModel
 
         private void AutoStopActiveBooking(string reason)
         {
-            // Snapshot first: SetBookingInformation mutates QuickSelectItems' IsActive flags as
-            // it goes, so iterating the live query would skip entries.
+            // Snapshot first: StopBooking mutates QuickSelectItems' IsActive flags as it goes,
+            // so iterating the live query would skip entries.
             var activeProjects = QuickSelectItems.Where(q => q.IsActive).Select(q => q.SelectedProject).ToList();
             if (activeProjects.Count == 0)
                 return;
@@ -307,8 +311,10 @@ namespace Zeitmanagement.ViewModel
             foreach (var project in activeProjects)
             {
                 // Reuses the same booking-end/persistence logic as the manual per-slot stop
-                // button, so there's a single place that ends a booking.
-                SetBookingInformation(project);
+                // button, so there's a single place that ends a booking. Always a full stop -
+                // even a paused slot is cleared out rather than left reserved - since the
+                // session is going away (lock/sleep), not just a short interruption.
+                StopBooking(project);
             }
 
             var names = string.Join(", ", activeProjects.Select(p => $"\"{p}\""));
@@ -350,30 +356,24 @@ namespace Zeitmanagement.ViewModel
         #endregion
 
         /// <summary>
-        /// Starts or stops the booking for <paramref name="selectedProject"/>'s slot. Unlike a
-        /// single-active model, this never touches other slots: several projects can run in
-        /// parallel, up to <see cref="MaxActiveSlots"/> at once.
+        /// Starts a fresh slot's booking, or resumes one that's paused. Unlike a single-active
+        /// model, this never touches other slots: several projects can run in parallel, up to
+        /// <see cref="MaxActiveSlots"/> at once.
         /// </summary>
-        private void SetBookingInformation(string selectedProject)
+        private void BeginOrResume(string selectedProject)
         {
+            var calledProject = QuickSelectItems.FirstOrDefault(q => q.SelectedProject != null && q.SelectedProject.Equals(selectedProject));
+            if (calledProject == null) return;
+
             var now = DateTime.Now;
 
-            var calledProject = QuickSelectItems.FirstOrDefault(q => q.SelectedProject != null && q.SelectedProject.Equals(selectedProject));
-
-            if (calledProject == null)
+            if (calledProject.IsPaused)
             {
-                return;
+                calledProject.Start = now.ToString("HH:mm");
+                calledProject.StartedAt = now;
+                calledProject.IsPaused = false;
             }
-
-            if (calledProject.IsActive)
-            {
-                calledProject.End = now.ToString("HH:mm");
-                calledProject.IsActive = false;
-                calledProject.StartedAt = null;
-
-                UpdateDatabase(calledProject);
-            }
-            else
+            else if (!calledProject.IsActive)
             {
                 var activeCount = QuickSelectItems.Count(q => q.IsActive);
                 if (activeCount >= MaxActiveSlots)
@@ -390,6 +390,53 @@ namespace Zeitmanagement.ViewModel
                 calledProject.IsActive = true;
                 calledProject.StartedAt = now;
             }
+            // else: already running - the Start/Resume control is disabled in that case, so
+            // this is just a defensive no-op.
+
+            UpdateActiveState();
+        }
+
+        /// <summary>
+        /// Fully stops <paramref name="selectedProject"/>'s slot, freeing it up for another
+        /// project. If it's currently running, closes out and persists the running segment
+        /// first; if it's paused, that segment was already persisted when it was paused, so
+        /// there's nothing left to book.
+        /// </summary>
+        private void StopBooking(string selectedProject)
+        {
+            var calledProject = QuickSelectItems.FirstOrDefault(q => q.SelectedProject != null && q.SelectedProject.Equals(selectedProject));
+            if (calledProject == null || !calledProject.IsActive) return;
+
+            if (!calledProject.IsPaused)
+            {
+                calledProject.End = DateTime.Now.ToString("HH:mm");
+                UpdateDatabase(calledProject);
+            }
+
+            calledProject.IsActive = false;
+            calledProject.IsPaused = false;
+            calledProject.StartedAt = null;
+            calledProject.ResetAccumulatedElapsed();
+
+            UpdateActiveState();
+        }
+
+        /// <summary>
+        /// Pauses <paramref name="selectedProject"/>'s slot: persists the segment running up to
+        /// now just like a stop would, but keeps the slot reserved so it can be resumed with a
+        /// single click instead of going through the "start a project" combo box again.
+        /// </summary>
+        private void PauseBooking(string selectedProject)
+        {
+            var calledProject = QuickSelectItems.FirstOrDefault(q => q.SelectedProject != null && q.SelectedProject.Equals(selectedProject));
+            if (calledProject == null || !calledProject.IsActive || calledProject.IsPaused) return;
+
+            var now = DateTime.Now;
+            calledProject.End = now.ToString("HH:mm");
+            UpdateDatabase(calledProject);
+            calledProject.AccumulateElapsed(now);
+            calledProject.StartedAt = null;
+            calledProject.IsPaused = true;
 
             UpdateActiveState();
         }
@@ -431,7 +478,7 @@ namespace Zeitmanagement.ViewModel
         /// </summary>
         private QuickSelectItemViewModel CreateQuickSelectItem()
         {
-            var item = new QuickSelectItemViewModel(SetBookingInformation, SaveProjectnames, RemoveQuickSelectItem);
+            var item = new QuickSelectItemViewModel(BeginOrResume, StopBooking, PauseBooking, SaveProjectnames, RemoveQuickSelectItem);
 
             foreach (var project in db.GetProjects())
             {

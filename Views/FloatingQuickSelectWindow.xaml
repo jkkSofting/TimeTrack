@@ -96,10 +96,40 @@
             </Setter>
         </Style>
 
-        <!--  Kleiner "Stop"-Button innerhalb eines Slots  -->
-        <Style x:Key="SlotStopButton" TargetType="Button" BasedOn="{StaticResource FlatButton}">
-            <Setter Property="Padding" Value="10,4" />
-            <Setter Property="FontSize" Value="12" />
+        <!--  Kleine, quadratische Icon-Buttons (Fortsetzen/Pause/Stop) innerhalb eines Slots  -->
+        <Style x:Key="SlotIconButton" TargetType="Button" BasedOn="{StaticResource FlatButton}">
+            <Setter Property="Width" Value="32" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+
+        <!--  Nur sichtbar, während der Slot aktiv läuft (Pause-Button)  -->
+        <Style x:Key="SlotRunningOnlyButton" TargetType="Button" BasedOn="{StaticResource SlotIconButton}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsPaused}" Value="True">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!--  Nur sichtbar, während der Slot pausiert ist (Fortsetzen-Button)  -->
+        <Style x:Key="SlotPausedOnlyButton" TargetType="Button" BasedOn="{StaticResource SlotIconButton}">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsPaused}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!--  Status-Punkt: grün während der Slot läuft, gelb während er pausiert ist  -->
+        <Style x:Key="StatusDot" TargetType="Ellipse">
+            <Setter Property="Fill" Value="#3DD68C" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsPaused}" Value="True">
+                    <Setter Property="Fill" Value="#E0A83D" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
     </Window.Resources>
@@ -122,11 +152,11 @@
                     ToolTip="Fenster immer im Vordergrund halten" />
             </Grid>
 
-            <!--  Laufende Projekte (bis zu 4 parallele Slots)  -->
+            <!--  Aktive Projekte, laufend oder pausiert (bis zu 4 parallele Slots)  -->
             <TextBlock
                 Margin="2,12,0,4"
                 Foreground="{StaticResource BrushTextMuted}"
-                Text="Laufende Projekte" />
+                Text="Aktive Projekte" />
 
             <TextBlock
                 Margin="2,4,0,4"
@@ -157,7 +187,7 @@
                                     Height="12"
                                     Margin="0,0,10,0"
                                     VerticalAlignment="Center"
-                                    Fill="#3DD68C" />
+                                    Style="{StaticResource StatusDot}" />
 
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                     <TextBlock
@@ -169,7 +199,7 @@
                                     <TextBlock
                                         FontSize="11"
                                         Foreground="{StaticResource BrushTextMuted}"
-                                        Text="{Binding Start, StringFormat=seit {0}}" />
+                                        Text="{Binding StatusText}" />
                                 </StackPanel>
 
                                 <TextBlock
@@ -181,12 +211,57 @@
                                     Foreground="{StaticResource BrushText}"
                                     Text="{Binding ElapsedText}" />
 
-                                <Button
+                                <StackPanel
                                     Grid.Column="3"
                                     VerticalAlignment="Center"
-                                    Command="{Binding EndTimerCommand}"
-                                    Content="Stop"
-                                    Style="{StaticResource SlotStopButton}" />
+                                    Orientation="Horizontal">
+
+                                    <!--  Fortsetzen (nur sichtbar, wenn pausiert)  -->
+                                    <Button
+                                        Margin="0,0,6,0"
+                                        Command="{Binding StartTimerCommand}"
+                                        Style="{StaticResource SlotPausedOnlyButton}"
+                                        ToolTip="Fortsetzen">
+                                        <Path
+                                            Width="11"
+                                            Height="11"
+                                            Data="M0,0 L0,11 L10,5.5 Z"
+                                            Fill="{StaticResource BrushText}"
+                                            Stretch="Uniform" />
+                                    </Button>
+
+                                    <!--  Pausieren (nur sichtbar, während aktiv läuft)  -->
+                                    <Button
+                                        Margin="0,0,6,0"
+                                        Command="{Binding PauseTimerCommand}"
+                                        Style="{StaticResource SlotRunningOnlyButton}"
+                                        ToolTip="Pausieren">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Rectangle
+                                                Width="3"
+                                                Height="11"
+                                                Fill="{StaticResource BrushText}" />
+                                            <Rectangle
+                                                Width="3"
+                                                Height="11"
+                                                Margin="3,0,0,0"
+                                                Fill="{StaticResource BrushText}" />
+                                        </StackPanel>
+                                    </Button>
+
+                                    <!--  Stoppen  -->
+                                    <Button
+                                        Command="{Binding EndTimerCommand}"
+                                        Style="{StaticResource SlotIconButton}"
+                                        ToolTip="Stoppen">
+                                        <Rectangle
+                                            Width="11"
+                                            Height="11"
+                                            Fill="{StaticResource BrushText}"
+                                            RadiusX="1.5"
+                                            RadiusY="1.5" />
+                                    </Button>
+                                </StackPanel>
                             </Grid>
                         </Border>
                     </DataTemplate>
@@ -215,8 +290,15 @@
                     Grid.Column="1"
                     Margin="6,4,4,4"
                     Command="{Binding StartNewSlotCommand}"
-                    Content="Start"
-                    Style="{StaticResource FlatButton}" />
+                    Style="{StaticResource FlatButton}"
+                    ToolTip="Start">
+                    <Path
+                        Width="11"
+                        Height="11"
+                        Data="M0,0 L0,11 L10,5.5 Z"
+                        Fill="{StaticResource BrushText}"
+                        Stretch="Uniform" />
+                </Button>
             </Grid>
 
             <TextBlock
