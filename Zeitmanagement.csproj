@@ -70,6 +70,7 @@
     <Compile Include="TimeTracker.cs" />
     <Compile Include="Helpers\AutostartHelper.cs" />
     <Compile Include="Helpers\BackupHelper.cs" />
+    <Compile Include="Helpers\SapBookingCalculator.cs" />
     <Compile Include="Helpers\SessionActivityMonitor.cs" />
     <Compile Include="Helpers\StartupMode.cs" />
     <Compile Include="Helpers\TrayNotificationService.cs" />
@@ -82,6 +83,7 @@
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ProjectsViewModel.cs" />
     <Compile Include="ViewModel\QuickSelectItemViewModel.cs" />
+    <Compile Include="ViewModel\SapBookingViewModel.cs" />
     <Compile Include="ViewModel\QuickSelectViewModel.cs" />
     <Compile Include="ViewModel\SettingsViewModel.cs" />
     <Compile Include="Views\CountUpTextblock.cs" />
@@ -109,6 +111,9 @@
     </Compile>
     <Compile Include="Views\FloatingQuickSelectWindow.xaml.cs">
       <DependentUpon>FloatingQuickSelectWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SapBookingView.xaml.cs">
+      <DependentUpon>SapBookingView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\SettingsView.xaml.cs">
       <DependentUpon>SettingsView.xaml</DependentUpon>
@@ -149,6 +154,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\FloatingQuickSelectWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SapBookingView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

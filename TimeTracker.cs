@@ -69,7 +69,8 @@ public sealed class TimeTracker : IDisposable
                 projektname     TEXT    NOT NULL UNIQUE,
                 kunde           TEXT    NOT NULL,
                 anzahl_stunden  REAL    NOT NULL DEFAULT 0.0,
-                kostentraeger   TEXT    NOT NULL
+                kostentraeger   TEXT    NOT NULL,
+                ist_extern      INTEGER NOT NULL DEFAULT 0 -- 1 = vom Kunden bezahlt
             );
             CREATE INDEX IF NOT EXISTS idx_projects_name ON projects(projektname);
 
@@ -125,13 +126,21 @@ public sealed class TimeTracker : IDisposable
             END;";
             cmd.ExecuteNonQuery();
 
+            // Migration: Datenbanken vor der SAP-Verrechnung haben noch keine Spalte ist_extern
+            cmd.CommandText = "SELECT COUNT(*) FROM pragma_table_info('projects') WHERE name = 'ist_extern';";
+            if (Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) == 0)
+            {
+                cmd.CommandText = "ALTER TABLE projects ADD COLUMN ist_extern INTEGER NOT NULL DEFAULT 0;";
+                cmd.ExecuteNonQuery();
+            }
+
             tx.Commit();
         }
     }
 
     // ---------- Projekte ----------
 
-    public void AddOrEnsureProject(string projektname, string kunde, string kostentraeger)
+    public void AddOrEnsureProject(string projektname, string kunde, string kostentraeger, bool istExtern = false)
     {
         if (string.IsNullOrWhiteSpace(projektname)) throw new ArgumentException("leer", nameof(projektname));
         if (string.IsNullOrWhiteSpace(kunde)) throw new ArgumentException("leer", nameof(kunde));
@@ -142,15 +151,17 @@ public sealed class TimeTracker : IDisposable
             // SQLite ab 3.24.0: UPSERT via ON CONFLICT .. DO UPDATE
             cmd.CommandText =
             @"
-            INSERT INTO projects (projektname, kunde, kostentraeger)
-                 VALUES (@name, @kunde, @kost)
+            INSERT INTO projects (projektname, kunde, kostentraeger, ist_extern)
+                 VALUES (@name, @kunde, @kost, @ext)
             ON CONFLICT(projektname) DO UPDATE SET
                  kunde = excluded.kunde,
-                 kostentraeger = excluded.kostentraeger
+                 kostentraeger = excluded.kostentraeger,
+                 ist_extern = excluded.ist_extern
             ";
             cmd.Parameters.AddWithValue("@name", projektname);
             cmd.Parameters.AddWithValue("@kunde", kunde);
             cmd.Parameters.AddWithValue("@kost", kostentraeger);
+            cmd.Parameters.AddWithValue("@ext", istExtern ? 1 : 0);
             cmd.ExecuteNonQuery();
         }
     }
@@ -194,7 +205,7 @@ public sealed class TimeTracker : IDisposable
     {
         using (var cmd = _conn.CreateCommand())
         {
-            cmd.CommandText = "SELECT projektname, kunde, anzahl_stunden, kostentraeger FROM projects ORDER BY projektname;";
+            cmd.CommandText = "SELECT projektname, kunde, anzahl_stunden, kostentraeger, ist_extern FROM projects ORDER BY projektname;";
             using (var r = cmd.ExecuteReader())
             {
                 while (r.Read())
@@ -204,14 +215,15 @@ public sealed class TimeTracker : IDisposable
                         Projektname = r.GetString(0),
                         Kunde = r.GetString(1),
                         AnzahlStunden = r.GetDouble(2),
-                        Kostentraeger = r.GetString(3)
+                        Kostentraeger = r.GetString(3),
+                        IstExtern = r.GetInt32(4) != 0
                     };
                 }
             }
         }
     }
 
-    public void UpdateProject(string originalProjektname, string newProjektname, string kunde, string kostentraeger)
+    public void UpdateProject(string originalProjektname, string newProjektname, string kunde, string kostentraeger, bool istExtern = false)
     {
         if (string.IsNullOrWhiteSpace(originalProjektname)) throw new ArgumentException("leer", nameof(originalProjektname));
         if (string.IsNullOrWhiteSpace(newProjektname)) throw new ArgumentException("leer", nameof(newProjektname));
@@ -253,11 +265,13 @@ public sealed class TimeTracker : IDisposable
             UPDATE projects
                SET projektname = @pname,
                    kunde = @kunde,
-                   kostentraeger = @kost
+                   kostentraeger = @kost,
+                   ist_extern = @ext
              WHERE id = @id;";
             cmd.Parameters.AddWithValue("@pname", newProjektname);
             cmd.Parameters.AddWithValue("@kunde", kunde);
             cmd.Parameters.AddWithValue("@kost", kostentraeger);
+            cmd.Parameters.AddWithValue("@ext", istExtern ? 1 : 0);
             cmd.Parameters.AddWithValue("@id", originalId);
             cmd.ExecuteNonQuery();
 
@@ -396,6 +410,44 @@ public sealed class TimeTracker : IDisposable
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Liefert alle Buchungen im Zeitraum [fromInclusive, toInclusive] inkl. Projektname und Intern/Extern-Kennzeichen,
+    /// sortiert nach Datum und Startzeit.
+    /// </summary>
+    public List<TimeEntryRow> GetTimeEntriesBetween(DateTime fromInclusive, DateTime toInclusive)
+    {
+        var result = new List<TimeEntryRow>();
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = @"
+            SELECT te.id, te.datum, te.startzeit, te.endzeit, te.beschreibung, p.projektname, p.ist_extern
+              FROM time_entries te
+              JOIN projects p ON p.id = te.projekt_id
+             WHERE te.datum >= @from AND te.datum <= @to
+             ORDER BY te.datum, te.startzeit;";
+            cmd.Parameters.AddWithValue("@from", fromInclusive.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            cmd.Parameters.AddWithValue("@to", toInclusive.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+
+            using (var r = cmd.ExecuteReader())
+            {
+                while (r.Read())
+                {
+                    result.Add(new TimeEntryRow
+                    {
+                        Id = r.GetInt32(0),
+                        Datum = DateTime.ParseExact(r.GetString(1), "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                        Startzeit = r.GetString(2),
+                        Endzeit = r.GetString(3),
+                        Beschreibung = r.IsDBNull(4) ? null : r.GetString(4),
+                        Projektname = r.GetString(5),
+                        IstExtern = r.GetInt32(6) != 0
+                    });
+                }
+            }
+        }
+        return result;
     }
 
     /// <summary>
@@ -558,6 +610,7 @@ public sealed class TimeTracker : IDisposable
         public string Kunde { get; set; }
         public double AnzahlStunden { get; set; }
         public string Kostentraeger { get; set; }
+        public bool IstExtern { get; set; }     // vom Kunden bezahlt
     }
 
     public class TimeEntryRow
@@ -568,6 +621,7 @@ public sealed class TimeTracker : IDisposable
         public string Endzeit { get; set; }
         public string Beschreibung { get; set; }
         public string Projektname { get; set; } // <— NEU (für Anzeige)
+        public bool IstExtern { get; set; }     // nur von GetTimeEntriesBetween gefüllt
     }
 
 }

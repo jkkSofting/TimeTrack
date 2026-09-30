@@ -44,6 +44,10 @@ namespace Zeitmanagement.ViewModel
 
         private string _newProjektname, _newKunde, _newKostentraeger;
 
+        /// <summary>Neues Projekt wird vom Kunden bezahlt (extern).</summary>
+        public bool NewIstExtern { get => _newIstExtern; set => SetProperty(ref _newIstExtern, value); }
+        private bool _newIstExtern;
+
         public string StartDate { get => _startDate; set => SetProperty(ref _startDate, value); }
         private string _startDate;
 
@@ -69,6 +73,9 @@ namespace Zeitmanagement.ViewModel
         { get => _editKostentraeger; set { SetProperty(ref _editKostentraeger, value); SaveEditProjectCommand.RaiseCanExecuteChanged(); } }
 
         private string _editProjektname, _editKunde, _editKostentraeger;
+
+        public bool EditIstExtern { get => _editIstExtern; set => SetProperty(ref _editIstExtern, value); }
+        private bool _editIstExtern;
 
         // UI-Text
         private string _headerSubtitle = "Verwalte Projekte, Buchungen & Stunden";
@@ -174,6 +181,7 @@ namespace Zeitmanagement.ViewModel
                         Projektname = p.Projektname,
                         Kunde = p.Kunde,
                         Kostentraeger = p.Kostentraeger,
+                        IstExtern = p.IstExtern,
                         Buchungen = count,
                         Stunden = Math.Round(hours, 2)
                     });
@@ -217,9 +225,10 @@ namespace Zeitmanagement.ViewModel
             var kunde = NewKunde.Trim();
             var kt = NewKostentraeger.Trim();
 
-            MainViewModel.DbInstance.AddOrEnsureProject(name, kunde, kt);
+            MainViewModel.DbInstance.AddOrEnsureProject(name, kunde, kt, NewIstExtern);
 
             NewProjektname = NewKunde = NewKostentraeger = string.Empty;
+            NewIstExtern = false;
             IsAddPanelOpen = false;
 
             Refresh();
@@ -243,6 +252,7 @@ namespace Zeitmanagement.ViewModel
             EditProjektname = item.Projektname;
             EditKunde = item.Kunde;
             EditKostentraeger = item.Kostentraeger;
+            EditIstExtern = item.IstExtern;
 
             // Falls Add-Panel offen ist: zumachen, wir sind nicht im Basar
             IsAddPanelOpen = false;
@@ -267,7 +277,8 @@ namespace Zeitmanagement.ViewModel
                 originalProjektname: _editProjektnameOriginal,
                 newProjektname: newName,
                 kunde: newKunde,
-                kostentraeger: newKt);
+                kostentraeger: newKt,
+                istExtern: EditIstExtern);
 
             CancelEdit(); // leert Felder & schließt Panel
             Refresh();
@@ -302,11 +313,14 @@ namespace Zeitmanagement.ViewModel
         public string Projektname { get => _projektname; set => SetProperty(ref _projektname, value); }
         public string Kunde { get => _kunde; set => SetProperty(ref _kunde, value); }
         public string Kostentraeger { get => _kostentraeger; set => SetProperty(ref _kostentraeger, value); }
+        public bool IstExtern { get => _istExtern; set { SetProperty(ref _istExtern, value); RaisePropertyChanged(nameof(TypText)); } }
+        public string TypText => _istExtern ? "Extern" : "Intern";
         public int Buchungen { get => _buchungen; set => SetProperty(ref _buchungen, value); }
         public double Stunden { get => _stunden; set => SetProperty(ref _stunden, value); }
 
         private string _projektname, _kunde, _kostentraeger;
         private int _buchungen;
+        private bool _istExtern;
         private double _stunden;
     }
 }

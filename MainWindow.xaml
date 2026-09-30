@@ -76,6 +76,15 @@
                     Margin="5"
                     Background="#00000000"
                     Command="{Binding SelectViewCommand}"
+                    CommandParameter="Sap"
+                    Content="SAP-Verrechnung"
+                    Foreground="White" />
+                <Button
+                    Height="30"
+                    MaxWidth="140"
+                    Margin="5"
+                    Background="#00000000"
+                    Command="{Binding SelectViewCommand}"
                     CommandParameter="Settings"
                     Content="Einstellungen"
                     Foreground="White" />

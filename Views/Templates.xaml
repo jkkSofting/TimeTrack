@@ -28,6 +28,10 @@
         <views:FragmentationView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type vm:SapBookingViewModel}">
+        <views:SapBookingView />
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
         <views:SettingsView />
     </DataTemplate>

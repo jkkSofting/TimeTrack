@@ -19,6 +19,7 @@ namespace Zeitmanagement.ViewModel
         private readonly BaseViewModel _entriesView;
         private readonly BaseViewModel _quickSelectView;
         private readonly BaseViewModel _fragmentationView;
+        private readonly BaseViewModel _sapBookingView;
         private readonly BaseViewModel _settingsView;
 
         private object _rightSide;
@@ -71,6 +72,7 @@ namespace Zeitmanagement.ViewModel
             _entriesView = new EntriesViewModel();
             _quickSelectView = new QuickSelectViewModel();
             _fragmentationView = new FragmentationViewModel();
+            _sapBookingView = new SapBookingViewModel();
             _settingsView = new SettingsViewModel();
 
             SelectViewCommandExecute("dashboard");
@@ -117,6 +119,9 @@ namespace Zeitmanagement.ViewModel
                     break;
                 case "fragmentation":
                     RightSide = _fragmentationView;
+                    break;
+                case "sap":
+                    RightSide = _sapBookingView;
                     break;
                 case "settings":
                     RightSide = _settingsView;
