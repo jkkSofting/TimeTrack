@@ -105,6 +105,10 @@ namespace Zeitmanagement.ViewModel
 
             var result = SapBookingCalculator.Calculate(inputs);
 
+            _projectToKtr.Clear();
+            foreach (var p in db.GetProjects())
+                _projectToKtr[p.Projektname] = p.Kostentraeger;
+
             HasDays = result.Days.Count > 0;
             NoExternalProjects = HasDays && result.Projects.All(p => !p.IsExternal);
 
@@ -112,8 +116,8 @@ namespace Zeitmanagement.ViewModel
             BuildDays(result);
 
             MonthProjects.Clear();
-            foreach (var p in result.Projects)
-                MonthProjects.Add(ToRow(p));
+            foreach (var row in ToKtrRows(result.Projects))
+                MonthProjects.Add(row);
         }
 
         private void BuildKpis(SapMonthResult r, DateTime lastDayOfMonth)
@@ -194,8 +198,8 @@ namespace Zeitmanagement.ViewModel
                     });
                 }
 
-                foreach (var p in d.Projects)
-                    vm.Projects.Add(ToRow(p));
+                foreach (var row in ToKtrRows(d.Projects))
+                    vm.Projects.Add(row);
 
                 // Erklärung in Klartext, damit jede Zahl nachvollziehbar ist
                 if (d.CoveredByExternalMin > 0.5)
@@ -213,6 +217,30 @@ namespace Zeitmanagement.ViewModel
 
                 Days.Add(vm);
             }
+        }
+
+        private readonly Dictionary<string, string> _projectToKtr = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Fasst Projekte mit gleichem Kostenträger (und gleichem Typ) zu einer Zeile zusammen.</summary>
+        private IEnumerable<SapProjectRowVM> ToKtrRows(IEnumerable<SapProjectResult> projects)
+        {
+            return projects
+                .GroupBy(p => new
+                {
+                    Ktr = _projectToKtr.TryGetValue(p.Project, out var k) && !string.IsNullOrWhiteSpace(k) ? k : "—",
+                    p.IsExternal
+                })
+                .Select(g => ToRow(new SapProjectResult
+                {
+                    Project = g.Key.Ktr,
+                    IsExternal = g.Key.IsExternal,
+                    GrossMin = g.Sum(p => p.GrossMin),
+                    BookedMin = g.Sum(p => p.BookedMin),
+                    CoveredByExternalMin = g.Sum(p => p.CoveredByExternalMin),
+                    CoveredBySurplusMin = g.Sum(p => p.CoveredBySurplusMin),
+                    DiscardedMin = g.Sum(p => p.DiscardedMin)
+                }))
+                .OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase);
         }
 
         private static SapProjectRowVM ToRow(SapProjectResult p)

@@ -183,7 +183,7 @@
                             FontSize="16"
                             FontWeight="SemiBold"
                             Foreground="{StaticResource BrushText}"
-                            Text="Im SAP zu buchen – Monat je Projekt" />
+                            Text="Im SAP zu buchen – Monat je Kostenträger" />
                         <Grid Margin="0,0,0,4">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="3*" />
@@ -192,7 +192,7 @@
                                 <ColumnDefinition Width="110" />
                                 <ColumnDefinition Width="3*" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource Muted}" Text="Projekt" />
+                            <TextBlock Style="{StaticResource Muted}" Text="Kostenträger" />
                             <TextBlock Grid.Column="1" Style="{StaticResource Muted}" Text="Typ" />
                             <TextBlock Grid.Column="2" Style="{StaticResource Muted}" Text="Gebucht (brutto)" />
                             <TextBlock Grid.Column="3" Style="{StaticResource Muted}" Text="Im SAP buchen" />
