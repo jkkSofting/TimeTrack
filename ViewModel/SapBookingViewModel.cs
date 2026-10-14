@@ -33,6 +33,7 @@ namespace Zeitmanagement.ViewModel
         private static readonly SolidColorBrush InternalBookedBrush = Frozen(0x8E, 0x8B, 0xFF);
         private static readonly SolidColorBrush CoveredExternalBrush = Frozen(0x4E, 0xCA, 0x84);
         private static readonly SolidColorBrush CoveredSurplusBrush = Frozen(0xFF, 0xC1, 0x07);
+        private static readonly SolidColorBrush DiscardedBrush = Frozen(0x7A, 0x80, 0x8C);
         private static readonly SolidColorBrush SurplusBrush = Frozen(0xFF, 0x8A, 0x50);
         private static readonly SolidColorBrush TextBrush = Frozen(0xF5, 0xF7, 0xFB);
 
@@ -124,6 +125,8 @@ namespace Zeitmanagement.ViewModel
             Kpis.Add(new SapKpiVM("Intern (Buchungen)", Fmt(r.InternalGrossMin), "alle internen Buchungen brutto", InternalBookedBrush));
             Kpis.Add(new SapKpiVM("Gedeckt durch Extern", Fmt(r.CoveredByExternalMin), "intern, parallel zu extern: entfällt", CoveredExternalBrush));
             Kpis.Add(new SapKpiVM("Gedeckt durch Speicher", Fmt(r.CoveredBySurplusMin), "intern, mit Überschuss verrechnet: entfällt", CoveredSurplusBrush));
+            if (r.DiscardedMin > 0.5)
+                Kpis.Add(new SapKpiVM("Verworfen", Fmt(r.DiscardedMin), "intern, parallel zu internem Projekt mit weniger Stunden: zählt nicht", DiscardedBrush));
             Kpis.Add(new SapKpiVM("Intern im SAP buchen", Fmt(r.InternalBookedMin), "Rest der internen Zeit", InternalBookedBrush));
             Kpis.Add(new SapKpiVM("Im SAP gesamt", Fmt(r.SapTotalMin), "extern + interner Rest", TextBrush));
             Kpis.Add(new SapKpiVM(monthOpen ? "Überschuss offen" : "Überstunden", Fmt(r.LeftoverMin),
@@ -201,6 +204,8 @@ namespace Zeitmanagement.ViewModel
                     vm.Lines.Add(new SapLineVM($"+{Fmt(d.SurplusGeneratedMin)} Überschuss, weil mehrere externe Projekte parallel liefen: kommt in den Speicher", SurplusBrush));
                 if (d.CoveredBySurplusMin > 0.5)
                     vm.Lines.Add(new SapLineVM($"−{Fmt(d.CoveredBySurplusMin)} freie interne Zeit mit gespeichertem Überschuss verrechnet: entfällt im SAP", CoveredSurplusBrush));
+                if (d.DiscardedMin > 0.5)
+                    vm.Lines.Add(new SapLineVM($"−{Fmt(d.DiscardedMin)} parallele interne Zeit des Projekts mit mehr Tagesstunden: verworfen, zählt nicht", DiscardedBrush));
                 if (d.InternalBookedMin > 0.5)
                     vm.Lines.Add(new SapLineVM($"{Fmt(d.InternalBookedMin)} interne Zeit muss im SAP gebucht werden", InternalBookedBrush));
                 if (vm.Lines.Count == 0)
@@ -215,6 +220,7 @@ namespace Zeitmanagement.ViewModel
             var notes = new List<string>();
             if (p.CoveredByExternalMin > 0.5) notes.Add($"−{Fmt(p.CoveredByExternalMin)} durch Extern");
             if (p.CoveredBySurplusMin > 0.5) notes.Add($"−{Fmt(p.CoveredBySurplusMin)} durch Speicher");
+            if (p.DiscardedMin > 0.5) notes.Add($"−{Fmt(p.DiscardedMin)} verworfen");
             return new SapProjectRowVM
             {
                 Name = p.Project,
@@ -233,6 +239,7 @@ namespace Zeitmanagement.ViewModel
                 case SapSegmentKind.External: return ExternalBrush;
                 case SapSegmentKind.InternalCoveredByExternal: return CoveredExternalBrush;
                 case SapSegmentKind.InternalCoveredBySurplus: return CoveredSurplusBrush;
+                case SapSegmentKind.InternalDiscarded: return DiscardedBrush;
                 default: return InternalBookedBrush;
             }
         }
@@ -244,6 +251,7 @@ namespace Zeitmanagement.ViewModel
                 case SapSegmentKind.External: return "extern: wird im SAP gebucht";
                 case SapSegmentKind.InternalCoveredByExternal: return "intern, durch parallele externe Arbeit gedeckt: entfällt";
                 case SapSegmentKind.InternalCoveredBySurplus: return "intern, mit gespeichertem Überschuss verrechnet: entfällt";
+                case SapSegmentKind.InternalDiscarded: return "intern, parallel zu internem Projekt mit weniger Stunden: verworfen";
                 default: return "intern: muss im SAP gebucht werden";
             }
         }

@@ -23,7 +23,9 @@ namespace Zeitmanagement.Helpers
         /// <summary>Interne Zeit, die parallel zu externer Arbeit lief und deshalb entfällt.</summary>
         InternalCoveredByExternal,
         /// <summary>Interne Zeit, die mit gespeichertem Überschuss verrechnet wurde und deshalb entfällt.</summary>
-        InternalCoveredBySurplus
+        InternalCoveredBySurplus,
+        /// <summary>Interne Zeit, die parallel zu einem anderen internen Projekt mit weniger Tagesstunden lief: wird verworfen.</summary>
+        InternalDiscarded
     }
 
     /// <summary>Ein Abschnitt einer Buchung mit seinem Verrechnungsstatus (für die Zeitleiste).</summary>
@@ -52,6 +54,7 @@ namespace Zeitmanagement.Helpers
         public double BookedMin { get; set; }
         public double CoveredByExternalMin { get; set; }
         public double CoveredBySurplusMin { get; set; }
+        public double DiscardedMin { get; set; }
     }
 
     internal sealed class SapDayResult
@@ -69,6 +72,7 @@ namespace Zeitmanagement.Helpers
         public double CoveredByExternalMin { get; set; }
         public double CoveredBySurplusMin { get; set; }
         public double SurplusGeneratedMin { get; set; }
+        public double DiscardedMin { get; set; }
         public double PoolStartMin { get; set; }
         public double PoolEndMin { get; set; }
         public int LaneCount { get; set; }
@@ -90,6 +94,7 @@ namespace Zeitmanagement.Helpers
         public double CoveredByExternalMin => Days.Sum(d => d.CoveredByExternalMin);
         public double CoveredBySurplusMin => Days.Sum(d => d.CoveredBySurplusMin);
         public double SurplusGeneratedMin => Days.Sum(d => d.SurplusGeneratedMin);
+        public double DiscardedMin => Days.Sum(d => d.DiscardedMin);
         public double SapTotalMin => ExternalMin + InternalBookedMin;
         /// <summary>Am Monatsende nicht verrechneter Überschuss = tatsächliche Überstunden.</summary>
         public double LeftoverMin { get; set; }
@@ -106,6 +111,9 @@ namespace Zeitmanagement.Helpers
     /// <item>e = 0, i ≥ 1: Interne Zeit ist "frei". Sie wird mit dem gespeicherten Überschuss verrechnet
     /// (entfällt im SAP), soweit der Speicher reicht; der Rest wird gebucht.</item>
     /// </list>
+    /// Laufen ohne externes Projekt mehrere interne Projekte parallel, zählt nur das Projekt, das an diesem
+    /// Kalendertag insgesamt weniger Stunden gebucht hat (bei Gleichstand das alphabetisch erste). Die
+    /// parallele Zeit der anderen internen Projekte wird verworfen, als hätte sie nie existiert.
     /// Der Speicher wirkt nur auf später liegende Abschnitte (auch an späteren Tagen). Am Monatsende
     /// verfällt der Rest und zählt als Überstunden. Übergeben werden darf daher nur ein Kalendermonat.
     /// </summary>
@@ -204,6 +212,23 @@ namespace Zeitmanagement.Helpers
                     }
                     else if (inte.Count >= 1)
                     {
+                        if (inte.Count > 1)
+                        {
+                            // Nur das Projekt mit den wenigsten Tagesstunden bleibt, die anderen entfallen
+                            var keep = inte
+                                .OrderBy(k => projects[entries[k].Project].GrossMin)
+                                .ThenBy(k => entries[k].Project, StringComparer.CurrentCultureIgnoreCase)
+                                .First();
+                            foreach (var k in inte.Where(k => k != keep))
+                            {
+                                var dp = ProjectOf(entries[k]);
+                                dp.DiscardedMin += len;
+                                day.DiscardedMin += len;
+                                day.Segments.Add(Segment(entries[k], laneOf[k], a, z, SapSegmentKind.InternalDiscarded));
+                            }
+                            inte = new List<int> { keep };
+                        }
+
                         double demand = inte.Count * len;
                         double absorbed = Math.Min(pool, demand);
                         pool -= absorbed;
@@ -242,6 +267,7 @@ namespace Zeitmanagement.Helpers
                     mp.BookedMin += p.BookedMin;
                     mp.CoveredByExternalMin += p.CoveredByExternalMin;
                     mp.CoveredBySurplusMin += p.CoveredBySurplusMin;
+                    mp.DiscardedMin += p.DiscardedMin;
                 }
             }
 

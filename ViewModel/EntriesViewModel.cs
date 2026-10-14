@@ -119,13 +119,16 @@ namespace Zeitmanagement.ViewModel
 
         // --- Arbeitstag: Beginn und Ende wie gebucht, tatsächliches Ende inkl. Überschneidungen und Pause ---
         private bool _hasWorkDay;
-        private string _workDayStart, _workDayEnd, _actualDayEnd, _actualDayEndNote, _actualDayEndToolTip;
+        private string _workDayStart, _workDayEnd, _workDayReal, _actualDayEnd, _actualDayEndNote, _actualDayEndToolTip;
 
         /// <summary>True, wenn der ausgewählte Tag gültige Buchungen hat (steuert die Arbeitstag-Kacheln).</summary>
         public bool HasWorkDay { get => _hasWorkDay; private set => SetProperty(ref _hasWorkDay, value); }
 
         /// <summary>Beginn der ersten Buchung des Tages (HH:mm).</summary>
         public string WorkDayStart { get => _workDayStart; private set => SetProperty(ref _workDayStart, value); }
+
+        /// <summary>Real gearbeitete Zeit: Beginn bis Ende ohne Pausen, parallel gebuchte Zeit zählt nur einmal.</summary>
+        public string WorkDayReal { get => _workDayReal; private set => SetProperty(ref _workDayReal, value); }
 
         /// <summary>Spätestes gebuchtes Ende des Tages (HH:mm).</summary>
         public string WorkDayEnd { get => _workDayEnd; private set => SetProperty(ref _workDayEnd, value); }
@@ -529,7 +532,7 @@ namespace Zeitmanagement.ViewModel
             HasWorkDay = start.HasValue && bookedEnd.HasValue;
             if (!HasWorkDay)
             {
-                WorkDayStart = WorkDayEnd = ActualDayEnd = ActualDayEndNote = ActualDayEndToolTip = null;
+                WorkDayStart = WorkDayEnd = WorkDayReal = ActualDayEnd = ActualDayEndNote = ActualDayEndToolTip = null;
                 return;
             }
 
@@ -540,6 +543,8 @@ namespace Zeitmanagement.ViewModel
 
             WorkDayStart = FormatClock(start.Value);
             WorkDayEnd = FormatClock(bookedEnd.Value);
+            var real = bookedEnd.Value - start.Value - takenBreak;
+            WorkDayReal = FormatSpan(real > TimeSpan.Zero ? real : TimeSpan.Zero);
             ActualDayEnd = FormatClock(actualEnd);
 
             string breakNote = required == TimeSpan.Zero ? "keine Pause nötig"

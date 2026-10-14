@@ -279,7 +279,7 @@
                         Padding="10,6"
                         Background="{StaticResource BrushAccent}"
                         CornerRadius="18"
-                        ToolTip="Beginn der ersten und Ende der letzten Buchung des Tages, wie gebucht."
+                        ToolTip="Beginn der ersten und Ende der letzten Buchung des Tages, wie gebucht. In Klammern: real gearbeitete Zeit (ohne Pausen, parallele Buchungen nur einmal gezählt)."
                         Visibility="{Binding HasWorkDay, Converter={StaticResource BoolToVis}}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock
@@ -295,6 +295,10 @@
                                 FontWeight="SemiBold"
                                 Foreground="{StaticResource BrushText}"
                                 Text="{Binding WorkDayEnd}" />
+                            <TextBlock
+                                Margin="6,0,0,0"
+                                Foreground="{StaticResource BrushTextMuted}"
+                                Text="{Binding WorkDayReal, StringFormat={}({0} real)}" />
                         </StackPanel>
                     </Border>
 
