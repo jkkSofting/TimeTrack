@@ -13,12 +13,7 @@
     Topmost="True"
     WindowStartupLocation="Manual"
     WindowStyle="None">
-    <Window.Resources>
-        <SolidColorBrush x:Key="BrushBody" Color="#1A2036" />
-        <SolidColorBrush x:Key="BrushOutline" Color="#4A5778" />
-        <SolidColorBrush x:Key="BrushBelly" Color="#F4F6FB" />
-        <SolidColorBrush x:Key="BrushBeak" Color="#F5A623" />
-    </Window.Resources>
+    <!--  Farben kommen aus dem gemeinsamen Maskottchen-Design (Views/Mascot.xaml)  -->
 
     <!--
         Der Pinguin ist höher als das Fenster (130 statt 100): Das Fenster schneidet ihn unten
@@ -43,9 +38,9 @@
                 Canvas.Top="54"
                 Width="16"
                 Height="46"
-                Fill="{StaticResource BrushBody}"
+                Fill="{StaticResource MascotBodyBrush}"
                 RenderTransformOrigin="0.5,0"
-                Stroke="{StaticResource BrushOutline}"
+                Stroke="{StaticResource MascotOutlineBrush}"
                 StrokeThickness="1.5">
                 <Ellipse.RenderTransform>
                     <RotateTransform Angle="12" />
@@ -58,8 +53,8 @@
                 Canvas.Top="14"
                 Width="66"
                 Height="120"
-                Fill="{StaticResource BrushBody}"
-                Stroke="{StaticResource BrushOutline}"
+                Fill="{StaticResource MascotBodyBrush}"
+                Stroke="{StaticResource MascotOutlineBrush}"
                 StrokeThickness="1.5" />
 
             <!--  Bauch  -->
@@ -68,7 +63,7 @@
                 Canvas.Top="46"
                 Width="44"
                 Height="100"
-                Fill="{StaticResource BrushBelly}" />
+                Fill="{StaticResource MascotBellyBrush}" />
 
             <!--  Augen  -->
             <Ellipse
@@ -76,13 +71,13 @@
                 Canvas.Top="27"
                 Width="14"
                 Height="14"
-                Fill="{StaticResource BrushBelly}" />
+                Fill="{StaticResource MascotBellyBrush}" />
             <Ellipse
                 Canvas.Left="58"
                 Canvas.Top="27"
                 Width="14"
                 Height="14"
-                Fill="{StaticResource BrushBelly}" />
+                Fill="{StaticResource MascotBellyBrush}" />
             <Ellipse
                 Canvas.Left="43"
                 Canvas.Top="31"
@@ -102,20 +97,38 @@
                 Canvas.Top="41"
                 Width="9"
                 Height="6"
-                Fill="#FF8FA3"
-                Opacity="0.55" />
+                Fill="{StaticResource MascotCheekBrush}" />
             <Ellipse
                 Canvas.Left="70"
                 Canvas.Top="41"
                 Width="9"
                 Height="6"
-                Fill="#FF8FA3"
-                Opacity="0.55" />
+                Fill="{StaticResource MascotCheekBrush}" />
 
             <!--  Schnabel  -->
             <Path
                 Data="M 47,41 Q 55,37 63,41 Q 55,55 47,41 Z"
-                Fill="{StaticResource BrushBeak}" />
+                Fill="{StaticResource MascotBeakBrush}" />
+
+            <!--  Uhr auf dem Bauch (wie beim Maskottchen), Zeiger auf 10:10  -->
+            <Path
+                Data="M 55,61 A 13,13 0 1 1 54.99,61 Z M 55,63 L 55,65 M 66,74 L 64,74 M 55,85 L 55,83 M 44,74 L 46,74 M 55,74 L 49.4,70.8"
+                Stroke="{StaticResource MascotBodyBrush}"
+                StrokeEndLineCap="Round"
+                StrokeStartLineCap="Round"
+                StrokeThickness="2" />
+            <Path
+                Data="M 55,74 L 63.2,69.3"
+                Stroke="{StaticResource MascotBeakBrush}"
+                StrokeEndLineCap="Round"
+                StrokeStartLineCap="Round"
+                StrokeThickness="2" />
+            <Ellipse
+                Canvas.Left="53.4"
+                Canvas.Top="72.4"
+                Width="3.2"
+                Height="3.2"
+                Fill="{StaticResource MascotBodyBrush}" />
 
             <!--  Rechte Flosse (aus Betrachtersicht) - die winkende  -->
             <Ellipse
@@ -123,9 +136,9 @@
                 Canvas.Top="54"
                 Width="16"
                 Height="46"
-                Fill="{StaticResource BrushBody}"
+                Fill="{StaticResource MascotBodyBrush}"
                 RenderTransformOrigin="0.5,0"
-                Stroke="{StaticResource BrushOutline}"
+                Stroke="{StaticResource MascotOutlineBrush}"
                 StrokeThickness="1.5">
                 <Ellipse.RenderTransform>
                     <RotateTransform x:Name="Flipper" Angle="-12" />
