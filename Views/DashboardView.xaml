@@ -208,12 +208,50 @@
                 </StackPanel>
             </Border>
 
-            <StackPanel DockPanel.Dock="Left">
-                <TextBlock
-                    FontSize="28"
-                    Style="{StaticResource Title}"
-                    Text="Dashboard" />
-                <TextBlock Style="{StaticResource Subtitle}" Text="{Binding HeaderSubtitle}" />
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                <!--  Maskottchen mit leichtem Schein, damit der dunkle Pinguin sich vom Hintergrund abhebt  -->
+                <Grid
+                    Width="84"
+                    Height="96"
+                    VerticalAlignment="Center">
+                    <Ellipse Margin="-6,4,-6,0">
+                        <Ellipse.Fill>
+                            <RadialGradientBrush>
+                                <GradientStop Offset="0" Color="#555AC8FA" />
+                                <GradientStop Offset="1" Color="#005AC8FA" />
+                            </RadialGradientBrush>
+                        </Ellipse.Fill>
+                    </Ellipse>
+                    <Image Source="{StaticResource MascotImage}" ToolTip="Dein Zeiterfassungs-Pinguin" />
+                </Grid>
+
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="28"
+                        Style="{StaticResource Title}"
+                        Text="Dashboard" />
+                    <TextBlock Style="{StaticResource Subtitle}" Text="{Binding HeaderSubtitle}" />
+
+                    <!--  Sprechblase des Pinguins, Spitze zeigt nach links auf ihn  -->
+                    <Grid Margin="0,8,0,0" HorizontalAlignment="Left">
+                        <Path
+                            Margin="-7,0,0,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Data="M 8,0 L 0,7 L 8,14 Z"
+                            Fill="{StaticResource BrushCard}" />
+                        <Border
+                            MaxWidth="460"
+                            Padding="12,7"
+                            Background="{StaticResource BrushCard}"
+                            CornerRadius="12">
+                            <TextBlock
+                                Foreground="{StaticResource BrushText}"
+                                Text="{Binding MascotMessage}"
+                                TextWrapping="Wrap" />
+                        </Border>
+                    </Grid>
+                </StackPanel>
             </StackPanel>
         </DockPanel>
 
