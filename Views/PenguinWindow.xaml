@@ -1,0 +1,135 @@
+<Window
+    x:Class="Zeitmanagement.Views.PenguinWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Width="140"
+    Height="100"
+    AllowsTransparency="True"
+    Background="Transparent"
+    Focusable="False"
+    IsHitTestVisible="False"
+    ResizeMode="NoResize"
+    ShowActivated="False"
+    ShowInTaskbar="False"
+    Topmost="True"
+    WindowStartupLocation="Manual"
+    WindowStyle="None">
+    <Window.Resources>
+        <SolidColorBrush x:Key="BrushBody" Color="#1A2036" />
+        <SolidColorBrush x:Key="BrushOutline" Color="#4A5778" />
+        <SolidColorBrush x:Key="BrushBelly" Color="#F4F6FB" />
+        <SolidColorBrush x:Key="BrushBeak" Color="#F5A623" />
+    </Window.Resources>
+
+    <!--
+        Der Pinguin ist höher als das Fenster (130 statt 100): Das Fenster schneidet ihn unten
+        ab und sitzt genau auf der Oberkante der Taskleiste. Schiebt man den Pinguin per
+        TranslateTransform nach unten, verschwindet er optisch "hinter" der Taskleiste.
+    -->
+    <Grid ClipToBounds="True">
+        <Canvas
+            Width="110"
+            Height="130"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Top">
+            <Canvas.RenderTransform>
+                <TranslateTransform x:Name="Shift" Y="100" />
+            </Canvas.RenderTransform>
+
+            <!--  Linke Flosse (aus Betrachtersicht), hängt locker herunter  -->
+            <Ellipse
+                Canvas.Left="12"
+                Canvas.Top="54"
+                Width="16"
+                Height="46"
+                Fill="{StaticResource BrushBody}"
+                RenderTransformOrigin="0.5,0"
+                Stroke="{StaticResource BrushOutline}"
+                StrokeThickness="1.5">
+                <Ellipse.RenderTransform>
+                    <RotateTransform Angle="12" />
+                </Ellipse.RenderTransform>
+            </Ellipse>
+
+            <!--  Körper  -->
+            <Ellipse
+                Canvas.Left="22"
+                Canvas.Top="14"
+                Width="66"
+                Height="120"
+                Fill="{StaticResource BrushBody}"
+                Stroke="{StaticResource BrushOutline}"
+                StrokeThickness="1.5" />
+
+            <!--  Bauch  -->
+            <Ellipse
+                Canvas.Left="33"
+                Canvas.Top="46"
+                Width="44"
+                Height="100"
+                Fill="{StaticResource BrushBelly}" />
+
+            <!--  Augen  -->
+            <Ellipse
+                Canvas.Left="38"
+                Canvas.Top="27"
+                Width="14"
+                Height="14"
+                Fill="{StaticResource BrushBelly}" />
+            <Ellipse
+                Canvas.Left="58"
+                Canvas.Top="27"
+                Width="14"
+                Height="14"
+                Fill="{StaticResource BrushBelly}" />
+            <Ellipse
+                Canvas.Left="43"
+                Canvas.Top="31"
+                Width="6"
+                Height="6"
+                Fill="Black" />
+            <Ellipse
+                Canvas.Left="61"
+                Canvas.Top="31"
+                Width="6"
+                Height="6"
+                Fill="Black" />
+
+            <!--  Wangen  -->
+            <Ellipse
+                Canvas.Left="31"
+                Canvas.Top="41"
+                Width="9"
+                Height="6"
+                Fill="#FF8FA3"
+                Opacity="0.55" />
+            <Ellipse
+                Canvas.Left="70"
+                Canvas.Top="41"
+                Width="9"
+                Height="6"
+                Fill="#FF8FA3"
+                Opacity="0.55" />
+
+            <!--  Schnabel  -->
+            <Path
+                Data="M 47,41 Q 55,37 63,41 Q 55,55 47,41 Z"
+                Fill="{StaticResource BrushBeak}" />
+
+            <!--  Rechte Flosse (aus Betrachtersicht) - die winkende  -->
+            <Ellipse
+                Canvas.Left="82"
+                Canvas.Top="54"
+                Width="16"
+                Height="46"
+                Fill="{StaticResource BrushBody}"
+                RenderTransformOrigin="0.5,0"
+                Stroke="{StaticResource BrushOutline}"
+                StrokeThickness="1.5">
+                <Ellipse.RenderTransform>
+                    <RotateTransform x:Name="Flipper" Angle="-12" />
+                </Ellipse.RenderTransform>
+            </Ellipse>
+        </Canvas>
+    </Grid>
+</Window>

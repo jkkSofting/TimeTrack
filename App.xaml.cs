@@ -18,6 +18,7 @@ namespace Zeitmanagement
     public partial class App : Application
     {
         private TrayNotificationService _trayService;
+        private PenguinEasterEgg _penguin;
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -61,10 +62,14 @@ namespace Zeitmanagement
                     mainViewModel.SelectViewCommand.Execute("settings");
                 });
             UpdateService.Start();
+
+            _penguin = new PenguinEasterEgg();
+            _penguin.Start();
         }
 
         protected override void OnExit(ExitEventArgs e)
         {
+            _penguin?.Dispose();
             _trayService?.Dispose();
             (MainWindow?.DataContext as MainViewModel)?.QuickSelectViewModel?.Shutdown();
 
