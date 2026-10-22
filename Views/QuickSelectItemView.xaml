@@ -231,6 +231,22 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!--  Projekt-Auswahl einer Zeile: gesperrt, solange die Zeile läuft (oder pausiert ist),
+              damit ein laufendes Projekt nicht durch Umstellen aus der Liste verschwindet.  -->
+        <Style
+            x:Key="QuickSelectProjectCombo"
+            BasedOn="{StaticResource NiceCombo}"
+            TargetType="ComboBox">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsActive}" Value="True">
+                    <Setter Property="IsEnabled" Value="False" />
+                    <Setter Property="Opacity" Value="0.6" />
+                    <Setter Property="ToolTip" Value="Laufende Projekte können nicht geändert oder entfernt werden." />
+                    <Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </UserControl.Resources>
     <Grid>
         <Border
@@ -254,7 +270,7 @@
                     Width="400"
                     ItemsSource="{Binding AvailableProjects}"
                     SelectedItem="{Binding SelectedProject, Mode=TwoWay}"
-                    Style="{StaticResource NiceCombo}" />
+                    Style="{StaticResource QuickSelectProjectCombo}" />
 
                 <TextBox
                     Grid.Column="1"
