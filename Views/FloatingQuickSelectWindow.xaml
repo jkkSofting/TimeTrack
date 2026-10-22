@@ -134,179 +134,189 @@
 
     </Window.Resources>
 
-    <Border Background="{StaticResource BgGradient}">
-        <StackPanel Margin="14,12">
-            <!--  Kopfzeile: Titel + Pin  -->
-            <Grid>
+    <Grid>
+        <Border Background="{StaticResource BgGradient}">
+            <StackPanel Margin="14,12">
+                <!--  Kopfzeile: Titel + Pin  -->
+                <Grid>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Foreground="{StaticResource BrushText}"
+                        Text="Quick Switch" />
+                    <ToggleButton
+                        HorizontalAlignment="Right"
+                        Content="📌 Vordergrund"
+                        IsChecked="{Binding Topmost, Mode=TwoWay, RelativeSource={RelativeSource AncestorType=Window}}"
+                        Style="{StaticResource PinToggle}"
+                        ToolTip="Fenster immer im Vordergrund halten" />
+                </Grid>
+
+                <!--  Aktive Projekte, laufend oder pausiert (bis zu 4 parallele Slots)  -->
                 <TextBlock
-                    VerticalAlignment="Center"
-                    FontSize="16"
-                    FontWeight="SemiBold"
-                    Foreground="{StaticResource BrushText}"
-                    Text="Quick Switch" />
-                <ToggleButton
-                    HorizontalAlignment="Right"
-                    Content="📌 Vordergrund"
-                    IsChecked="{Binding Topmost, Mode=TwoWay, RelativeSource={RelativeSource AncestorType=Window}}"
-                    Style="{StaticResource PinToggle}"
-                    ToolTip="Fenster immer im Vordergrund halten" />
-            </Grid>
+                    Margin="2,12,0,4"
+                    Foreground="{StaticResource BrushTextMuted}"
+                    Text="Aktive Projekte" />
 
-            <!--  Aktive Projekte, laufend oder pausiert (bis zu 4 parallele Slots)  -->
-            <TextBlock
-                Margin="2,12,0,4"
-                Foreground="{StaticResource BrushTextMuted}"
-                Text="Aktive Projekte" />
+                <TextBlock
+                    Margin="2,4,0,4"
+                    FontStyle="Italic"
+                    Foreground="{StaticResource BrushTextMuted}"
+                    Text="Keine Buchung aktiv"
+                    Visibility="{Binding NoActiveSlots, Converter={StaticResource BoolToVis}}" />
 
-            <TextBlock
-                Margin="2,4,0,4"
-                FontStyle="Italic"
-                Foreground="{StaticResource BrushTextMuted}"
-                Text="Keine Buchung aktiv"
-                Visibility="{Binding NoActiveSlots, Converter={StaticResource BoolToVis}}" />
+                <ItemsControl ItemsSource="{Binding ActiveSlots}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border
+                                Margin="0,0,0,8"
+                                Padding="12,10"
+                                Background="{StaticResource BrushAccent}"
+                                CornerRadius="12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
 
-            <ItemsControl ItemsSource="{Binding ActiveSlots}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border
-                            Margin="0,0,0,8"
-                            Padding="12,10"
-                            Background="{StaticResource BrushAccent}"
-                            CornerRadius="12">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+                                    <Ellipse
+                                        Grid.Column="0"
+                                        Width="12"
+                                        Height="12"
+                                        Margin="0,0,10,0"
+                                        VerticalAlignment="Center"
+                                        Style="{StaticResource StatusDot}" />
 
-                                <Ellipse
-                                    Grid.Column="0"
-                                    Width="12"
-                                    Height="12"
-                                    Margin="0,0,10,0"
-                                    VerticalAlignment="Center"
-                                    Style="{StaticResource StatusDot}" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock
+                                            FontSize="14"
+                                            FontWeight="SemiBold"
+                                            Foreground="{StaticResource BrushText}"
+                                            Text="{Binding SelectedProject}"
+                                            TextTrimming="CharacterEllipsis" />
+                                        <TextBlock
+                                            FontSize="11"
+                                            Foreground="{StaticResource BrushTextMuted}"
+                                            Text="{Binding StatusText}" />
+                                    </StackPanel>
 
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                     <TextBlock
+                                        Grid.Column="2"
+                                        Margin="8,0"
+                                        VerticalAlignment="Center"
+                                        FontFamily="Consolas"
                                         FontSize="14"
-                                        FontWeight="SemiBold"
                                         Foreground="{StaticResource BrushText}"
-                                        Text="{Binding SelectedProject}"
-                                        TextTrimming="CharacterEllipsis" />
-                                    <TextBlock
-                                        FontSize="11"
-                                        Foreground="{StaticResource BrushTextMuted}"
-                                        Text="{Binding StatusText}" />
-                                </StackPanel>
+                                        Text="{Binding ElapsedText}" />
 
-                                <TextBlock
-                                    Grid.Column="2"
-                                    Margin="8,0"
-                                    VerticalAlignment="Center"
-                                    FontFamily="Consolas"
-                                    FontSize="14"
-                                    Foreground="{StaticResource BrushText}"
-                                    Text="{Binding ElapsedText}" />
+                                    <StackPanel
+                                        Grid.Column="3"
+                                        VerticalAlignment="Center"
+                                        Orientation="Horizontal">
 
-                                <StackPanel
-                                    Grid.Column="3"
-                                    VerticalAlignment="Center"
-                                    Orientation="Horizontal">
-
-                                    <!--  Fortsetzen (nur sichtbar, wenn pausiert)  -->
-                                    <Button
-                                        Margin="0,0,6,0"
-                                        Command="{Binding StartTimerCommand}"
-                                        Style="{StaticResource SlotPausedOnlyButton}"
-                                        ToolTip="Fortsetzen">
-                                        <Path
-                                            Width="11"
-                                            Height="11"
-                                            Data="M0,0 L0,11 L10,5.5 Z"
-                                            Fill="{StaticResource BrushText}"
-                                            Stretch="Uniform" />
-                                    </Button>
-
-                                    <!--  Pausieren (nur sichtbar, während aktiv läuft)  -->
-                                    <Button
-                                        Margin="0,0,6,0"
-                                        Command="{Binding PauseTimerCommand}"
-                                        Style="{StaticResource SlotRunningOnlyButton}"
-                                        ToolTip="Pausieren">
-                                        <StackPanel Orientation="Horizontal">
-                                            <Rectangle
-                                                Width="3"
+                                        <!--  Fortsetzen (nur sichtbar, wenn pausiert)  -->
+                                        <Button
+                                            Margin="0,0,6,0"
+                                            Command="{Binding StartTimerCommand}"
+                                            Style="{StaticResource SlotPausedOnlyButton}"
+                                            ToolTip="Fortsetzen">
+                                            <Path
+                                                Width="11"
                                                 Height="11"
-                                                Fill="{StaticResource BrushText}" />
+                                                Data="M0,0 L0,11 L10,5.5 Z"
+                                                Fill="{StaticResource BrushText}"
+                                                Stretch="Uniform" />
+                                        </Button>
+
+                                        <!--  Pausieren (nur sichtbar, während aktiv läuft)  -->
+                                        <Button
+                                            Margin="0,0,6,0"
+                                            Command="{Binding PauseTimerCommand}"
+                                            Style="{StaticResource SlotRunningOnlyButton}"
+                                            ToolTip="Pausieren">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Rectangle
+                                                    Width="3"
+                                                    Height="11"
+                                                    Fill="{StaticResource BrushText}" />
+                                                <Rectangle
+                                                    Width="3"
+                                                    Height="11"
+                                                    Margin="3,0,0,0"
+                                                    Fill="{StaticResource BrushText}" />
+                                            </StackPanel>
+                                        </Button>
+
+                                        <!--  Stoppen  -->
+                                        <Button
+                                            Command="{Binding EndTimerCommand}"
+                                            Style="{StaticResource SlotIconButton}"
+                                            ToolTip="Stoppen">
                                             <Rectangle
-                                                Width="3"
+                                                Width="11"
                                                 Height="11"
-                                                Margin="3,0,0,0"
-                                                Fill="{StaticResource BrushText}" />
-                                        </StackPanel>
-                                    </Button>
+                                                Fill="{StaticResource BrushText}"
+                                                RadiusX="1.5"
+                                                RadiusY="1.5" />
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
 
-                                    <!--  Stoppen  -->
-                                    <Button
-                                        Command="{Binding EndTimerCommand}"
-                                        Style="{StaticResource SlotIconButton}"
-                                        ToolTip="Stoppen">
-                                        <Rectangle
-                                            Width="11"
-                                            Height="11"
-                                            Fill="{StaticResource BrushText}"
-                                            RadiusX="1.5"
-                                            RadiusY="1.5" />
-                                    </Button>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                <!--  Neues Projekt parallel starten (bis zu MaxActiveSlots)  -->
+                <TextBlock
+                    Margin="2,8,0,4"
+                    Foreground="{StaticResource BrushTextMuted}"
+                    Text="Projekt starten"
+                    Visibility="{Binding CanStartMoreSlots, Converter={StaticResource BoolToVis}}" />
+                <Grid Visibility="{Binding CanStartMoreSlots, Converter={StaticResource BoolToVis}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-            <!--  Neues Projekt parallel starten (bis zu MaxActiveSlots)  -->
-            <TextBlock
-                Margin="2,8,0,4"
-                Foreground="{StaticResource BrushTextMuted}"
-                Text="Projekt starten"
-                Visibility="{Binding CanStartMoreSlots, Converter={StaticResource BoolToVis}}" />
-            <Grid Visibility="{Binding CanStartMoreSlots, Converter={StaticResource BoolToVis}}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+                    <ComboBox
+                        Grid.Column="0"
+                        ItemsSource="{Binding ConfiguredProjects}"
+                        SelectedItem="{Binding PendingNewProject, Mode=TwoWay}"
+                        Style="{StaticResource NiceCombo}" />
 
-                <ComboBox
-                    Grid.Column="0"
-                    ItemsSource="{Binding ConfiguredProjects}"
-                    SelectedItem="{Binding PendingNewProject, Mode=TwoWay}"
-                    Style="{StaticResource NiceCombo}" />
+                    <Button
+                        Grid.Column="1"
+                        Margin="6,4,4,4"
+                        Command="{Binding StartNewSlotCommand}"
+                        Style="{StaticResource FlatButton}"
+                        ToolTip="Start">
+                        <Path
+                            Width="11"
+                            Height="11"
+                            Data="M0,0 L0,11 L10,5.5 Z"
+                            Fill="{StaticResource BrushText}"
+                            Stretch="Uniform" />
+                    </Button>
+                </Grid>
 
-                <Button
-                    Grid.Column="1"
-                    Margin="6,4,4,4"
-                    Command="{Binding StartNewSlotCommand}"
-                    Style="{StaticResource FlatButton}"
-                    ToolTip="Start">
-                    <Path
-                        Width="11"
-                        Height="11"
-                        Data="M0,0 L0,11 L10,5.5 Z"
-                        Fill="{StaticResource BrushText}"
-                        Stretch="Uniform" />
-                </Button>
-            </Grid>
+                <TextBlock
+                    Margin="2,8,0,0"
+                    FontStyle="Italic"
+                    Foreground="{StaticResource BrushTextMuted}"
+                    Text="Maximal 4 Projekte gleichzeitig aktiv"
+                    Visibility="{Binding MaxSlotsReached, Converter={StaticResource BoolToVis}}" />
+            </StackPanel>
+        </Border>
 
-            <TextBlock
-                Margin="2,8,0,0"
-                FontStyle="Italic"
-                Foreground="{StaticResource BrushTextMuted}"
-                Text="Maximal 4 Projekte gleichzeitig aktiv"
-                Visibility="{Binding MaxSlotsReached, Converter={StaticResource BoolToVis}}" />
-        </StackPanel>
-    </Border>
+        <!--  Roter Rahmen, solange in Teams der Bildschirm geteilt wird (Präsentation im Meeting)  -->
+        <Border
+            x:Name="PresentationFrame"
+            BorderBrush="#E5484D"
+            BorderThickness="1"
+            IsHitTestVisible="False"
+            Visibility="{Binding IsPresentingInTeams, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
+    </Grid>
 </Window>

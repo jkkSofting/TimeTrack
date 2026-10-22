@@ -121,6 +121,18 @@ namespace Zeitmanagement.Properties {
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool PenguinEnabled {
+            get {
+                return ((bool)(this["PenguinEnabled"]));
+            }
+            set {
+                this["PenguinEnabled"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool SettingsUpgraded {
             get {

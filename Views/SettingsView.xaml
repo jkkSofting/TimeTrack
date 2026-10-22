@@ -146,6 +146,12 @@
                     Content="Schnellwechsel-Fenster immer im Vordergrund halten"
                     IsChecked="{Binding FloatingWindowAlwaysOnTop, Mode=TwoWay}" />
 
+                <CheckBox
+                    Margin="0,12,0,0"
+                    Click="PenguinCheckBox_Click"
+                    Content="Pinguin ab und zu hinter der Taskleiste auftauchen lassen"
+                    IsChecked="{Binding PenguinEnabled, Mode=TwoWay}" />
+
                 <StackPanel
                     Margin="0,24,0,0"
                     HorizontalAlignment="Left"

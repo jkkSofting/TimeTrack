@@ -70,6 +70,9 @@
     <Compile Include="TimeTracker.cs" />
     <Compile Include="Helpers\AutostartHelper.cs" />
     <Compile Include="Helpers\BackupHelper.cs" />
+    <Compile Include="Helpers\OverlayWindowHelper.cs" />
+    <Compile Include="Helpers\PenguinEasterEgg.cs" />
+    <Compile Include="Helpers\PresentationDetector.cs" />
     <Compile Include="Helpers\SapBookingCalculator.cs" />
     <Compile Include="Helpers\SessionActivityMonitor.cs" />
     <Compile Include="Helpers\StartupMode.cs" />
@@ -100,6 +103,9 @@
     </Compile>
     <Compile Include="Views\NullToVisibilityConverter.cs" />
     <Compile Include="Views\NumberFormatterConverter.cs" />
+    <Compile Include="Views\PenguinWindow.xaml.cs">
+      <DependentUpon>PenguinWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\ProjectsView.xaml.cs">
       <DependentUpon>ProjectsView.xaml</DependentUpon>
     </Compile>
@@ -108,6 +114,9 @@
     </Compile>
     <Compile Include="Views\QuickSelectView.xaml.cs">
       <DependentUpon>QuickSelectView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\FishWindow.xaml.cs">
+      <DependentUpon>FishWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\FloatingQuickSelectWindow.xaml.cs">
       <DependentUpon>FloatingQuickSelectWindow.xaml</DependentUpon>
@@ -141,6 +150,10 @@
     <Page Include="Views\FragmentationView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\PenguinWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\ProjectsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -150,6 +163,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\QuickSelectView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\FishWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
