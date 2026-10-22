@@ -91,6 +91,21 @@ namespace Zeitmanagement.ViewModel
             set => SetProperty(ref _penguinEnabled, value);
         }
 
+        // Untergrenze erst beim Speichern, sonst würde schon die erste getippte Ziffer hochgesetzt.
+        private int _penguinMinDelayMinutes;
+        public int PenguinMinDelayMinutes
+        {
+            get => _penguinMinDelayMinutes;
+            set => SetProperty(ref _penguinMinDelayMinutes, value);
+        }
+
+        private int _penguinMaxDelayMinutes;
+        public int PenguinMaxDelayMinutes
+        {
+            get => _penguinMaxDelayMinutes;
+            set => SetProperty(ref _penguinMaxDelayMinutes, value);
+        }
+
         public string CurrentVersionText { get; } =
             Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
@@ -159,6 +174,8 @@ namespace Zeitmanagement.ViewModel
             ReminderNudgeIntervalMinutes = Properties.Settings.Default.ReminderNudgeIntervalMinutes;
             AutoUpdateCheckEnabled = Properties.Settings.Default.AutoUpdateCheckEnabled;
             PenguinEnabled = Properties.Settings.Default.PenguinEnabled;
+            PenguinMinDelayMinutes = Properties.Settings.Default.PenguinMinDelayMinutes;
+            PenguinMaxDelayMinutes = Properties.Settings.Default.PenguinMaxDelayMinutes;
             ShowUpdate(UpdateService.LatestUpdate);
 
             AvailableBackups.Clear();
@@ -309,6 +326,13 @@ namespace Zeitmanagement.ViewModel
             Properties.Settings.Default.ReminderNudgeIntervalMinutes = ReminderNudgeIntervalMinutes;
             Properties.Settings.Default.AutoUpdateCheckEnabled = AutoUpdateCheckEnabled;
             Properties.Settings.Default.PenguinEnabled = PenguinEnabled;
+            // Mindestens 10 Minuten, und "bis" darf nicht kleiner als "von" sein - dann gilt einfach eine feste Pause.
+            if (PenguinMinDelayMinutes < PenguinEasterEgg.MinDelayLimitMinutes)
+                PenguinMinDelayMinutes = PenguinEasterEgg.MinDelayLimitMinutes;
+            if (PenguinMaxDelayMinutes < PenguinMinDelayMinutes)
+                PenguinMaxDelayMinutes = PenguinMinDelayMinutes;
+            Properties.Settings.Default.PenguinMinDelayMinutes = PenguinMinDelayMinutes;
+            Properties.Settings.Default.PenguinMaxDelayMinutes = PenguinMaxDelayMinutes;
             Properties.Settings.Default.Save();
 
             try

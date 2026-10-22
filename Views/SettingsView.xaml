@@ -153,6 +153,30 @@
                     IsChecked="{Binding PenguinEnabled, Mode=TwoWay}" />
 
                 <StackPanel
+                    Margin="0,6,0,0"
+                    Orientation="Horizontal"
+                    IsEnabled="{Binding PenguinEnabled}"
+                    ToolTip="Mindestens 10 Minuten">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Foreground="{StaticResource BrushTextMuted}"
+                        Text="Pause zwischen Auftritten (Minuten): von" />
+                    <TextBox
+                        Width="60"
+                        Margin="8,0,0,0"
+                        Text="{Binding PenguinMinDelayMinutes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Foreground="{StaticResource BrushTextMuted}"
+                        Text="bis" />
+                    <TextBox
+                        Width="60"
+                        Margin="8,0,0,0"
+                        Text="{Binding PenguinMaxDelayMinutes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+
+                <StackPanel
                     Margin="0,24,0,0"
                     HorizontalAlignment="Left"
                     Orientation="Horizontal">
