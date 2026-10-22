@@ -15,10 +15,9 @@ namespace Zeitmanagement.Helpers
     /// </summary>
     internal sealed class PenguinEasterEgg : IDisposable
     {
-        // Short delays while the behavior is being tuned. For everyday use these should be
-        // raised to minutes/hours.
-        private static readonly TimeSpan MinDelay = TimeSpan.FromSeconds(10);
-        private static readonly TimeSpan MaxDelay = TimeSpan.FromSeconds(30);
+        // Random pause between two appearances (also before the first one after app start).
+        private static readonly TimeSpan MinDelay = TimeSpan.FromMinutes(60);
+        private static readonly TimeSpan MaxDelay = TimeSpan.FromMinutes(90);
 
         private readonly Random _random = new Random();
         private readonly DispatcherTimer _timer = new DispatcherTimer();
