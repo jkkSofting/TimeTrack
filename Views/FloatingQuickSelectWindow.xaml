@@ -137,14 +137,21 @@
     <Grid>
         <Border Background="{StaticResource BgGradient}">
             <StackPanel Margin="14,12">
-                <!--  Kopfzeile: Titel + Pin  -->
+                <!--  Kopfzeile: Maskottchen + Titel + Pin  -->
                 <Grid>
-                    <TextBlock
-                        VerticalAlignment="Center"
-                        FontSize="16"
-                        FontWeight="SemiBold"
-                        Foreground="{StaticResource BrushText}"
-                        Text="Quick Switch" />
+                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                        <Image
+                            Width="22"
+                            Height="22"
+                            Margin="0,0,8,0"
+                            Source="{StaticResource MascotAppIconImage}" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="16"
+                            FontWeight="SemiBold"
+                            Foreground="{StaticResource BrushText}"
+                            Text="Quick Switch" />
+                    </StackPanel>
                     <ToggleButton
                         HorizontalAlignment="Right"
                         Content="📌 Vordergrund"

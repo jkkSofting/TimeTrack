@@ -1,0 +1,229 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+    mc:Ignorable="po">
+    <!--
+        Das TimeTrack-Maskottchen: ein Kaiserpinguin mit einer Uhr auf dem Bauch.
+        Einzige Quelle für das Design - App-Icon (Scripts\Render-AppIcon.ps1), Logo in der
+        Seitenleiste, Schnellwechsel-Fenster und das Pinguin-Easter-Egg nutzen alle diese Grafiken.
+
+        Typische Kaiserpinguin-Merkmale: schlanker, aufrechter Körper, schwarzer Kopf mit
+        gelb-orangen Ohrflecken, die am Hals in eine gelbliche Brust auslaufen, langer leicht
+        gebogener Schnabel mit orangem Streifen am Unterschnabel, dunkle Füße.
+        Der Kopf ist leicht zur Seite (Betrachter rechts) gedreht.
+    -->
+
+    <!--  Farben  -->
+    <Color x:Key="MascotPlumageDarkColor">#0C101B</Color>
+    <Color x:Key="MascotPlumageColor">#1A2134</Color>
+    <Color x:Key="MascotPlumageSheenColor">#3E4C6E</Color>
+    <Color x:Key="MascotEarPatchColor">#F7931E</Color>
+    <Color x:Key="MascotEarPatchLightColor">#FFD452</Color>
+
+    <SolidColorBrush x:Key="MascotOutlineBrush" po:Freeze="True" Color="#4A5779" />
+    <SolidColorBrush x:Key="MascotBillBrush" po:Freeze="True" Color="#11141D" />
+    <SolidColorBrush x:Key="MascotMandibleBrush" po:Freeze="True" Color="#F08A5D" />
+    <SolidColorBrush x:Key="MascotFeetBrush" po:Freeze="True" Color="#2C3242" />
+    <SolidColorBrush x:Key="MascotClockAccentBrush" po:Freeze="True" Color="{StaticResource MascotEarPatchColor}" />
+
+    <!--  Gefieder mit leichtem bläulichem Glanz oben links, damit der Körper rund wirkt  -->
+    <RadialGradientBrush x:Key="MascotPlumageBrush" po:Freeze="True" Center="0.4,0.3" GradientOrigin="0.32,0.18" RadiusX="0.8" RadiusY="0.75">
+        <GradientStop Offset="0" Color="{StaticResource MascotPlumageSheenColor}" />
+        <GradientStop Offset="0.45" Color="{StaticResource MascotPlumageColor}" />
+        <GradientStop Offset="1" Color="{StaticResource MascotPlumageDarkColor}" />
+    </RadialGradientBrush>
+
+    <LinearGradientBrush x:Key="MascotFlipperBrush" po:Freeze="True" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="{StaticResource MascotPlumageColor}" />
+        <GradientStop Offset="1" Color="{StaticResource MascotPlumageDarkColor}" />
+    </LinearGradientBrush>
+
+    <!--  Brust: oben blassgelb (läuft aus den Ohrflecken aus), dann weiß, unten leicht verschattet  -->
+    <LinearGradientBrush x:Key="MascotBellyBrush" po:Freeze="True" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#FFE08A" />
+        <GradientStop Offset="0.16" Color="#FFF1C9" />
+        <GradientStop Offset="0.38" Color="#FFFFFF" />
+        <GradientStop Offset="0.8" Color="#F2F4F8" />
+        <GradientStop Offset="1" Color="#D5DBE6" />
+    </LinearGradientBrush>
+
+    <!--  Schatten an den Bauchrändern für Volumen  -->
+    <RadialGradientBrush x:Key="MascotBellyShadeBrush" po:Freeze="True" Center="0.5,0.45" GradientOrigin="0.45,0.4" RadiusX="0.56" RadiusY="0.6">
+        <GradientStop Offset="0.6" Color="#00304060" />
+        <GradientStop Offset="1" Color="#55304060" />
+    </RadialGradientBrush>
+
+    <LinearGradientBrush x:Key="MascotEarPatchBrush" po:Freeze="True" StartPoint="0.5,0" EndPoint="0.5,1">
+        <GradientStop Offset="0" Color="{StaticResource MascotEarPatchColor}" />
+        <GradientStop Offset="0.55" Color="#FFB637" />
+        <GradientStop Offset="1" Color="{StaticResource MascotEarPatchLightColor}" />
+    </LinearGradientBrush>
+
+    <Pen x:Key="MascotOutlinePen" po:Freeze="True" Brush="{StaticResource MascotOutlineBrush}" Thickness="1.2" />
+    <Pen x:Key="MascotClockRingPen" po:Freeze="True" Brush="#8C98B0" Thickness="1.6" />
+    <Pen x:Key="MascotClockPen" po:Freeze="True" Brush="#1F2638" StartLineCap="Round" EndLineCap="Round" Thickness="2.2" />
+    <Pen x:Key="MascotClockTickPen" po:Freeze="True" Brush="#8C98B0" StartLineCap="Round" EndLineCap="Round" Thickness="1.4" />
+    <Pen x:Key="MascotMinuteHandPen" po:Freeze="True" Brush="{StaticResource MascotClockAccentBrush}" StartLineCap="Round" EndLineCap="Round" Thickness="1.8" />
+
+    <!--
+        Rechte Flosse (aus Betrachtersicht) einzeln, damit das Easter Egg sie winken lassen kann.
+        Gleiches Koordinatensystem 120 x 150 wie der Rest, Schulter (Drehpunkt) bei 88,60.
+        Liegt hinter dem Körper.
+    -->
+    <DrawingGroup x:Key="MascotRightFlipperDrawing" po:Freeze="True">
+        <GeometryDrawing Brush="Transparent">
+            <GeometryDrawing.Geometry>
+                <RectangleGeometry Rect="0,0,120,150" />
+            </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing
+            Brush="{StaticResource MascotFlipperBrush}"
+            Geometry="M 84,58 C 96,66 104,88 108,112 C 108.6,116 105.6,117.4 103.6,114.4 C 97,102 92,90 88,78 Z"
+            Pen="{StaticResource MascotOutlinePen}" />
+    </DrawingGroup>
+
+    <!--  Der Pinguin ohne die rechte Flosse, Koordinatensystem 120 x 150  -->
+    <DrawingGroup x:Key="MascotBodyDrawing" po:Freeze="True">
+        <!--  Unsichtbarer Rahmen, damit die Grafik immer das volle 120 x 150 Feld einnimmt  -->
+        <GeometryDrawing Brush="Transparent">
+            <GeometryDrawing.Geometry>
+                <RectangleGeometry Rect="0,0,120,150" />
+            </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+
+        <!--  Füße  -->
+        <GeometryDrawing Brush="{StaticResource MascotFeetBrush}">
+            <GeometryDrawing.Geometry>
+                <GeometryGroup>
+                    <EllipseGeometry Center="47,140.5" RadiusX="10" RadiusY="4" />
+                    <EllipseGeometry Center="73,140.5" RadiusX="10" RadiusY="4" />
+                </GeometryGroup>
+            </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+
+        <!--  Linke Flosse (aus Betrachtersicht), hinter dem Körper  -->
+        <GeometryDrawing
+            Brush="{StaticResource MascotFlipperBrush}"
+            Geometry="M 36,58 C 24,66 16,88 12,112 C 11.4,116 14.4,117.4 16.4,114.4 C 23,102 28,90 32,78 Z"
+            Pen="{StaticResource MascotOutlinePen}" />
+
+        <!--  Kopf und Körper als eine Silhouette  -->
+        <GeometryDrawing
+            Brush="{StaticResource MascotPlumageBrush}"
+            Geometry="M 57,12 C 66,12 72,18 72,27 C 72,33 74,38 79,45 C 89,58 96,80 96,104 C 96,127 82,140 60,140 C 38,140 24,127 24,104 C 24,80 31,58 41,45 C 45,39 42,33 42,27 C 42,18 48,12 57,12 Z"
+            Pen="{StaticResource MascotOutlinePen}" />
+
+        <!--  Bauch, darüber Randschatten  -->
+        <GeometryDrawing Brush="{StaticResource MascotBellyBrush}" Geometry="M 60,47 C 73,47 85,66 87,90 C 89,115 80,134 60,136 C 40,134 31,115 33,90 C 35,66 47,47 60,47 Z" />
+        <GeometryDrawing Brush="{StaticResource MascotBellyShadeBrush}" Geometry="M 60,47 C 73,47 85,66 87,90 C 89,115 80,134 60,136 C 40,134 31,115 33,90 C 35,66 47,47 60,47 Z" />
+
+        <!--  Schwarze Kehle, läuft spitz in die Brust aus  -->
+        <GeometryDrawing Brush="{StaticResource MascotPlumageBrush}" Geometry="M 47,38 L 73,38 C 71,47 66,53 62,60 C 58,53 52,46 47,38 Z" />
+
+        <!--  Ohrflecken: der vordere hinter dem Auge, der hintere als schmaler Streifen am Hals  -->
+        <GeometryDrawing Brush="{StaticResource MascotEarPatchBrush}" Geometry="M 52.5,21 C 47,21 44.2,26 45,31.5 C 46,38 48.4,45 51.5,54 C 53.8,47 56.4,40.5 56.6,33.5 C 56.8,27 56,21 52.5,21 Z" />
+        <GeometryDrawing Brush="{StaticResource MascotEarPatchBrush}" Geometry="M 71,33 C 74.4,37.6 75.2,43 72.6,51 C 70.8,46.4 69.4,40.6 71,33 Z" />
+
+        <!--  Glanzlicht auf dem Kopf  -->
+        <GeometryDrawing Brush="#24FFFFFF">
+            <GeometryDrawing.Geometry>
+                <EllipseGeometry Center="54,17.5" RadiusX="7" RadiusY="3.2">
+                    <EllipseGeometry.Transform>
+                        <RotateTransform Angle="-12" CenterX="54" CenterY="17.5" />
+                    </EllipseGeometry.Transform>
+                </EllipseGeometry>
+            </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+
+        <!--  Schnabel: langer, leicht gebogener Oberschnabel, Unterschnabel mit orangem Streifen  -->
+        <GeometryDrawing Brush="{StaticResource MascotMandibleBrush}" Geometry="M 67.5,30.5 C 77,32 87,34.4 94.6,37.6 C 87,38.4 77,37.6 68,35.2 Z" />
+        <GeometryDrawing Brush="{StaticResource MascotBillBrush}" Geometry="M 67,23.6 C 77,24.4 88,28.6 96,37.8 C 88,34.6 78,32.4 67.5,31 Z" />
+        <GeometryDrawing Brush="#33FFFFFF" Geometry="M 70,25.2 C 78,26 86,29.4 92,34.6 C 85,30.8 78,28.4 70,26.6 Z" />
+
+        <!--  Auge mit dunklem Rand und kleinem Lichtpunkt  -->
+        <GeometryDrawing Brush="#2A1C16" Pen="{StaticResource MascotOutlinePen}">
+            <GeometryDrawing.Geometry>
+                <EllipseGeometry Center="62.6,24.2" RadiusX="2.5" RadiusY="2.5" />
+            </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="White">
+            <GeometryDrawing.Geometry>
+                <EllipseGeometry Center="63.4,23.4" RadiusX="0.9" RadiusY="0.9" />
+            </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+
+        <!--  Uhr auf dem Bauch: Ring, vier Striche, Zeiger auf 10:10, Mittelpunkt  -->
+        <GeometryDrawing Brush="#59FFFFFF" Pen="{StaticResource MascotClockRingPen}">
+            <GeometryDrawing.Geometry>
+                <EllipseGeometry Center="60,98" RadiusX="16" RadiusY="16" />
+            </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Pen="{StaticResource MascotClockTickPen}">
+            <GeometryDrawing.Geometry>
+                <GeometryGroup>
+                    <LineGeometry StartPoint="60,85.5" EndPoint="60,88.5" />
+                    <LineGeometry StartPoint="72.5,98" EndPoint="69.5,98" />
+                    <LineGeometry StartPoint="60,110.5" EndPoint="60,107.5" />
+                    <LineGeometry StartPoint="47.5,98" EndPoint="50.5,98" />
+                </GeometryGroup>
+            </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Pen="{StaticResource MascotClockPen}">
+            <GeometryDrawing.Geometry>
+                <LineGeometry StartPoint="60,98" EndPoint="53.1,94" />
+            </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Pen="{StaticResource MascotMinuteHandPen}">
+            <GeometryDrawing.Geometry>
+                <LineGeometry StartPoint="60,98" EndPoint="69.5,92.5" />
+            </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#1F2638">
+            <GeometryDrawing.Geometry>
+                <EllipseGeometry Center="60,98" RadiusX="1.8" RadiusY="1.8" />
+            </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+    </DrawingGroup>
+
+    <DrawingImage x:Key="MascotBodyImage" po:Freeze="True" Drawing="{StaticResource MascotBodyDrawing}" />
+    <DrawingImage x:Key="MascotRightFlipperImage" po:Freeze="True" Drawing="{StaticResource MascotRightFlipperDrawing}" />
+
+    <!--  Der ganze Pinguin, Koordinatensystem 120 x 150: rechte Flosse hinter dem Körper  -->
+    <DrawingGroup x:Key="MascotDrawing" po:Freeze="True">
+        <ImageDrawing ImageSource="{StaticResource MascotRightFlipperImage}" Rect="0,0,120,150" />
+        <ImageDrawing ImageSource="{StaticResource MascotBodyImage}" Rect="0,0,120,150" />
+    </DrawingGroup>
+
+    <!--  Der ganze Pinguin als Bildquelle, z. B. <Image Source="{StaticResource MascotImage}" />  -->
+    <DrawingImage x:Key="MascotImage" po:Freeze="True" Drawing="{StaticResource MascotDrawing}" />
+
+    <!--
+        App-Icon / Logo, Koordinatensystem 256 x 256: abgerundetes Quadrat im Akzent-Verlauf der App,
+        der Pinguin taucht von unten auf (wie beim Easter Egg hinter der Taskleiste) und wird
+        an der Unterkante abgeschnitten - so bleibt das Gesicht auch bei 16 px noch erkennbar.
+    -->
+    <DrawingGroup x:Key="MascotAppIconDrawing" po:Freeze="True">
+        <DrawingGroup.ClipGeometry>
+            <RectangleGeometry RadiusX="56" RadiusY="56" Rect="0,0,256,256" />
+        </DrawingGroup.ClipGeometry>
+
+        <GeometryDrawing>
+            <GeometryDrawing.Brush>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Offset="0" Color="#5AC8FA" />
+                    <GradientStop Offset="1" Color="#8E8BFF" />
+                </LinearGradientBrush>
+            </GeometryDrawing.Brush>
+            <GeometryDrawing.Geometry>
+                <RectangleGeometry Rect="0,0,256,256" />
+            </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+
+        <!--  Pinguin doppelt so groß (120 x 150 -> 240 x 300), unten abgeschnitten  -->
+        <ImageDrawing ImageSource="{StaticResource MascotImage}" Rect="8,6,240,300" />
+    </DrawingGroup>
+
+    <DrawingImage x:Key="MascotAppIconImage" po:Freeze="True" Drawing="{StaticResource MascotAppIconDrawing}" />
+</ResourceDictionary>

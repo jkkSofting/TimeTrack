@@ -133,6 +133,30 @@ namespace Zeitmanagement.Properties {
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("60")]
+        public int PenguinMinDelayMinutes {
+            get {
+                return ((int)(this["PenguinMinDelayMinutes"]));
+            }
+            set {
+                this["PenguinMinDelayMinutes"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("90")]
+        public int PenguinMaxDelayMinutes {
+            get {
+                return ((int)(this["PenguinMaxDelayMinutes"]));
+            }
+            set {
+                this["PenguinMaxDelayMinutes"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool SettingsUpgraded {
             get {

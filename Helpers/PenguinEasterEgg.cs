@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Threading;
 using Zeitmanagement.Views;
@@ -12,30 +13,54 @@ namespace Zeitmanagement.Helpers
     /// (see <see cref="PenguinWindow"/>). Only one penguin is visible at a time; the next
     /// appearance is scheduled once the previous one is gone. While the user is presenting
     /// (full-screen app, slideshow, screen sharing), the penguin skips its turn.
+    /// The random pause between two appearances (also before the first one after app start)
+    /// comes from the settings; changing it reschedules a pending appearance right away.
     /// </summary>
     internal sealed class PenguinEasterEgg : IDisposable
     {
-        // Random pause between two appearances (also before the first one after app start).
-        private static readonly TimeSpan MinDelay = TimeSpan.FromMinutes(60);
-        private static readonly TimeSpan MaxDelay = TimeSpan.FromMinutes(90);
+        /// <summary>Shortest pause between two appearances the settings allow.</summary>
+        public const int MinDelayLimitMinutes = 10;
 
         private readonly Random _random = new Random();
         private readonly DispatcherTimer _timer = new DispatcherTimer();
         private PenguinWindow _window;
+        private int _scheduledMinMinutes;
+        private int _scheduledMaxMinutes;
         private bool _disposed;
 
         public PenguinEasterEgg()
         {
             _timer.Tick += OnTimerTick;
+            Properties.Settings.Default.PropertyChanged += OnSettingsChanged;
         }
 
         public void Start() => ScheduleNext();
 
         private void ScheduleNext()
         {
-            var range = (MaxDelay - MinDelay).TotalMilliseconds;
-            _timer.Interval = MinDelay + TimeSpan.FromMilliseconds(_random.NextDouble() * range);
+            var settings = Properties.Settings.Default;
+            _scheduledMinMinutes = Math.Max(MinDelayLimitMinutes, settings.PenguinMinDelayMinutes);
+            _scheduledMaxMinutes = Math.Max(_scheduledMinMinutes, settings.PenguinMaxDelayMinutes);
+
+            var minDelay = TimeSpan.FromMinutes(_scheduledMinMinutes);
+            var range = TimeSpan.FromMinutes(_scheduledMaxMinutes - _scheduledMinMinutes).TotalMilliseconds;
+            _timer.Interval = minDelay + TimeSpan.FromMilliseconds(_random.NextDouble() * range);
             _timer.Start();
+        }
+
+        private void OnSettingsChanged(object sender, PropertyChangedEventArgs e)
+        {
+            // Only a pending appearance is rescheduled; a visible penguin schedules the next one
+            // with the new values when it is gone. Saving unchanged values keeps the countdown.
+            if (_disposed || !_timer.IsEnabled)
+                return;
+
+            var settings = Properties.Settings.Default;
+            if (settings.PenguinMinDelayMinutes == _scheduledMinMinutes && settings.PenguinMaxDelayMinutes == _scheduledMaxMinutes)
+                return;
+
+            _timer.Stop();
+            ScheduleNext();
         }
 
         private void OnTimerTick(object sender, EventArgs e)
@@ -75,6 +100,7 @@ namespace Zeitmanagement.Helpers
         public void Dispose()
         {
             _disposed = true;
+            Properties.Settings.Default.PropertyChanged -= OnSettingsChanged;
             _timer.Stop();
             _window?.Close();
         }
