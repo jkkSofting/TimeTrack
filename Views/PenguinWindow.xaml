@@ -7,7 +7,6 @@
     AllowsTransparency="True"
     Background="Transparent"
     Focusable="False"
-    IsHitTestVisible="False"
     ResizeMode="NoResize"
     ShowActivated="False"
     ShowInTaskbar="False"
@@ -31,7 +30,9 @@
             Width="110"
             Height="130"
             HorizontalAlignment="Center"
-            VerticalAlignment="Top">
+            VerticalAlignment="Top"
+            Cursor="Hand"
+            MouseLeftButtonDown="Penguin_MouseLeftButtonDown">
             <Canvas.RenderTransform>
                 <TranslateTransform x:Name="Shift" Y="100" />
             </Canvas.RenderTransform>
