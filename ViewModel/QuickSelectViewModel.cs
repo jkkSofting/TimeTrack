@@ -170,7 +170,7 @@ namespace Zeitmanagement.ViewModel
         /// <summary>
         /// Rebuilds <see cref="ConfiguredProjects"/> from the slots in place, so the floating
         /// window's combo box keeps its current selection while stale entries are pruned and
-        /// new ones added.
+        /// new ones added, always in alphabetical order.
         /// </summary>
         private void UpdateConfiguredProjects()
         {
@@ -186,10 +186,19 @@ namespace Zeitmanagement.ViewModel
                     ConfiguredProjects.RemoveAt(i);
             }
 
+            // Insert at the sorted position instead of appending, so the list stays alphabetical
+            // without replacing the collection (which would reset the combo box selection).
+            var comparer = StringComparer.CurrentCultureIgnoreCase;
             foreach (var p in desired)
             {
-                if (!ConfiguredProjects.Contains(p))
-                    ConfiguredProjects.Add(p);
+                if (ConfiguredProjects.Contains(p))
+                    continue;
+
+                int index = 0;
+                while (index < ConfiguredProjects.Count && comparer.Compare(ConfiguredProjects[index], p) <= 0)
+                    index++;
+
+                ConfiguredProjects.Insert(index, p);
             }
         }
 
