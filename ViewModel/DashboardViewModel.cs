@@ -38,10 +38,6 @@ namespace Zeitmanagement.ViewModel
         private string _headerSubtitle;
         public string HeaderSubtitle { get => _headerSubtitle; set => SetProperty(ref _headerSubtitle, value); }
 
-        /// <summary>Was der Pinguin in seiner Sprechblase sagt (abhängig von Uhrzeit, Wochentag und heutigen Stunden).</summary>
-        private string _mascotMessage;
-        public string MascotMessage { get => _mascotMessage; set => SetProperty(ref _mascotMessage, value); }
-
         private string _nowStamp;
         public string NowStamp { get => _nowStamp; set => SetProperty(ref _nowStamp, value); }
 
@@ -358,7 +354,6 @@ namespace Zeitmanagement.ViewModel
             NextComparisonCommand = new DelegateCommand(_ => PickRandomComparison());
 
             HeaderSubtitle = "Übersicht deiner produktiven Selbstgeißelung";
-            MascotMessage = "Hallo! Ich passe auf deine Zeit auf.";
             NowStamp = DateTime.Now.ToString("dd.MM.yyyy HH:mm");
         }
 
@@ -480,38 +475,7 @@ namespace Zeitmanagement.ViewModel
             _comparisonTotalHours = HoursCounter;
             PickRandomComparison();
 
-            MascotMessage = GetMascotMessage(DateTime.Now, TodayHours);
-
             NowStamp = DateTime.Now.ToString("dd.MM.yyyy HH:mm");
-        }
-
-        /// <summary>Spruch des Pinguins - wie bei Duo mal lobend, mal vorwurfsvoll.</summary>
-        private static string GetMascotMessage(DateTime now, double todayHours)
-        {
-            int totalMinutes = (int)Math.Round(todayHours * 60);
-            string today = $"{totalMinutes / 60}:{totalMinutes % 60:D2} h";
-
-            if (now.DayOfWeek == DayOfWeek.Saturday || now.DayOfWeek == DayOfWeek.Sunday)
-            {
-                return todayHours > 0
-                    ? $"Am Wochenende arbeiten? Schon {today}... ich sag's keinem. 🤫"
-                    : "Wochenende! Selbst Pinguine legen mal die Flossen hoch.";
-            }
-
-            if (todayHours <= 0)
-            {
-                if (now.Hour < 10)
-                    return "Guten Morgen! Noch nichts gebucht - der Tag gehört noch ganz dir.";
-                return "Heute noch keine Minute gebucht? Ich schau dich ganz enttäuscht an. 🐧";
-            }
-
-            if (todayHours < 4)
-                return $"Guter Anfang: {today} heute. Ich glaub an dich!";
-            if (todayHours < 8)
-                return $"Läuft! Schon {today} heute - ich bin stolz auf dich.";
-            if (todayHours < 10)
-                return $"{today} geschafft! Feierabend ist übrigens kein Fremdwort. 🐟";
-            return $"{today}?! Selbst Pinguine brauchen mal eine Pause.";
         }
 
         private double SumHoursForDate(DateTime date)
