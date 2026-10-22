@@ -44,7 +44,7 @@ namespace Zeitmanagement.Helpers
 
             try
             {
-                if (PresentationDetector.IsPresenting())
+                if (!Properties.Settings.Default.PenguinEnabled || PresentationDetector.IsPresenting())
                     ScheduleNext();
                 else
                     ShowPenguin();

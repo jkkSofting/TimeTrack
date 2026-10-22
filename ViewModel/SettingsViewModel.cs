@@ -84,6 +84,13 @@ namespace Zeitmanagement.ViewModel
             set => SetProperty(ref _autoUpdateCheckEnabled, value);
         }
 
+        private bool _penguinEnabled;
+        public bool PenguinEnabled
+        {
+            get => _penguinEnabled;
+            set => SetProperty(ref _penguinEnabled, value);
+        }
+
         public string CurrentVersionText { get; } =
             Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
@@ -151,6 +158,7 @@ namespace Zeitmanagement.ViewModel
             ReminderNudgeEnabled = Properties.Settings.Default.ReminderNudgeEnabled;
             ReminderNudgeIntervalMinutes = Properties.Settings.Default.ReminderNudgeIntervalMinutes;
             AutoUpdateCheckEnabled = Properties.Settings.Default.AutoUpdateCheckEnabled;
+            PenguinEnabled = Properties.Settings.Default.PenguinEnabled;
             ShowUpdate(UpdateService.LatestUpdate);
 
             AvailableBackups.Clear();
@@ -300,6 +308,7 @@ namespace Zeitmanagement.ViewModel
             Properties.Settings.Default.ReminderNudgeEnabled = ReminderNudgeEnabled;
             Properties.Settings.Default.ReminderNudgeIntervalMinutes = ReminderNudgeIntervalMinutes;
             Properties.Settings.Default.AutoUpdateCheckEnabled = AutoUpdateCheckEnabled;
+            Properties.Settings.Default.PenguinEnabled = PenguinEnabled;
             Properties.Settings.Default.Save();
 
             try
