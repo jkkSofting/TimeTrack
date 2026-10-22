@@ -315,7 +315,7 @@
         <Border
             x:Name="PresentationFrame"
             BorderBrush="#E5484D"
-            BorderThickness="4"
+            BorderThickness="1"
             IsHitTestVisible="False"
             Visibility="{Binding IsPresentingInTeams, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
     </Grid>
