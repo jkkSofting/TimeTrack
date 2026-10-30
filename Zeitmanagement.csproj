@@ -76,6 +76,7 @@
     <Compile Include="Helpers\SapBookingCalculator.cs" />
     <Compile Include="Helpers\SessionActivityMonitor.cs" />
     <Compile Include="Helpers\StartupMode.cs" />
+    <Compile Include="Helpers\ThemeManager.cs" />
     <Compile Include="Helpers\TrayNotificationService.cs" />
     <Compile Include="Helpers\UpdateChecker.cs" />
     <Compile Include="Helpers\UpdateService.cs" />
@@ -103,6 +104,7 @@
     </Compile>
     <Compile Include="Views\NullToVisibilityConverter.cs" />
     <Compile Include="Views\NumberFormatterConverter.cs" />
+    <Compile Include="Views\Ui.cs" />
     <Compile Include="Views\PenguinWindow.xaml.cs">
       <DependentUpon>PenguinWindow.xaml</DependentUpon>
     </Compile>
@@ -186,7 +188,43 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\ComboBoxStyle.xaml">
+    <Page Include="Themes\Controls.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\Palettes\Christmas.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\Palettes\Dark.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\Palettes\Easter.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\Palettes\Forest.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\Palettes\Halloween.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\Palettes\Light.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\Palettes\Ocean.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\Palettes\VfbStuttgart.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\Palettes\WerderBremen.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

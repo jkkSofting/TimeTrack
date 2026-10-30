@@ -190,6 +190,18 @@ namespace Zeitmanagement.Properties {
                 this["Theme"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool SeasonalThemesEnabled {
+            get {
+                return ((bool)(this["SeasonalThemesEnabled"]));
+            }
+            set {
+                this["SeasonalThemesEnabled"] = value;
+            }
+        }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]

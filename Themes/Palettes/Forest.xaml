@@ -1,0 +1,64 @@
+<!--  Farbschema "Forest" (Wald: Moos, Tannen und Waldboden). Alle Paletten haben dieselben Schlüssel;
+      der ThemeManager tauscht zur Laufzeit die komplette Palette aus.  -->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <sys:Boolean x:Key="Theme.IsDark">True</sys:Boolean>
+    <x:Static x:Key="Theme.Greeting" Member="sys:String.Empty" />
+
+    <Color x:Key="Theme.TitleBarColor">#0D1611</Color>
+    <Color x:Key="Theme.TitleBarTextColor">#EAF3EC</Color>
+
+    <LinearGradientBrush x:Key="Theme.AppBackground" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0" Color="#0D1611" />
+        <GradientStop Offset="1" Color="#132019" />
+    </LinearGradientBrush>
+
+    <SolidColorBrush x:Key="Theme.Sidebar" Color="#0A120D" />
+    <SolidColorBrush x:Key="Theme.SidebarBorder" Color="#15221A" />
+    <SolidColorBrush x:Key="Theme.SidebarText" Color="#C8DACD" />
+    <SolidColorBrush x:Key="Theme.SidebarTextMuted" Color="#7C9584" />
+    <SolidColorBrush x:Key="Theme.SidebarHover" Color="#13201A" />
+    <SolidColorBrush x:Key="Theme.SidebarSelected" Color="#1C3024" />
+    <SolidColorBrush x:Key="Theme.SidebarSelectedText" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="Theme.Card" Color="#16241B" />
+    <SolidColorBrush x:Key="Theme.CardBorder" Color="#23362A" />
+    <SolidColorBrush x:Key="Theme.Surface" Color="#1B2C21" />
+    <SolidColorBrush x:Key="Theme.SurfaceHover" Color="#25392C" />
+    <SolidColorBrush x:Key="Theme.Control" Color="#182A1E" />
+    <SolidColorBrush x:Key="Theme.ControlBorder" Color="#2F4737" />
+    <SolidColorBrush x:Key="Theme.ControlHover" Color="#1F3426" />
+    <SolidColorBrush x:Key="Theme.Text" Color="#EAF3EC" />
+    <SolidColorBrush x:Key="Theme.TextMuted" Color="#9DB5A4" />
+    <SolidColorBrush x:Key="Theme.TextSubtle" Color="#6A8371" />
+    <SolidColorBrush x:Key="Theme.Accent" Color="#5DB86E" />
+    <SolidColorBrush x:Key="Theme.AccentHover" Color="#76CB86" />
+    <SolidColorBrush x:Key="Theme.AccentPressed" Color="#4B9F5B" />
+    <SolidColorBrush x:Key="Theme.OnAccent" Color="#06110A" />
+    <SolidColorBrush x:Key="Theme.AccentSoft" Color="#1F3A27" />
+    <SolidColorBrush x:Key="Theme.AccentSoftText" Color="#A6E2B1" />
+    <SolidColorBrush x:Key="Theme.Divider" Color="#23362A" />
+    <SolidColorBrush x:Key="Theme.Track" Color="#203226" />
+    <SolidColorBrush x:Key="Theme.Hover" Color="#1C2E22" />
+    <SolidColorBrush x:Key="Theme.Selection" Color="#27432F" />
+    <SolidColorBrush x:Key="Theme.Popup" Color="#182A1E" />
+    <SolidColorBrush x:Key="Theme.ScrollThumb" Color="#2F4737" />
+    <SolidColorBrush x:Key="Theme.ScrollThumbHover" Color="#45644F" />
+    <SolidColorBrush x:Key="Theme.Success" Color="#3DD68C" />
+    <SolidColorBrush x:Key="Theme.SuccessSoft" Color="#14352A" />
+    <SolidColorBrush x:Key="Theme.Warning" Color="#FFB454" />
+    <SolidColorBrush x:Key="Theme.WarningSoft" Color="#3A2A16" />
+    <SolidColorBrush x:Key="Theme.Danger" Color="#FF6B81" />
+    <SolidColorBrush x:Key="Theme.DangerSoft" Color="#3A1620" />
+
+    <SolidColorBrush x:Key="Theme.Heat0" Color="#1A2A1F" />
+    <SolidColorBrush x:Key="Theme.Heat1" Color="#24492F" />
+    <SolidColorBrush x:Key="Theme.Heat2" Color="#2F6E40" />
+    <SolidColorBrush x:Key="Theme.Heat3" Color="#49A05B" />
+    <SolidColorBrush x:Key="Theme.Heat4" Color="#7FD18C" />
+
+    <DropShadowEffect x:Key="Theme.CardShadow" BlurRadius="18" Direction="270" Opacity="0.3" ShadowDepth="2" Color="#000000" />
+    <DropShadowEffect x:Key="Theme.PopupShadow" BlurRadius="20" Direction="270" Opacity="0.48" ShadowDepth="4" Color="#000000" />
+</ResourceDictionary>

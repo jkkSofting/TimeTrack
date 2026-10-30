@@ -26,6 +26,8 @@ namespace Zeitmanagement
 
             UpgradeSettingsIfNeeded();
 
+            ThemeManager.Initialize();
+
             OfferBackupRestoreIfDbMissing();
 
             var startupMode = ParseStartupMode(Zeitmanagement.Properties.Settings.Default.StartupMode);
@@ -71,6 +73,7 @@ namespace Zeitmanagement
         {
             _penguin?.Dispose();
             _trayService?.Dispose();
+            ThemeManager.Shutdown();
             (MainWindow?.DataContext as MainViewModel)?.QuickSelectViewModel?.Shutdown();
 
             base.OnExit(e);
