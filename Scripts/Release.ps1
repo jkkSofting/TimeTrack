@@ -50,10 +50,28 @@ function Invoke-NativeCommand {
 
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $assemblyInfoPath = Join-Path $repoRoot "Properties\AssemblyInfo.cs"
+$changelogPath = Join-Path $repoRoot "Helpers\Changelog.cs"
 $issPath = Join-Path $repoRoot "Installer\installer.iss"
 $slnPath = Join-Path $repoRoot "Zeitmanagement.sln"
 $installerExePath = Join-Path $repoRoot "Installer\Output\TimeTracker-$Version.exe"
 $pushUrl = "https://$PushUser@github.com/$RepoOwner/$RepoName.git"
+
+# --- 0. Neuigkeiten pruefen -------------------------------------------------
+
+# Jede Version braucht einen Eintrag in Helpers\Changelog.cs, sonst sehen die Nutzer auf der Seite
+# "Hilfe & Neuigkeiten" nicht, was sich geaendert hat.
+$changelog = Get-Content $changelogPath -Raw -Encoding UTF8
+$entryPattern = 'new ChangelogRelease\("' + [regex]::Escape($Version) + '"(?<body>.*?)(?=new ChangelogRelease\(|\};)'
+$entry = [regex]::Match($changelog, $entryPattern, 'Singleline')
+if (-not $entry.Success) {
+    throw "Helpers\Changelog.cs hat keinen Eintrag fuer $Version. Erst die Neuigkeiten eintragen, siehe RELEASING.md."
+}
+
+# Ohne -Notes werden die Release-Notes auf GitHub aus dem Changelog-Eintrag erzeugt
+if (-not $Notes) {
+    $changes = [regex]::Matches($entry.Groups['body'].Value, '(?<kind>Neu|Verbessert|Behoben)\("(?<text>[^"]*)"\)')
+    $Notes = ($changes | ForEach-Object { "- **$($_.Groups['kind'].Value):** $($_.Groups['text'].Value)" }) -join "`n"
+}
 
 # --- 1. Version bumpen ------------------------------------------------------
 
@@ -67,6 +85,13 @@ Set-Content -Path $assemblyInfoPath -Value $assemblyInfo -NoNewline
 $iss = Get-Content $issPath -Raw
 $iss = $iss -replace '#define MyAppVersion "[^"]+"', "#define MyAppVersion `"$Version`""
 Set-Content -Path $issPath -Value $iss -NoNewline
+
+# Der Changelog-Eintrag bekommt das Datum des Releases
+$today = Get-Date
+$changelog = $changelog -replace `
+    ('(new ChangelogRelease\("' + [regex]::Escape($Version) + '", )new DateTime\(\d+, \d+, \d+\)'), `
+    ('${1}' + "new DateTime($($today.Year), $($today.Month), $($today.Day))")
+Set-Content -Path $changelogPath -Value $changelog -NoNewline -Encoding UTF8
 
 # --- 2. Release-Build --------------------------------------------------------
 
@@ -96,7 +121,7 @@ if (-not (Test-Path $installerExePath)) {
 
 Push-Location $repoRoot
 try {
-    Invoke-NativeCommand -FilePath "git" -ArgumentList @("add", "Properties/AssemblyInfo.cs", "Installer/installer.iss") -StepName "git add"
+    Invoke-NativeCommand -FilePath "git" -ArgumentList @("add", "Properties/AssemblyInfo.cs", "Installer/installer.iss", "Helpers/Changelog.cs") -StepName "git add"
     Invoke-NativeCommand -FilePath "git" -ArgumentList @("commit", "-m", "Bump version to $Version") -StepName "git commit"
     Invoke-NativeCommand -FilePath "git" -ArgumentList @("tag", "-a", $Version, "-m", "TimeTrack $Version") -StepName "git tag"
     Invoke-NativeCommand -FilePath "git" -ArgumentList @("push", $pushUrl, "main") -StepName "git push main"
@@ -134,9 +159,11 @@ $releaseBody = @{
     prerelease = $false
 } | ConvertTo-Json
 
+# Als UTF-8-Bytes senden, sonst gehen Umlaute aus dem Changelog unter Windows PowerShell kaputt
 $release = Invoke-RestMethod -Method Post `
     -Uri "https://api.github.com/repos/$RepoOwner/$RepoName/releases" `
-    -Headers $headers -ContentType "application/json" -Body $releaseBody
+    -Headers $headers -ContentType "application/json; charset=utf-8" `
+    -Body ([System.Text.Encoding]::UTF8.GetBytes($releaseBody))
 
 $assetName = Split-Path $installerExePath -Leaf
 Write-Host "==> $assetName hochladen" -ForegroundColor Cyan

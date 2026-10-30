@@ -65,6 +65,21 @@ namespace Zeitmanagement
                 });
             UpdateService.Start();
 
+            if (mainViewModel.Help.WasUpdated)
+            {
+                _trayService.ShowBalloon(
+                    "TimeTrack wurde aktualisiert",
+                    $"Version {mainViewModel.Help.InstalledVersionText} ist installiert. Klicken, um zu sehen, was neu ist.",
+                    onClick: () =>
+                    {
+                        mainWindow.Show();
+                        if (mainWindow.WindowState == WindowState.Minimized)
+                            mainWindow.WindowState = WindowState.Normal;
+                        mainWindow.Activate();
+                        mainViewModel.OpenChangelog();
+                    });
+            }
+
             _penguin = new PenguinEasterEgg();
             _penguin.Start();
         }
@@ -91,6 +106,16 @@ namespace Zeitmanagement
                 return;
 
             Zeitmanagement.Properties.Settings.Default.Upgrade();
+
+            // SettingsUpgraded is only true after Upgrade() if a previous install had it set. Coming
+            // from a version before the changelog existed counts as having seen everything up to
+            // then, so the update hint and the "Neu für dich" marks show for what came after.
+            if (Zeitmanagement.Properties.Settings.Default.SettingsUpgraded &&
+                string.IsNullOrEmpty(Zeitmanagement.Properties.Settings.Default.LastSeenChangelogVersion))
+            {
+                Zeitmanagement.Properties.Settings.Default.LastSeenChangelogVersion = "2026.43.0";
+            }
+
             Zeitmanagement.Properties.Settings.Default.SettingsUpgraded = true;
             Zeitmanagement.Properties.Settings.Default.Save();
         }
