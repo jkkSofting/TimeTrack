@@ -16,7 +16,7 @@ namespace Zeitmanagement.Views
     /// taskbar. Only the penguin itself catches mouse clicks (the transparent rest of the window
     /// lets them through) and the window never takes focus. If the penguin is clicked in time it
     /// throws a fish at the user (see <see cref="FishWindow"/>) and waits for it to slide down
-    /// before it disappears. The window closes itself when it is done.
+    /// (or be caught) before it disappears. Catches are counted in the settings. The window closes itself when it is done.
     /// </summary>
     public partial class PenguinWindow : Window
     {
@@ -33,16 +33,16 @@ namespace Zeitmanagement.Views
         private const double SinkStart = FlipperLowered + 0.3;
         private const double SinkDuration = 0.7;
 
-        private const double FlipperRestAngle = -12;
-        private const double FlipperRaisedAngle = -140;
-        private const double FlipperWaveAngle = -112;
+        private const double FlipperRestAngle = 0; // the drawing already shows the resting flipper
+        private const double FlipperRaisedAngle = -128;
+        private const double FlipperWaveAngle = -100;
 
         // Throwing a fish: a click only counts while the penguin is at least this far up.
         private const double ClickableBelowOffset = 60;
         private const double ThrowWindUp = 0.12;
         private const double ThrowRelease = 0.30; // the fish leaves the flipper
-        private const double ThrowWindUpAngle = -165;
-        private const double ThrowReleaseAngle = -25;
+        private const double ThrowWindUpAngle = -153;
+        private const double ThrowReleaseAngle = -13;
         private const double PauseAfterFish = 0.3;
 
         private readonly Drawing.Rectangle _workAreaPixels;
@@ -133,6 +133,7 @@ namespace Zeitmanagement.Views
 
             try
             {
+                CountCatch();
                 ThrowFish();
             }
             catch (Exception ex)
@@ -141,6 +142,13 @@ namespace Zeitmanagement.Views
                 Debug.WriteLine($"Penguin fish throw failed: {ex}");
                 SinkAfterThrow();
             }
+        }
+
+        private static void CountCatch()
+        {
+            var settings = Properties.Settings.Default;
+            settings.PenguinCaughtCount++;
+            settings.Save();
         }
 
         private void ThrowFish()

@@ -7,65 +7,75 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodel="clr-namespace:Zeitmanagement.ViewModel"
     d:DataContext="{d:DesignInstance Type=viewmodel:SettingsViewModel}"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
+    d:DesignHeight="900"
+    d:DesignWidth="1200"
     mc:Ignorable="d">
     <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis" />
-
-        <Color x:Key="ColCard">#1A2238</Color>
-        <Color x:Key="ColText">#F5F7FB</Color>
-        <Color x:Key="ColTextMuted">#B7C0D8</Color>
-
-        <SolidColorBrush x:Key="BrushText" Color="{StaticResource ColText}" />
-        <SolidColorBrush x:Key="BrushTextMuted" Color="{StaticResource ColTextMuted}" />
-        <SolidColorBrush x:Key="BrushCard" Color="{StaticResource ColCard}" />
-
-        <LinearGradientBrush x:Key="BgGradient" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Offset="0" Color="#0B1020" />
-            <GradientStop Offset="1" Color="#121A33" />
-        </LinearGradientBrush>
-
-        <!--  Card  -->
-        <Style x:Key="Card" TargetType="Border">
-            <Setter Property="CornerRadius" Value="18" />
-            <Setter Property="Background" Value="{StaticResource BrushCard}" />
-            <Setter Property="Padding" Value="16" />
-            <Setter Property="Margin" Value="10" />
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect
-                        BlurRadius="18"
-                        Opacity="0.4"
-                        ShadowDepth="3"
-                        Color="#000000" />
-                </Setter.Value>
-            </Setter>
+        <!--  Karte einer Einstellungsgruppe mit Icon und Titel  -->
+        <Style
+            x:Key="SettingsCard"
+            BasedOn="{StaticResource Card}"
+            TargetType="Border">
+            <Setter Property="Margin" Value="0,0,0,16" />
         </Style>
 
-        <!--  Flat-Button  -->
-        <Style x:Key="FlatButton" TargetType="Button">
-            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
-            <Setter Property="Background" Value="#2D3A63" />
-            <Setter Property="BorderBrush" Value="#42507C" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="14,8" />
+        <Style x:Key="CardIcon" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,0,10,0" />
+            <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource Theme.Accent}" />
+        </Style>
+
+        <Style x:Key="CardHeader" TargetType="StackPanel">
+            <Setter Property="Margin" Value="0,0,0,14" />
+            <Setter Property="Orientation" Value="Horizontal" />
+        </Style>
+
+        <!--  Eine Zeile mit Trennlinie zwischen Einstellungen  -->
+        <Style x:Key="SettingRow" TargetType="Border">
+            <Setter Property="Padding" Value="0,12" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Theme.Divider}" />
+            <Setter Property="BorderThickness" Value="0,1,0,0" />
+        </Style>
+
+        <Style x:Key="Hint" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,4,0,0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource Theme.TextMuted}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style x:Key="NumberBox" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Width" Value="64" />
+            <Setter Property="TextAlignment" Value="Center" />
+        </Style>
+
+        <!--  Design-Auswahl: Kacheln mit kleiner Vorschau des Farbschemas  -->
+        <Style x:Key="ThemeTile" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,12,12" />
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="Button">
+                    <ControlTemplate TargetType="ListBoxItem">
                         <Border
-                            x:Name="bd"
-                            Padding="{TemplateBinding Padding}"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="8">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
+                            x:Name="frame"
+                            Width="186"
+                            Padding="6"
+                            Background="{DynamicResource Theme.Surface}"
+                            BorderBrush="{DynamicResource Theme.CardBorder}"
+                            BorderThickness="2"
+                            CornerRadius="12">
+                            <ContentPresenter />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#34406E" />
+                                <Setter TargetName="frame" Property="BorderBrush" Value="{DynamicResource Theme.TextSubtle}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="frame" Property="BorderBrush" Value="{DynamicResource Theme.Accent}" />
+                                <Setter TargetName="frame" Property="Background" Value="{DynamicResource Theme.AccentSoft}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -73,276 +83,569 @@
             </Setter>
         </Style>
 
-        <!--  Primary Flat-Button (Speichern)  -->
-        <Style x:Key="PrimaryFlatButton" BasedOn="{StaticResource FlatButton}" TargetType="Button">
-            <Setter Property="Background" Value="#3A7BD5" />
-            <Setter Property="BorderBrush" Value="#5B9BE8" />
-        </Style>
+        <!--  Mini-Vorschau einer Palette: Seitenleiste, Hintergrund, Karte mit Akzent  -->
+        <DataTemplate x:Key="ThemePreviewTemplate" DataType="{x:Type viewmodel:ThemePreview}">
+            <Border
+                Height="64"
+                Background="{Binding Background}"
+                BorderBrush="{Binding CardBorder}"
+                BorderThickness="1"
+                ClipToBounds="True"
+                CornerRadius="7">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Background="{Binding Sidebar}" CornerRadius="6,0,0,6">
+                        <StackPanel Margin="4,9,4,0">
+                            <Border
+                                Height="3"
+                                Margin="0,0,0,4"
+                                Background="{Binding Accent}"
+                                CornerRadius="1.5" />
+                            <Border
+                                Height="3"
+                                Margin="0,0,0,4"
+                                Background="{Binding Text}"
+                                CornerRadius="1.5" />
+                            <Border
+                                Height="3"
+                                Background="{Binding Text}"
+                                CornerRadius="1.5" />
+                        </StackPanel>
+                    </Border>
+                    <Border
+                        Grid.Column="1"
+                        Margin="6,9,6,9"
+                        Padding="6"
+                        Background="{Binding Card}"
+                        BorderBrush="{Binding CardBorder}"
+                        BorderThickness="1"
+                        CornerRadius="5">
+                        <StackPanel>
+                            <Border
+                                Width="28"
+                                Height="3"
+                                HorizontalAlignment="Left"
+                                Background="{Binding Text}"
+                                CornerRadius="1.5" />
+                            <Border
+                                Width="20"
+                                Height="9"
+                                Margin="0,8,0,0"
+                                HorizontalAlignment="Right"
+                                Background="{Binding Accent}"
+                                CornerRadius="3" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </DataTemplate>
 
-        <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
-            <Setter Property="Margin" Value="0,6" />
-            <Setter Property="Cursor" Value="Hand" />
-        </Style>
+        <!--  Kachel eines Designs: links die helle, rechts die dunkle Variante  -->
+        <DataTemplate x:Key="ThemeTileTemplate" DataType="{x:Type viewmodel:ThemeOption}">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="6" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ContentPresenter
+                        Content="{Binding Light}"
+                        ContentTemplate="{StaticResource ThemePreviewTemplate}"
+                        ToolTip="Hell" />
+                    <ContentPresenter
+                        Grid.Column="2"
+                        Content="{Binding Dark}"
+                        ContentTemplate="{StaticResource ThemePreviewTemplate}"
+                        ToolTip="Dunkel" />
+                </Grid>
+                <DockPanel Margin="2,6,2,0">
+                    <Border
+                        Padding="5,0"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource Theme.Surface}"
+                        BorderBrush="{DynamicResource Theme.CardBorder}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        DockPanel.Dock="Right"
+                        ToolTip="Erscheint auch automatisch zur passenden Jahreszeit"
+                        Visibility="{Binding IsSeasonal, Converter={StaticResource BoolToVis}}">
+                        <TextBlock
+                            FontSize="10"
+                            Foreground="{DynamicResource Theme.TextMuted}"
+                            Text="saisonal" />
+                    </Border>
+                    <TextBlock
+                        FontWeight="SemiBold"
+                        Style="{StaticResource Text.Body}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+                </DockPanel>
+            </StackPanel>
+        </DataTemplate>
 
-        <Style TargetType="TextBox">
-            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
-            <Setter Property="Background" Value="#233055" />
-            <Setter Property="BorderBrush" Value="#33406A" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="6,4" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-        </Style>
+        <!--  Kleiner Fisch für die Statistik (wie der geworfene Fisch, verkleinert)  -->
+        <DrawingImage x:Key="FishIcon">
+            <DrawingImage.Drawing>
+                <DrawingGroup>
+                    <GeometryDrawing Brush="#4F7FB0" Geometry="M16,22 L0,4 5,22 0,40 Z M30,10 L40,0 56,10 Z M34,34 L42,43 52,34 Z" />
+                    <GeometryDrawing Geometry="M10,22 A33,15 0 1 1 76,22 A33,15 0 1 1 10,22 Z">
+                        <GeometryDrawing.Brush>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Offset="0" Color="#6F9CCB" />
+                                <GradientStop Offset="0.55" Color="#B8D4EE" />
+                                <GradientStop Offset="1" Color="#EEF5FB" />
+                            </LinearGradientBrush>
+                        </GeometryDrawing.Brush>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="White" Geometry="M57,19.5 A3.5,3.5 0 1 1 64,19.5 A3.5,3.5 0 1 1 57,19.5 Z" />
+                    <GeometryDrawing Brush="Black" Geometry="M60,19.75 A1.75,1.75 0 1 1 63.5,19.75 A1.75,1.75 0 1 1 60,19.75 Z" />
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
     </UserControl.Resources>
 
-    <Grid Background="{StaticResource BgGradient}">
+    <Grid Style="{StaticResource Page}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!--  Header  -->
-        <Border
-            Grid.Row="0"
-            Margin="16,16,16,8"
-            Style="{StaticResource Card}">
-            <TextBlock
-                FontSize="24"
-                FontWeight="SemiBold"
-                Foreground="{StaticResource BrushText}"
-                Text="Einstellungen" />
-        </Border>
+        <DockPanel Style="{StaticResource PageHeader}">
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource Text.PageTitle}" Text="Einstellungen" />
+                <TextBlock Style="{StaticResource Text.Subtitle}" Text="Das Design wird sofort übernommen, alles andere mit „Speichern“ unten." />
+            </StackPanel>
+        </DockPanel>
 
-        <!--  Body  -->
-        <Border
+        <ScrollViewer
             Grid.Row="1"
-            Margin="16,8,16,8"
-            Style="{StaticResource Card}"
-            VerticalAlignment="Top">
-            <StackPanel MaxWidth="480" HorizontalAlignment="Left">
-                <CheckBox Content="Mit Windows starten" IsChecked="{Binding AutostartEnabled, Mode=TwoWay}" />
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
+            <Grid Margin="28,0,28,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                <TextBlock
-                    Margin="2,14,0,4"
-                    Foreground="{StaticResource BrushTextMuted}"
-                    Text="Programm starten als" />
-                <ComboBox
-                    ItemsSource="{Binding StartupModeOptions}"
-                    SelectedValue="{Binding SelectedStartupMode, Mode=TwoWay}"
-                    SelectedValuePath="Value"
-                    Style="{StaticResource NiceCombo}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Label}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-
-                <CheckBox
-                    Margin="0,18,0,0"
-                    Content="Schnellwechsel-Fenster immer im Vordergrund halten"
-                    IsChecked="{Binding FloatingWindowAlwaysOnTop, Mode=TwoWay}" />
-
-                <CheckBox
-                    Margin="0,12,0,0"
-                    Click="PenguinCheckBox_Click"
-                    Content="Pinguin ab und zu hinter der Taskleiste auftauchen lassen"
-                    IsChecked="{Binding PenguinEnabled, Mode=TwoWay}" />
-
-                <StackPanel
-                    Margin="0,24,0,0"
-                    HorizontalAlignment="Left"
-                    Orientation="Horizontal">
-                    <Button
-                        MinWidth="110"
-                        Command="{Binding SaveCommand}"
-                        Content="Speichern"
-                        Style="{StaticResource PrimaryFlatButton}" />
-                    <Button
-                        MinWidth="110"
-                        Margin="8,0,0,0"
-                        Command="{Binding CancelCommand}"
-                        Content="Verwerfen"
-                        Style="{StaticResource FlatButton}" />
-                </StackPanel>
-            </StackPanel>
-        </Border>
-
-        <!--  Automatisierung  -->
-        <Border
-            Grid.Row="2"
-            Margin="16,8,16,8"
-            Style="{StaticResource Card}"
-            VerticalAlignment="Top">
-            <StackPanel MaxWidth="480" HorizontalAlignment="Left">
-                <TextBlock
-                    FontSize="18"
-                    FontWeight="SemiBold"
-                    Foreground="{StaticResource BrushText}"
-                    Text="Automatisierung" />
-
-                <CheckBox
-                    Margin="0,14,0,0"
-                    Content="Buchung bei Sperrbildschirm/Ruhemodus automatisch beenden"
-                    IsChecked="{Binding AutoStopOnLockEnabled, Mode=TwoWay}" />
-
-                <StackPanel
-                    Margin="0,6,0,0"
-                    Orientation="Horizontal"
-                    IsEnabled="{Binding AutoStopOnLockEnabled}">
-                    <TextBlock
-                        VerticalAlignment="Center"
-                        Foreground="{StaticResource BrushTextMuted}"
-                        Text="Verzögerung bei Sperrbildschirm (Minuten):" />
-                    <TextBox
-                        Width="60"
-                        Margin="8,0,0,0"
-                        Text="{Binding AutoStopOnLockMinutes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
-
-                <CheckBox
-                    Margin="0,18,0,0"
-                    Content="Erinnern, wenn kein Projekt ausgewählt ist"
-                    IsChecked="{Binding ReminderNudgeEnabled, Mode=TwoWay}" />
-
-                <StackPanel
-                    Margin="0,6,0,0"
-                    Orientation="Horizontal"
-                    IsEnabled="{Binding ReminderNudgeEnabled}">
-                    <TextBlock
-                        VerticalAlignment="Center"
-                        Foreground="{StaticResource BrushTextMuted}"
-                        Text="Erinnerungsintervall (Minuten):" />
-                    <TextBox
-                        Width="60"
-                        Margin="8,0,0,0"
-                        Text="{Binding ReminderNudgeIntervalMinutes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
-            </StackPanel>
-        </Border>
-
-        <!--  Updates  -->
-        <Border
-            Grid.Row="3"
-            Margin="16,8,16,8"
-            Style="{StaticResource Card}"
-            VerticalAlignment="Top">
-            <StackPanel MaxWidth="480" HorizontalAlignment="Left">
-                <TextBlock
-                    FontSize="18"
-                    FontWeight="SemiBold"
-                    Foreground="{StaticResource BrushText}"
-                    Text="Updates" />
-
-                <CheckBox
-                    Margin="0,14,0,0"
-                    Content="Regelmäßig automatisch nach Updates suchen"
-                    IsChecked="{Binding AutoUpdateCheckEnabled, Mode=TwoWay}" />
-
-                <TextBlock
-                    Margin="2,14,0,0"
-                    Foreground="{StaticResource BrushTextMuted}"
-                    Text="{Binding CurrentVersionText, StringFormat='Installierte Version: {0}'}" />
-
-                <TextBlock
-                    Margin="2,4,0,0"
-                    Foreground="{StaticResource BrushText}"
-                    Text="{Binding UpdateStatusText}" />
-
-                <StackPanel
-                    Margin="0,14,0,0"
-                    HorizontalAlignment="Left"
-                    Orientation="Horizontal">
-                    <Button
-                        MinWidth="170"
-                        Command="{Binding CheckForUpdateCommand}"
-                        Content="Nach Updates suchen"
-                        Style="{StaticResource FlatButton}" />
-                    <Button
-                        MinWidth="170"
-                        Margin="8,0,0,0"
-                        Command="{Binding InstallUpdateCommand}"
-                        Content="Update installieren"
-                        Style="{StaticResource PrimaryFlatButton}"
-                        Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVis}}" />
-                </StackPanel>
-            </StackPanel>
-        </Border>
-
-        <!--  Backup  -->
-        <Border
-            Grid.Row="4"
-            Margin="16,8,16,16"
-            Style="{StaticResource Card}"
-            VerticalAlignment="Top">
-            <StackPanel MaxWidth="480" HorizontalAlignment="Left">
-                <TextBlock
-                    FontSize="18"
-                    FontWeight="SemiBold"
-                    Foreground="{StaticResource BrushText}"
-                    Text="Datensicherung" />
-
-                <StackPanel
-                    Margin="0,14,0,0"
-                    HorizontalAlignment="Left"
-                    Orientation="Horizontal">
-                    <Button
-                        MinWidth="170"
-                        Command="{Binding CreateBackupCommand}"
-                        Content="Sicherung jetzt erstellen"
-                        Style="{StaticResource PrimaryFlatButton}" />
-                    <Button
-                        MinWidth="170"
-                        Margin="8,0,0,0"
-                        Command="{Binding BrowseBackupCommand}"
-                        Content="Sicherung durchsuchen..."
-                        Style="{StaticResource FlatButton}" />
-                </StackPanel>
-
-                <TextBlock
-                    Margin="2,18,0,4"
-                    Foreground="{StaticResource BrushTextMuted}"
-                    Text="Vorhandene Sicherungen" />
-
-                <ItemsControl ItemsSource="{Binding AvailableBackups}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
+                <!--  ===== Darstellung (volle Breite) =====  -->
+                <Border Grid.ColumnSpan="3" Style="{StaticResource SettingsCard}">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,14">
+                            <!--  Helligkeit: gilt für jedes Design  -->
                             <Border
-                                Margin="0,0,0,6"
-                                Padding="10,8"
-                                Background="#20294A"
-                                BorderBrush="#33406E"
+                                Padding="3"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource Theme.Surface}"
+                                BorderBrush="{DynamicResource Theme.CardBorder}"
                                 BorderThickness="1"
-                                CornerRadius="8">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
+                                CornerRadius="10"
+                                DockPanel.Dock="Right">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton
+                                        local:Ui.Glyph="&#xE7F4;"
+                                        Content="Wie Windows"
+                                        GroupName="ThemeMode"
+                                        IsChecked="{Binding IsModeSystem, Mode=TwoWay}"
+                                        Style="{StaticResource Segment}" />
+                                    <RadioButton
+                                        local:Ui.Glyph="&#xE706;"
+                                        Content="Hell"
+                                        GroupName="ThemeMode"
+                                        IsChecked="{Binding IsModeLight, Mode=TwoWay}"
+                                        Style="{StaticResource Segment}" />
+                                    <RadioButton
+                                        local:Ui.Glyph="&#xE708;"
+                                        Content="Dunkel"
+                                        GroupName="ThemeMode"
+                                        IsChecked="{Binding IsModeDark, Mode=TwoWay}"
+                                        Style="{StaticResource Segment}" />
+                                </StackPanel>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource CardIcon}" Text="&#xE790;" />
+                                <TextBlock Style="{StaticResource Text.Section}" Text="Design" />
+                            </StackPanel>
+                        </DockPanel>
+
+                        <ListBox
+                            Background="Transparent"
+                            BorderThickness="0"
+                            ItemContainerStyle="{StaticResource ThemeTile}"
+                            ItemTemplate="{StaticResource ThemeTileTemplate}"
+                            ItemsSource="{Binding ThemeOptions}"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                            SelectedItem="{Binding SelectedTheme, Mode=TwoWay}">
+                            <!--  Ohne eigenen ScrollViewer, damit das Mausrad die Seite scrollt  -->
+                            <ListBox.Template>
+                                <ControlTemplate TargetType="ListBox">
+                                    <ItemsPresenter />
+                                </ControlTemplate>
+                            </ListBox.Template>
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                        </ListBox>
+
+                        <Border Margin="0,4,0,0" Style="{StaticResource SettingRow}">
+                            <StackPanel>
+                                <CheckBox
+                                    Content="Saisonale Designs automatisch anzeigen"
+                                    IsChecked="{Binding SeasonalThemesEnabled, Mode=TwoWay}"
+                                    Style="{StaticResource Switch}" />
+                                <TextBlock Style="{StaticResource Hint}" Text="{Binding SeasonalThemesHint}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border
+                            Margin="0,4,0,0"
+                            Padding="10,8"
+                            Background="{DynamicResource Theme.AccentSoft}"
+                            CornerRadius="8">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock
+                                    Margin="0,0,8,0"
+                                    FontSize="13"
+                                    Foreground="{DynamicResource Theme.AccentSoftText}"
+                                    Style="{StaticResource Text.Icon}"
+                                    Text="&#xE946;" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource Theme.AccentSoftText}"
+                                    Text="{Binding ThemeStatusText}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!--  ===== Linke Spalte =====  -->
+                <StackPanel Grid.Row="1">
+                    <!--  Start & Fenster  -->
+                    <Border Style="{StaticResource SettingsCard}">
+                        <StackPanel>
+                            <StackPanel Style="{StaticResource CardHeader}">
+                                <TextBlock Style="{StaticResource CardIcon}" Text="&#xE7E8;" />
+                                <TextBlock Style="{StaticResource Text.Section}" Text="Start &amp; Fenster" />
+                            </StackPanel>
+
+                            <Border BorderThickness="0" Style="{StaticResource SettingRow}">
+                                <CheckBox
+                                    Content="Mit Windows starten"
+                                    IsChecked="{Binding AutostartEnabled, Mode=TwoWay}"
+                                    Style="{StaticResource Switch}" />
+                            </Border>
+
+                            <Border Style="{StaticResource SettingRow}">
+                                <DockPanel>
+                                    <ComboBox
+                                        Width="300"
+                                        DockPanel.Dock="Right"
+                                        ItemsSource="{Binding StartupModeOptions}"
+                                        SelectedValue="{Binding SelectedStartupMode, Mode=TwoWay}"
+                                        SelectedValuePath="Value">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Label}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
                                     <TextBlock
                                         VerticalAlignment="Center"
-                                        Foreground="{StaticResource BrushText}"
-                                        Text="{Binding CreatedAt, StringFormat='dd.MM.yyyy HH:mm:ss'}" />
-                                    <Button
-                                        Grid.Column="1"
-                                        MinWidth="110"
-                                        Command="{Binding DataContext.RestoreBackupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}"
-                                        Content="Wiederherstellen"
-                                        Style="{StaticResource FlatButton}" />
-                                </Grid>
+                                        Style="{StaticResource Text.Body}"
+                                        Text="Programm starten als" />
+                                </DockPanel>
                             </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+
+                            <Border Style="{StaticResource SettingRow}">
+                                <CheckBox
+                                    Content="Quick-Switch-Fenster immer im Vordergrund halten"
+                                    IsChecked="{Binding FloatingWindowAlwaysOnTop, Mode=TwoWay}"
+                                    Style="{StaticResource Switch}" />
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!--  Automatisierung  -->
+                    <Border Style="{StaticResource SettingsCard}">
+                        <StackPanel>
+                            <StackPanel Style="{StaticResource CardHeader}">
+                                <TextBlock Style="{StaticResource CardIcon}" Text="&#xE945;" />
+                                <TextBlock Style="{StaticResource Text.Section}" Text="Automatisierung" />
+                            </StackPanel>
+
+                            <Border BorderThickness="0" Style="{StaticResource SettingRow}">
+                                <StackPanel>
+                                    <CheckBox
+                                        Content="Buchung bei Sperrbildschirm/Ruhemodus automatisch beenden"
+                                        IsChecked="{Binding AutoStopOnLockEnabled, Mode=TwoWay}"
+                                        Style="{StaticResource Switch}" />
+                                    <StackPanel
+                                        Margin="0,10,0,0"
+                                        IsEnabled="{Binding AutoStopOnLockEnabled}"
+                                        Orientation="Horizontal">
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            Style="{StaticResource Text.Muted}"
+                                            Text="Nach" />
+                                        <TextBox
+                                            Margin="8,0"
+                                            Style="{StaticResource NumberBox}"
+                                            Text="{Binding AutoStopOnLockMinutes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            Style="{StaticResource Text.Muted}"
+                                            Text="Minuten Sperrbildschirm" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource SettingRow}">
+                                <StackPanel>
+                                    <CheckBox
+                                        Content="Erinnern, wenn kein Projekt läuft"
+                                        IsChecked="{Binding ReminderNudgeEnabled, Mode=TwoWay}"
+                                        Style="{StaticResource Switch}" />
+                                    <StackPanel
+                                        Margin="0,10,0,0"
+                                        IsEnabled="{Binding ReminderNudgeEnabled}"
+                                        Orientation="Horizontal">
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            Style="{StaticResource Text.Muted}"
+                                            Text="Alle" />
+                                        <TextBox
+                                            Margin="8,0"
+                                            Style="{StaticResource NumberBox}"
+                                            Text="{Binding ReminderNudgeIntervalMinutes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            Style="{StaticResource Text.Muted}"
+                                            Text="Minuten erinnern" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!--  Updates  -->
+                    <Border Style="{StaticResource SettingsCard}">
+                        <StackPanel>
+                            <StackPanel Style="{StaticResource CardHeader}">
+                                <TextBlock Style="{StaticResource CardIcon}" Text="&#xE895;" />
+                                <TextBlock Style="{StaticResource Text.Section}" Text="Updates" />
+                            </StackPanel>
+
+                            <Border BorderThickness="0" Style="{StaticResource SettingRow}">
+                                <CheckBox
+                                    Content="Regelmäßig automatisch nach Updates suchen"
+                                    IsChecked="{Binding AutoUpdateCheckEnabled, Mode=TwoWay}"
+                                    Style="{StaticResource Switch}" />
+                            </Border>
+
+                            <Border Style="{StaticResource SettingRow}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Button
+                                            local:Ui.Glyph="&#xE72C;"
+                                            Command="{Binding CheckForUpdateCommand}"
+                                            Content="Suchen" />
+                                        <Button
+                                            Margin="8,0,0,0"
+                                            local:Ui.Glyph="&#xE896;"
+                                            Command="{Binding InstallUpdateCommand}"
+                                            Content="Installieren"
+                                            Style="{StaticResource Button.Primary}"
+                                            Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVis}}" />
+                                    </StackPanel>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Style="{StaticResource Text.Body}" Text="{Binding UpdateStatusText}" />
+                                        <TextBlock Style="{StaticResource Hint}" Text="{Binding CurrentVersionText, StringFormat='Installierte Version: {0}'}" />
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!--  ===== Rechte Spalte =====  -->
+                <StackPanel Grid.Row="1" Grid.Column="2">
+                    <!--  Pinguin  -->
+                    <Border Style="{StaticResource SettingsCard}">
+                        <StackPanel>
+                            <StackPanel Style="{StaticResource CardHeader}">
+                                <ContentControl
+                                    Width="22"
+                                    Height="22"
+                                    Margin="0,0,10,0"
+                                    Focusable="False"
+                                    Template="{StaticResource MascotLogoTemplate}" />
+                                <TextBlock Style="{StaticResource Text.Section}" Text="Pinguin" />
+                            </StackPanel>
+
+                            <Border BorderThickness="0" Style="{StaticResource SettingRow}">
+                                <StackPanel>
+                                    <CheckBox
+                                        Click="PenguinCheckBox_Click"
+                                        Content="Pinguin ab und zu hinter der Taskleiste auftauchen lassen"
+                                        IsChecked="{Binding PenguinEnabled, Mode=TwoWay}"
+                                        Style="{StaticResource Switch}" />
+                                    <StackPanel
+                                        Margin="0,10,0,0"
+                                        IsEnabled="{Binding PenguinEnabled}"
+                                        Orientation="Horizontal"
+                                        ToolTip="Mindestens 10 Minuten">
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            Style="{StaticResource Text.Muted}"
+                                            Text="Alle" />
+                                        <TextBox
+                                            Margin="8,0"
+                                            Style="{StaticResource NumberBox}"
+                                            Text="{Binding PenguinMinDelayMinutes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            Style="{StaticResource Text.Muted}"
+                                            Text="bis" />
+                                        <TextBox
+                                            Margin="8,0"
+                                            Style="{StaticResource NumberBox}"
+                                            Text="{Binding PenguinMaxDelayMinutes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            Style="{StaticResource Text.Muted}"
+                                            Text="Minuten" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  Statistik  -->
+                            <Border Style="{StaticResource SettingRow}">
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource Text.Body}" Text="Deine Fangstatistik" />
+                                    <TextBlock Style="{StaticResource Hint}" Text="Klick den Pinguin rechtzeitig an, dann wirft er dir einen Fisch zu. Den musst du dann noch erwischen, bevor er runterrutscht." />
+                                    <Grid Margin="0,12,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="12" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Style="{StaticResource Inset}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <ContentControl
+                                                    Width="36"
+                                                    Height="36"
+                                                    Margin="0,0,12,0"
+                                                    Focusable="False"
+                                                    Template="{StaticResource MascotLogoTemplate}" />
+                                                <StackPanel>
+                                                    <TextBlock Style="{StaticResource Text.Value}" Text="{Binding PenguinCaughtCount}" />
+                                                    <TextBlock Style="{StaticResource Text.Label}" Text="Pinguin gefangen" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Grid.Column="2" Style="{StaticResource Inset}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image
+                                                    Width="40"
+                                                    Height="24"
+                                                    Margin="0,0,12,0"
+                                                    VerticalAlignment="Center"
+                                                    Source="{StaticResource FishIcon}" />
+                                                <StackPanel>
+                                                    <TextBlock Style="{StaticResource Text.Value}" Text="{Binding FishCaughtCount}" />
+                                                    <TextBlock Style="{StaticResource Text.Label}" Text="Fisch gefangen" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!--  Datensicherung  -->
+                    <Border Style="{StaticResource SettingsCard}">
+                        <StackPanel>
+                            <StackPanel Style="{StaticResource CardHeader}">
+                                <TextBlock Style="{StaticResource CardIcon}" Text="&#xE8F7;" />
+                                <TextBlock Style="{StaticResource Text.Section}" Text="Datensicherung" />
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal">
+                                <Button
+                                    local:Ui.Glyph="&#xE74E;"
+                                    Command="{Binding CreateBackupCommand}"
+                                    Content="Sicherung jetzt erstellen"
+                                    Style="{StaticResource Button.Primary}" />
+                                <Button
+                                    Margin="8,0,0,0"
+                                    local:Ui.Glyph="&#xE8E5;"
+                                    Command="{Binding BrowseBackupCommand}"
+                                    Content="Sicherung laden…" />
+                            </StackPanel>
+
+                            <TextBlock
+                                Margin="0,18,0,6"
+                                Style="{StaticResource Text.Label}"
+                                Text="Vorhandene Sicherungen" />
+
+                            <ItemsControl ItemsSource="{Binding AvailableBackups}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource SettingRow}">
+                                            <DockPanel>
+                                                <Button
+                                                    local:Ui.Glyph="&#xE777;"
+                                                    Command="{Binding DataContext.RestoreBackupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Content="Wiederherstellen"
+                                                    DockPanel.Dock="Right"
+                                                    Style="{StaticResource Button.Ghost}" />
+                                                <TextBlock
+                                                    VerticalAlignment="Center"
+                                                    Style="{StaticResource Text.Body}"
+                                                    Text="{Binding CreatedAt, StringFormat='dd.MM.yyyy HH:mm:ss'}" />
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+
+        <!--  Aktionsleiste: immer sichtbar  -->
+        <Border
+            Grid.Row="2"
+            Padding="28,12"
+            Background="{DynamicResource Theme.Card}"
+            BorderBrush="{DynamicResource Theme.CardBorder}"
+            BorderThickness="0,1,0,0">
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button
+                    MinWidth="110"
+                    Command="{Binding CancelCommand}"
+                    Content="Verwerfen" />
+                <Button
+                    MinWidth="130"
+                    Margin="8,0,0,0"
+                    local:Ui.Glyph="&#xE74E;"
+                    Command="{Binding SaveCommand}"
+                    Content="Speichern"
+                    Style="{StaticResource Button.Primary}" />
             </StackPanel>
         </Border>
     </Grid>

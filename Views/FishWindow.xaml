@@ -7,7 +7,6 @@
     AllowsTransparency="True"
     Background="Transparent"
     Focusable="False"
-    IsHitTestVisible="False"
     ResizeMode="NoResize"
     ShowActivated="False"
     ShowInTaskbar="False"
@@ -22,6 +21,7 @@
         Das Fenster sitzt auf der Oberkante der Taskleiste und ist hoch genug, dass der Fisch
         "gegen die Scheibe" klatschen und nach unten rutschen kann. Position, Größe der Spur
         und alle Animationen werden im Code gesetzt (Aufprallpunkt ist zufällig).
+        Nur der Fisch selbst nimmt Klicks an (zum Fangen), die Spur lässt sie nicht auslösen.
     -->
     <Canvas ClipToBounds="True">
 
@@ -29,6 +29,7 @@
         <Grid
             x:Name="Trail"
             Width="14"
+            IsHitTestVisible="False"
             RenderTransformOrigin="0.5,0">
             <Grid.RenderTransform>
                 <ScaleTransform x:Name="TrailScale" ScaleY="0" />
@@ -57,6 +58,8 @@
             x:Name="Fish"
             Width="80"
             Height="44"
+            Cursor="Hand"
+            MouseLeftButtonDown="Fish_MouseLeftButtonDown"
             Opacity="0"
             RenderTransformOrigin="0.5,0.5">
             <Canvas.RenderTransform>
@@ -107,5 +110,26 @@
                 Height="3.5"
                 Fill="Black" />
         </Canvas>
+
+        <!--  Rückmeldung beim Fangen: steigt vom Fangpunkt auf und verblasst  -->
+        <TextBlock
+            x:Name="CaughtText"
+            FontSize="15"
+            FontWeight="Bold"
+            Foreground="White"
+            IsHitTestVisible="False"
+            Opacity="0"
+            Text="Gefangen!">
+            <TextBlock.Effect>
+                <DropShadowEffect
+                    BlurRadius="6"
+                    Opacity="0.8"
+                    ShadowDepth="1"
+                    Color="#1A2238" />
+            </TextBlock.Effect>
+            <TextBlock.RenderTransform>
+                <TranslateTransform x:Name="CaughtTextMove" />
+            </TextBlock.RenderTransform>
+        </TextBlock>
     </Canvas>
 </Window>

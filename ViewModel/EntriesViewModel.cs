@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using Zeitmanagement.Helpers;
 using Zeitmanagement.MVVM;
 
 namespace Zeitmanagement.ViewModel
@@ -188,6 +189,7 @@ namespace Zeitmanagement.ViewModel
         public EntriesViewModel()
         {
             RefreshCommand = new DelegateCommand(_ => Refresh());
+            ThemeManager.ThemeChanged += (s, e) => BuildGraph();
             TodayCommand = new DelegateCommand(_ => SelectedDate = DateTime.Today.ToString("dd.MM.yyyy"));
 
             AddEntryCommand = new DelegateCommand(_ => AddEntry(), _ => CanAdd());
@@ -594,27 +596,30 @@ namespace Zeitmanagement.ViewModel
         private const double GraphLabelGap = 8;
         private const double GraphPauseLabelMinMinutes = 2;
 
-        private static readonly Color[] GraphPalette =
+        // Graph colours follow the current theme (the graph is rebuilt when it changes).
+        private static IReadOnlyList<Color> _graphPaletteSource;
+        private static SolidColorBrush[] _graphBrushes;
+
+        private static SolidColorBrush[] GraphBrushes
         {
-            Color.FromRgb(0x5A, 0xC8, 0xFA), // blue
-            Color.FromRgb(0x8E, 0x8B, 0xFF), // purple
-            Color.FromRgb(0xFF, 0x6B, 0x6B), // red
-            Color.FromRgb(0x4E, 0xCA, 0x84), // green
-            Color.FromRgb(0xFF, 0xC1, 0x07), // yellow
-            Color.FromRgb(0xFF, 0x8A, 0x50), // orange
-            Color.FromRgb(0xE0, 0x5A, 0xA8), // pink
-            Color.FromRgb(0x00, 0xD9, 0xC0), // teal
-            Color.FromRgb(0xB3, 0x88, 0xFF), // lavender
-            Color.FromRgb(0x7E, 0xD3, 0x57), // lime
-        };
+            get
+            {
+                var palette = ThemeManager.DataPalette;
+                if (!ReferenceEquals(palette, _graphPaletteSource))
+                {
+                    _graphBrushes = palette.Select(CreateFrozenBrush).ToArray();
+                    _graphPaletteSource = palette;
+                }
+                return _graphBrushes;
+            }
+        }
 
-        private static readonly SolidColorBrush[] GraphBrushes = GraphPalette.Select(c => CreateFrozenBrush(c)).ToArray();
-        private static readonly SolidColorBrush GraphBreakBrush = CreateFrozenBrush(Color.FromRgb(0x6B, 0x73, 0x90));
-        private static readonly SolidColorBrush GraphEndpointBrush = CreateFrozenBrush(Color.FromRgb(0xF5, 0xF7, 0xFB));
+        private static Brush GraphBreakBrush => ThemeManager.GetBrush("Theme.TextSubtle");
+        private static Brush GraphEndpointBrush => ThemeManager.GetBrush("Theme.Text");
 
-        // Same colour as the card behind the graph (ColCard): the ring it draws around each node
-        // cuts a small gap into the line, which makes nodes on a busy line easier to tell apart.
-        private static readonly SolidColorBrush GraphBackgroundBrush = CreateFrozenBrush(Color.FromRgb(0x1A, 0x22, 0x38));
+        // Same colour as the card behind the graph: the ring it draws around each node cuts a
+        // small gap into the line, which makes nodes on a busy line easier to tell apart.
+        private static Brush GraphBackgroundBrush => ThemeManager.GetBrush("Theme.Card");
         private static readonly DoubleCollection GraphBreakDashes = CreateFrozenDashes(3, 3);
 
         private static SolidColorBrush CreateFrozenBrush(Color c)

@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 using Microsoft.Win32;
 using Zeitmanagement.Helpers;
 using Zeitmanagement.MVVM;
@@ -26,8 +28,131 @@ namespace Zeitmanagement.ViewModel
         public override string ToString() => Label;
     }
 
+    /// <summary>A theme as offered in the settings, with previews of its light and dark variant.</summary>
+    internal class ThemeOption
+    {
+        public ThemeOption(AppTheme theme)
+        {
+            Theme = theme;
+            Name = ThemeManager.DisplayName(theme);
+            IsSeasonal = ThemeManager.IsSeasonal(theme);
+            Light = new ThemePreview(ThemeManager.LoadPalette(theme, dark: false));
+            Dark = new ThemePreview(ThemeManager.LoadPalette(theme, dark: true));
+        }
+
+        public AppTheme Theme { get; }
+        public string Name { get; }
+        public bool IsSeasonal { get; }
+        public ThemePreview Light { get; }
+        public ThemePreview Dark { get; }
+    }
+
+    /// <summary>The few colours of a palette the mini preview on a theme tile needs.</summary>
+    internal class ThemePreview
+    {
+        public ThemePreview(ResourceDictionary palette)
+        {
+            Background = (Brush)palette["Theme.AppBackground"];
+            Sidebar = (Brush)palette["Theme.Sidebar"];
+            Card = (Brush)palette["Theme.Card"];
+            CardBorder = (Brush)palette["Theme.CardBorder"];
+            Accent = (Brush)palette["Theme.Accent"];
+            Text = (Brush)palette["Theme.TextSubtle"];
+        }
+
+        public Brush Background { get; }
+        public Brush Sidebar { get; }
+        public Brush Card { get; }
+        public Brush CardBorder { get; }
+        public Brush Accent { get; }
+        public Brush Text { get; }
+    }
+
     internal class SettingsViewModel : BaseViewModel
     {
+        public IReadOnlyList<ThemeOption> ThemeOptions { get; } =
+            ThemeManager.AllThemes.Select(theme => new ThemeOption(theme)).ToList();
+
+        /// <summary>The chosen colour scheme. Takes effect (and is stored) right away, without "Speichern".</summary>
+        public ThemeOption SelectedTheme
+        {
+            get => ThemeOptions.FirstOrDefault(option => option.Theme == ThemeManager.Selected);
+            set
+            {
+                if (value == null || value.Theme == ThemeManager.Selected)
+                    return;
+
+                Properties.Settings.Default.Theme = value.Theme.ToString();
+                Properties.Settings.Default.Save();
+            }
+        }
+
+        // Hell / Dunkel / Wie Windows as three radio buttons; takes effect (and is stored) right away.
+        public bool IsModeSystem
+        {
+            get => ThemeManager.SelectedMode == ThemeMode.System;
+            set { if (value) SetThemeMode(ThemeMode.System); }
+        }
+
+        public bool IsModeLight
+        {
+            get => ThemeManager.SelectedMode == ThemeMode.Light;
+            set { if (value) SetThemeMode(ThemeMode.Light); }
+        }
+
+        public bool IsModeDark
+        {
+            get => ThemeManager.SelectedMode == ThemeMode.Dark;
+            set { if (value) SetThemeMode(ThemeMode.Dark); }
+        }
+
+        private static void SetThemeMode(ThemeMode mode)
+        {
+            if (mode == ThemeManager.SelectedMode)
+                return;
+
+            Properties.Settings.Default.ThemeMode = mode.ToString();
+            Properties.Settings.Default.Save();
+        }
+
+        /// <summary>Holiday themes switch on by themselves around the holidays. Takes effect right away.</summary>
+        public bool SeasonalThemesEnabled
+        {
+            get => Properties.Settings.Default.SeasonalThemesEnabled;
+            set
+            {
+                if (value == Properties.Settings.Default.SeasonalThemesEnabled)
+                    return;
+
+                Properties.Settings.Default.SeasonalThemesEnabled = value;
+                Properties.Settings.Default.Save();
+            }
+        }
+
+        public string SeasonalThemesHint { get; } =
+            $"Halloween, Weihnachten und Ostern erscheinen automatisch {ThemeManager.SeasonDaysBefore} Tage vor bis {ThemeManager.SeasonDaysAfter} Tage nach dem Fest.";
+
+        /// <summary>Which theme and variant is shown right now, and why if it isn't simply the chosen one.</summary>
+        public string ThemeStatusText
+        {
+            get
+            {
+                var variant = ThemeManager.IsDark ? "dunkel" : "hell";
+                if (ThemeManager.SelectedMode == ThemeMode.System)
+                    variant += " wie in Windows";
+
+                var text = $"Gerade aktiv: {ThemeManager.DisplayName(ThemeManager.Effective)}, {variant}";
+                var season = ThemeManager.ActiveSeason;
+                if (season != null && season != ThemeManager.Selected)
+                    text += $" – automatisch bis {ThemeManager.SeasonRange(season.Value, DateTime.Today.Year).To:dd.MM.}";
+
+                return text;
+            }
+        }
+
+        public int PenguinCaughtCount => Properties.Settings.Default.PenguinCaughtCount;
+        public int FishCaughtCount => Properties.Settings.Default.FishCaughtCount;
+
         private bool _autostartEnabled;
         public bool AutostartEnabled
         {
@@ -91,6 +216,21 @@ namespace Zeitmanagement.ViewModel
             set => SetProperty(ref _penguinEnabled, value);
         }
 
+        // Untergrenze erst beim Speichern, sonst würde schon die erste getippte Ziffer hochgesetzt.
+        private int _penguinMinDelayMinutes;
+        public int PenguinMinDelayMinutes
+        {
+            get => _penguinMinDelayMinutes;
+            set => SetProperty(ref _penguinMinDelayMinutes, value);
+        }
+
+        private int _penguinMaxDelayMinutes;
+        public int PenguinMaxDelayMinutes
+        {
+            get => _penguinMaxDelayMinutes;
+            set => SetProperty(ref _penguinMaxDelayMinutes, value);
+        }
+
         public string CurrentVersionText { get; } =
             Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
@@ -144,6 +284,8 @@ namespace Zeitmanagement.ViewModel
             InstallUpdateCommand = new DelegateCommand(async _ => await InstallUpdate());
 
             UpdateService.UpdateAvailable += _ => ShowUpdate(UpdateService.LatestUpdate);
+            ThemeManager.ThemeChanged += (s, e) => RaisePropertyChanged(nameof(ThemeStatusText));
+            Properties.Settings.Default.PropertyChanged += OnSettingsChanged;
 
             Refresh();
         }
@@ -159,12 +301,42 @@ namespace Zeitmanagement.ViewModel
             ReminderNudgeIntervalMinutes = Properties.Settings.Default.ReminderNudgeIntervalMinutes;
             AutoUpdateCheckEnabled = Properties.Settings.Default.AutoUpdateCheckEnabled;
             PenguinEnabled = Properties.Settings.Default.PenguinEnabled;
+            PenguinMinDelayMinutes = Properties.Settings.Default.PenguinMinDelayMinutes;
+            PenguinMaxDelayMinutes = Properties.Settings.Default.PenguinMaxDelayMinutes;
             ShowUpdate(UpdateService.LatestUpdate);
 
             AvailableBackups.Clear();
             foreach (var backup in BackupHelper.GetAvailableBackups())
             {
                 AvailableBackups.Add(backup);
+            }
+        }
+
+        /// <summary>
+        /// Keeps values that change outside this page live: the catch counters (the penguin may
+        /// show up while the settings are open) and the theme (also switchable in the sidebar).
+        /// </summary>
+        private void OnSettingsChanged(object sender, PropertyChangedEventArgs e)
+        {
+            switch (e.PropertyName)
+            {
+                case nameof(Properties.Settings.PenguinCaughtCount):
+                    RaisePropertyChanged(nameof(PenguinCaughtCount));
+                    break;
+                case nameof(Properties.Settings.FishCaughtCount):
+                    RaisePropertyChanged(nameof(FishCaughtCount));
+                    break;
+                case nameof(Properties.Settings.Theme):
+                    RaisePropertyChanged(nameof(SelectedTheme));
+                    break;
+                case nameof(Properties.Settings.ThemeMode):
+                    RaisePropertyChanged(nameof(IsModeSystem));
+                    RaisePropertyChanged(nameof(IsModeLight));
+                    RaisePropertyChanged(nameof(IsModeDark));
+                    break;
+                case nameof(Properties.Settings.SeasonalThemesEnabled):
+                    RaisePropertyChanged(nameof(SeasonalThemesEnabled));
+                    break;
             }
         }
 
@@ -309,6 +481,13 @@ namespace Zeitmanagement.ViewModel
             Properties.Settings.Default.ReminderNudgeIntervalMinutes = ReminderNudgeIntervalMinutes;
             Properties.Settings.Default.AutoUpdateCheckEnabled = AutoUpdateCheckEnabled;
             Properties.Settings.Default.PenguinEnabled = PenguinEnabled;
+            // Mindestens 10 Minuten, und "bis" darf nicht kleiner als "von" sein - dann gilt einfach eine feste Pause.
+            if (PenguinMinDelayMinutes < PenguinEasterEgg.MinDelayLimitMinutes)
+                PenguinMinDelayMinutes = PenguinEasterEgg.MinDelayLimitMinutes;
+            if (PenguinMaxDelayMinutes < PenguinMinDelayMinutes)
+                PenguinMaxDelayMinutes = PenguinMinDelayMinutes;
+            Properties.Settings.Default.PenguinMinDelayMinutes = PenguinMinDelayMinutes;
+            Properties.Settings.Default.PenguinMaxDelayMinutes = PenguinMaxDelayMinutes;
             Properties.Settings.Default.Save();
 
             try
