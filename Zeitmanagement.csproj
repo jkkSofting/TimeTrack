@@ -70,6 +70,8 @@
     <Compile Include="TimeTracker.cs" />
     <Compile Include="Helpers\AutostartHelper.cs" />
     <Compile Include="Helpers\BackupHelper.cs" />
+    <Compile Include="Helpers\Changelog.cs" />
+    <Compile Include="Helpers\HelpContent.cs" />
     <Compile Include="Helpers\OverlayWindowHelper.cs" />
     <Compile Include="Helpers\PenguinEasterEgg.cs" />
     <Compile Include="Helpers\PresentationDetector.cs" />

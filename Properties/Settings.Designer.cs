@@ -217,6 +217,18 @@ namespace Zeitmanagement.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastSeenChangelogVersion {
+            get {
+                return ((string)(this["LastSeenChangelogVersion"]));
+            }
+            set {
+                this["LastSeenChangelogVersion"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool SettingsUpgraded {
             get {
