@@ -1,4 +1,4 @@
-<!--  Farbschema "Forest" (Wald: Moos, Tannen und Waldboden). Alle Paletten haben dieselben Schlüssel;
+<!--  Farbschema "Forest.Dark" (Wald, dunkel: Moos, Tannen und Waldboden). Alle Paletten haben dieselben Schlüssel;
       der ThemeManager tauscht zur Laufzeit die komplette Palette aus.  -->
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"

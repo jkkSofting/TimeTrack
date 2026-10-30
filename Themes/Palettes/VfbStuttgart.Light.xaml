@@ -1,4 +1,4 @@
-<!--  Farbschema "VfbStuttgart" (VfB Stuttgart: Weiß mit rotem Brustring). Alle Paletten haben dieselben Schlüssel;
+<!--  Farbschema "VfbStuttgart.Light" (VfB Stuttgart, hell: Weiß mit rotem Brustring). Alle Paletten haben dieselben Schlüssel;
       der ThemeManager tauscht zur Laufzeit die komplette Palette aus.  -->
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -16,11 +16,11 @@
         <GradientStop Offset="1" Color="#F1EDED" />
     </LinearGradientBrush>
 
-    <SolidColorBrush x:Key="Theme.Sidebar" Color="#E32219" />
-    <SolidColorBrush x:Key="Theme.SidebarBorder" Color="#E32219" />
-    <SolidColorBrush x:Key="Theme.SidebarText" Color="#FFF1F0" />
-    <SolidColorBrush x:Key="Theme.SidebarTextMuted" Color="#FFBDB8" />
-    <SolidColorBrush x:Key="Theme.SidebarHover" Color="#EE3B32" />
+    <SolidColorBrush x:Key="Theme.Sidebar" Color="#C41A12" />
+    <SolidColorBrush x:Key="Theme.SidebarBorder" Color="#C41A12" />
+    <SolidColorBrush x:Key="Theme.SidebarText" Color="#FFF4F3" />
+    <SolidColorBrush x:Key="Theme.SidebarTextMuted" Color="#FFCFCB" />
+    <SolidColorBrush x:Key="Theme.SidebarHover" Color="#D2271E" />
     <SolidColorBrush x:Key="Theme.SidebarSelected" Color="#FFFFFF" />
     <SolidColorBrush x:Key="Theme.SidebarSelectedText" Color="#C8170F" />
     <SolidColorBrush x:Key="Theme.Card" Color="#FFFFFF" />

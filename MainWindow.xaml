@@ -119,7 +119,7 @@
                             Command="{Binding ToggleDarkModeCommand}"
                             Foreground="{DynamicResource Theme.SidebarText}"
                             Style="{StaticResource Button.IconGhost}"
-                            ToolTip="Zwischen hellem und dunklem Design wechseln. Weitere Designs gibt es in den Einstellungen." />
+                            ToolTip="Zwischen heller und dunkler Variante des Designs wechseln. Weitere Designs gibt es in den Einstellungen." />
                     </Grid>
                 </Border>
 

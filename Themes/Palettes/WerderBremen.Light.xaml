@@ -1,4 +1,4 @@
-<!--  Farbschema "WerderBremen" (Werder Bremen: Grün-Weiß). Alle Paletten haben dieselben Schlüssel;
+<!--  Farbschema "WerderBremen.Light" (Werder Bremen, hell: Grün-Weiß). Alle Paletten haben dieselben Schlüssel;
       der ThemeManager tauscht zur Laufzeit die komplette Palette aus.  -->
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -16,11 +16,11 @@
         <GradientStop Offset="1" Color="#EAF2ED" />
     </LinearGradientBrush>
 
-    <SolidColorBrush x:Key="Theme.Sidebar" Color="#1D9053" />
-    <SolidColorBrush x:Key="Theme.SidebarBorder" Color="#1D9053" />
-    <SolidColorBrush x:Key="Theme.SidebarText" Color="#EEFFF5" />
-    <SolidColorBrush x:Key="Theme.SidebarTextMuted" Color="#A8E0C0" />
-    <SolidColorBrush x:Key="Theme.SidebarHover" Color="#24A05E" />
+    <SolidColorBrush x:Key="Theme.Sidebar" Color="#14713F" />
+    <SolidColorBrush x:Key="Theme.SidebarBorder" Color="#14713F" />
+    <SolidColorBrush x:Key="Theme.SidebarText" Color="#F2FFF7" />
+    <SolidColorBrush x:Key="Theme.SidebarTextMuted" Color="#B9E6CC" />
+    <SolidColorBrush x:Key="Theme.SidebarHover" Color="#1A814A" />
     <SolidColorBrush x:Key="Theme.SidebarSelected" Color="#FFFFFF" />
     <SolidColorBrush x:Key="Theme.SidebarSelectedText" Color="#14743F" />
     <SolidColorBrush x:Key="Theme.Card" Color="#FFFFFF" />

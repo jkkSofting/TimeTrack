@@ -12,13 +12,13 @@ using Microsoft.Win32;
 
 namespace Zeitmanagement.Helpers
 {
-    /// <summary>The colour schemes the user can choose from (stored by name in the settings).</summary>
+    /// <summary>
+    /// The motifs the user can choose from (stored by name in the settings). Each one comes in
+    /// a light and a dark variant, see <see cref="ThemeMode"/>.
+    /// </summary>
     internal enum AppTheme
     {
-        /// <summary>Follows the Windows app mode: <see cref="Light"/> or <see cref="Dark"/>.</summary>
-        System,
-        Light,
-        Dark,
+        Standard,
         Forest,
         Ocean,
         Halloween,
@@ -28,15 +28,26 @@ namespace Zeitmanagement.Helpers
         WerderBremen
     }
 
+    /// <summary>Light or dark variant of the theme (stored by name in the settings).</summary>
+    internal enum ThemeMode
+    {
+        /// <summary>Follows the Windows app mode.</summary>
+        System,
+        Light,
+        Dark
+    }
+
     /// <summary>
-    /// Applies the app's colour scheme. Every scheme is a palette dictionary under
-    /// Themes/Palettes with the same keys ("Theme.Text", "Theme.Card", ...); all views and
-    /// styles reference those keys via DynamicResource, so swapping the palette in the
-    /// application resources recolours the whole app on the fly.
-    /// The effective theme is the one chosen in the settings, except during a holiday season
-    /// (Halloween, Christmas, Easter: <see cref="SeasonDaysBefore"/> days before until
-    /// <see cref="SeasonDaysAfter"/> days after) if seasonal themes are enabled. "System"
-    /// follows the Windows light/dark app mode and updates when it changes.
+    /// Applies the app's colour scheme: a motif (<see cref="AppTheme"/>) in its light or dark
+    /// variant. Every variant is a palette dictionary Themes/Palettes/[Motif].[Light|Dark].xaml
+    /// with the same keys ("Theme.Text", "Theme.Card", ...); all views and styles reference
+    /// those keys via DynamicResource, so swapping the palette in the application resources
+    /// recolours the whole app on the fly.
+    /// The motif is the one chosen in the settings, except during a holiday season (Halloween,
+    /// Christmas, Easter: <see cref="SeasonDaysBefore"/> days before until
+    /// <see cref="SeasonDaysAfter"/> days after) if seasonal themes are enabled; light or dark
+    /// always follows the chosen mode. <see cref="ThemeMode.System"/> follows the Windows
+    /// light/dark app mode and updates when it changes.
     /// The penguin mascot wears a matching accessory ("Theme.MascotAccessory", drawn in
     /// Views/Mascot.xaml), e.g. a witch hat for Halloween or a scarf for the football themes.
     /// </summary>
@@ -89,19 +100,22 @@ namespace Zeitmanagement.Helpers
         /// <summary>Raised after a different palette has been applied.</summary>
         public static event EventHandler ThemeChanged;
 
-        /// <summary>The theme that is actually shown (never <see cref="AppTheme.System"/>).</summary>
-        public static AppTheme Effective { get; private set; } = AppTheme.Dark;
+        /// <summary>The motif that is actually shown (the chosen one or the holiday one).</summary>
+        public static AppTheme Effective { get; private set; } = AppTheme.Standard;
 
-        /// <summary>The holiday theme currently overriding the chosen one, if any.</summary>
+        /// <summary>The holiday motif currently overriding the chosen one, if any.</summary>
         public static AppTheme? ActiveSeason { get; private set; }
 
-        /// <summary>True if the current palette has light text on dark cards.</summary>
-        public static bool IsDark => Application.Current?.TryFindResource("Theme.IsDark") is bool isDark && isDark;
+        /// <summary>True if the dark variant is shown.</summary>
+        public static bool IsDark { get; private set; } = true;
 
         /// <summary>Colours for projects in charts and graphs, readable on the current cards.</summary>
         public static IReadOnlyList<Color> DataPalette => IsDark ? DarkDataPalette : LightDataPalette;
 
         public static AppTheme Selected => Parse(Properties.Settings.Default.Theme);
+
+        public static ThemeMode SelectedMode =>
+            Enum.TryParse(Properties.Settings.Default.ThemeMode, out ThemeMode mode) ? mode : ThemeMode.System;
 
         public static IReadOnlyList<AppTheme> AllThemes { get; } = (AppTheme[])Enum.GetValues(typeof(AppTheme));
 
@@ -112,9 +126,7 @@ namespace Zeitmanagement.Helpers
         {
             switch (theme)
             {
-                case AppTheme.System: return "Wie Windows";
-                case AppTheme.Light: return "Hell";
-                case AppTheme.Dark: return "Dunkel";
+                case AppTheme.Standard: return "Standard";
                 case AppTheme.Forest: return "Wald";
                 case AppTheme.Ocean: return "Meer";
                 case AppTheme.Halloween: return "Halloween";
@@ -126,8 +138,19 @@ namespace Zeitmanagement.Helpers
             }
         }
 
+        public static string DisplayName(ThemeMode mode)
+        {
+            switch (mode)
+            {
+                case ThemeMode.Light: return "Hell";
+                case ThemeMode.Dark: return "Dunkel";
+                default: return "Wie Windows";
+            }
+        }
+
+        /// <summary>Unknown names (also the former "System"/"Light"/"Dark") fall back to the standard motif.</summary>
         public static AppTheme Parse(string value) =>
-            Enum.TryParse(value, out AppTheme theme) ? theme : AppTheme.System;
+            Enum.TryParse(value, out AppTheme theme) && Enum.IsDefined(typeof(AppTheme), theme) ? theme : AppTheme.Standard;
 
         /// <summary>Call once at startup, before the first window is created.</summary>
         public static void Initialize()
@@ -158,18 +181,20 @@ namespace Zeitmanagement.Helpers
         {
             var settings = Properties.Settings.Default;
             var season = settings.SeasonalThemesEnabled ? SeasonOn(DateTime.Today) : null;
-            var theme = season ?? Resolve(Selected);
+            var theme = season ?? Selected;
+            var dark = ResolveDark(SelectedMode);
 
-            if (!force && theme == Effective && season == ActiveSeason)
+            if (!force && theme == Effective && dark == IsDark && season == ActiveSeason)
                 return;
 
             ActiveSeason = season;
-            var changed = force || theme != Effective;
+            var changed = force || theme != Effective || dark != IsDark;
             Effective = theme;
+            IsDark = dark;
 
             if (changed)
             {
-                ApplyPalette(theme);
+                ApplyPalette(theme, dark);
                 foreach (Window window in Application.Current.Windows)
                     ApplyWindowChrome(window);
             }
@@ -178,8 +203,8 @@ namespace Zeitmanagement.Helpers
         }
 
         /// <summary>Loads a palette on its own, e.g. for the preview tiles in the settings.</summary>
-        public static ResourceDictionary LoadPalette(AppTheme theme) =>
-            new ResourceDictionary { Source = new Uri($"pack://application:,,,/Zeitmanagement;component/Themes/Palettes/{Resolve(theme)}.xaml") };
+        public static ResourceDictionary LoadPalette(AppTheme theme, bool dark) =>
+            new ResourceDictionary { Source = new Uri($"pack://application:,,,/Zeitmanagement;component/Themes/Palettes/{theme}.{(dark ? "Dark" : "Light")}.xaml") };
 
         /// <summary>A brush of the current palette, e.g. "Theme.Text".</summary>
         public static Brush GetBrush(string key) =>
@@ -233,8 +258,8 @@ namespace Zeitmanagement.Helpers
             return new DateTime(year, month, dayOfMonth);
         }
 
-        private static AppTheme Resolve(AppTheme theme) =>
-            theme == AppTheme.System ? (IsWindowsInLightMode() ? AppTheme.Light : AppTheme.Dark) : theme;
+        private static bool ResolveDark(ThemeMode mode) =>
+            mode == ThemeMode.System ? !IsWindowsInLightMode() : mode == ThemeMode.Dark;
 
         private static bool IsWindowsInLightMode()
         {
@@ -250,10 +275,10 @@ namespace Zeitmanagement.Helpers
             }
         }
 
-        private static void ApplyPalette(AppTheme theme)
+        private static void ApplyPalette(AppTheme theme, bool dark)
         {
             var merged = Application.Current.Resources.MergedDictionaries;
-            var palette = LoadPalette(theme);
+            var palette = LoadPalette(theme, dark);
 
             // App.xaml merges a default palette first; replace whichever palette is in place.
             var index = _palette != null ? merged.IndexOf(_palette) : merged.ToList().FindIndex(IsPalette);
@@ -310,7 +335,9 @@ namespace Zeitmanagement.Helpers
 
         private static void OnSettingsChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(Properties.Settings.Theme) || e.PropertyName == nameof(Properties.Settings.SeasonalThemesEnabled))
+            if (e.PropertyName == nameof(Properties.Settings.Theme)
+                || e.PropertyName == nameof(Properties.Settings.ThemeMode)
+                || e.PropertyName == nameof(Properties.Settings.SeasonalThemesEnabled))
                 Refresh();
         }
 

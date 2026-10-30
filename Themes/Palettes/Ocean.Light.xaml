@@ -1,4 +1,4 @@
-<!--  Farbschema "Ocean" (Meer: Gischt, Sand und tiefes Blau). Alle Paletten haben dieselben Schlüssel;
+<!--  Farbschema "Ocean.Light" (Meer, hell: Gischt, Sand und tiefes Blau). Alle Paletten haben dieselben Schlüssel;
       der ThemeManager tauscht zur Laufzeit die komplette Palette aus.  -->
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"

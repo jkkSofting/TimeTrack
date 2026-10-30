@@ -61,7 +61,7 @@
                     <ControlTemplate TargetType="ListBoxItem">
                         <Border
                             x:Name="frame"
-                            Width="148"
+                            Width="186"
                             Padding="6"
                             Background="{DynamicResource Theme.Surface}"
                             BorderBrush="{DynamicResource Theme.CardBorder}"
@@ -83,65 +83,85 @@
             </Setter>
         </Style>
 
+        <!--  Mini-Vorschau einer Palette: Seitenleiste, Hintergrund, Karte mit Akzent  -->
+        <DataTemplate x:Key="ThemePreviewTemplate" DataType="{x:Type viewmodel:ThemePreview}">
+            <Border
+                Height="64"
+                Background="{Binding Background}"
+                BorderBrush="{Binding CardBorder}"
+                BorderThickness="1"
+                ClipToBounds="True"
+                CornerRadius="7">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Background="{Binding Sidebar}" CornerRadius="6,0,0,6">
+                        <StackPanel Margin="4,9,4,0">
+                            <Border
+                                Height="3"
+                                Margin="0,0,0,4"
+                                Background="{Binding Accent}"
+                                CornerRadius="1.5" />
+                            <Border
+                                Height="3"
+                                Margin="0,0,0,4"
+                                Background="{Binding Text}"
+                                CornerRadius="1.5" />
+                            <Border
+                                Height="3"
+                                Background="{Binding Text}"
+                                CornerRadius="1.5" />
+                        </StackPanel>
+                    </Border>
+                    <Border
+                        Grid.Column="1"
+                        Margin="6,9,6,9"
+                        Padding="6"
+                        Background="{Binding Card}"
+                        BorderBrush="{Binding CardBorder}"
+                        BorderThickness="1"
+                        CornerRadius="5">
+                        <StackPanel>
+                            <Border
+                                Width="28"
+                                Height="3"
+                                HorizontalAlignment="Left"
+                                Background="{Binding Text}"
+                                CornerRadius="1.5" />
+                            <Border
+                                Width="20"
+                                Height="9"
+                                Margin="0,8,0,0"
+                                HorizontalAlignment="Right"
+                                Background="{Binding Accent}"
+                                CornerRadius="3" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!--  Kachel eines Designs: links die helle, rechts die dunkle Variante  -->
         <DataTemplate x:Key="ThemeTileTemplate" DataType="{x:Type viewmodel:ThemeOption}">
             <StackPanel>
-                <!--  Mini-Vorschau: Seitenleiste, Hintergrund, Karte mit Akzent  -->
-                <Border
-                    Height="70"
-                    Background="{Binding Background}"
-                    BorderBrush="{Binding CardBorder}"
-                    BorderThickness="1"
-                    ClipToBounds="True"
-                    CornerRadius="7">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="30" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Border Background="{Binding Sidebar}" CornerRadius="6,0,0,6">
-                            <StackPanel Margin="6,10,6,0">
-                                <Border
-                                    Height="4"
-                                    Margin="0,0,0,5"
-                                    Background="{Binding Accent}"
-                                    CornerRadius="2" />
-                                <Border
-                                    Height="4"
-                                    Margin="0,0,0,5"
-                                    Background="{Binding Text}"
-                                    CornerRadius="2" />
-                                <Border
-                                    Height="4"
-                                    Background="{Binding Text}"
-                                    CornerRadius="2" />
-                            </StackPanel>
-                        </Border>
-                        <Border
-                            Grid.Column="1"
-                            Margin="8,10,8,10"
-                            Padding="7"
-                            Background="{Binding Card}"
-                            BorderBrush="{Binding CardBorder}"
-                            BorderThickness="1"
-                            CornerRadius="5">
-                            <StackPanel>
-                                <Border
-                                    Width="40"
-                                    Height="4"
-                                    HorizontalAlignment="Left"
-                                    Background="{Binding Text}"
-                                    CornerRadius="2" />
-                                <Border
-                                    Width="26"
-                                    Height="10"
-                                    Margin="0,9,0,0"
-                                    HorizontalAlignment="Right"
-                                    Background="{Binding Accent}"
-                                    CornerRadius="3" />
-                            </StackPanel>
-                        </Border>
-                    </Grid>
-                </Border>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="6" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ContentPresenter
+                        Content="{Binding Light}"
+                        ContentTemplate="{StaticResource ThemePreviewTemplate}"
+                        ToolTip="Hell" />
+                    <ContentPresenter
+                        Grid.Column="2"
+                        Content="{Binding Dark}"
+                        ContentTemplate="{StaticResource ThemePreviewTemplate}"
+                        ToolTip="Dunkel" />
+                </Grid>
                 <DockPanel Margin="2,6,2,0">
                     <Border
                         Padding="5,0"
@@ -220,10 +240,42 @@
                 <!--  ===== Darstellung (volle Breite) =====  -->
                 <Border Grid.ColumnSpan="3" Style="{StaticResource SettingsCard}">
                     <StackPanel>
-                        <StackPanel Style="{StaticResource CardHeader}">
-                            <TextBlock Style="{StaticResource CardIcon}" Text="&#xE790;" />
-                            <TextBlock Style="{StaticResource Text.Section}" Text="Design" />
-                        </StackPanel>
+                        <DockPanel Margin="0,0,0,14">
+                            <!--  Helligkeit: gilt für jedes Design  -->
+                            <Border
+                                Padding="3"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource Theme.Surface}"
+                                BorderBrush="{DynamicResource Theme.CardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                DockPanel.Dock="Right">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton
+                                        local:Ui.Glyph="&#xE7F4;"
+                                        Content="Wie Windows"
+                                        GroupName="ThemeMode"
+                                        IsChecked="{Binding IsModeSystem, Mode=TwoWay}"
+                                        Style="{StaticResource Segment}" />
+                                    <RadioButton
+                                        local:Ui.Glyph="&#xE706;"
+                                        Content="Hell"
+                                        GroupName="ThemeMode"
+                                        IsChecked="{Binding IsModeLight, Mode=TwoWay}"
+                                        Style="{StaticResource Segment}" />
+                                    <RadioButton
+                                        local:Ui.Glyph="&#xE708;"
+                                        Content="Dunkel"
+                                        GroupName="ThemeMode"
+                                        IsChecked="{Binding IsModeDark, Mode=TwoWay}"
+                                        Style="{StaticResource Segment}" />
+                                </StackPanel>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource CardIcon}" Text="&#xE790;" />
+                                <TextBlock Style="{StaticResource Text.Section}" Text="Design" />
+                            </StackPanel>
+                        </DockPanel>
 
                         <ListBox
                             Background="Transparent"
@@ -261,15 +313,6 @@
                             Padding="10,8"
                             Background="{DynamicResource Theme.AccentSoft}"
                             CornerRadius="8">
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ThemeStatusText}" Value="{x:Null}">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock
                                     Margin="0,0,8,0"

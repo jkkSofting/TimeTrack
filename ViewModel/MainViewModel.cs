@@ -67,7 +67,7 @@ namespace Zeitmanagement.ViewModel
             private set => SetProperty(ref _currentView, value);
         }
 
-        /// <summary>Switches between the light and the dark theme (other themes: see the settings).</summary>
+        /// <summary>Switches the current theme between its light and dark variant.</summary>
         public DelegateCommand ToggleDarkModeCommand { get; }
 
         private readonly DispatcherTimer _timer;
@@ -113,10 +113,7 @@ namespace Zeitmanagement.ViewModel
         private static void ToggleDarkMode()
         {
             var settings = Properties.Settings.Default;
-            settings.Theme = (ThemeManager.IsDark ? AppTheme.Light : AppTheme.Dark).ToString();
-            // An explicit choice beats the holiday theme, otherwise the click would seem to do nothing.
-            if (ThemeManager.ActiveSeason != null)
-                settings.SeasonalThemesEnabled = false;
+            settings.ThemeMode = (ThemeManager.IsDark ? ThemeMode.Light : ThemeMode.Dark).ToString();
             settings.Save();
         }
 

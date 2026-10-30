@@ -316,6 +316,52 @@
         </Setter>
     </Style>
 
+    <!--  Segment eines Umschalters (mehrere RadioButtons in einer gemeinsamen Umrandung)  -->
+    <Style x:Key="Segment" TargetType="RadioButton">
+        <Setter Property="Foreground" Value="{DynamicResource Theme.TextMuted}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border
+                        x:Name="bd"
+                        Padding="12,6"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        BorderThickness="1"
+                        CornerRadius="7">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                x:Name="glyph"
+                                Margin="0,0,7,0"
+                                FontSize="13"
+                                Foreground="{TemplateBinding Foreground}"
+                                Style="{StaticResource Text.Icon}"
+                                Text="{TemplateBinding views:Ui.Glyph}" />
+                            <ContentPresenter VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="views:Ui.Glyph" Value="{x:Null}">
+                            <Setter TargetName="glyph" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource Theme.Text}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource Theme.Card}" />
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Theme.CardBorder}" />
+                            <Setter Property="Foreground" Value="{DynamicResource Theme.Text}" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!--  ===== Eingaben =====  -->
     <Style TargetType="TextBox">
         <Setter Property="Foreground" Value="{DynamicResource Theme.Text}" />

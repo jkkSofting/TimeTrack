@@ -1,4 +1,4 @@
-<!--  Farbschema "Easter" (Ostern: Pastell, Frühlingsblumen und Flieder). Alle Paletten haben dieselben Schlüssel;
+<!--  Farbschema "Easter.Light" (Ostern, hell: Pastell, Frühlingsblumen und Flieder). Alle Paletten haben dieselben Schlüssel;
       der ThemeManager tauscht zur Laufzeit die komplette Palette aus.  -->
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -19,7 +19,7 @@
     <SolidColorBrush x:Key="Theme.Sidebar" Color="#F1EAFB" />
     <SolidColorBrush x:Key="Theme.SidebarBorder" Color="#E6DCF5" />
     <SolidColorBrush x:Key="Theme.SidebarText" Color="#4A3F66" />
-    <SolidColorBrush x:Key="Theme.SidebarTextMuted" Color="#8E84A6" />
+    <SolidColorBrush x:Key="Theme.SidebarTextMuted" Color="#776D90" />
     <SolidColorBrush x:Key="Theme.SidebarHover" Color="#E9E0F8" />
     <SolidColorBrush x:Key="Theme.SidebarSelected" Color="#DFD1F6" />
     <SolidColorBrush x:Key="Theme.SidebarSelectedText" Color="#5B3DA8" />

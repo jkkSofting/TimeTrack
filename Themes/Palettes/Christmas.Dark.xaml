@@ -1,4 +1,4 @@
-<!--  Farbschema "Christmas" (Weihnachten: Tannengrün, Kerzenrot und Gold). Alle Paletten haben dieselben Schlüssel;
+<!--  Farbschema "Christmas.Dark" (Weihnachten, dunkel: Tannengrün, Kerzenrot und Gold). Alle Paletten haben dieselben Schlüssel;
       der ThemeManager tauscht zur Laufzeit die komplette Palette aus.  -->
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"

@@ -42,6 +42,9 @@
       <Value Profile="(Default)">0</Value>
     </Setting>
     <Setting Name="Theme" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Standard</Value>
+    </Setting>
+    <Setting Name="ThemeMode" Type="System.String" Scope="User">
       <Value Profile="(Default)">System</Value>
     </Setting>
     <Setting Name="SeasonalThemesEnabled" Type="System.Boolean" Scope="User">

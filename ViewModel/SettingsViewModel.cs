@@ -28,7 +28,7 @@ namespace Zeitmanagement.ViewModel
         public override string ToString() => Label;
     }
 
-    /// <summary>A colour scheme as offered in the settings, with preview colours for its tile.</summary>
+    /// <summary>A theme as offered in the settings, with previews of its light and dark variant.</summary>
     internal class ThemeOption
     {
         public ThemeOption(AppTheme theme)
@@ -36,8 +36,22 @@ namespace Zeitmanagement.ViewModel
             Theme = theme;
             Name = ThemeManager.DisplayName(theme);
             IsSeasonal = ThemeManager.IsSeasonal(theme);
+            Light = new ThemePreview(ThemeManager.LoadPalette(theme, dark: false));
+            Dark = new ThemePreview(ThemeManager.LoadPalette(theme, dark: true));
+        }
 
-            var palette = ThemeManager.LoadPalette(theme);
+        public AppTheme Theme { get; }
+        public string Name { get; }
+        public bool IsSeasonal { get; }
+        public ThemePreview Light { get; }
+        public ThemePreview Dark { get; }
+    }
+
+    /// <summary>The few colours of a palette the mini preview on a theme tile needs.</summary>
+    internal class ThemePreview
+    {
+        public ThemePreview(ResourceDictionary palette)
+        {
             Background = (Brush)palette["Theme.AppBackground"];
             Sidebar = (Brush)palette["Theme.Sidebar"];
             Card = (Brush)palette["Theme.Card"];
@@ -46,9 +60,6 @@ namespace Zeitmanagement.ViewModel
             Text = (Brush)palette["Theme.TextSubtle"];
         }
 
-        public AppTheme Theme { get; }
-        public string Name { get; }
-        public bool IsSeasonal { get; }
         public Brush Background { get; }
         public Brush Sidebar { get; }
         public Brush Card { get; }
@@ -76,6 +87,34 @@ namespace Zeitmanagement.ViewModel
             }
         }
 
+        // Hell / Dunkel / Wie Windows as three radio buttons; takes effect (and is stored) right away.
+        public bool IsModeSystem
+        {
+            get => ThemeManager.SelectedMode == ThemeMode.System;
+            set { if (value) SetThemeMode(ThemeMode.System); }
+        }
+
+        public bool IsModeLight
+        {
+            get => ThemeManager.SelectedMode == ThemeMode.Light;
+            set { if (value) SetThemeMode(ThemeMode.Light); }
+        }
+
+        public bool IsModeDark
+        {
+            get => ThemeManager.SelectedMode == ThemeMode.Dark;
+            set { if (value) SetThemeMode(ThemeMode.Dark); }
+        }
+
+        private static void SetThemeMode(ThemeMode mode)
+        {
+            if (mode == ThemeManager.SelectedMode)
+                return;
+
+            Properties.Settings.Default.ThemeMode = mode.ToString();
+            Properties.Settings.Default.Save();
+        }
+
         /// <summary>Holiday themes switch on by themselves around the holidays. Takes effect right away.</summary>
         public bool SeasonalThemesEnabled
         {
@@ -93,21 +132,21 @@ namespace Zeitmanagement.ViewModel
         public string SeasonalThemesHint { get; } =
             $"Halloween, Weihnachten und Ostern erscheinen automatisch {ThemeManager.SeasonDaysBefore} Tage vor bis {ThemeManager.SeasonDaysAfter} Tage nach dem Fest.";
 
-        /// <summary>Explains which theme is shown right now if it isn't simply the chosen one.</summary>
+        /// <summary>Which theme and variant is shown right now, and why if it isn't simply the chosen one.</summary>
         public string ThemeStatusText
         {
             get
             {
-                var season = ThemeManager.ActiveSeason;
-                if (season != null)
-                {
-                    var until = ThemeManager.SeasonRange(season.Value, DateTime.Today.Year).To;
-                    return $"Gerade aktiv: {ThemeManager.DisplayName(season.Value)}, automatisch bis {until:dd.MM.}";
-                }
+                var variant = ThemeManager.IsDark ? "dunkel" : "hell";
+                if (ThemeManager.SelectedMode == ThemeMode.System)
+                    variant += " wie in Windows";
 
-                return ThemeManager.Selected == AppTheme.System
-                    ? $"Gerade aktiv: {ThemeManager.DisplayName(ThemeManager.Effective)} (wie in Windows eingestellt)"
-                    : null;
+                var text = $"Gerade aktiv: {ThemeManager.DisplayName(ThemeManager.Effective)}, {variant}";
+                var season = ThemeManager.ActiveSeason;
+                if (season != null && season != ThemeManager.Selected)
+                    text += $" – automatisch bis {ThemeManager.SeasonRange(season.Value, DateTime.Today.Year).To:dd.MM.}";
+
+                return text;
             }
         }
 
@@ -289,6 +328,11 @@ namespace Zeitmanagement.ViewModel
                     break;
                 case nameof(Properties.Settings.Theme):
                     RaisePropertyChanged(nameof(SelectedTheme));
+                    break;
+                case nameof(Properties.Settings.ThemeMode):
+                    RaisePropertyChanged(nameof(IsModeSystem));
+                    RaisePropertyChanged(nameof(IsModeLight));
+                    RaisePropertyChanged(nameof(IsModeDark));
                     break;
                 case nameof(Properties.Settings.SeasonalThemesEnabled):
                     RaisePropertyChanged(nameof(SeasonalThemesEnabled));
