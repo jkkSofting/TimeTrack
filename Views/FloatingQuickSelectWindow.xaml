@@ -7,104 +7,31 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewModel="clr-namespace:Zeitmanagement.ViewModel"
     Title="Quick Switch"
-    Width="330"
+    Width="340"
     d:DataContext="{d:DesignInstance Type=viewModel:QuickSelectViewModel}"
+    Background="{DynamicResource Theme.AppBackground}"
+    FontFamily="Segoe UI"
     ResizeMode="CanMinimize"
     ShowInTaskbar="True"
     SizeToContent="Height"
+    UseLayoutRounding="True"
     WindowStartupLocation="Manual"
     mc:Ignorable="d">
     <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis" />
-
-        <!--  Farben (identisch zum Quick-Select-Theme)  -->
-        <Color x:Key="ColText">#F5F7FB</Color>
-        <Color x:Key="ColTextMuted">#B7C0D8</Color>
-
-        <SolidColorBrush x:Key="BrushText" Color="{StaticResource ColText}" />
-        <SolidColorBrush x:Key="BrushTextMuted" Color="{StaticResource ColTextMuted}" />
-        <SolidColorBrush x:Key="BrushAccent" Color="#1F2A4D" />
-
-        <LinearGradientBrush x:Key="BgGradient" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Offset="0" Color="#0B1020" />
-            <GradientStop Offset="1" Color="#121A33" />
-        </LinearGradientBrush>
-
-        <!--  Flat-Button  -->
-        <Style x:Key="FlatButton" TargetType="Button">
-            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
-            <Setter Property="Background" Value="#2D3A63" />
-            <Setter Property="BorderBrush" Value="#42507C" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="8,6" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border
-                            x:Name="bd"
-                            Padding="{TemplateBinding Padding}"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="8">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#34406E" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="bd" Property="Opacity" Value="0.45" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!--  Pin-Toggle (immer im Vordergrund)  -->
-        <Style x:Key="PinToggle" TargetType="ToggleButton">
-            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
-            <Setter Property="Background" Value="#2D3A63" />
-            <Setter Property="BorderBrush" Value="#42507C" />
-            <Setter Property="Padding" Value="8,4" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ToggleButton">
-                        <Border
-                            x:Name="bd"
-                            Padding="{TemplateBinding Padding}"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="8">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="BorderBrush" Value="#6C7BAF" />
-                            </Trigger>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#3A7BD5" />
-                                <Setter TargetName="bd" Property="BorderBrush" Value="#5B9BE8" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <!--  Kleine, quadratische Icon-Buttons (Fortsetzen/Pause/Stop) innerhalb eines Slots  -->
-        <Style x:Key="SlotIconButton" TargetType="Button" BasedOn="{StaticResource FlatButton}">
-            <Setter Property="Width" Value="32" />
-            <Setter Property="Height" Value="28" />
-            <Setter Property="Padding" Value="0" />
+        <Style
+            x:Key="SlotIconButton"
+            BasedOn="{StaticResource Button.Icon}"
+            TargetType="Button">
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="30" />
         </Style>
 
         <!--  Nur sichtbar, während der Slot aktiv läuft (Pause-Button)  -->
-        <Style x:Key="SlotRunningOnlyButton" TargetType="Button" BasedOn="{StaticResource SlotIconButton}">
+        <Style
+            x:Key="SlotRunningOnlyButton"
+            BasedOn="{StaticResource SlotIconButton}"
+            TargetType="Button">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsPaused}" Value="True">
                     <Setter Property="Visibility" Value="Collapsed" />
@@ -113,7 +40,10 @@
         </Style>
 
         <!--  Nur sichtbar, während der Slot pausiert ist (Fortsetzen-Button)  -->
-        <Style x:Key="SlotPausedOnlyButton" TargetType="Button" BasedOn="{StaticResource SlotIconButton}">
+        <Style
+            x:Key="SlotPausedOnlyButton"
+            BasedOn="{StaticResource SlotIconButton}"
+            TargetType="Button">
             <Setter Property="Visibility" Value="Collapsed" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsPaused}" Value="True">
@@ -124,199 +54,159 @@
 
         <!--  Status-Punkt: grün während der Slot läuft, gelb während er pausiert ist  -->
         <Style x:Key="StatusDot" TargetType="Ellipse">
-            <Setter Property="Fill" Value="#3DD68C" />
+            <Setter Property="Fill" Value="{DynamicResource Theme.Success}" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsPaused}" Value="True">
-                    <Setter Property="Fill" Value="#E0A83D" />
+                    <Setter Property="Fill" Value="{DynamicResource Theme.Warning}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-
     </Window.Resources>
 
     <Grid>
-        <Border Background="{StaticResource BgGradient}">
-            <StackPanel Margin="14,12">
-                <!--  Kopfzeile: Maskottchen + Titel + Pin  -->
-                <Grid>
-                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
-                        <Image
-                            Width="22"
-                            Height="22"
-                            Margin="0,0,8,0"
-                            Source="{StaticResource MascotAppIconImage}" />
-                        <TextBlock
-                            VerticalAlignment="Center"
-                            FontSize="16"
-                            FontWeight="SemiBold"
-                            Foreground="{StaticResource BrushText}"
-                            Text="Quick Switch" />
-                    </StackPanel>
-                    <ToggleButton
-                        HorizontalAlignment="Right"
-                        Content="📌 Vordergrund"
-                        IsChecked="{Binding Topmost, Mode=TwoWay, RelativeSource={RelativeSource AncestorType=Window}}"
-                        Style="{StaticResource PinToggle}"
-                        ToolTip="Fenster immer im Vordergrund halten" />
-                </Grid>
+        <StackPanel Margin="14,12,14,14">
+            <!--  Kopfzeile: Maskottchen + Titel + Pin  -->
+            <Grid>
+                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                    <ContentControl
+                        Width="24"
+                        Height="24"
+                        Margin="0,0,8,0"
+                        Focusable="False"
+                        Template="{StaticResource MascotLogoTemplate}" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Style="{StaticResource Text.Section}"
+                        Text="Quick Switch" />
+                </StackPanel>
+                <ToggleButton
+                    Padding="10,5"
+                    HorizontalAlignment="Right"
+                    local:Ui.Glyph="&#xE718;"
+                    Content="Vordergrund"
+                    IsChecked="{Binding Topmost, Mode=TwoWay, RelativeSource={RelativeSource AncestorType=Window}}"
+                    Style="{StaticResource Toggle.Accent}"
+                    ToolTip="Fenster immer im Vordergrund halten" />
+            </Grid>
 
-                <!--  Aktive Projekte, laufend oder pausiert (bis zu 4 parallele Slots)  -->
+            <!--  Aktive Projekte, laufend oder pausiert (bis zu 4 parallele Slots)  -->
+            <TextBlock
+                Margin="2,14,0,6"
+                Style="{StaticResource Text.Label}"
+                Text="Aktive Projekte" />
+
+            <Border
+                Padding="12"
+                Style="{StaticResource Inset}"
+                Visibility="{Binding NoActiveSlots, Converter={StaticResource BoolToVis}}">
                 <TextBlock
-                    Margin="2,12,0,4"
-                    Foreground="{StaticResource BrushTextMuted}"
-                    Text="Aktive Projekte" />
+                    HorizontalAlignment="Center"
+                    Style="{StaticResource Text.Muted}"
+                    Text="Keine Buchung aktiv" />
+            </Border>
 
-                <TextBlock
-                    Margin="2,4,0,4"
-                    FontStyle="Italic"
-                    Foreground="{StaticResource BrushTextMuted}"
-                    Text="Keine Buchung aktiv"
-                    Visibility="{Binding NoActiveSlots, Converter={StaticResource BoolToVis}}" />
+            <ItemsControl Focusable="False" ItemsSource="{Binding ActiveSlots}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border
+                            Margin="0,0,0,8"
+                            Padding="12,10"
+                            Effect="{x:Null}"
+                            Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
 
-                <ItemsControl ItemsSource="{Binding ActiveSlots}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border
-                                Margin="0,0,0,8"
-                                Padding="12,10"
-                                Background="{StaticResource BrushAccent}"
-                                CornerRadius="12">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
+                                <Ellipse
+                                    Width="10"
+                                    Height="10"
+                                    Margin="0,0,10,0"
+                                    VerticalAlignment="Center"
+                                    Style="{StaticResource StatusDot}" />
 
-                                    <Ellipse
-                                        Grid.Column="0"
-                                        Width="12"
-                                        Height="12"
-                                        Margin="0,0,10,0"
-                                        VerticalAlignment="Center"
-                                        Style="{StaticResource StatusDot}" />
-
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock
-                                            FontSize="14"
-                                            FontWeight="SemiBold"
-                                            Foreground="{StaticResource BrushText}"
-                                            Text="{Binding SelectedProject}"
-                                            TextTrimming="CharacterEllipsis" />
-                                        <TextBlock
-                                            FontSize="11"
-                                            Foreground="{StaticResource BrushTextMuted}"
-                                            Text="{Binding StatusText}" />
-                                    </StackPanel>
-
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                     <TextBlock
-                                        Grid.Column="2"
-                                        Margin="8,0"
-                                        VerticalAlignment="Center"
-                                        FontFamily="Consolas"
                                         FontSize="14"
-                                        Foreground="{StaticResource BrushText}"
-                                        Text="{Binding ElapsedText}" />
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource Theme.Text}"
+                                        Text="{Binding SelectedProject}"
+                                        TextTrimming="CharacterEllipsis" />
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="{DynamicResource Theme.TextMuted}"
+                                        Text="{Binding StatusText}" />
+                                </StackPanel>
 
-                                    <StackPanel
-                                        Grid.Column="3"
-                                        VerticalAlignment="Center"
-                                        Orientation="Horizontal">
+                                <TextBlock
+                                    Grid.Column="2"
+                                    Margin="8,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Consolas"
+                                    FontSize="14"
+                                    Foreground="{DynamicResource Theme.Text}"
+                                    Text="{Binding ElapsedText}" />
 
-                                        <!--  Fortsetzen (nur sichtbar, wenn pausiert)  -->
-                                        <Button
-                                            Margin="0,0,6,0"
-                                            Command="{Binding StartTimerCommand}"
-                                            Style="{StaticResource SlotPausedOnlyButton}"
-                                            ToolTip="Fortsetzen">
-                                            <Path
-                                                Width="11"
-                                                Height="11"
-                                                Data="M0,0 L0,11 L10,5.5 Z"
-                                                Fill="{StaticResource BrushText}"
-                                                Stretch="Uniform" />
-                                        </Button>
+                                <StackPanel
+                                    Grid.Column="3"
+                                    VerticalAlignment="Center"
+                                    Orientation="Horizontal">
+                                    <Button
+                                        Margin="0,0,6,0"
+                                        local:Ui.Glyph="&#xE768;"
+                                        Command="{Binding StartTimerCommand}"
+                                        Style="{StaticResource SlotPausedOnlyButton}"
+                                        ToolTip="Fortsetzen" />
+                                    <Button
+                                        Margin="0,0,6,0"
+                                        local:Ui.Glyph="&#xE769;"
+                                        Command="{Binding PauseTimerCommand}"
+                                        Style="{StaticResource SlotRunningOnlyButton}"
+                                        ToolTip="Pausieren" />
+                                    <Button
+                                        local:Ui.Glyph="&#xE71A;"
+                                        Command="{Binding EndTimerCommand}"
+                                        Style="{StaticResource SlotIconButton}"
+                                        ToolTip="Stoppen" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
-                                        <!--  Pausieren (nur sichtbar, während aktiv läuft)  -->
-                                        <Button
-                                            Margin="0,0,6,0"
-                                            Command="{Binding PauseTimerCommand}"
-                                            Style="{StaticResource SlotRunningOnlyButton}"
-                                            ToolTip="Pausieren">
-                                            <StackPanel Orientation="Horizontal">
-                                                <Rectangle
-                                                    Width="3"
-                                                    Height="11"
-                                                    Fill="{StaticResource BrushText}" />
-                                                <Rectangle
-                                                    Width="3"
-                                                    Height="11"
-                                                    Margin="3,0,0,0"
-                                                    Fill="{StaticResource BrushText}" />
-                                            </StackPanel>
-                                        </Button>
+            <!--  Neues Projekt parallel starten (bis zu MaxActiveSlots)  -->
+            <TextBlock
+                Margin="2,8,0,6"
+                Style="{StaticResource Text.Label}"
+                Text="Projekt starten"
+                Visibility="{Binding CanStartMoreSlots, Converter={StaticResource BoolToVis}}" />
+            <Grid Visibility="{Binding CanStartMoreSlots, Converter={StaticResource BoolToVis}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-                                        <!--  Stoppen  -->
-                                        <Button
-                                            Command="{Binding EndTimerCommand}"
-                                            Style="{StaticResource SlotIconButton}"
-                                            ToolTip="Stoppen">
-                                            <Rectangle
-                                                Width="11"
-                                                Height="11"
-                                                Fill="{StaticResource BrushText}"
-                                                RadiusX="1.5"
-                                                RadiusY="1.5" />
-                                        </Button>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <ComboBox ItemsSource="{Binding ConfiguredProjects}" SelectedItem="{Binding PendingNewProject, Mode=TwoWay}" />
 
-                <!--  Neues Projekt parallel starten (bis zu MaxActiveSlots)  -->
-                <TextBlock
-                    Margin="2,8,0,4"
-                    Foreground="{StaticResource BrushTextMuted}"
-                    Text="Projekt starten"
-                    Visibility="{Binding CanStartMoreSlots, Converter={StaticResource BoolToVis}}" />
-                <Grid Visibility="{Binding CanStartMoreSlots, Converter={StaticResource BoolToVis}}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                <Button
+                    Grid.Column="1"
+                    Margin="8,0,0,0"
+                    local:Ui.Glyph="&#xE768;"
+                    Command="{Binding StartNewSlotCommand}"
+                    Style="{StaticResource Button.Primary}"
+                    ToolTip="Start" />
+            </Grid>
 
-                    <ComboBox
-                        Grid.Column="0"
-                        ItemsSource="{Binding ConfiguredProjects}"
-                        SelectedItem="{Binding PendingNewProject, Mode=TwoWay}"
-                        Style="{StaticResource NiceCombo}" />
-
-                    <Button
-                        Grid.Column="1"
-                        Margin="6,4,4,4"
-                        Command="{Binding StartNewSlotCommand}"
-                        Style="{StaticResource FlatButton}"
-                        ToolTip="Start">
-                        <Path
-                            Width="11"
-                            Height="11"
-                            Data="M0,0 L0,11 L10,5.5 Z"
-                            Fill="{StaticResource BrushText}"
-                            Stretch="Uniform" />
-                    </Button>
-                </Grid>
-
-                <TextBlock
-                    Margin="2,8,0,0"
-                    FontStyle="Italic"
-                    Foreground="{StaticResource BrushTextMuted}"
-                    Text="Maximal 4 Projekte gleichzeitig aktiv"
-                    Visibility="{Binding MaxSlotsReached, Converter={StaticResource BoolToVis}}" />
-            </StackPanel>
-        </Border>
+            <TextBlock
+                Margin="2,8,0,0"
+                Style="{StaticResource Text.Label}"
+                Text="Maximal 4 Projekte gleichzeitig aktiv"
+                Visibility="{Binding MaxSlotsReached, Converter={StaticResource BoolToVis}}" />
+        </StackPanel>
 
         <!--  Roter Rahmen, solange in Teams der Bildschirm geteilt wird (Präsentation im Meeting)  -->
         <Border

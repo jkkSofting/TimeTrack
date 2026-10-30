@@ -6,111 +6,196 @@
     xmlns:local="clr-namespace:Zeitmanagement"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodel="clr-namespace:Zeitmanagement.ViewModel"
+    xmlns:views="clr-namespace:Zeitmanagement.Views"
     Title="{Binding WindowTitle}"
     Width="1800"
     Height="800"
+    MinWidth="1000"
+    MinHeight="600"
     d:DataContext="{d:DesignInstance Type=viewmodel:MainViewModel}"
+    Background="{DynamicResource Theme.AppBackground}"
+    FontFamily="Segoe UI"
     ResizeMode="CanResize"
+    UseLayoutRounding="True"
     WindowState="Maximized"
     mc:Ignorable="d">
+    <Window.Resources>
+        <!--  Kleine Gruppenüberschrift in der Navigation  -->
+        <Style x:Key="NavGroup" TargetType="TextBlock">
+            <Setter Property="Margin" Value="26,18,0,6" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Theme.SidebarTextMuted}" />
+        </Style>
+    </Window.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition MaxWidth="150" />
+            <ColumnDefinition Width="232" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <Grid Background="#1A2238">
-            <Grid.RowDefinitions>
-                <RowDefinition />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-            <StackPanel>
+
+        <!--  ===== Seitenleiste =====  -->
+        <Border
+            Background="{DynamicResource Theme.Sidebar}"
+            BorderBrush="{DynamicResource Theme.SidebarBorder}"
+            BorderThickness="0,0,1,0">
+            <DockPanel>
                 <!--  Logo: das Pinguin-Maskottchen + Schriftzug  -->
-                <StackPanel Margin="0,14,0,10" HorizontalAlignment="Center">
-                    <Image
-                        Width="64"
-                        Height="64"
-                        Source="{StaticResource MascotAppIconImage}" />
-                    <TextBlock
-                        Margin="0,6,0,0"
-                        HorizontalAlignment="Center"
-                        FontSize="18"
-                        FontWeight="SemiBold"
-                        Foreground="White"
-                        Text="TimeTrack" />
+                <StackPanel
+                    Margin="22,22,16,6"
+                    DockPanel.Dock="Top"
+                    Orientation="Horizontal">
+                    <ContentControl
+                        Width="42"
+                        Height="42"
+                        Focusable="False"
+                        Template="{StaticResource MascotLogoTemplate}" />
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="19"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource Theme.SidebarText}"
+                            Text="TimeTrack" />
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{DynamicResource Theme.SidebarTextMuted}"
+                            Text="Zeiterfassung" />
+                    </StackPanel>
                 </StackPanel>
-                <Button
-                    Height="30"
-                    MaxWidth="140"
-                    Margin="5"
-                    Background="#00000000"
-                    Command="{Binding SelectViewCommand}"
-                    CommandParameter="Dashboard"
-                    Content="Dashboard"
-                    Foreground="White" />
-                <Button
-                    Height="30"
-                    MaxWidth="140"
-                    Margin="5"
-                    Background="#00000000"
-                    Command="{Binding SelectViewCommand}"
-                    CommandParameter="Hours"
-                    Content="Stundenbuchung"
-                    Foreground="White" />
-                <Button
-                    Height="30"
-                    MaxWidth="140"
-                    Margin="5"
-                    Background="#00000000"
-                    Command="{Binding SelectViewCommand}"
-                    CommandParameter="Projects"
-                    Content="Projektübersicht"
-                    Foreground="White" />
-                <Button
-                    Height="30"
-                    MaxWidth="140"
-                    Margin="5"
-                    Background="#00000000"
-                    Command="{Binding SelectViewCommand}"
-                    CommandParameter="QuickSelect"
-                    Content="Quick Select"
-                    Foreground="White" />
-                <Button
-                    Height="30"
-                    MaxWidth="140"
-                    Margin="5"
-                    Background="#00000000"
-                    Command="{Binding SelectViewCommand}"
-                    CommandParameter="Fragmentation"
-                    Content="Fragmentierung"
-                    Foreground="White" />
-                <Button
-                    Height="30"
-                    MaxWidth="140"
-                    Margin="5"
-                    Background="#00000000"
-                    Command="{Binding SelectViewCommand}"
-                    CommandParameter="Sap"
-                    Content="SAP-Verrechnung"
-                    Foreground="White" />
-                <Button
-                    Height="30"
-                    MaxWidth="140"
-                    Margin="5"
-                    Background="#00000000"
-                    Command="{Binding SelectViewCommand}"
-                    CommandParameter="Settings"
-                    Content="Einstellungen"
-                    Foreground="White" />
-            </StackPanel>
-            <TextBlock
-                Grid.Row="1"
-                Margin="5"
-                HorizontalAlignment="Center"
-                FontSize="17"
-                Foreground="White"
-                Text="{Binding Clock}"
-                TextAlignment="Center" />
-        </Grid>
-        <ContentControl Grid.Column="1" Content="{Binding RightSide}" />
+
+                <!--  Gruß des saisonalen bzw. Fan-Themes (sonst ausgeblendet)  -->
+                <Border
+                    Margin="18,10,18,0"
+                    Padding="10,6"
+                    Background="{DynamicResource Theme.SidebarSelected}"
+                    CornerRadius="8"
+                    DockPanel.Dock="Top">
+                    <TextBlock
+                        x:Name="Greeting"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource Theme.SidebarSelectedText}"
+                        Text="{DynamicResource Theme.Greeting}"
+                        TextTrimming="CharacterEllipsis" />
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Text, ElementName=Greeting}" Value="">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                </Border>
+
+                <!--  Fußzeile: Uhr, Datum und Hell/Dunkel-Schalter  -->
+                <Border
+                    Margin="18,8,18,18"
+                    Padding="14,12"
+                    BorderBrush="{DynamicResource Theme.SidebarBorder}"
+                    BorderThickness="0,1,0,0"
+                    DockPanel.Dock="Bottom">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock
+                                FontFamily="Segoe UI Semibold"
+                                FontSize="22"
+                                Foreground="{DynamicResource Theme.SidebarText}"
+                                Text="{Binding Clock}" />
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="{DynamicResource Theme.SidebarTextMuted}"
+                                Text="{Binding Today}" />
+                        </StackPanel>
+                        <Button
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            views:Ui.Glyph="&#xE706;"
+                            Command="{Binding ToggleDarkModeCommand}"
+                            Foreground="{DynamicResource Theme.SidebarText}"
+                            Style="{StaticResource Button.IconGhost}"
+                            ToolTip="Zwischen heller und dunkler Variante des Designs wechseln. Weitere Designs gibt es in den Einstellungen." />
+                    </Grid>
+                </Border>
+
+                <!--  Navigation  -->
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,4,0,0">
+                        <TextBlock Style="{StaticResource NavGroup}" Text="ZEITERFASSUNG" />
+                        <RadioButton
+                            views:Ui.Glyph="&#xE80F;"
+                            Command="{Binding SelectViewCommand}"
+                            CommandParameter="Dashboard"
+                            Content="Dashboard"
+                            GroupName="Nav"
+                            IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=dashboard}"
+                            Style="{StaticResource NavItem}" />
+                        <RadioButton
+                            views:Ui.Glyph="&#xE768;"
+                            Command="{Binding SelectViewCommand}"
+                            CommandParameter="QuickSelect"
+                            Content="Quick Select"
+                            GroupName="Nav"
+                            IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=quickselect}"
+                            Style="{StaticResource NavItem}" />
+                        <RadioButton
+                            views:Ui.Glyph="&#xE787;"
+                            Command="{Binding SelectViewCommand}"
+                            CommandParameter="Hours"
+                            Content="Stundenbuchung"
+                            GroupName="Nav"
+                            IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=hours}"
+                            Style="{StaticResource NavItem}" />
+
+                        <TextBlock Style="{StaticResource NavGroup}" Text="AUSWERTUNG" />
+                        <RadioButton
+                            views:Ui.Glyph="&#xE9D2;"
+                            Command="{Binding SelectViewCommand}"
+                            CommandParameter="Fragmentation"
+                            Content="Fragmentierung"
+                            GroupName="Nav"
+                            IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=fragmentation}"
+                            Style="{StaticResource NavItem}" />
+                        <RadioButton
+                            views:Ui.Glyph="&#xE8EF;"
+                            Command="{Binding SelectViewCommand}"
+                            CommandParameter="Sap"
+                            Content="SAP-Verrechnung"
+                            GroupName="Nav"
+                            IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=sap}"
+                            Style="{StaticResource NavItem}" />
+
+                        <TextBlock Style="{StaticResource NavGroup}" Text="VERWALTUNG" />
+                        <RadioButton
+                            views:Ui.Glyph="&#xE8B7;"
+                            Command="{Binding SelectViewCommand}"
+                            CommandParameter="Projects"
+                            Content="Projekte"
+                            GroupName="Nav"
+                            IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=projects}"
+                            Style="{StaticResource NavItem}" />
+                        <RadioButton
+                            views:Ui.Glyph="&#xE713;"
+                            Command="{Binding SelectViewCommand}"
+                            CommandParameter="Settings"
+                            Content="Einstellungen"
+                            GroupName="Nav"
+                            IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=settings}"
+                            Style="{StaticResource NavItem}" />
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!--  ===== Inhalt =====  -->
+        <ContentControl
+            Grid.Column="1"
+            Content="{Binding RightSide}"
+            Focusable="False" />
     </Grid>
 </Window>

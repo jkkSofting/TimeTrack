@@ -6,8 +6,10 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <!--  Aktives Farbschema: wird beim Start und bei jedem Theme-Wechsel vom ThemeManager ersetzt  -->
+                <ResourceDictionary Source="Themes/Palettes/Standard.Dark.xaml" />
+                <ResourceDictionary Source="Themes/Controls.xaml" />
                 <ResourceDictionary Source="Views/Templates.xaml" />
-                <ResourceDictionary Source="Views/ComboBoxStyle.xaml" />
                 <ResourceDictionary Source="Views/Mascot.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

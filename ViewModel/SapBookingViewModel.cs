@@ -21,21 +21,17 @@ namespace Zeitmanagement.ViewModel
         private const double LaneHeight = 18.0;
         private const double SurplusTrackHeight = 8.0;
 
-        private static SolidColorBrush Frozen(byte r, byte g, byte b)
-        {
-            var br = new SolidColorBrush(Color.FromRgb(r, g, b));
-            br.Freeze();
-            return br;
-        }
+        // Farben aus der Kategoriepalette des aktuellen Themes; die Legende der View nutzt
+        // dieselben Schlüssel (Theme.Data0..4, Theme.DataNeutral).
+        private static Brush ExternalBrush => ThemeManager.GetBrush("Theme.Data0");
+        private static Brush InternalBookedBrush => ThemeManager.GetBrush("Theme.Data1");
+        private static Brush CoveredExternalBrush => ThemeManager.GetBrush("Theme.Data2");
+        private static Brush CoveredSurplusBrush => ThemeManager.GetBrush("Theme.Data3");
+        private static Brush SurplusBrush => ThemeManager.GetBrush("Theme.Data4");
+        private static Brush DiscardedBrush => ThemeManager.GetBrush("Theme.DataNeutral");
 
-        // Diese Farben werden auch in der Legende der View verwendet (dort als Literale).
-        private static readonly SolidColorBrush ExternalBrush = Frozen(0x5A, 0xC8, 0xFA);
-        private static readonly SolidColorBrush InternalBookedBrush = Frozen(0x8E, 0x8B, 0xFF);
-        private static readonly SolidColorBrush CoveredExternalBrush = Frozen(0x4E, 0xCA, 0x84);
-        private static readonly SolidColorBrush CoveredSurplusBrush = Frozen(0xFF, 0xC1, 0x07);
-        private static readonly SolidColorBrush DiscardedBrush = Frozen(0x7A, 0x80, 0x8C);
-        private static readonly SolidColorBrush SurplusBrush = Frozen(0xFF, 0x8A, 0x50);
-        private static readonly SolidColorBrush TextBrush = Frozen(0xF5, 0xF7, 0xFB);
+        // Neutrale Markierung (Gesamtwerte) in der Textfarbe des aktuellen Themes.
+        private static Brush TextBrush => ThemeManager.GetBrush("Theme.Text");
 
         private DateTime _month = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
 
@@ -79,6 +75,13 @@ namespace Zeitmanagement.ViewModel
             PreviousCommand = new DelegateCommand(_ => ReferenceDate = _month.AddMonths(-1));
             NextCommand = new DelegateCommand(_ => ReferenceDate = _month.AddMonths(1));
             TodayCommand = new DelegateCommand(_ => ReferenceDate = DateTime.Today);
+
+            // Balkenfarben kommen aus dem Theme; erst neu zeichnen, wenn die Seite schon gezeigt wurde.
+            ThemeManager.ThemeChanged += (s, e) =>
+            {
+                if (Days.Count > 0)
+                    Refresh();
+            };
         }
 
         public override void Refresh()
@@ -260,7 +263,7 @@ namespace Zeitmanagement.ViewModel
             };
         }
 
-        private static SolidColorBrush BrushOf(SapSegmentKind k)
+        private static Brush BrushOf(SapSegmentKind k)
         {
             switch (k)
             {

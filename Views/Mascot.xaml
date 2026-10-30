@@ -226,4 +226,225 @@
     </DrawingGroup>
 
     <DrawingImage x:Key="MascotAppIconImage" po:Freeze="True" Drawing="{StaticResource MascotAppIconDrawing}" />
+
+    <!--
+        Accessoires je Theme, im selben 120 x 150 Koordinatensystem wie der Pinguin, damit sie
+        einfach deckungsgleich darübergelegt werden können (der unsichtbare Rahmen hält die Größe
+        fest). Der ThemeManager stellt das passende als "Theme.MascotAccessory" bereit.
+        Kopf: oben bei y = 12 zwischen x = 42 und 72; Hals: um y = 40 zwischen x = 42 und 78.
+    -->
+    <Pen x:Key="MascotAccessoryPen" po:Freeze="True" Brush="#33000000" Thickness="0.8" />
+
+    <DrawingImage x:Key="MascotAccessory.None" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <GeometryDrawing Brush="Transparent">
+                <GeometryDrawing.Geometry>
+                    <RectangleGeometry Rect="0,0,120,150" />
+                </GeometryDrawing.Geometry>
+            </GeometryDrawing>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!--  Halloween: Hexenhut mit orangem Band und abgeknickter Spitze  -->
+    <DrawingImage x:Key="MascotAccessory.Halloween" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="M 0,0 H 120 V 150 H 0 Z" />
+                <GeometryDrawing
+                    Brush="#2A1B3D"
+                    Geometry="M 45,16 C 48,10 51,5 56,2.5 C 60,0.5 66,0.8 70,3.5 C 66,4 63.5,7 66,10.5 L 69,16 Z"
+                    Pen="{StaticResource MascotAccessoryPen}" />
+                <GeometryDrawing Brush="#FF8A1F" Geometry="M 46.6,12.6 L 67.2,12.6 L 68.4,15.4 L 45.2,15.4 Z" />
+                <GeometryDrawing Brush="#2A1B3D" Pen="{StaticResource MascotAccessoryPen}">
+                    <GeometryDrawing.Geometry>
+                        <EllipseGeometry Center="57,16.5" RadiusX="21" RadiusY="3.4" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!--  Weihnachten: rote Mütze mit weißem Fellrand und Bommel  -->
+    <DrawingImage x:Key="MascotAccessory.Christmas" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="M 0,0 H 120 V 150 H 0 Z" />
+                <GeometryDrawing
+                    Brush="#D93A3A"
+                    Geometry="M 43,15 C 44,6 52,1 61,1.5 C 70,2 77,7 81,15 C 77,12.5 73,12 71,15 Z"
+                    Pen="{StaticResource MascotAccessoryPen}" />
+                <GeometryDrawing Brush="#F5F5F2" Pen="{StaticResource MascotAccessoryPen}">
+                    <GeometryDrawing.Geometry>
+                        <RectangleGeometry
+                            RadiusX="3.5"
+                            RadiusY="3.5"
+                            Rect="40.5,13,33,7" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+                <GeometryDrawing Brush="#F5F5F2" Pen="{StaticResource MascotAccessoryPen}">
+                    <GeometryDrawing.Geometry>
+                        <EllipseGeometry Center="81.5,16" RadiusX="4" RadiusY="4" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!--  Ostern: Hasenohren  -->
+    <DrawingImage x:Key="MascotAccessory.Easter" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="M 0,0 H 120 V 150 H 0 Z" />
+                <GeometryDrawing Brush="#F7F4FA" Pen="{StaticResource MascotAccessoryPen}">
+                    <GeometryDrawing.Geometry>
+                        <GeometryGroup>
+                            <EllipseGeometry Center="50,9.2" RadiusX="3.8" RadiusY="7.8">
+                                <EllipseGeometry.Transform>
+                                    <RotateTransform Angle="-14" CenterX="50" CenterY="9.2" />
+                                </EllipseGeometry.Transform>
+                            </EllipseGeometry>
+                            <EllipseGeometry Center="64,8.7" RadiusX="3.8" RadiusY="7.8">
+                                <EllipseGeometry.Transform>
+                                    <RotateTransform Angle="12" CenterX="64" CenterY="8.7" />
+                                </EllipseGeometry.Transform>
+                            </EllipseGeometry>
+                        </GeometryGroup>
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+                <GeometryDrawing Brush="#F4A9C4">
+                    <GeometryDrawing.Geometry>
+                        <GeometryGroup>
+                            <EllipseGeometry Center="50,9.7" RadiusX="1.8" RadiusY="5.4">
+                                <EllipseGeometry.Transform>
+                                    <RotateTransform Angle="-14" CenterX="50" CenterY="9.7" />
+                                </EllipseGeometry.Transform>
+                            </EllipseGeometry>
+                            <EllipseGeometry Center="64,9.2" RadiusX="1.8" RadiusY="5.4">
+                                <EllipseGeometry.Transform>
+                                    <RotateTransform Angle="12" CenterX="64" CenterY="9.2" />
+                                </EllipseGeometry.Transform>
+                            </EllipseGeometry>
+                        </GeometryGroup>
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!--  Wald: grüne Bommelmütze  -->
+    <DrawingImage x:Key="MascotAccessory.Forest" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="M 0,0 H 120 V 150 H 0 Z" />
+                <GeometryDrawing
+                    Brush="#3F8F4E"
+                    Geometry="M 42.5,18 C 42,9 48.5,4 57,4 C 65.5,4 72,9 71.5,18 Z"
+                    Pen="{StaticResource MascotAccessoryPen}" />
+                <GeometryDrawing Brush="#2E6B3A" Pen="{StaticResource MascotAccessoryPen}">
+                    <GeometryDrawing.Geometry>
+                        <RectangleGeometry
+                            RadiusX="2.5"
+                            RadiusY="2.5"
+                            Rect="41.5,14.5,31,5" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+                <GeometryDrawing Brush="#E8C46A" Pen="{StaticResource MascotAccessoryPen}">
+                    <GeometryDrawing.Geometry>
+                        <EllipseGeometry Center="57,4.4" RadiusX="3.4" RadiusY="3.4" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!--  Meer: Matrosenmütze  -->
+    <DrawingImage x:Key="MascotAccessory.Ocean" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="M 0,0 H 120 V 150 H 0 Z" />
+                <GeometryDrawing
+                    Brush="#FFFFFF"
+                    Geometry="M 44,15 C 44,8 50,5.5 57,5.5 C 64,5.5 70,8 70,15 Z"
+                    Pen="{StaticResource MascotAccessoryPen}" />
+                <GeometryDrawing Brush="#0B3B52" Pen="{StaticResource MascotAccessoryPen}">
+                    <GeometryDrawing.Geometry>
+                        <RectangleGeometry
+                            RadiusX="2"
+                            RadiusY="2"
+                            Rect="42.5,13,29,5" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+                <GeometryDrawing Brush="#E5484D">
+                    <GeometryDrawing.Geometry>
+                        <EllipseGeometry Center="57,6" RadiusX="2" RadiusY="1.4" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!--  Fan-Themes: Schal in Vereinsfarben um den Hals, ein Ende hängt herunter  -->
+    <DrawingImage x:Key="MascotAccessory.VfbStuttgart" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="M 0,0 H 120 V 150 H 0 Z" />
+                <GeometryDrawing
+                    Brush="#E32219"
+                    Geometry="M 65,46 L 72.5,45 L 75,66 L 67,66.5 Z"
+                    Pen="{StaticResource MascotAccessoryPen}" />
+                <GeometryDrawing Brush="#FFFFFF" Geometry="M 66.6,55 L 73.6,54.4 L 74,58 L 67,58.6 Z" />
+                <GeometryDrawing
+                    Brush="#E32219"
+                    Geometry="M 40.5,39.5 C 50,45 68,45 78.5,38.5 L 79.5,46 C 68,52.5 50,52.5 40.5,47 Z"
+                    Pen="{StaticResource MascotAccessoryPen}" />
+                <GeometryDrawing Brush="#FFFFFF" Geometry="M 40.5,42.5 C 50,48 68,48 79,41.5 L 79.2,43.2 C 68,49.6 50,49.6 40.5,44.2 Z" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <DrawingImage x:Key="MascotAccessory.WerderBremen" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="M 0,0 H 120 V 150 H 0 Z" />
+                <GeometryDrawing
+                    Brush="#1D9053"
+                    Geometry="M 65,46 L 72.5,45 L 75,66 L 67,66.5 Z"
+                    Pen="{StaticResource MascotAccessoryPen}" />
+                <GeometryDrawing Brush="#FFFFFF" Geometry="M 66.6,55 L 73.6,54.4 L 74,58 L 67,58.6 Z" />
+                <GeometryDrawing
+                    Brush="#1D9053"
+                    Geometry="M 40.5,39.5 C 50,45 68,45 78.5,38.5 L 79.5,46 C 68,52.5 50,52.5 40.5,47 Z"
+                    Pen="{StaticResource MascotAccessoryPen}" />
+                <GeometryDrawing Brush="#FFFFFF" Geometry="M 40.5,42.5 C 50,48 68,48 79,41.5 L 79.2,43.2 C 68,49.6 50,49.6 40.5,44.2 Z" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!--
+        App-Logo mit dem Accessoire des aktuellen Themes, z. B.
+        <ContentControl Width="42" Height="42" Template="{StaticResource MascotLogoTemplate}" />
+        Das Accessoire liegt wie im App-Icon auf dem doppelt so großen Pinguin (Rect 8,6,240,300).
+    -->
+    <ControlTemplate x:Key="MascotLogoTemplate" TargetType="ContentControl">
+        <Viewbox>
+            <Canvas Width="256" Height="256">
+                <Canvas.Clip>
+                    <RectangleGeometry
+                        RadiusX="56"
+                        RadiusY="56"
+                        Rect="0,0,256,256" />
+                </Canvas.Clip>
+                <Image
+                    Width="256"
+                    Height="256"
+                    Source="{StaticResource MascotAppIconImage}" />
+                <Image
+                    Canvas.Left="8"
+                    Canvas.Top="6"
+                    Width="240"
+                    Height="300"
+                    Source="{DynamicResource Theme.MascotAccessory}" />
+            </Canvas>
+        </Viewbox>
+    </ControlTemplate>
 </ResourceDictionary>

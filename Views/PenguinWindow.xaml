@@ -49,6 +49,12 @@
                 Width="104"
                 Height="130"
                 Source="{StaticResource MascotBodyImage}" />
+
+            <!--  Accessoire passend zum aktuellen Theme (Hexenhut, Mütze, Schal, ...)  -->
+            <Image
+                Width="104"
+                Height="130"
+                Source="{DynamicResource Theme.MascotAccessory}" />
         </Canvas>
     </Grid>
 </Window>

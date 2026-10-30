@@ -16,7 +16,7 @@ namespace Zeitmanagement.Views
     /// taskbar. Only the penguin itself catches mouse clicks (the transparent rest of the window
     /// lets them through) and the window never takes focus. If the penguin is clicked in time it
     /// throws a fish at the user (see <see cref="FishWindow"/>) and waits for it to slide down
-    /// before it disappears. The window closes itself when it is done.
+    /// (or be caught) before it disappears. Catches are counted in the settings. The window closes itself when it is done.
     /// </summary>
     public partial class PenguinWindow : Window
     {
@@ -133,6 +133,7 @@ namespace Zeitmanagement.Views
 
             try
             {
+                CountCatch();
                 ThrowFish();
             }
             catch (Exception ex)
@@ -141,6 +142,13 @@ namespace Zeitmanagement.Views
                 Debug.WriteLine($"Penguin fish throw failed: {ex}");
                 SinkAfterThrow();
             }
+        }
+
+        private static void CountCatch()
+        {
+            var settings = Properties.Settings.Default;
+            settings.PenguinCaughtCount++;
+            settings.Save();
         }
 
         private void ThrowFish()
