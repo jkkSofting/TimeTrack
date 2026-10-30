@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 using Microsoft.Win32;
 using Zeitmanagement.Helpers;
 using Zeitmanagement.MVVM;
@@ -26,8 +28,92 @@ namespace Zeitmanagement.ViewModel
         public override string ToString() => Label;
     }
 
+    /// <summary>A colour scheme as offered in the settings, with preview colours for its tile.</summary>
+    internal class ThemeOption
+    {
+        public ThemeOption(AppTheme theme)
+        {
+            Theme = theme;
+            Name = ThemeManager.DisplayName(theme);
+            IsSeasonal = ThemeManager.IsSeasonal(theme);
+
+            var palette = ThemeManager.LoadPalette(theme);
+            Background = (Brush)palette["Theme.AppBackground"];
+            Sidebar = (Brush)palette["Theme.Sidebar"];
+            Card = (Brush)palette["Theme.Card"];
+            CardBorder = (Brush)palette["Theme.CardBorder"];
+            Accent = (Brush)palette["Theme.Accent"];
+            Text = (Brush)palette["Theme.TextSubtle"];
+        }
+
+        public AppTheme Theme { get; }
+        public string Name { get; }
+        public bool IsSeasonal { get; }
+        public Brush Background { get; }
+        public Brush Sidebar { get; }
+        public Brush Card { get; }
+        public Brush CardBorder { get; }
+        public Brush Accent { get; }
+        public Brush Text { get; }
+    }
+
     internal class SettingsViewModel : BaseViewModel
     {
+        public IReadOnlyList<ThemeOption> ThemeOptions { get; } =
+            ThemeManager.AllThemes.Select(theme => new ThemeOption(theme)).ToList();
+
+        /// <summary>The chosen colour scheme. Takes effect (and is stored) right away, without "Speichern".</summary>
+        public ThemeOption SelectedTheme
+        {
+            get => ThemeOptions.FirstOrDefault(option => option.Theme == ThemeManager.Selected);
+            set
+            {
+                if (value == null || value.Theme == ThemeManager.Selected)
+                    return;
+
+                Properties.Settings.Default.Theme = value.Theme.ToString();
+                Properties.Settings.Default.Save();
+            }
+        }
+
+        /// <summary>Holiday themes switch on by themselves around the holidays. Takes effect right away.</summary>
+        public bool SeasonalThemesEnabled
+        {
+            get => Properties.Settings.Default.SeasonalThemesEnabled;
+            set
+            {
+                if (value == Properties.Settings.Default.SeasonalThemesEnabled)
+                    return;
+
+                Properties.Settings.Default.SeasonalThemesEnabled = value;
+                Properties.Settings.Default.Save();
+            }
+        }
+
+        public string SeasonalThemesHint { get; } =
+            $"Halloween, Weihnachten und Ostern erscheinen automatisch {ThemeManager.SeasonDaysBefore} Tage vor bis {ThemeManager.SeasonDaysAfter} Tage nach dem Fest.";
+
+        /// <summary>Explains which theme is shown right now if it isn't simply the chosen one.</summary>
+        public string ThemeStatusText
+        {
+            get
+            {
+                var season = ThemeManager.ActiveSeason;
+                if (season != null)
+                {
+                    var until = ThemeManager.SeasonRange(season.Value, DateTime.Today.Year).To;
+                    return $"Gerade aktiv: {ThemeManager.DisplayName(season.Value)}, automatisch bis {until:dd.MM.}";
+                }
+
+                return ThemeManager.Selected == AppTheme.System
+                    ? $"Gerade aktiv: {ThemeManager.DisplayName(ThemeManager.Effective)} (wie in Windows eingestellt)"
+                    : null;
+            }
+        }
+
+        public int PenguinCaughtCount => Properties.Settings.Default.PenguinCaughtCount;
+        public int FishCaughtCount => Properties.Settings.Default.FishCaughtCount;
+
         private bool _autostartEnabled;
         public bool AutostartEnabled
         {
@@ -159,6 +245,8 @@ namespace Zeitmanagement.ViewModel
             InstallUpdateCommand = new DelegateCommand(async _ => await InstallUpdate());
 
             UpdateService.UpdateAvailable += _ => ShowUpdate(UpdateService.LatestUpdate);
+            ThemeManager.ThemeChanged += (s, e) => RaisePropertyChanged(nameof(ThemeStatusText));
+            Properties.Settings.Default.PropertyChanged += OnSettingsChanged;
 
             Refresh();
         }
@@ -182,6 +270,29 @@ namespace Zeitmanagement.ViewModel
             foreach (var backup in BackupHelper.GetAvailableBackups())
             {
                 AvailableBackups.Add(backup);
+            }
+        }
+
+        /// <summary>
+        /// Keeps values that change outside this page live: the catch counters (the penguin may
+        /// show up while the settings are open) and the theme (also switchable in the sidebar).
+        /// </summary>
+        private void OnSettingsChanged(object sender, PropertyChangedEventArgs e)
+        {
+            switch (e.PropertyName)
+            {
+                case nameof(Properties.Settings.PenguinCaughtCount):
+                    RaisePropertyChanged(nameof(PenguinCaughtCount));
+                    break;
+                case nameof(Properties.Settings.FishCaughtCount):
+                    RaisePropertyChanged(nameof(FishCaughtCount));
+                    break;
+                case nameof(Properties.Settings.Theme):
+                    RaisePropertyChanged(nameof(SelectedTheme));
+                    break;
+                case nameof(Properties.Settings.SeasonalThemesEnabled):
+                    RaisePropertyChanged(nameof(SeasonalThemesEnabled));
+                    break;
             }
         }
 
