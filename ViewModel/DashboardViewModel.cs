@@ -71,38 +71,10 @@ namespace Zeitmanagement.ViewModel
         /// <summary>Stunden-Schwellen für die 5 Farbstufen (Level 1..4 Untergrenzen).</summary>
         private static readonly double[] HeatThresholds = { 2.0, 4.0, 6.0, 8.0 };
 
-        /// <summary>Farbverlauf von "keine Aktivität" bis "viel" – passend zur Dashboard-Palette.</summary>
-        private static readonly Brush[] HeatLevelBrushes = BuildLevelBrushes();
+        /// <summary>Höchste Farbstufe; die Farben je Stufe kommen aus dem Theme (Theme.Heat0..4).</summary>
+        private const int MaxHeatLevel = 4;
 
         public ObservableCollection<HeatColumnVM> HeatColumns { get; } = new ObservableCollection<HeatColumnVM>();
-
-        // Für die Legende ("Weniger … Mehr")
-        public Brush HeatLevel0 => HeatLevelBrushes[0];
-        public Brush HeatLevel1 => HeatLevelBrushes[1];
-        public Brush HeatLevel2 => HeatLevelBrushes[2];
-        public Brush HeatLevel3 => HeatLevelBrushes[3];
-        public Brush HeatLevel4 => HeatLevelBrushes[4];
-
-        private static Brush[] BuildLevelBrushes()
-        {
-            var colors = new[]
-            {
-                (Color)ColorConverter.ConvertFromString("#1E2740"), // 0 – keine Aktivität
-                (Color)ColorConverter.ConvertFromString("#264B6E"), // 1
-                (Color)ColorConverter.ConvertFromString("#2E77B0"), // 2
-                (Color)ColorConverter.ConvertFromString("#3EA0E0"), // 3
-                (Color)ColorConverter.ConvertFromString("#5AC8FA"), // 4 – viel
-            };
-
-            var brushes = new Brush[colors.Length];
-            for (int i = 0; i < colors.Length; i++)
-            {
-                var b = new SolidColorBrush(colors[i]);
-                b.Freeze();
-                brushes[i] = b;
-            }
-            return brushes;
-        }
 
         private static int LevelForHours(double hours)
         {
@@ -112,7 +84,7 @@ namespace Zeitmanagement.ViewModel
             {
                 if (hours >= HeatThresholds[i]) level = i + 2;
             }
-            return Math.Min(level, HeatLevelBrushes.Length - 1);
+            return Math.Min(level, MaxHeatLevel);
         }
 
         private void BuildHeatmap()
@@ -164,7 +136,7 @@ namespace Zeitmanagement.ViewModel
                     column.Days.Add(new HeatCellVM
                     {
                         Date = date,
-                        Fill = HeatLevelBrushes[level],
+                        Level = level,
                         Tooltip = tip
                     });
                 }
@@ -523,7 +495,8 @@ namespace Zeitmanagement.ViewModel
     internal sealed class HeatCellVM
     {
         public DateTime? Date { get; set; }
-        public Brush Fill { get; set; }
+        /// <summary>Farbstufe 0 (keine Aktivität) bis 4 (viel).</summary>
+        public int Level { get; set; }
         public string Tooltip { get; set; }
 
         /// <summary>Zukünftige Tage bleiben unsichtbar, halten aber das Raster ausgerichtet.</summary>

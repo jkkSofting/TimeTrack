@@ -12,91 +12,79 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis" />
-
-        <SolidColorBrush x:Key="BrushText" Color="#F5F7FB" />
-        <SolidColorBrush x:Key="BrushTextMuted" Color="#B7C0D8" />
-        <SolidColorBrush x:Key="BrushCard" Color="#1A2238" />
-        <SolidColorBrush x:Key="BrushTrack" Color="#2A3050" />
-
-        <LinearGradientBrush x:Key="BgGradient" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Offset="0" Color="#0B1020" />
-            <GradientStop Offset="1" Color="#121A33" />
-        </LinearGradientBrush>
-
-        <Style x:Key="Card" TargetType="Border">
-            <Setter Property="CornerRadius" Value="18" />
-            <Setter Property="Background" Value="{StaticResource BrushCard}" />
-            <Setter Property="Padding" Value="16" />
-            <Setter Property="Margin" Value="8" />
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect BlurRadius="18" Opacity="0.4" ShadowDepth="3" Color="#000000" />
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="NavButton" TargetType="Button">
-            <Setter Property="Width" Value="36" />
-            <Setter Property="Height" Value="36" />
-            <Setter Property="FontSize" Value="16" />
-            <Setter Property="Background" Value="#2A3050" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Cursor" Value="Hand" />
-        </Style>
-
         <Style x:Key="Muted" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource BrushTextMuted}" />
+            <Setter Property="Foreground" Value="{DynamicResource Theme.TextMuted}" />
             <Setter Property="FontSize" Value="12" />
+        </Style>
+
+        <Style x:Key="LegendSwatch" TargetType="Border">
+            <Setter Property="Width" Value="12" />
+            <Setter Property="Height" Value="12" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="CornerRadius" Value="3" />
+        </Style>
+
+        <Style x:Key="LegendItem" TargetType="StackPanel">
+            <Setter Property="Margin" Value="0,0,20,6" />
+            <Setter Property="Orientation" Value="Horizontal" />
         </Style>
     </UserControl.Resources>
 
-    <Grid Background="{StaticResource BgGradient}">
+    <Grid Style="{StaticResource Page}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!--  Header  -->
-        <Border Grid.Row="0" Style="{StaticResource Card}">
-            <StackPanel>
-                <TextBlock FontSize="26" FontWeight="Bold" Foreground="{StaticResource BrushText}" Text="SAP-Verrechnung" />
+        <!--  Kopf: Titel links, Monatsauswahl rechts  -->
+        <DockPanel Style="{StaticResource PageHeader}">
+            <StackPanel
+                VerticalAlignment="Center"
+                DockPanel.Dock="Right"
+                Orientation="Horizontal">
+                <Button
+                    local:Ui.Glyph="&#xE76B;"
+                    Command="{Binding PreviousCommand}"
+                    Style="{StaticResource Button.Icon}"
+                    ToolTip="Vorheriger Monat" />
                 <TextBlock
-                    Margin="0,4,0,12"
-                    FontSize="13"
-                    Foreground="{StaticResource BrushTextMuted}"
-                    Text="Was muss wirklich im SAP gebucht werden? Externe Zeit deckt parallele interne Zeit ab; Überschuss wird bis Monatsende auf freie interne Zeiten geschoben."
-                    TextWrapping="Wrap" />
-                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
-                    <Button Command="{Binding PreviousCommand}" Content="◀" Style="{StaticResource NavButton}" />
-                    <TextBlock
-                        MinWidth="180"
-                        VerticalAlignment="Center"
-                        FontSize="16"
-                        FontWeight="SemiBold"
-                        Foreground="{StaticResource BrushText}"
-                        Text="{Binding RangeLabel}"
-                        TextAlignment="Center" />
-                    <Button Command="{Binding NextCommand}" Content="▶" Style="{StaticResource NavButton}" />
-                    <Button
-                        Width="Auto"
-                        Margin="16,0,0,0"
-                        Padding="12,0"
-                        Command="{Binding TodayCommand}"
-                        Content="Aktueller Monat"
-                        Style="{StaticResource NavButton}" />
-                    <DatePicker
-                        Width="140"
-                        Margin="16,0,0,0"
-                        FontSize="13"
-                        SelectedDate="{Binding ReferenceDate}" />
-                </StackPanel>
+                    MinWidth="160"
+                    VerticalAlignment="Center"
+                    FontSize="15"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource Theme.Text}"
+                    Text="{Binding RangeLabel}"
+                    TextAlignment="Center" />
+                <Button
+                    local:Ui.Glyph="&#xE76C;"
+                    Command="{Binding NextCommand}"
+                    Style="{StaticResource Button.Icon}"
+                    ToolTip="Nächster Monat" />
+                <Button
+                    Margin="12,0,0,0"
+                    Command="{Binding TodayCommand}"
+                    Content="Aktueller Monat" />
+                <DatePicker
+                    Width="140"
+                    Margin="12,0,0,0"
+                    SelectedDate="{Binding ReferenceDate}" />
             </StackPanel>
-        </Border>
 
-        <ScrollViewer Grid.Row="1" Margin="0,0,0,8" VerticalScrollBarVisibility="Auto">
-            <StackPanel>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource Text.PageTitle}" Text="SAP-Verrechnung" />
+                <TextBlock
+                    Style="{StaticResource Text.Subtitle}"
+                    Text="Was muss wirklich im SAP gebucht werden? Externe Zeit deckt parallele interne Zeit ab; Überschuss wird bis Monatsende auf freie interne Zeiten geschoben."
+                    TextTrimming="None"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </DockPanel>
+
+        <ScrollViewer
+            Grid.Row="1"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="28,0,28,24">
 
                 <!--  Kennzahlen  -->
                 <Border Style="{StaticResource Card}">
@@ -112,21 +100,22 @@
                                     <Border
                                         Width="200"
                                         Margin="0,0,12,12"
-                                        Padding="12,10"
-                                        Background="#233055"
+                                        Padding="14,12"
+                                        Background="{DynamicResource Theme.Surface}"
                                         BorderBrush="{Binding Accent}"
                                         BorderThickness="0,3,0,0"
                                         CornerRadius="10">
                                         <StackPanel>
                                             <TextBlock Style="{StaticResource Muted}" Text="{Binding Title}" />
                                             <TextBlock
+                                                Margin="0,2,0,2"
                                                 FontSize="22"
                                                 FontWeight="Bold"
-                                                Foreground="{StaticResource BrushText}"
+                                                Foreground="{DynamicResource Theme.Text}"
                                                 Text="{Binding Value}" />
                                             <TextBlock
                                                 FontSize="11"
-                                                Foreground="{StaticResource BrushTextMuted}"
+                                                Foreground="{DynamicResource Theme.TextMuted}"
                                                 Text="{Binding Hint}"
                                                 TextWrapping="Wrap" />
                                         </StackPanel>
@@ -135,86 +124,131 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                         <TextBlock
-                            FontSize="13"
-                            Foreground="{StaticResource BrushText}"
+                            Style="{StaticResource Text.Body}"
                             Text="{Binding StatusNote}"
                             TextWrapping="Wrap" />
-                        <TextBlock
-                            Margin="0,8,0,0"
-                            FontSize="13"
-                            Foreground="#FFC107"
-                            Text="Hinweis: In diesem Monat ist kein Projekt als extern markiert, daher wird nichts verrechnet. Unter „Projektübersicht“ lässt sich pro Projekt festlegen, ob es extern (vom Kunden bezahlt) ist."
-                            TextWrapping="Wrap"
-                            Visibility="{Binding NoExternalProjects, Converter={StaticResource BoolToVis}}" />
+                        <Border
+                            Margin="0,10,0,0"
+                            Background="{DynamicResource Theme.WarningSoft}"
+                            BorderBrush="Transparent"
+                            Style="{StaticResource Inset}"
+                            Visibility="{Binding NoExternalProjects, Converter={StaticResource BoolToVis}}">
+                            <TextBlock
+                                FontSize="13"
+                                Foreground="{DynamicResource Theme.Warning}"
+                                Text="Hinweis: In diesem Monat ist kein Projekt als extern markiert, daher wird nichts verrechnet. Unter „Projekte“ lässt sich pro Projekt festlegen, ob es extern (vom Kunden bezahlt) ist."
+                                TextWrapping="Wrap" />
+                        </Border>
                     </StackPanel>
                 </Border>
 
-                <!--  Legende  -->
-                <Border Style="{StaticResource Card}">
-                    <WrapPanel>
-                        <StackPanel Margin="0,0,20,4" Orientation="Horizontal">
-                            <Border Width="14" Height="14" Margin="0,0,6,0" Background="#5AC8FA" CornerRadius="3" />
-                            <TextBlock Foreground="{StaticResource BrushText}" Text="Extern (wird gebucht)" />
-                        </StackPanel>
-                        <StackPanel Margin="0,0,20,4" Orientation="Horizontal">
-                            <Border Width="14" Height="14" Margin="0,0,6,0" Background="#8E8BFF" CornerRadius="3" />
-                            <TextBlock Foreground="{StaticResource BrushText}" Text="Intern (wird gebucht)" />
-                        </StackPanel>
-                        <StackPanel Margin="0,0,20,4" Orientation="Horizontal">
-                            <Border Width="14" Height="14" Margin="0,0,6,0" Background="#4ECA84" CornerRadius="3" />
-                            <TextBlock Foreground="{StaticResource BrushText}" Text="Intern, durch parallele externe Arbeit gedeckt (entfällt)" />
-                        </StackPanel>
-                        <StackPanel Margin="0,0,20,4" Orientation="Horizontal">
-                            <Border Width="14" Height="14" Margin="0,0,6,0" Background="#FFC107" CornerRadius="3" />
-                            <TextBlock Foreground="{StaticResource BrushText}" Text="Intern, mit gespeichertem Überschuss verrechnet (entfällt)" />
-                        </StackPanel>
-                        <StackPanel Margin="0,0,20,4" Orientation="Horizontal">
-                            <Border Width="14" Height="6" Margin="0,0,6,0" Background="#FF8A50" CornerRadius="2" />
-                            <TextBlock Foreground="{StaticResource BrushText}" Text="Überschuss entsteht (mehrere externe Projekte parallel)" />
-                        </StackPanel>
-                    </WrapPanel>
-                </Border>
+                <!--  Legende (Farben wie im SapBookingViewModel)  -->
+                <WrapPanel Margin="4,16,0,4">
+                    <StackPanel Style="{StaticResource LegendItem}">
+                        <Border Background="#5AC8FA" Style="{StaticResource LegendSwatch}" />
+                        <TextBlock Style="{StaticResource Text.Muted}" Text="Extern (wird gebucht)" />
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource LegendItem}">
+                        <Border Background="#8E8BFF" Style="{StaticResource LegendSwatch}" />
+                        <TextBlock Style="{StaticResource Text.Muted}" Text="Intern (wird gebucht)" />
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource LegendItem}">
+                        <Border Background="#4ECA84" Style="{StaticResource LegendSwatch}" />
+                        <TextBlock Style="{StaticResource Text.Muted}" Text="Intern, durch parallele externe Arbeit gedeckt (entfällt)" />
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource LegendItem}">
+                        <Border Background="#FFC107" Style="{StaticResource LegendSwatch}" />
+                        <TextBlock Style="{StaticResource Text.Muted}" Text="Intern, mit gespeichertem Überschuss verrechnet (entfällt)" />
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource LegendItem}">
+                        <Border
+                            Height="6"
+                            Background="#FF8A50"
+                            Style="{StaticResource LegendSwatch}" />
+                        <TextBlock Style="{StaticResource Text.Muted}" Text="Überschuss entsteht (mehrere externe Projekte parallel)" />
+                    </StackPanel>
+                </WrapPanel>
 
-                <!--  Monatssumme je Projekt  -->
-                <Border Style="{StaticResource Card}" Visibility="{Binding HasDays, Converter={StaticResource BoolToVis}}">
+                <!--  Monatssumme je Kostenträger  -->
+                <Border
+                    Margin="0,8,0,0"
+                    Style="{StaticResource Card}"
+                    Visibility="{Binding HasDays, Converter={StaticResource BoolToVis}}">
                     <StackPanel>
                         <TextBlock
-                            Margin="0,0,0,8"
-                            FontSize="16"
-                            FontWeight="SemiBold"
-                            Foreground="{StaticResource BrushText}"
+                            Margin="0,0,0,12"
+                            Style="{StaticResource Text.Section}"
                             Text="Im SAP zu buchen – Monat je Kostenträger" />
-                        <Grid Margin="0,0,0,4">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="3*" />
-                                <ColumnDefinition Width="80" />
-                                <ColumnDefinition Width="110" />
-                                <ColumnDefinition Width="110" />
-                                <ColumnDefinition Width="3*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource Muted}" Text="Kostenträger" />
-                            <TextBlock Grid.Column="1" Style="{StaticResource Muted}" Text="Typ" />
-                            <TextBlock Grid.Column="2" Style="{StaticResource Muted}" Text="Gebucht (brutto)" />
-                            <TextBlock Grid.Column="3" Style="{StaticResource Muted}" Text="Im SAP buchen" />
-                            <TextBlock Grid.Column="4" Style="{StaticResource Muted}" Text="Verrechnet" />
-                        </Grid>
+                        <Border
+                            Padding="0,0,0,8"
+                            BorderBrush="{DynamicResource Theme.Divider}"
+                            BorderThickness="0,0,0,1">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="3*" />
+                                    <ColumnDefinition Width="80" />
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="3*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource Muted}" Text="Kostenträger" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Style="{StaticResource Muted}"
+                                    Text="Typ" />
+                                <TextBlock
+                                    Grid.Column="2"
+                                    Style="{StaticResource Muted}"
+                                    Text="Gebucht (brutto)" />
+                                <TextBlock
+                                    Grid.Column="3"
+                                    Style="{StaticResource Muted}"
+                                    Text="Im SAP buchen" />
+                                <TextBlock
+                                    Grid.Column="4"
+                                    Style="{StaticResource Muted}"
+                                    Text="Verrechnet" />
+                            </Grid>
+                        </Border>
                         <ItemsControl ItemsSource="{Binding MonthProjects}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="3*" />
-                                            <ColumnDefinition Width="80" />
-                                            <ColumnDefinition Width="110" />
-                                            <ColumnDefinition Width="110" />
-                                            <ColumnDefinition Width="3*" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Foreground="{StaticResource BrushText}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Grid.Column="1" Foreground="{Binding TypeBrush}" Text="{Binding TypeText}" />
-                                        <TextBlock Grid.Column="2" Foreground="{StaticResource BrushTextMuted}" Text="{Binding GrossText}" />
-                                        <TextBlock Grid.Column="3" FontWeight="SemiBold" Foreground="{StaticResource BrushText}" Text="{Binding BookedText}" />
-                                        <TextBlock Grid.Column="4" Style="{StaticResource Muted}" Text="{Binding NoteText}" />
-                                    </Grid>
+                                    <Border
+                                        Padding="0,8"
+                                        BorderBrush="{DynamicResource Theme.Divider}"
+                                        BorderThickness="0,0,0,1">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="3*" />
+                                                <ColumnDefinition Width="80" />
+                                                <ColumnDefinition Width="120" />
+                                                <ColumnDefinition Width="120" />
+                                                <ColumnDefinition Width="3*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock
+                                                Style="{StaticResource Text.Body}"
+                                                Text="{Binding Name}"
+                                                TextTrimming="CharacterEllipsis" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                FontSize="13"
+                                                Foreground="{Binding TypeBrush}"
+                                                Text="{Binding TypeText}" />
+                                            <TextBlock
+                                                Grid.Column="2"
+                                                Style="{StaticResource Text.Muted}"
+                                                Text="{Binding GrossText}" />
+                                            <TextBlock
+                                                Grid.Column="3"
+                                                FontWeight="SemiBold"
+                                                Style="{StaticResource Text.Body}"
+                                                Text="{Binding BookedText}" />
+                                            <TextBlock
+                                                Grid.Column="4"
+                                                Style="{StaticResource Muted}"
+                                                Text="{Binding NoteText}" />
+                                        </Grid>
+                                    </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
@@ -222,10 +256,13 @@
                 </Border>
 
                 <!--  Tage  -->
-                <ItemsControl ItemsSource="{Binding Days}">
+                <ItemsControl Margin="0,16,0,0" ItemsSource="{Binding Days}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Margin="8,4" Padding="14" Style="{StaticResource Card}">
+                            <Border
+                                Margin="0,0,0,12"
+                                Padding="16"
+                                Style="{StaticResource Card.Flat}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="120" />
@@ -235,9 +272,15 @@
 
                                     <!--  Datum und Arbeitszeit  -->
                                     <StackPanel>
-                                        <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource BrushText}" Text="{Binding DateLabel}" />
-                                        <TextBlock Margin="0,4,0,0" Style="{StaticResource Muted}" Text="Arbeitszeit" />
-                                        <TextBlock FontSize="13" Foreground="{StaticResource BrushText}" Text="{Binding SpanText}" />
+                                        <TextBlock
+                                            FontWeight="SemiBold"
+                                            Style="{StaticResource Text.Body}"
+                                            Text="{Binding DateLabel}" />
+                                        <TextBlock
+                                            Margin="0,6,0,0"
+                                            Style="{StaticResource Muted}"
+                                            Text="Arbeitszeit" />
+                                        <TextBlock Style="{StaticResource Text.Body}" Text="{Binding SpanText}" />
                                         <TextBlock Style="{StaticResource Muted}" Text="{Binding RangeText}" />
                                     </StackPanel>
 
@@ -247,7 +290,7 @@
                                             <ItemsControl
                                                 Width="1000"
                                                 Height="{Binding TimelineHeight}"
-                                                Background="{StaticResource BrushTrack}"
+                                                Background="{DynamicResource Theme.Track}"
                                                 ItemsSource="{Binding Rects}">
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
@@ -273,11 +316,14 @@
                                             </ItemsControl>
                                         </Viewbox>
                                         <Grid Margin="0,2,0,6">
-                                            <TextBlock FontSize="10" Foreground="{StaticResource BrushTextMuted}" Text="{Binding StartLabel}" />
+                                            <TextBlock
+                                                FontSize="10"
+                                                Foreground="{DynamicResource Theme.TextMuted}"
+                                                Text="{Binding StartLabel}" />
                                             <TextBlock
                                                 HorizontalAlignment="Right"
                                                 FontSize="10"
-                                                Foreground="{StaticResource BrushTextMuted}"
+                                                Foreground="{DynamicResource Theme.TextMuted}"
                                                 Text="{Binding EndLabel}" />
                                         </Grid>
 
@@ -292,19 +338,29 @@
                                                             VerticalAlignment="Center"
                                                             Background="{Binding Brush}"
                                                             CornerRadius="4" />
-                                                        <TextBlock FontSize="12" Foreground="{StaticResource BrushText}" Text="{Binding Text}" />
+                                                        <TextBlock
+                                                            FontSize="12"
+                                                            Foreground="{DynamicResource Theme.Text}"
+                                                            Text="{Binding Text}" />
                                                     </StackPanel>
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
 
-                                        <StackPanel Margin="0,8,0,0" Orientation="Horizontal" ToolTip="{Binding PoolTip}">
+                                        <StackPanel
+                                            Margin="0,8,0,0"
+                                            Orientation="Horizontal"
+                                            ToolTip="{Binding PoolTip}">
                                             <TextBlock
                                                 Width="130"
                                                 VerticalAlignment="Center"
                                                 Style="{StaticResource Muted}"
                                                 Text="Überschuss-Speicher" />
-                                            <Border Width="100" Height="8" Background="{StaticResource BrushTrack}" CornerRadius="4">
+                                            <Border
+                                                Width="100"
+                                                Height="8"
+                                                Background="{DynamicResource Theme.Track}"
+                                                CornerRadius="4">
                                                 <Border
                                                     Width="{Binding PoolBarWidth}"
                                                     HorizontalAlignment="Left"
@@ -315,30 +371,29 @@
                                                 Margin="8,0,0,0"
                                                 VerticalAlignment="Center"
                                                 FontSize="12"
-                                                Foreground="{StaticResource BrushText}"
+                                                Foreground="{DynamicResource Theme.Text}"
                                                 Text="{Binding PoolText}" />
                                         </StackPanel>
                                     </StackPanel>
 
                                     <!--  SAP-Buchung dieses Tages  -->
-                                    <Border
-                                        Grid.Column="2"
-                                        Padding="10"
-                                        Background="#233055"
-                                        CornerRadius="10">
+                                    <Border Grid.Column="2" Style="{StaticResource Inset}">
                                         <StackPanel>
                                             <Grid>
-                                                <TextBlock FontWeight="SemiBold" Foreground="{StaticResource BrushText}" Text="Im SAP buchen" />
+                                                <TextBlock
+                                                    FontWeight="SemiBold"
+                                                    Style="{StaticResource Text.Body}"
+                                                    Text="Im SAP buchen" />
                                                 <TextBlock
                                                     HorizontalAlignment="Right"
                                                     FontWeight="Bold"
-                                                    Foreground="{StaticResource BrushText}"
+                                                    Style="{StaticResource Text.Body}"
                                                     Text="{Binding SapTotalText}" />
                                             </Grid>
                                             <ItemsControl Margin="0,6,0,0" ItemsSource="{Binding Projects}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Grid Margin="0,2">
+                                                        <Grid Margin="0,3">
                                                             <Grid.ColumnDefinitions>
                                                                 <ColumnDefinition Width="*" />
                                                                 <ColumnDefinition Width="Auto" />
@@ -354,12 +409,15 @@
                                                                         CornerRadius="4" />
                                                                     <TextBlock
                                                                         FontSize="12"
-                                                                        Foreground="{StaticResource BrushText}"
+                                                                        Foreground="{DynamicResource Theme.Text}"
                                                                         Text="{Binding Name}"
                                                                         TextTrimming="CharacterEllipsis" />
                                                                 </StackPanel>
-                                                                <TextBlock Margin="14,0,0,0" FontSize="10" Foreground="{StaticResource BrushTextMuted}">
-                                                                    <Run Text="{Binding TypeText, Mode=OneWay}" /> · gebucht <Run Text="{Binding GrossText, Mode=OneWay}" /> <Run Text="{Binding NoteText, Mode=OneWay}" />
+                                                                <TextBlock
+                                                                    Margin="14,0,0,0"
+                                                                    FontSize="10"
+                                                                    Foreground="{DynamicResource Theme.TextMuted}">
+                                                                    <Run Text="{Binding TypeText, Mode=OneWay}" /><Run Text=" · gebucht " /><Run Text="{Binding GrossText, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding NoteText, Mode=OneWay}" />
                                                                 </TextBlock>
                                                             </StackPanel>
                                                             <TextBlock
@@ -367,7 +425,7 @@
                                                                 VerticalAlignment="Center"
                                                                 FontSize="13"
                                                                 FontWeight="SemiBold"
-                                                                Foreground="{StaticResource BrushText}"
+                                                                Foreground="{DynamicResource Theme.Text}"
                                                                 Text="{Binding BookedText}" />
                                                         </Grid>
                                                     </DataTemplate>

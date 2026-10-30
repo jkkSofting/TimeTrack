@@ -35,7 +35,9 @@ namespace Zeitmanagement.ViewModel
         private static readonly SolidColorBrush CoveredSurplusBrush = Frozen(0xFF, 0xC1, 0x07);
         private static readonly SolidColorBrush DiscardedBrush = Frozen(0x7A, 0x80, 0x8C);
         private static readonly SolidColorBrush SurplusBrush = Frozen(0xFF, 0x8A, 0x50);
-        private static readonly SolidColorBrush TextBrush = Frozen(0xF5, 0xF7, 0xFB);
+
+        // Neutrale Markierung (Gesamtwerte) in der Textfarbe des aktuellen Themes.
+        private static Brush TextBrush => ThemeManager.GetBrush("Theme.Text");
 
         private DateTime _month = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
 

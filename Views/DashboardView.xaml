@@ -11,450 +11,345 @@
     d:DesignWidth="1200"
     mc:Ignorable="d">
 
-    <!--  ========= THEME & RESOURCES =========  -->
     <UserControl.Resources>
-        <!--  Palette  -->
-        <Color x:Key="ColBgDark">#0B1020</Color>
-        <Color x:Key="ColCard">#1A2238</Color>
-        <Color x:Key="ColAccent">#5AC8FA</Color>
-        <Color x:Key="ColAccent2">#8E8BFF</Color>
-        <Color x:Key="ColText">#F5F7FB</Color>
-        <Color x:Key="ColTextMuted">#B7C0D8</Color>
-
-        <SolidColorBrush x:Key="BrushBg" Color="{StaticResource ColBgDark}" />
-        <SolidColorBrush x:Key="BrushCard" Color="{StaticResource ColCard}" />
-        <SolidColorBrush x:Key="BrushText" Color="{StaticResource ColText}" />
-        <SolidColorBrush x:Key="BrushTextMuted" Color="{StaticResource ColTextMuted}" />
-        <SolidColorBrush x:Key="BrushAccent" Color="{StaticResource ColAccent}" />
-        <SolidColorBrush x:Key="BrushAccent2" Color="{StaticResource ColAccent2}" />
-
-        <!--  Hintergrund-Gradient  -->
-        <LinearGradientBrush x:Key="BgGradient" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Offset="0" Color="#0B1020" />
-            <GradientStop Offset="1" Color="#121A33" />
-        </LinearGradientBrush>
-
-        <!--  Glassy Card Style  -->
-        <Style x:Key="Card" TargetType="Border">
-            <Setter Property="CornerRadius" Value="18" />
-            <Setter Property="Background" Value="{StaticResource BrushCard}" />
-            <Setter Property="Padding" Value="18" />
-            <Setter Property="Margin" Value="8" />
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect
-                        BlurRadius="18"
-                        Opacity="0.4"
-                        ShadowDepth="3"
-                        Color="#000000" />
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!--  Titel + Untertitel  -->
-        <Style x:Key="Title" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
-            <Setter Property="FontSize" Value="22" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-        </Style>
-
-        <Style x:Key="Subtitle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource BrushTextMuted}" />
-            <Setter Property="FontSize" Value="13" />
-        </Style>
-
-        <!--  Icon-Badge  -->
-        <Style x:Key="IconBadge" TargetType="Border">
-            <Setter Property="Width" Value="44" />
-            <Setter Property="Height" Value="44" />
-            <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="HorizontalAlignment" Value="Left" />
-            <Setter Property="VerticalAlignment" Value="Top" />
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Offset="0" Color="#2B355A" />
-                        <GradientStop Offset="1" Color="#1D284B" />
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect
-                        BlurRadius="12"
-                        Opacity="0.45"
-                        ShadowDepth="2"
-                        Color="#000000" />
-                </Setter.Value>
-            </Setter>
-            <Setter Property="Padding" Value="8" />
-        </Style>
-
-        <!--  Converter  -->
         <local:NumberFormatterConverter x:Key="Fmt" />
         <local:DecimalHoursToHHmmConverter x:Key="HoursToHHmm" />
 
-        <!--  StatCard Template  -->
+        <!--  Icon-Kachel links in den Kennzahl-Karten  -->
+        <Style x:Key="IconBadge" TargetType="Border">
+            <Setter Property="Width" Value="46" />
+            <Setter Property="Height" Value="46" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Background" Value="{DynamicResource Theme.AccentSoft}" />
+            <Setter Property="Padding" Value="12" />
+        </Style>
+
+        <!--  Kennzahl-Karte  -->
         <DataTemplate x:Key="StatCardTemplate">
-            <Border Style="{StaticResource Card}">
+            <Border Margin="0,0,16,0" Style="{StaticResource Card}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <!--  Icon  -->
                     <Border Style="{StaticResource IconBadge}">
                         <Viewbox Stretch="Uniform">
-                            <!--  Simple icon via PathGeometry; ersetzbar  -->
-                            <Path Data="{Binding IconGeometry}" Fill="{StaticResource BrushAccent}" />
+                            <Path Data="{Binding IconGeometry}" Fill="{DynamicResource Theme.AccentSoftText}" />
                         </Viewbox>
                     </Border>
 
-                    <!--  Content  -->
-                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                        <TextBlock Style="{StaticResource Subtitle}" Text="{Binding Caption}" />
+                    <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                        <TextBlock Style="{StaticResource Text.Label}" Text="{Binding Caption}" />
                         <local:CountUpTextBlock
-                            Margin="0,2,0,2"
+                            Margin="0,4,0,2"
                             DurationMilliseconds="900"
-                            FontSize="46"
+                            FontSize="38"
                             FontWeight="Bold"
-                            Foreground="{StaticResource BrushText}"
+                            Foreground="{DynamicResource Theme.Text}"
                             FormatString="{Binding FormatString}"
                             TargetValue="{Binding Value}" />
-                        <TextBlock Style="{StaticResource Subtitle}">
-                            <Run Text="{Binding Subnote}" />
-                        </TextBlock>
+                        <TextBlock Style="{StaticResource Text.Muted}" Text="{Binding Subnote}" />
                     </StackPanel>
                 </Grid>
             </Border>
         </DataTemplate>
+
+        <!--  Kleine Kennzahl in der zweiten Reihe  -->
+        <Style x:Key="MetricValue" TargetType="local:CountUpTextBlock">
+            <Setter Property="Margin" Value="0,4,0,0" />
+            <Setter Property="FontSize" Value="26" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Theme.Text}" />
+            <Setter Property="DurationMilliseconds" Value="800" />
+        </Style>
+
+        <!--  Heatmap-Zelle: Farbe je Aktivitätsstufe aus dem Theme  -->
+        <Style x:Key="HeatCell" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource Theme.Heat0}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Level}" Value="1">
+                    <Setter Property="Background" Value="{DynamicResource Theme.Heat1}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="2">
+                    <Setter Property="Background" Value="{DynamicResource Theme.Heat2}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="3">
+                    <Setter Property="Background" Value="{DynamicResource Theme.Heat3}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="4">
+                    <Setter Property="Background" Value="{DynamicResource Theme.Heat4}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="WeekdayLabel" TargetType="TextBlock">
+            <Setter Property="Height" Value="17" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Foreground" Value="{DynamicResource Theme.TextMuted}" />
+        </Style>
+
+        <Style x:Key="LegendCell" TargetType="Border">
+            <Setter Property="Width" Value="13" />
+            <Setter Property="Height" Value="13" />
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="CornerRadius" Value="3" />
+        </Style>
     </UserControl.Resources>
 
-    <!--  ========= LAYOUT =========  -->
-    <Grid Background="{StaticResource BgGradient}">
+    <Grid Style="{StaticResource Page}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!--  Header  -->
-        <DockPanel Grid.Row="0" Margin="16,12,16,8">
-
-            <!--  Spaß-Vergleich (oben rechts)  -->
+        <!--  Kopf: Titel links, Spaß-Vergleich rechts  -->
+        <DockPanel Style="{StaticResource PageHeader}">
             <Border
-                DockPanel.Dock="Right"
                 Padding="16,10"
-                VerticalAlignment="Center"
-                Background="{StaticResource BrushCard}"
-                CornerRadius="14">
-                <Border.Effect>
-                    <DropShadowEffect
-                        BlurRadius="16"
-                        Opacity="0.35"
-                        ShadowDepth="2"
-                        Color="#000000" />
-                </Border.Effect>
+                DockPanel.Dock="Right"
+                Style="{StaticResource Card}">
                 <StackPanel Orientation="Horizontal">
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Style="{StaticResource Subtitle}" Text="Zum Vergleich hast du so lange gearbeitet wie" />
+                        <TextBlock Style="{StaticResource Text.Label}" Text="Zum Vergleich hast du so lange gearbeitet wie" />
                         <StackPanel Margin="0,2,0,0" Orientation="Horizontal">
                             <TextBlock
                                 VerticalAlignment="Center"
-                                FontSize="26"
+                                FontSize="24"
                                 FontWeight="Bold"
-                                Foreground="{StaticResource BrushAccent}"
+                                Foreground="{DynamicResource Theme.Accent}"
                                 Text="{Binding ComparisonFactorText}" />
                             <TextBlock
-                                Width="300"
+                                Width="280"
                                 Margin="10,0,0,0"
                                 VerticalAlignment="Center"
-                                Foreground="{StaticResource BrushText}"
+                                Style="{StaticResource Text.Body}"
                                 Text="{Binding ComparisonCaption}"
                                 TextWrapping="Wrap" />
                         </StackPanel>
                     </StackPanel>
 
-                    <!--  Neu würfeln  -->
                     <Button
-                        Width="40"
-                        Height="40"
-                        Margin="14,0,0,0"
+                        Margin="12,0,0,0"
                         VerticalAlignment="Center"
                         Command="{Binding NextComparisonCommand}"
-                        Cursor="Hand"
+                        Style="{StaticResource Button.Icon}"
                         ToolTip="Neuer Vergleich">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border
-                                    x:Name="bg"
-                                    Background="#22344F"
-                                    CornerRadius="10">
-                                    <TextBlock
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        FontSize="18"
-                                        Text="🎲" />
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="bg" Property="Background" Value="#2E4A70" />
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
+                        <TextBlock FontSize="16" Text="🎲" />
                     </Button>
                 </StackPanel>
             </Border>
 
-            <StackPanel DockPanel.Dock="Left">
-                <TextBlock
-                    FontSize="28"
-                    Style="{StaticResource Title}"
-                    Text="Dashboard" />
-                <TextBlock Style="{StaticResource Subtitle}" Text="{Binding HeaderSubtitle}" />
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource Text.PageTitle}" Text="Dashboard" />
+                <TextBlock Style="{StaticResource Text.Subtitle}" Text="{Binding HeaderSubtitle}" />
             </StackPanel>
         </DockPanel>
 
-        <!--  Main: 3 Stat Cards + sekundäre Reihe  -->
-        <Grid Grid.Row="1" Margin="16,4,16,12">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+        <ScrollViewer
+            Grid.Row="1"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="28,0,28,24">
 
-            <!--  Row 1: Big Stats  -->
-            <ContentPresenter
-                Grid.Row="0"
-                Grid.Column="0"
-                Content="{Binding StatProjects}"
-                ContentTemplate="{StaticResource StatCardTemplate}" />
-            <ContentPresenter
-                Grid.Row="0"
-                Grid.Column="1"
-                Content="{Binding StatBookings}"
-                ContentTemplate="{StaticResource StatCardTemplate}" />
-            <ContentPresenter
-                Grid.Row="0"
-                Grid.Column="2"
-                Content="{Binding StatHours}"
-                ContentTemplate="{StaticResource StatCardTemplate}" />
-
-            <!--  Row 2: Zusatzinfos  -->
-            <Border
-                Grid.Row="1"
-                Grid.ColumnSpan="3"
-                Margin="8,12,8,0"
-                Style="{StaticResource Card}">
-                <Grid>
+                <!--  Reihe 1: große Kennzahlen  -->
+                <Grid Margin="0,0,-16,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-
-                    <StackPanel Margin="8">
-                        <TextBlock Style="{StaticResource Subtitle}" Text="Heutige Stunden (Summe)" />
-                        <local:CountUpTextBlock
-                            DurationMilliseconds="800"
-                            FontSize="28"
-                            FontWeight="SemiBold"
-                            Foreground="{StaticResource BrushText}"
-                            FormatString="0.## h"
-                            TargetValue="{Binding TodayHours}" />
-                        <TextBlock Style="{StaticResource Subtitle}" Text="{Binding TodayHours, Converter={StaticResource HoursToHHmm}}" />
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="1" Margin="8">
-                        <TextBlock Style="{StaticResource Subtitle}" Text="Ø Stunden/Tag (letzte 5 Werktage)" />
-                        <local:CountUpTextBlock
-                            DurationMilliseconds="800"
-                            FontSize="28"
-                            FontWeight="SemiBold"
-                            Foreground="{StaticResource BrushText}"
-                            FormatString="0.## h"
-                            TargetValue="{Binding AvgHoursLast5Days}" />
-                        <TextBlock Style="{StaticResource Subtitle}" Text="{Binding AvgHoursLast5Days, Converter={StaticResource HoursToHHmm}}" />
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="2" Margin="8">
-                        <TextBlock Style="{StaticResource Subtitle}" Text="Top-Projekt (letzte 30 Tage)" />
-                        <TextBlock
-                            FontSize="24"
-                            FontWeight="SemiBold"
-                            Foreground="{StaticResource BrushText}"
-                            Text="{Binding TopProjectName}" />
-                        <TextBlock Style="{StaticResource Subtitle}">
-                            <Run Text="{Binding TopProjectHours, Converter={StaticResource HoursToHHmm}}" />
-                        </TextBlock>
-                    </StackPanel>
+                    <ContentPresenter Content="{Binding StatProjects}" ContentTemplate="{StaticResource StatCardTemplate}" />
+                    <ContentPresenter
+                        Grid.Column="1"
+                        Content="{Binding StatBookings}"
+                        ContentTemplate="{StaticResource StatCardTemplate}" />
+                    <ContentPresenter
+                        Grid.Column="2"
+                        Content="{Binding StatHours}"
+                        ContentTemplate="{StaticResource StatCardTemplate}" />
                 </Grid>
-            </Border>
 
-            <!--  Row 3: Aktivitäts-Heatmap (GitHub-Style)  -->
-            <Border
-                Grid.Row="2"
-                Grid.ColumnSpan="3"
-                Margin="8,12,8,0"
-                Style="{StaticResource Card}">
-                <StackPanel>
-                    <TextBlock
-                        Margin="0,0,0,12"
-                        Style="{StaticResource Subtitle}"
-                        Text="Aktivität (letzte 12 Monate)" />
+                <!--  Reihe 2: Zusatzinfos  -->
+                <Border Margin="0,16,0,0" Style="{StaticResource Card}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
 
-                    <ScrollViewer
-                        HorizontalScrollBarVisibility="Auto"
-                        VerticalScrollBarVisibility="Disabled">
-                        <StackPanel Orientation="Horizontal">
-
-                            <!--  Wochentags-Labels (Wochenstart = Montag)  -->
-                            <StackPanel Margin="0,0,6,0" VerticalAlignment="Top">
-                                <Border Height="16" />
-                                <TextBlock
-                                    Height="17"
-                                    FontSize="10"
-                                    Foreground="{StaticResource BrushTextMuted}"
-                                    Text="Mo"
-                                    VerticalAlignment="Center" />
-                                <TextBlock Height="17" Text="" />
-                                <TextBlock
-                                    Height="17"
-                                    FontSize="10"
-                                    Foreground="{StaticResource BrushTextMuted}"
-                                    Text="Mi"
-                                    VerticalAlignment="Center" />
-                                <TextBlock Height="17" Text="" />
-                                <TextBlock
-                                    Height="17"
-                                    FontSize="10"
-                                    Foreground="{StaticResource BrushTextMuted}"
-                                    Text="Fr"
-                                    VerticalAlignment="Center" />
-                                <TextBlock Height="17" Text="" />
-                                <TextBlock Height="17" Text="" />
-                            </StackPanel>
-
-                            <!--  Wochen-Spalten  -->
-                            <ItemsControl ItemsSource="{Binding HeatColumns}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel VerticalAlignment="Top">
-                                            <!--  Monatslabel: Canvas, damit langer Text überläuft ohne die Rasterbreite zu ändern  -->
-                                            <Canvas Width="17" Height="16">
-                                                <TextBlock
-                                                    Canvas.Left="0"
-                                                    Canvas.Top="2"
-                                                    FontSize="10"
-                                                    Foreground="{StaticResource BrushTextMuted}"
-                                                    Text="{Binding MonthLabel}" />
-                                            </Canvas>
-                                            <ItemsControl ItemsSource="{Binding Days}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Button
-                                                            Width="13"
-                                                            Height="13"
-                                                            Margin="2"
-                                                            Command="{Binding DataContext.OpenDayCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                            CommandParameter="{Binding}"
-                                                            Cursor="Hand"
-                                                            ToolTip="{Binding Tooltip}">
-                                                            <Button.Template>
-                                                                <ControlTemplate TargetType="Button">
-                                                                    <Border
-                                                                        x:Name="cell"
-                                                                        Background="{Binding Fill}"
-                                                                        BorderBrush="Transparent"
-                                                                        BorderThickness="1"
-                                                                        CornerRadius="3" />
-                                                                    <ControlTemplate.Triggers>
-                                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                                            <Setter TargetName="cell" Property="BorderBrush" Value="#CCFFFFFF" />
-                                                                        </Trigger>
-                                                                    </ControlTemplate.Triggers>
-                                                                </ControlTemplate>
-                                                            </Button.Template>
-                                                        </Button>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource Text.Label}" Text="Heute gebucht" />
+                            <local:CountUpTextBlock
+                                FormatString="0.## h"
+                                Style="{StaticResource MetricValue}"
+                                TargetValue="{Binding TodayHours}" />
+                            <TextBlock Style="{StaticResource Text.Muted}" Text="{Binding TodayHours, Converter={StaticResource HoursToHHmm}}" />
                         </StackPanel>
-                    </ScrollViewer>
 
-                    <!--  Legende  -->
-                    <StackPanel
-                        Margin="0,10,0,0"
-                        HorizontalAlignment="Right"
-                        Orientation="Horizontal">
-                        <TextBlock
-                            Margin="0,0,6,0"
-                            VerticalAlignment="Center"
-                            Style="{StaticResource Subtitle}"
-                            Text="Weniger" />
                         <Border
-                            Width="13"
-                            Height="13"
-                            Margin="2"
-                            Background="{Binding HeatLevel0}"
-                            CornerRadius="3" />
+                            Grid.Column="1"
+                            Width="1"
+                            Margin="24,0"
+                            Background="{DynamicResource Theme.Divider}" />
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Style="{StaticResource Text.Label}" Text="Ø Stunden/Tag (letzte 5 Werktage)" />
+                            <local:CountUpTextBlock
+                                FormatString="0.## h"
+                                Style="{StaticResource MetricValue}"
+                                TargetValue="{Binding AvgHoursLast5Days}" />
+                            <TextBlock Style="{StaticResource Text.Muted}" Text="{Binding AvgHoursLast5Days, Converter={StaticResource HoursToHHmm}}" />
+                        </StackPanel>
+
                         <Border
-                            Width="13"
-                            Height="13"
-                            Margin="2"
-                            Background="{Binding HeatLevel1}"
-                            CornerRadius="3" />
-                        <Border
-                            Width="13"
-                            Height="13"
-                            Margin="2"
-                            Background="{Binding HeatLevel2}"
-                            CornerRadius="3" />
-                        <Border
-                            Width="13"
-                            Height="13"
-                            Margin="2"
-                            Background="{Binding HeatLevel3}"
-                            CornerRadius="3" />
-                        <Border
-                            Width="13"
-                            Height="13"
-                            Margin="2"
-                            Background="{Binding HeatLevel4}"
-                            CornerRadius="3" />
-                        <TextBlock
-                            Margin="6,0,0,0"
-                            VerticalAlignment="Center"
-                            Style="{StaticResource Subtitle}"
-                            Text="Mehr" />
+                            Grid.Column="3"
+                            Width="1"
+                            Margin="24,0"
+                            Background="{DynamicResource Theme.Divider}" />
+
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Style="{StaticResource Text.Label}" Text="Top-Projekt (letzte 30 Tage)" />
+                            <TextBlock
+                                Margin="0,4,0,0"
+                                FontSize="24"
+                                Style="{StaticResource Text.Value}"
+                                Text="{Binding TopProjectName}"
+                                TextTrimming="CharacterEllipsis" />
+                            <TextBlock Style="{StaticResource Text.Muted}" Text="{Binding TopProjectHours, Converter={StaticResource HoursToHHmm}}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!--  Reihe 3: Aktivitäts-Heatmap (GitHub-Style); Klick auf einen Tag öffnet ihn  -->
+                <Border Margin="0,16,0,0" Style="{StaticResource Card}">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,14">
+                            <!--  Legende  -->
+                            <StackPanel
+                                VerticalAlignment="Center"
+                                DockPanel.Dock="Right"
+                                Orientation="Horizontal">
+                                <TextBlock
+                                    Margin="0,0,6,0"
+                                    VerticalAlignment="Center"
+                                    Style="{StaticResource Text.Label}"
+                                    Text="Weniger" />
+                                <Border Background="{DynamicResource Theme.Heat0}" Style="{StaticResource LegendCell}" />
+                                <Border Background="{DynamicResource Theme.Heat1}" Style="{StaticResource LegendCell}" />
+                                <Border Background="{DynamicResource Theme.Heat2}" Style="{StaticResource LegendCell}" />
+                                <Border Background="{DynamicResource Theme.Heat3}" Style="{StaticResource LegendCell}" />
+                                <Border Background="{DynamicResource Theme.Heat4}" Style="{StaticResource LegendCell}" />
+                                <TextBlock
+                                    Margin="6,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Style="{StaticResource Text.Label}"
+                                    Text="Mehr" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource Text.Section}" Text="Aktivität der letzten 12 Monate" />
+                                <TextBlock
+                                    Margin="0,2,0,0"
+                                    Style="{StaticResource Text.Label}"
+                                    Text="Klick auf einen Tag öffnet ihn in der Stundenbuchung" />
+                            </StackPanel>
+                        </DockPanel>
+
+                        <ScrollViewer
+                            local:Ui.ForwardMouseWheel="True"
+                            HorizontalScrollBarVisibility="Auto"
+                            VerticalScrollBarVisibility="Disabled">
+                            <StackPanel Orientation="Horizontal">
+
+                                <!--  Wochentags-Labels (Wochenstart = Montag)  -->
+                                <StackPanel Margin="0,0,6,0" VerticalAlignment="Top">
+                                    <Border Height="16" />
+                                    <TextBlock Style="{StaticResource WeekdayLabel}" Text="Mo" />
+                                    <TextBlock Style="{StaticResource WeekdayLabel}" Text="" />
+                                    <TextBlock Style="{StaticResource WeekdayLabel}" Text="Mi" />
+                                    <TextBlock Style="{StaticResource WeekdayLabel}" Text="" />
+                                    <TextBlock Style="{StaticResource WeekdayLabel}" Text="Fr" />
+                                    <TextBlock Style="{StaticResource WeekdayLabel}" Text="" />
+                                    <TextBlock Style="{StaticResource WeekdayLabel}" Text="" />
+                                </StackPanel>
+
+                                <!--  Wochen-Spalten  -->
+                                <ItemsControl ItemsSource="{Binding HeatColumns}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel VerticalAlignment="Top">
+                                                <!--  Monatslabel: Canvas, damit langer Text überläuft ohne die Rasterbreite zu ändern  -->
+                                                <Canvas Width="17" Height="16">
+                                                    <TextBlock
+                                                        Canvas.Left="0"
+                                                        Canvas.Top="2"
+                                                        FontSize="10"
+                                                        Foreground="{DynamicResource Theme.TextMuted}"
+                                                        Text="{Binding MonthLabel}" />
+                                                </Canvas>
+                                                <ItemsControl ItemsSource="{Binding Days}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Button
+                                                                Width="13"
+                                                                Height="13"
+                                                                Margin="2"
+                                                                Command="{Binding DataContext.OpenDayCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                CommandParameter="{Binding}"
+                                                                Focusable="False"
+                                                                ToolTip="{Binding Tooltip}">
+                                                                <Button.Template>
+                                                                    <ControlTemplate TargetType="Button">
+                                                                        <Border
+                                                                            x:Name="cell"
+                                                                            BorderBrush="Transparent"
+                                                                            BorderThickness="1"
+                                                                            CornerRadius="3"
+                                                                            Style="{StaticResource HeatCell}" />
+                                                                        <ControlTemplate.Triggers>
+                                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                                <Setter TargetName="cell" Property="BorderBrush" Value="{DynamicResource Theme.Text}" />
+                                                                            </Trigger>
+                                                                        </ControlTemplate.Triggers>
+                                                                    </ControlTemplate>
+                                                                </Button.Template>
+                                                                <Button.Style>
+                                                                    <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button">
+                                                                        <Style.Triggers>
+                                                                            <!--  Zukünftige Tage: unsichtbar, halten aber das Raster  -->
+                                                                            <DataTrigger Binding="{Binding IsPlaceholder}" Value="True">
+                                                                                <Setter Property="Visibility" Value="Hidden" />
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Button.Style>
+                                                            </Button>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </ScrollViewer>
                     </StackPanel>
-                </StackPanel>
-            </Border>
-        </Grid>
+                </Border>
 
-        <!--  Footer  -->
-        <DockPanel Grid.Row="2" Margin="16,0,16,16">
-            <TextBlock Foreground="{StaticResource BrushTextMuted}" Text="Zeitmanagement • Stand: " />
-            <TextBlock
-                Margin="4,0,0,0"
-                Foreground="{StaticResource BrushTextMuted}"
-                Text="{Binding NowStamp}" />
-        </DockPanel>
+                <TextBlock
+                    Margin="2,14,0,0"
+                    Style="{StaticResource Text.Label}"
+                    Text="{Binding NowStamp, StringFormat='Stand: {0}'}" />
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </UserControl>

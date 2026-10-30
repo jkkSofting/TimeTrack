@@ -5,27 +5,13 @@ using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using Zeitmanagement.Helpers;
 using Zeitmanagement.MVVM;
 
 namespace Zeitmanagement.ViewModel
 {
     internal sealed class FragmentationViewModel : BaseViewModel
     {
-        // ── Palette for projects (deterministic by name) ──
-        private static readonly Color[] Palette =
-        {
-            Color.FromRgb(0x5A, 0xC8, 0xFA), // blue
-            Color.FromRgb(0x8E, 0x8B, 0xFF), // purple
-            Color.FromRgb(0xFF, 0x6B, 0x6B), // red
-            Color.FromRgb(0x4E, 0xCA, 0x84), // green
-            Color.FromRgb(0xFF, 0xC1, 0x07), // yellow
-            Color.FromRgb(0xFF, 0x8A, 0x50), // orange
-            Color.FromRgb(0xE0, 0x5A, 0xA8), // pink
-            Color.FromRgb(0x00, 0xD9, 0xC0), // teal
-            Color.FromRgb(0xB3, 0x88, 0xFF), // lavender
-            Color.FromRgb(0x7E, 0xD3, 0x57), // lime
-        };
-
         // ── View modes ──
         public ObservableCollection<string> ViewModes { get; } =
             new ObservableCollection<string> { "Tag", "Woche", "Monat" };
@@ -110,6 +96,8 @@ namespace Zeitmanagement.ViewModel
             Days.Clear();
             Legend.Clear();
 
+            // Project colours in order of appearance, from the current theme's palette.
+            var palette = ThemeManager.DataPalette;
             var projectColors = new Dictionary<string, SolidColorBrush>();
             int colorIndex = 0;
 
@@ -129,7 +117,7 @@ namespace Zeitmanagement.ViewModel
 
                     if (!projectColors.ContainsKey(e.Projektname))
                     {
-                        var c = Palette[colorIndex % Palette.Length];
+                        var c = palette[colorIndex % palette.Count];
                         projectColors[e.Projektname] = new SolidColorBrush(c);
                         projectColors[e.Projektname].Freeze();
                         colorIndex++;
