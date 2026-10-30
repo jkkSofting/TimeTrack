@@ -458,12 +458,21 @@
                                                                     FontSize="13"
                                                                     Foreground="{DynamicResource Theme.TextMuted}"
                                                                     Text="{Binding TimeText}" />
+                                                                <!--  Projektfarbe als Markierung, der Name selbst in Textfarbe (gut lesbar in jedem Theme)  -->
+                                                                <Border
+                                                                    Width="8"
+                                                                    Height="8"
+                                                                    Margin="0,0,7,0"
+                                                                    VerticalAlignment="Center"
+                                                                    Background="{Binding Brush}"
+                                                                    CornerRadius="2"
+                                                                    DockPanel.Dock="Left" />
                                                                 <TextBlock
                                                                     Margin="0,0,10,0"
                                                                     DockPanel.Dock="Left"
                                                                     FontSize="13"
                                                                     FontWeight="SemiBold"
-                                                                    Foreground="{Binding Brush}"
+                                                                    Foreground="{DynamicResource Theme.Text}"
                                                                     Text="{Binding Title}" />
                                                                 <TextBlock
                                                                     FontSize="13"

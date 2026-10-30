@@ -56,6 +56,13 @@ namespace Zeitmanagement.ViewModel
             PreviousCommand = new DelegateCommand(_ => Navigate(-1));
             NextCommand = new DelegateCommand(_ => Navigate(1));
             SelectSegmentCommand = new DelegateCommand(o => SelectedSegment = o as Segment);
+
+            // Project colours come from the theme; only redraw once the page has been shown.
+            ThemeManager.ThemeChanged += (s, e) =>
+            {
+                if (Days.Count > 0)
+                    Refresh();
+            };
         }
 
         private void Navigate(int direction)

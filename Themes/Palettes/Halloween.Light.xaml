@@ -59,6 +59,19 @@
     <SolidColorBrush x:Key="Theme.Heat3" Color="#E8801F" />
     <SolidColorBrush x:Key="Theme.Heat4" Color="#B65A06" />
 
+    <!--  Kategoriefarben für Projekte und Balken, in fester Reihenfolge vergeben. Geprüft (dataviz-Validator):
+          Helligkeitsband, Mindestsättigung, Nachbarn unterscheidbar bei Rot-Grün-Schwäche und normalem Sehen,
+          mindestens 3:1 Kontrast zur Karte. DataNeutral: Grau für "zählt nicht".  -->
+    <SolidColorBrush x:Key="Theme.Data0" Color="#924500" />
+    <SolidColorBrush x:Key="Theme.Data1" Color="#9C72DE" />
+    <SolidColorBrush x:Key="Theme.Data2" Color="#2F8A27" />
+    <SolidColorBrush x:Key="Theme.Data3" Color="#982C72" />
+    <SolidColorBrush x:Key="Theme.Data4" Color="#A98904" />
+    <SolidColorBrush x:Key="Theme.Data5" Color="#3771D1" />
+    <SolidColorBrush x:Key="Theme.Data6" Color="#A5292B" />
+    <SolidColorBrush x:Key="Theme.Data7" Color="#099EAB" />
+    <SolidColorBrush x:Key="Theme.DataNeutral" Color="#8A92A3" />
+
     <DropShadowEffect x:Key="Theme.CardShadow" BlurRadius="18" Direction="270" Opacity="0.08" ShadowDepth="2" Color="#2A1B3D" />
     <DropShadowEffect x:Key="Theme.PopupShadow" BlurRadius="20" Direction="270" Opacity="0.128" ShadowDepth="4" Color="#2A1B3D" />
 </ResourceDictionary>

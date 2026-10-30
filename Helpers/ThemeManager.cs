@@ -64,37 +64,12 @@ namespace Zeitmanagement.Helpers
         [DllImport("dwmapi.dll")]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 
-        private static readonly Color[] DarkDataPalette =
-        {
-            Color.FromRgb(0x5A, 0xC8, 0xFA), // blue
-            Color.FromRgb(0x8E, 0x8B, 0xFF), // purple
-            Color.FromRgb(0xFF, 0x6B, 0x6B), // red
-            Color.FromRgb(0x4E, 0xCA, 0x84), // green
-            Color.FromRgb(0xFF, 0xC1, 0x07), // yellow
-            Color.FromRgb(0xFF, 0x8A, 0x50), // orange
-            Color.FromRgb(0xE0, 0x5A, 0xA8), // pink
-            Color.FromRgb(0x00, 0xD9, 0xC0), // teal
-            Color.FromRgb(0xB3, 0x88, 0xFF), // lavender
-            Color.FromRgb(0x7E, 0xD3, 0x57), // lime
-        };
-
-        // Same hues, a bit deeper, so labels in project colours stay readable on light cards.
-        private static readonly Color[] LightDataPalette =
-        {
-            Color.FromRgb(0x1F, 0x8F, 0xD6), // blue
-            Color.FromRgb(0x6E, 0x5B, 0xE0), // purple
-            Color.FromRgb(0xE0, 0x48, 0x48), // red
-            Color.FromRgb(0x22, 0xA5, 0x63), // green
-            Color.FromRgb(0xC9, 0x94, 0x00), // yellow
-            Color.FromRgb(0xE5, 0x70, 0x2A), // orange
-            Color.FromRgb(0xC8, 0x40, 0x8F), // pink
-            Color.FromRgb(0x00, 0xA8, 0x94), // teal
-            Color.FromRgb(0x8F, 0x63, 0xE8), // lavender
-            Color.FromRgb(0x5B, 0xA3, 0x3A), // lime
-        };
+        /// <summary>Number of category colours every palette defines (Theme.Data0..).</summary>
+        public const int DataColorCount = 8;
 
         private static readonly DispatcherTimer DateTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(30) };
         private static ResourceDictionary _palette;
+        private static Color[] _dataPalette = new Color[0];
         private static bool _initialized;
 
         /// <summary>Raised after a different palette has been applied.</summary>
@@ -109,8 +84,13 @@ namespace Zeitmanagement.Helpers
         /// <summary>True if the dark variant is shown.</summary>
         public static bool IsDark { get; private set; } = true;
 
-        /// <summary>Colours for projects in charts and graphs, readable on the current cards.</summary>
-        public static IReadOnlyList<Color> DataPalette => IsDark ? DarkDataPalette : LightDataPalette;
+        /// <summary>
+        /// Category colours of the current palette (Theme.Data0..7) for projects in charts and
+        /// graphs, to be handed out in this order. Each palette's set is validated so that
+        /// neighbours stay distinguishable (also with red-green colour blindness) and every colour
+        /// has at least 3:1 contrast on the cards. A new list instance after every theme change.
+        /// </summary>
+        public static IReadOnlyList<Color> DataPalette => _dataPalette;
 
         public static AppTheme Selected => Parse(Properties.Settings.Default.Theme);
 
@@ -288,6 +268,9 @@ namespace Zeitmanagement.Helpers
                 merged.Insert(0, palette);
 
             _palette = palette;
+            _dataPalette = Enumerable.Range(0, DataColorCount)
+                .Select(i => ((SolidColorBrush)palette["Theme.Data" + i]).Color)
+                .ToArray();
 
             var resources = Application.Current.Resources;
             resources["Theme.MascotAccessory"] = resources["MascotAccessory." + theme] ?? resources["MascotAccessory.None"];

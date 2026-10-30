@@ -142,28 +142,32 @@
                     </StackPanel>
                 </Border>
 
-                <!--  Legende (Farben wie im SapBookingViewModel)  -->
+                <!--  Legende (dieselben Theme-Farben wie im SapBookingViewModel)  -->
                 <WrapPanel Margin="4,16,0,4">
                     <StackPanel Style="{StaticResource LegendItem}">
-                        <Border Background="#5AC8FA" Style="{StaticResource LegendSwatch}" />
+                        <Border Background="{DynamicResource Theme.Data0}" Style="{StaticResource LegendSwatch}" />
                         <TextBlock Style="{StaticResource Text.Muted}" Text="Extern (wird gebucht)" />
                     </StackPanel>
                     <StackPanel Style="{StaticResource LegendItem}">
-                        <Border Background="#8E8BFF" Style="{StaticResource LegendSwatch}" />
+                        <Border Background="{DynamicResource Theme.Data1}" Style="{StaticResource LegendSwatch}" />
                         <TextBlock Style="{StaticResource Text.Muted}" Text="Intern (wird gebucht)" />
                     </StackPanel>
                     <StackPanel Style="{StaticResource LegendItem}">
-                        <Border Background="#4ECA84" Style="{StaticResource LegendSwatch}" />
+                        <Border Background="{DynamicResource Theme.Data2}" Style="{StaticResource LegendSwatch}" />
                         <TextBlock Style="{StaticResource Text.Muted}" Text="Intern, durch parallele externe Arbeit gedeckt (entfällt)" />
                     </StackPanel>
                     <StackPanel Style="{StaticResource LegendItem}">
-                        <Border Background="#FFC107" Style="{StaticResource LegendSwatch}" />
+                        <Border Background="{DynamicResource Theme.Data3}" Style="{StaticResource LegendSwatch}" />
                         <TextBlock Style="{StaticResource Text.Muted}" Text="Intern, mit gespeichertem Überschuss verrechnet (entfällt)" />
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource LegendItem}">
+                        <Border Background="{DynamicResource Theme.DataNeutral}" Style="{StaticResource LegendSwatch}" />
+                        <TextBlock Style="{StaticResource Text.Muted}" Text="Intern, parallel zu internem Projekt mit mehr Stunden (verworfen)" />
                     </StackPanel>
                     <StackPanel Style="{StaticResource LegendItem}">
                         <Border
                             Height="6"
-                            Background="#FF8A50"
+                            Background="{DynamicResource Theme.Data4}"
                             Style="{StaticResource LegendSwatch}" />
                         <TextBlock Style="{StaticResource Text.Muted}" Text="Überschuss entsteht (mehrere externe Projekte parallel)" />
                     </StackPanel>
@@ -229,11 +233,17 @@
                                                 Style="{StaticResource Text.Body}"
                                                 Text="{Binding Name}"
                                                 TextTrimming="CharacterEllipsis" />
-                                            <TextBlock
-                                                Grid.Column="1"
-                                                FontSize="13"
-                                                Foreground="{Binding TypeBrush}"
-                                                Text="{Binding TypeText}" />
+                                            <!--  Farbe als Markierung neben dem Text, der Text selbst bleibt in Textfarbe  -->
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                <Border
+                                                    Width="8"
+                                                    Height="8"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Background="{Binding TypeBrush}"
+                                                    CornerRadius="4" />
+                                                <TextBlock Style="{StaticResource Text.Body}" Text="{Binding TypeText}" />
+                                            </StackPanel>
                                             <TextBlock
                                                 Grid.Column="2"
                                                 Style="{StaticResource Text.Muted}"
@@ -364,7 +374,7 @@
                                                 <Border
                                                     Width="{Binding PoolBarWidth}"
                                                     HorizontalAlignment="Left"
-                                                    Background="#FF8A50"
+                                                    Background="{DynamicResource Theme.Data4}"
                                                     CornerRadius="4" />
                                             </Border>
                                             <TextBlock
