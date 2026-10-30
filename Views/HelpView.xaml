@@ -1,0 +1,321 @@
+<UserControl
+    x:Class="Zeitmanagement.Views.HelpView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helpers="clr-namespace:Zeitmanagement.Helpers"
+    xmlns:local="clr-namespace:Zeitmanagement.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodel="clr-namespace:Zeitmanagement.ViewModel"
+    d:DataContext="{d:DesignInstance Type=viewmodel:HelpViewModel}"
+    d:DesignHeight="900"
+    d:DesignWidth="1200"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <local:NullToVisibilityConverter x:Key="NullToCollapsed" />
+
+        <Style
+            x:Key="ListCard"
+            BasedOn="{StaticResource Card.Flat}"
+            TargetType="Border">
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+
+        <!--  Kleine Kapsel neben der Versionsnummer (Installiert, Neu, In Arbeit)  -->
+        <Style x:Key="Badge" TargetType="Border">
+            <Setter Property="Margin" Value="0,8,6,0" />
+            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="CornerRadius" Value="10" />
+        </Style>
+
+        <Style x:Key="BadgeText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Theme.Text}" />
+        </Style>
+
+        <!--  Eine Änderung: Art als Kapsel mit farbigem Punkt, daneben der Text  -->
+        <DataTemplate x:Key="ChangeTemplate" DataType="{x:Type helpers:ChangelogChange}">
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="108" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    x:Name="tag"
+                    Margin="0,1,0,0"
+                    VerticalAlignment="Top"
+                    Background="{DynamicResource Theme.AccentSoft}"
+                    Style="{StaticResource Badge}">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse
+                            x:Name="dot"
+                            Width="7"
+                            Height="7"
+                            Margin="0,0,6,0"
+                            VerticalAlignment="Center"
+                            Fill="{DynamicResource Theme.Accent}" />
+                        <TextBlock Style="{StaticResource BadgeText}" Text="{Binding Kind}" />
+                    </StackPanel>
+                </Border>
+                <TextBlock
+                    Grid.Column="1"
+                    LineHeight="20"
+                    Style="{StaticResource Text.Body}"
+                    Text="{Binding Text}"
+                    TextWrapping="Wrap" />
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Kind}" Value="Verbessert">
+                    <Setter TargetName="tag" Property="Background" Value="{DynamicResource Theme.SuccessSoft}" />
+                    <Setter TargetName="dot" Property="Fill" Value="{DynamicResource Theme.Success}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Behoben">
+                    <Setter TargetName="tag" Property="Background" Value="{DynamicResource Theme.WarningSoft}" />
+                    <Setter TargetName="dot" Property="Fill" Value="{DynamicResource Theme.Warning}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Eine Version: links Nummer, Datum und Kapseln, rechts Titel und Änderungen  -->
+        <DataTemplate x:Key="ReleaseTemplate" DataType="{x:Type viewmodel:ReleaseItem}">
+            <Border Style="{StaticResource ListCard}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="170" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock
+                            FontSize="18"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource Theme.Text}"
+                            Text="{Binding Version}" />
+                        <TextBlock
+                            Margin="0,2,0,0"
+                            FontSize="12"
+                            Style="{StaticResource Text.Muted}"
+                            Text="{Binding DateText}" />
+                        <WrapPanel>
+                            <Border
+                                Background="{DynamicResource Theme.AccentSoft}"
+                                Style="{StaticResource Badge}"
+                                ToolTip="Diese Version ist gerade installiert."
+                                Visibility="{Binding IsInstalled, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Style="{StaticResource BadgeText}" Text="Installiert" />
+                            </Border>
+                            <Border
+                                Background="{DynamicResource Theme.SuccessSoft}"
+                                Style="{StaticResource Badge}"
+                                ToolTip="Neu seit du zuletzt hier warst."
+                                Visibility="{Binding IsUnseen, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Style="{StaticResource BadgeText}" Text="Neu für dich" />
+                            </Border>
+                            <Border
+                                Background="{DynamicResource Theme.WarningSoft}"
+                                Style="{StaticResource Badge}"
+                                ToolTip="Noch nicht veröffentlicht."
+                                Visibility="{Binding IsUpcoming, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Style="{StaticResource BadgeText}" Text="In Arbeit" />
+                            </Border>
+                        </WrapPanel>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock
+                            Margin="0,0,0,12"
+                            Style="{StaticResource Text.Section}"
+                            Text="{Binding Title}"
+                            TextWrapping="Wrap"
+                            Visibility="{Binding HasTitle, Converter={StaticResource BoolToVis}}" />
+                        <ItemsControl
+                            Focusable="False"
+                            ItemTemplate="{StaticResource ChangeTemplate}"
+                            ItemsSource="{Binding Changes}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!--  Ein Hilfethema: Icon, Titel und Kurzfassung, darunter die einzelnen Punkte  -->
+        <DataTemplate x:Key="TopicTemplate" DataType="{x:Type helpers:HelpTopic}">
+            <Border Style="{StaticResource ListCard}">
+                <DockPanel>
+                    <Button
+                        Margin="12,0,0,0"
+                        VerticalAlignment="Top"
+                        local:Ui.Glyph="&#xE8A7;"
+                        Command="{Binding DataContext.OpenPageCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        CommandParameter="{Binding Page}"
+                        Content="Zur Seite"
+                        DockPanel.Dock="Right"
+                        Style="{StaticResource Button.Ghost}"
+                        Visibility="{Binding Page, Converter={StaticResource NullToCollapsed}}" />
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Border
+                                Width="40"
+                                Height="40"
+                                Background="{DynamicResource Theme.AccentSoft}"
+                                CornerRadius="10">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    FontSize="18"
+                                    Foreground="{DynamicResource Theme.AccentSoftText}"
+                                    Style="{StaticResource Text.Icon}"
+                                    Text="{Binding Glyph}" />
+                            </Border>
+                            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource Text.Section}" Text="{Binding Title}" />
+                                <TextBlock
+                                    Margin="0,2,0,0"
+                                    Style="{StaticResource Text.Muted}"
+                                    Text="{Binding Summary}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </StackPanel>
+                        <ItemsControl
+                            Margin="54,12,0,0"
+                            Focusable="False"
+                            ItemsSource="{Binding Steps}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="18" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse
+                                            Width="5"
+                                            Height="5"
+                                            Margin="0,8,0,0"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Top"
+                                            Fill="{DynamicResource Theme.Accent}" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            LineHeight="20"
+                                            Style="{StaticResource Text.Body}"
+                                            Text="{Binding}"
+                                            TextWrapping="Wrap" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Style="{StaticResource Page}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Style="{StaticResource PageHeader}">
+            <StackPanel
+                VerticalAlignment="Center"
+                DockPanel.Dock="Right"
+                Orientation="Horizontal">
+                <!--  Umschalter zwischen Neuigkeiten und Hilfe  -->
+                <Border
+                    Padding="3"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Theme.Surface}"
+                    BorderBrush="{DynamicResource Theme.CardBorder}"
+                    BorderThickness="1"
+                    CornerRadius="10">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton
+                            local:Ui.Glyph="&#xE789;"
+                            Content="Neuigkeiten"
+                            GroupName="HelpTab"
+                            IsChecked="{Binding IsChangelogTab, Mode=TwoWay}"
+                            Style="{StaticResource Segment}" />
+                        <RadioButton
+                            local:Ui.Glyph="&#xE897;"
+                            Content="Hilfe"
+                            GroupName="HelpTab"
+                            IsChecked="{Binding IsHelpTab, Mode=TwoWay}"
+                            Style="{StaticResource Segment}" />
+                    </StackPanel>
+                </Border>
+                <Grid Width="260" Margin="12,0,0,0">
+                    <TextBox
+                        Padding="32,7,32,7"
+                        local:Ui.Placeholder="{Binding SearchPlaceholder}"
+                        Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock
+                        Margin="11,0,0,0"
+                        HorizontalAlignment="Left"
+                        FontSize="13"
+                        Foreground="{DynamicResource Theme.TextSubtle}"
+                        IsHitTestVisible="False"
+                        Style="{StaticResource Text.Icon}"
+                        Text="&#xE721;" />
+                    <Button
+                        Width="28"
+                        Height="28"
+                        Margin="0,0,3,0"
+                        HorizontalAlignment="Right"
+                        local:Ui.Glyph="&#xE711;"
+                        Command="{Binding ClearSearchCommand}"
+                        Style="{StaticResource Button.IconGhost}"
+                        ToolTip="Suche leeren"
+                        Visibility="{Binding HasSearchText, Converter={StaticResource BoolToVis}}" />
+                </Grid>
+            </StackPanel>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource Text.PageTitle}" Text="Hilfe &amp; Neuigkeiten" />
+                <TextBlock Style="{StaticResource Text.Subtitle}">
+                    <Run Text="Was TimeTrack kann und was sich mit jeder Version geändert hat · installiert ist Version" />
+                    <Run Text="{Binding InstalledVersionText, Mode=OneWay}" />
+                </TextBlock>
+            </StackPanel>
+        </DockPanel>
+
+        <ScrollViewer
+            x:Name="Scroller"
+            Grid.Row="1"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
+            <!--  Zeilen nicht über die ganze Fensterbreite ziehen, damit sie lesbar bleiben  -->
+            <Grid Margin="28,0,28,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MaxWidth="1040" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ItemsControl
+                    Focusable="False"
+                    ItemTemplate="{StaticResource ReleaseTemplate}"
+                    ItemsSource="{Binding Releases}"
+                    Visibility="{Binding IsChangelogTab, Converter={StaticResource BoolToVis}}" />
+                <ItemsControl
+                    Focusable="False"
+                    ItemTemplate="{StaticResource TopicTemplate}"
+                    ItemsSource="{Binding Topics}"
+                    Visibility="{Binding IsHelpTab, Converter={StaticResource BoolToVis}}" />
+
+                <StackPanel
+                    Margin="0,40,0,0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}">
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontSize="32"
+                        Foreground="{DynamicResource Theme.TextSubtle}"
+                        Style="{StaticResource Text.Icon}"
+                        Text="&#xE721;" />
+                    <TextBlock
+                        Margin="0,10,0,0"
+                        HorizontalAlignment="Center"
+                        Style="{StaticResource Text.Muted}"
+                        Text="Nichts gefunden. Versuch es mit einem anderen Begriff." />
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

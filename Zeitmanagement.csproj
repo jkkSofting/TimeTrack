@@ -86,6 +86,7 @@
     <Compile Include="ViewModel\DashboardViewModel.cs" />
     <Compile Include="ViewModel\EntriesViewModel.cs" />
     <Compile Include="ViewModel\FragmentationViewModel.cs" />
+    <Compile Include="ViewModel\HelpViewModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ProjectsViewModel.cs" />
     <Compile Include="ViewModel\QuickSelectItemViewModel.cs" />
@@ -103,6 +104,9 @@
     </Compile>
     <Compile Include="Views\FragmentationView.xaml.cs">
       <DependentUpon>FragmentationView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\HelpView.xaml.cs">
+      <DependentUpon>HelpView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\NullToVisibilityConverter.cs" />
     <Compile Include="Views\NumberFormatterConverter.cs" />
@@ -152,6 +156,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\FragmentationView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\HelpView.xaml">
+      <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\PenguinWindow.xaml">

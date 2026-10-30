@@ -187,6 +187,28 @@
                             GroupName="Nav"
                             IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=settings}"
                             Style="{StaticResource NavItem}" />
+
+                        <TextBlock Style="{StaticResource NavGroup}" Text="INFO" />
+                        <Grid>
+                            <RadioButton
+                                views:Ui.Glyph="&#xE897;"
+                                Command="{Binding SelectViewCommand}"
+                                CommandParameter="Help"
+                                Content="Hilfe &amp; Neuigkeiten"
+                                GroupName="Nav"
+                                IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=help}"
+                                Style="{StaticResource NavItem}" />
+                            <!--  Punkt, solange die Neuigkeiten der installierten Version ungelesen sind  -->
+                            <Ellipse
+                                Width="9"
+                                Height="9"
+                                Margin="0,0,24,0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Fill="{DynamicResource Theme.Accent}"
+                                IsHitTestVisible="False"
+                                Visibility="{Binding Help.HasUnseenNews, Converter={StaticResource BoolToVis}}" />
+                        </Grid>
                     </StackPanel>
                 </ScrollViewer>
             </DockPanel>
