@@ -15,11 +15,30 @@ kompilieren, committen/taggen/pushen, GitHub Release samt `.exe`-Anhang anlegen)
 .\Scripts\Release.ps1 -Version 2026.40.0 -Notes "Kurze Beschreibung der Änderungen"
 ```
 
+Das Skript bricht ab, wenn `Helpers/Changelog.cs` keinen Eintrag für die Version hat (siehe
+Schritt 0), setzt das Datum dieses Eintrags auf den Release-Tag und erzeugt ohne `-Notes` die
+Release-Notes auf GitHub aus dem Eintrag.
+
 Voraussetzungen: Visual Studio (MSBuild), Inno Setup 6 (`ISCC.exe`), und ein im Git Credential
 Manager gecachter GitHub-Login für `jkkSofting` (wird per `git credential fill` gelesen, siehe
 `-PushUser`-Parameter). Bricht bei jedem fehlgeschlagenen Schritt sofort ab, statt halbfertig
 weiterzumachen. Die manuellen Einzelschritte unten sind der Referenz-Ablauf, den das Skript
 nachbildet.
+
+## 0. Neuigkeiten und Hilfe pflegen
+
+Die Seite „Hilfe & Neuigkeiten“ in der App zeigt, was sich mit jeder Version geändert hat, und
+erklärt alle Bereiche. Beides wird **mit jedem Feature** gepflegt, nicht erst beim Release:
+
+- `Helpers/Changelog.cs` — jede für Nutzer sichtbare Änderung als `Neu(...)`, `Verbessert(...)`
+  oder `Behoben(...)`, neueste Version oben. Noch nicht veröffentlichte Änderungen kommen in einen
+  Eintrag für die kommende Version (Format wie der Git-Tag, z. B. `2026.44.0`); die App zeigt ihn
+  in Entwicklungs-Builds als „In Arbeit“.
+- `Helpers/HelpContent.cs` — das Hilfethema der betroffenen Seite anpassen bzw. für neue Seiten
+  ein Thema ergänzen.
+
+Nach einem Update zeigt die App einen Punkt am Navigationseintrag und einen Tray-Hinweis, bis die
+Neuigkeiten geöffnet wurden.
 
 ## 1. Version an beiden Stellen erhöhen
 

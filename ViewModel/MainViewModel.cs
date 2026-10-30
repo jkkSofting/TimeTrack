@@ -22,6 +22,7 @@ namespace Zeitmanagement.ViewModel
         private readonly BaseViewModel _fragmentationView;
         private readonly BaseViewModel _sapBookingView;
         private readonly BaseViewModel _settingsView;
+        private readonly HelpViewModel _helpView;
 
         private object _rightSide;
 
@@ -44,6 +45,9 @@ namespace Zeitmanagement.ViewModel
         /// floating window against the same instance the Quick Select view is bound to.
         /// </summary>
         public QuickSelectViewModel QuickSelectViewModel => (QuickSelectViewModel)_quickSelectView;
+
+        /// <summary>The "Hilfe &amp; Neuigkeiten" page, also bound by the navigation for its "Neu" badge.</summary>
+        public HelpViewModel Help => _helpView;
 
         private string _clock;
         public string Clock
@@ -94,6 +98,7 @@ namespace Zeitmanagement.ViewModel
             _fragmentationView = new FragmentationViewModel();
             _sapBookingView = new SapBookingViewModel();
             _settingsView = new SettingsViewModel();
+            _helpView = new HelpViewModel(SelectViewCommandExecute);
 
             SelectViewCommandExecute("dashboard");
 
@@ -162,11 +167,21 @@ namespace Zeitmanagement.ViewModel
                 case "settings":
                     RightSide = _settingsView;
                     break;
+                case "help":
+                    RightSide = _helpView;
+                    break;
                 default:
                     break;
             }
 
             ((BaseViewModel)RightSide).Refresh();
+        }
+
+        /// <summary>Öffnet „Hilfe &amp; Neuigkeiten“ direkt bei den Neuigkeiten (aus dem Update-Hinweis heraus).</summary>
+        public void OpenChangelog()
+        {
+            _helpView.ShowChangelog();
+            SelectViewCommandExecute("help");
         }
 
         /// <summary>
