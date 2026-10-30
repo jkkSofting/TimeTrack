@@ -68,11 +68,12 @@
             <!--  Kopfzeile: Maskottchen + Titel + Pin  -->
             <Grid>
                 <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
-                    <Image
+                    <ContentControl
                         Width="24"
                         Height="24"
                         Margin="0,0,8,0"
-                        Source="{StaticResource MascotAppIconImage}" />
+                        Focusable="False"
+                        Template="{StaticResource MascotLogoTemplate}" />
                     <TextBlock
                         VerticalAlignment="Center"
                         Style="{StaticResource Text.Section}"

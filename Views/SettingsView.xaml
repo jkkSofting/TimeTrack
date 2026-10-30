@@ -441,11 +441,12 @@
                     <Border Style="{StaticResource SettingsCard}">
                         <StackPanel>
                             <StackPanel Style="{StaticResource CardHeader}">
-                                <Image
+                                <ContentControl
                                     Width="22"
                                     Height="22"
                                     Margin="0,0,10,0"
-                                    Source="{StaticResource MascotAppIconImage}" />
+                                    Focusable="False"
+                                    Template="{StaticResource MascotLogoTemplate}" />
                                 <TextBlock Style="{StaticResource Text.Section}" Text="Pinguin" />
                             </StackPanel>
 
@@ -498,11 +499,12 @@
                                         </Grid.ColumnDefinitions>
                                         <Border Style="{StaticResource Inset}">
                                             <StackPanel Orientation="Horizontal">
-                                                <Image
+                                                <ContentControl
                                                     Width="36"
                                                     Height="36"
                                                     Margin="0,0,12,0"
-                                                    Source="{StaticResource MascotAppIconImage}" />
+                                                    Focusable="False"
+                                                    Template="{StaticResource MascotLogoTemplate}" />
                                                 <StackPanel>
                                                     <TextBlock Style="{StaticResource Text.Value}" Text="{Binding PenguinCaughtCount}" />
                                                     <TextBlock Style="{StaticResource Text.Label}" Text="Pinguin gefangen" />

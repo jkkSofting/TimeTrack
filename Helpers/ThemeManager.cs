@@ -37,6 +37,8 @@ namespace Zeitmanagement.Helpers
     /// (Halloween, Christmas, Easter: <see cref="SeasonDaysBefore"/> days before until
     /// <see cref="SeasonDaysAfter"/> days after) if seasonal themes are enabled. "System"
     /// follows the Windows light/dark app mode and updates when it changes.
+    /// The penguin mascot wears a matching accessory ("Theme.MascotAccessory", drawn in
+    /// Views/Mascot.xaml), e.g. a witch hat for Halloween or a scarf for the football themes.
     /// </summary>
     internal static class ThemeManager
     {
@@ -261,6 +263,9 @@ namespace Zeitmanagement.Helpers
                 merged.Insert(0, palette);
 
             _palette = palette;
+
+            var resources = Application.Current.Resources;
+            resources["Theme.MascotAccessory"] = resources["MascotAccessory." + theme] ?? resources["MascotAccessory.None"];
         }
 
         private static bool IsPalette(ResourceDictionary dictionary) =>
