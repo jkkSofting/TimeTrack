@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Threading;
+using Zeitmanagement.Helpers;
 using Zeitmanagement.MVVM;
 
 namespace Zeitmanagement.ViewModel
@@ -51,6 +52,24 @@ namespace Zeitmanagement.ViewModel
             set => SetProperty(ref _clock, value);
         }
 
+        private string _today;
+        public string Today
+        {
+            get => _today;
+            set => SetProperty(ref _today, value);
+        }
+
+        private string _currentView;
+        /// <summary>Key of the page currently shown (as passed to <see cref="SelectViewCommand"/>, lower case).</summary>
+        public string CurrentView
+        {
+            get => _currentView;
+            private set => SetProperty(ref _currentView, value);
+        }
+
+        /// <summary>Switches between the light and the dark theme (other themes: see the settings).</summary>
+        public DelegateCommand ToggleDarkModeCommand { get; }
+
         private readonly DispatcherTimer _timer;
 
         public MainViewModel()
@@ -63,8 +82,9 @@ namespace Zeitmanagement.ViewModel
             {
                 Interval = TimeSpan.FromSeconds(1)
             };
-            _timer.Tick += (s, e) => Clock = DateTime.Now.ToLongTimeString();
+            _timer.Tick += (s, e) => UpdateClock();
             _timer.Start();
+            UpdateClock();
 
 
             _dashboardView = new DashboardViewModel(OpenDay);
@@ -78,8 +98,26 @@ namespace Zeitmanagement.ViewModel
             SelectViewCommandExecute("dashboard");
 
             SelectViewCommand = new DelegateCommand(SelectViewCommandExecute);
+            ToggleDarkModeCommand = new DelegateCommand(_ => ToggleDarkMode());
 
             GetDbProjects();
+        }
+
+        private void UpdateClock()
+        {
+            var now = DateTime.Now;
+            Clock = now.ToString("HH:mm:ss");
+            Today = now.ToString("dddd, d. MMMM");
+        }
+
+        private static void ToggleDarkMode()
+        {
+            var settings = Properties.Settings.Default;
+            settings.Theme = (ThemeManager.IsDark ? AppTheme.Light : AppTheme.Dark).ToString();
+            // An explicit choice beats the holiday theme, otherwise the click would seem to do nothing.
+            if (ThemeManager.ActiveSeason != null)
+                settings.SeasonalThemesEnabled = false;
+            settings.Save();
         }
 
         private static void GetDbProjects()
@@ -102,6 +140,7 @@ namespace Zeitmanagement.ViewModel
         private void SelectViewCommandExecute(object obj)
         {
             var mode = obj.ToString().ToLower();
+            CurrentView = mode;
 
             switch (mode)
             {
