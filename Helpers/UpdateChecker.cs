@@ -11,12 +11,15 @@ using System.Threading.Tasks;
 namespace Zeitmanagement.Helpers
 {
     /// <summary>
-    /// Talks to the GitHub Releases API for https://github.com/jkkSofting/TimeTrack to find out
+    /// Talks to the GitHub Releases API for https://github.com/jkkSofting/TimeTrack-Releases to find out
     /// whether a newer installer than the running version has been published, and can download it.
     /// </summary>
     internal static class UpdateChecker
     {
-        private const string LatestReleaseApiUrl = "https://api.github.com/repos/jkkSofting/TimeTrack/releases/latest";
+        // Versions up to 2026.45.0 looked at jkkSofting/TimeTrack. The first release that knows this URL is
+        // published in both repos, so those installs pick it up there and move over on their own - see
+        // RELEASING.md before pointing this anywhere else.
+        private const string LatestReleaseApiUrl = "https://api.github.com/repos/jkkSofting/TimeTrack-Releases/releases/latest";
 
         public sealed class UpdateInfo
         {
