@@ -53,7 +53,7 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
-            new ChangelogRelease("2026.46.0", new DateTime(2026, 11, 4), "",
+            new ChangelogRelease("2026.45.1", new DateTime(2026, 11, 4), "",
                 Verbessert("Updates kommen jetzt aus einem eigenen Release-Repository (github.com/jkkSofting/TimeTrack-Releases), in dem auch eine Anleitung und alle Neuigkeiten stehen. Für dich ändert sich nichts.")),
 
             new ChangelogRelease("2026.45.0", new DateTime(2026, 11, 4), "Alle Projekte im Quick Select",
