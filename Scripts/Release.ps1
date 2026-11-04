@@ -2,11 +2,15 @@
 <#
     Führt den kompletten Release-Ablauf aus RELEASING.md aus:
     Version bumpen -> Release-Build -> Installer kompilieren -> committen/taggen/pushen
-    -> GitHub Release samt Installer-.exe anlegen.
+    -> GitHub Release samt Installer-.exe anlegen -> README im Release-Repo aktualisieren.
+
+    Commit und Tag gehen ins Quell-Repo (TimeTrack), das Release samt Installer liegt im oeffentlichen
+    Repo TimeTrack-Releases - dort sucht der UpdateChecker der App.
 
     Beispiel:
         .\Scripts\Release.ps1 -Version 2026.40.0
         .\Scripts\Release.ps1 -Version 2026.40.0 -Notes "Bugfix fuer die Erinnerungen"
+        .\Scripts\Release.ps1 -Version 2026.46.0 -AlsoPublishToLegacyRepo   # Bruecken-Version, siehe RELEASING.md
 #>
 param(
     [Parameter(Mandatory = $true)]
@@ -20,7 +24,16 @@ param(
     [string]$PushUser = "jkkSofting",
 
     [string]$RepoOwner = "jkkSofting",
-    [string]$RepoName = "TimeTrack"
+
+    # Quell-Repo: hier landen Commit und Tag
+    [string]$RepoName = "TimeTrack",
+
+    # Oeffentliches Repo, in dem die Installer als GitHub Release liegen
+    [string]$ReleasesRepoName = "TimeTrack-Releases",
+
+    # Legt das Release zusaetzlich im Quell-Repo an. Clients bis 2026.45.0 suchen noch dort, deshalb muss
+    # die erste Version mit dem neuen UpdateChecker (die Bruecken-Version) in beiden Repos liegen.
+    [switch]$AlsoPublishToLegacyRepo
 )
 
 $ErrorActionPreference = "Stop"
@@ -65,6 +78,16 @@ $entryPattern = 'new ChangelogRelease\("' + [regex]::Escape($Version) + '"(?<bod
 $entry = [regex]::Match($changelog, $entryPattern, 'Singleline')
 if (-not $entry.Success) {
     throw "Helpers\Changelog.cs hat keinen Eintrag fuer $Version. Erst die Neuigkeiten eintragen, siehe RELEASING.md."
+}
+
+# Im Release-Repo muss es schon einen Commit geben (die README), sonst kann GitHub dort keinen Tag fuer das
+# Release anlegen. Besser hier abbrechen als nach Build und Push.
+try {
+    Invoke-RestMethod -Uri "https://api.github.com/repos/$RepoOwner/$ReleasesRepoName/branches/main" `
+        -Headers @{ "User-Agent" = "TimeTrack-Release-Script" } | Out-Null
+}
+catch {
+    throw "Das Release-Repo $RepoOwner/$ReleasesRepoName hat keinen Branch 'main'. Erst .\Scripts\Update-ReleasesReadme.ps1 ausfuehren."
 }
 
 # Ohne -Notes werden die Release-Notes auf GitHub aus dem Changelog-Eintrag erzeugt
@@ -149,8 +172,6 @@ $headers = @{
     "User-Agent"  = "TimeTrack-Release-Script"
 }
 
-Write-Host "==> GitHub Release $Version anlegen" -ForegroundColor Cyan
-
 $releaseBody = @{
     tag_name   = $Version
     name       = $Version
@@ -160,18 +181,43 @@ $releaseBody = @{
 } | ConvertTo-Json
 
 # Als UTF-8-Bytes senden, sonst gehen Umlaute aus dem Changelog unter Windows PowerShell kaputt
-$release = Invoke-RestMethod -Method Post `
-    -Uri "https://api.github.com/repos/$RepoOwner/$RepoName/releases" `
-    -Headers $headers -ContentType "application/json; charset=utf-8" `
-    -Body ([System.Text.Encoding]::UTF8.GetBytes($releaseBody))
-
+$releaseBodyBytes = [System.Text.Encoding]::UTF8.GetBytes($releaseBody)
 $assetName = Split-Path $installerExePath -Leaf
-Write-Host "==> $assetName hochladen" -ForegroundColor Cyan
 
-$uploadUri = "https://uploads.github.com/repos/$RepoOwner/$RepoName/releases/$($release.id)/assets?name=$assetName"
-$asset = Invoke-RestMethod -Method Post -Uri $uploadUri -Headers $headers `
-    -ContentType "application/octet-stream" -InFile $installerExePath
+# Erst das Release-Repo, dann das alte: Sobald Clients im alten Repo die Bruecken-Version sehen, muss sie
+# im neuen schon liegen. Im Release-Repo legt GitHub den Tag selbst an, im Quell-Repo gibt es ihn seit Schritt 4.
+$releaseRepos = @($ReleasesRepoName)
+if ($AlsoPublishToLegacyRepo) { $releaseRepos += $RepoName }
+
+foreach ($releaseRepo in $releaseRepos) {
+    Write-Host "==> GitHub Release $Version in $RepoOwner/$releaseRepo anlegen" -ForegroundColor Cyan
+
+    $release = Invoke-RestMethod -Method Post `
+        -Uri "https://api.github.com/repos/$RepoOwner/$releaseRepo/releases" `
+        -Headers $headers -ContentType "application/json; charset=utf-8" `
+        -Body $releaseBodyBytes
+
+    Write-Host "==> $assetName nach $releaseRepo hochladen" -ForegroundColor Cyan
+
+    $uploadUri = "https://uploads.github.com/repos/$RepoOwner/$releaseRepo/releases/$($release.id)/assets?name=$assetName"
+    $asset = Invoke-RestMethod -Method Post -Uri $uploadUri -Headers $headers `
+        -ContentType "application/octet-stream" -InFile $installerExePath
+
+    Write-Host ""
+    Write-Host "Release: $($release.html_url)" -ForegroundColor Green
+    Write-Host "Asset:   $($asset.browser_download_url)" -ForegroundColor Green
+}
+
+# --- 6. README im Release-Repo aktualisieren ---------------------------------
+
+try {
+    & (Join-Path $PSScriptRoot "Update-ReleasesReadme.ps1") `
+        -UpToVersion $Version -PushUser $PushUser -RepoOwner $RepoOwner -RepoName $ReleasesRepoName
+}
+catch {
+    Write-Warning "Das Release ist veroeffentlicht, nur die README im Release-Repo ist nicht aktualisiert. Nachholen mit: .\Scripts\Update-ReleasesReadme.ps1 -UpToVersion $Version"
+    throw
+}
 
 Write-Host ""
-Write-Host "Fertig. Release: $($release.html_url)" -ForegroundColor Green
-Write-Host "Asset:   $($asset.browser_download_url)" -ForegroundColor Green
+Write-Host "Fertig." -ForegroundColor Green
