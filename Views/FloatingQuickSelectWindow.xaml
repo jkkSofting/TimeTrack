@@ -190,7 +190,7 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <ComboBox ItemsSource="{Binding ConfiguredProjects}" SelectedItem="{Binding PendingNewProject, Mode=TwoWay}" />
+                <ComboBox ItemsSource="{Binding SelectableProjects}" SelectedItem="{Binding PendingNewProject, Mode=TwoWay}" />
 
                 <Button
                     Grid.Column="1"

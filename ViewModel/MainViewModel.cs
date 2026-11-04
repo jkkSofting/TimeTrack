@@ -92,7 +92,9 @@ namespace Zeitmanagement.ViewModel
 
 
             _dashboardView = new DashboardViewModel(OpenDay);
-            _projectView = new ProjectsViewModel();
+            // New/renamed/deleted/(de)activated projects must show up in Quick Select and the
+            // Quick Switch window right away, not only after the next start.
+            _projectView = new ProjectsViewModel(() => QuickSelectViewModel.ReloadProjects());
             _entriesView = new EntriesViewModel();
             _quickSelectView = new QuickSelectViewModel();
             _fragmentationView = new FragmentationViewModel();

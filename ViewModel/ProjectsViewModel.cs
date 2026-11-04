@@ -96,8 +96,16 @@ namespace Zeitmanagement.ViewModel
         public DelegateCommand SaveEditProjectCommand { get; }
         public DelegateCommand CancelEditProjectCommand { get; }
 
-        public ProjectsViewModel()
+        /// <summary>
+        /// Called whenever the set of projects (or which of them are enabled for Quick Select)
+        /// changed, so the Quick Select / Quick Switch lists can pick it up without a restart.
+        /// </summary>
+        private readonly Action _projectsChanged;
+
+        public ProjectsViewModel(Action projectsChanged = null)
         {
+            _projectsChanged = projectsChanged;
+
             ProjectsView = CollectionViewSource.GetDefaultView(Projects);
             ProjectsView.Filter = FilterProject;
 
@@ -176,15 +184,20 @@ namespace Zeitmanagement.ViewModel
                         continue;
                     }
 
-                    Projects.Add(new ProjectItemVM
+                    var item = new ProjectItemVM
                     {
                         Projektname = p.Projektname,
                         Kunde = p.Kunde,
                         Kostentraeger = p.Kostentraeger,
                         IstExtern = p.IstExtern,
+                        QuickSelectAktiv = p.QuickSelectAktiv,
                         Buchungen = count,
                         Stunden = Math.Round(hours, 2)
-                    });
+                    };
+
+                    // Subscribed only after the initializer, so loading doesn't write back to the DB.
+                    item.PropertyChanged += OnProjectItemChanged;
+                    Projects.Add(item);
                 }
                 catch (Exception e)
                 {
@@ -194,6 +207,15 @@ namespace Zeitmanagement.ViewModel
             }
 
             ProjectsView.Refresh();
+        }
+
+        private void OnProjectItemChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(ProjectItemVM.QuickSelectAktiv)) return;
+
+            var item = (ProjectItemVM)sender;
+            MainViewModel.DbInstance.SetProjectQuickSelectActive(item.Projektname, item.QuickSelectAktiv);
+            _projectsChanged?.Invoke();
         }
 
         private bool FilterProject(object obj)
@@ -232,6 +254,7 @@ namespace Zeitmanagement.ViewModel
             IsAddPanelOpen = false;
 
             Refresh();
+            _projectsChanged?.Invoke();
         }
 
         // --- Delete ---
@@ -241,6 +264,7 @@ namespace Zeitmanagement.ViewModel
 
             MainViewModel.DbInstance.DeleteProject(item.Projektname);
             Refresh();
+            _projectsChanged?.Invoke();
         }
 
         // --- Edit ---
@@ -282,6 +306,7 @@ namespace Zeitmanagement.ViewModel
 
             CancelEdit(); // leert Felder & schließt Panel
             Refresh();
+            _projectsChanged?.Invoke();
         }
 
         private void CancelEdit()
@@ -314,6 +339,8 @@ namespace Zeitmanagement.ViewModel
         public string Kunde { get => _kunde; set => SetProperty(ref _kunde, value); }
         public string Kostentraeger { get => _kostentraeger; set => SetProperty(ref _kostentraeger, value); }
         public bool IstExtern { get => _istExtern; set { SetProperty(ref _istExtern, value); RaisePropertyChanged(nameof(TypText)); } }
+        /// <summary>Whether the project is offered in Quick Select and the Quick Switch window.</summary>
+        public bool QuickSelectAktiv { get => _quickSelectAktiv; set => SetProperty(ref _quickSelectAktiv, value); }
         public string TypText => _istExtern ? "Extern" : "Intern";
         public int Buchungen { get => _buchungen; set => SetProperty(ref _buchungen, value); }
         public double Stunden { get => _stunden; set => SetProperty(ref _stunden, value); }
@@ -321,6 +348,7 @@ namespace Zeitmanagement.ViewModel
         private string _projektname, _kunde, _kostentraeger;
         private int _buchungen;
         private bool _istExtern;
+        private bool _quickSelectAktiv;
         private double _stunden;
     }
 }

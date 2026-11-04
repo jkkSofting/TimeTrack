@@ -285,6 +285,20 @@
                             Binding="{Binding Stunden, Converter={StaticResource HoursToHHmm}}"
                             Header="Stunden"
                             SortMemberPath="Stunden" />
+                        <DataGridTemplateColumn
+                            Width="Auto"
+                            Header="Quick Select"
+                            SortMemberPath="QuickSelectAktiv">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox
+                                        HorizontalAlignment="Center"
+                                        IsChecked="{Binding QuickSelectAktiv}"
+                                        Style="{StaticResource Switch}"
+                                        ToolTip="Ein: Das Projekt ist im Quick Select und im Quick Switch wählbar. Aus: Es wird dort nicht angeboten. Bestehende Buchungen bleiben unberührt." />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                         <DataGridTemplateColumn Width="Auto" Header="">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>

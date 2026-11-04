@@ -17,12 +17,12 @@ namespace Zeitmanagement.ViewModel
         public ObservableCollection<QuickSelectItemViewModel> QuickSelectItems { get; set; } = new ObservableCollection<QuickSelectItemViewModel>();
 
         /// <summary>
-        /// Distinct list of the projects that are currently configured in the main window's
-        /// Quick Select slots. Serves as the item source for the floating window's "start a
-        /// project" combo box, so only projects the user has already set up there can be picked
-        /// as one of the (up to <see cref="MaxActiveSlots"/>) parallel-running slots.
+        /// All projects that may be picked for Quick Select, i.e. every project except those the
+        /// user disabled in the project overview, in alphabetical order. Serves as the item
+        /// source for the floating window's "start a project" combo box and as the template for
+        /// each slot's own project list. Kept current by <see cref="ReloadProjects"/>.
         /// </summary>
-        public ObservableCollection<string> ConfiguredProjects { get; } = new ObservableCollection<string>();
+        public ObservableCollection<string> SelectableProjects { get; } = new ObservableCollection<string>();
 
         /// <summary>
         /// The projects currently running, in parallel, up to <see cref="MaxActiveSlots"/> at a
@@ -66,7 +66,7 @@ namespace Zeitmanagement.ViewModel
 
         public override void Refresh()
         {
-
+            ReloadProjects();
         }
 
         #region Floating window state
@@ -168,37 +168,73 @@ namespace Zeitmanagement.ViewModel
         }
 
         /// <summary>
-        /// Rebuilds <see cref="ConfiguredProjects"/> from the slots in place, so the floating
-        /// window's combo box keeps its current selection while stale entries are pruned and
-        /// new ones added, always in alphabetical order.
+        /// Re-reads the project list from the database, so projects that were added, renamed,
+        /// deleted or (de)activated for Quick Select since the last call show up - in the
+        /// floating window's combo box as well as in every slot's project list - without a
+        /// restart. Idle slots whose project no longer qualifies are dropped; a running one
+        /// keeps its project until it is stopped.
         /// </summary>
-        private void UpdateConfiguredProjects()
+        public void ReloadProjects()
         {
-            var desired = QuickSelectItems
-                .Select(q => q.SelectedProject)
-                .Where(p => !string.IsNullOrWhiteSpace(p))
-                .Distinct()
+            var selectable = db.GetProjects()
+                .Where(p => p.QuickSelectAktiv)
+                .Select(p => p.Projektname)
+                .OrderBy(p => p, StringComparer.CurrentCultureIgnoreCase)
                 .ToList();
 
-            for (int i = ConfiguredProjects.Count - 1; i >= 0; i--)
+            // Drop the stale slots before touching any project list: removing a slot's selected
+            // project from its combo box's items would write null back into SelectedProject
+            // (and re-enter SaveProjectnames) halfway through this update.
+            bool removedSlot = false;
+            for (int i = QuickSelectItems.Count - 1; i >= 0; i--)
             {
-                if (!desired.Contains(ConfiguredProjects[i]))
-                    ConfiguredProjects.RemoveAt(i);
+                var slot = QuickSelectItems[i];
+                if (!string.IsNullOrWhiteSpace(slot.SelectedProject) && !slot.IsActive && !selectable.Contains(slot.SelectedProject))
+                {
+                    QuickSelectItems.RemoveAt(i);
+                    removedSlot = true;
+                }
             }
 
-            // Insert at the sorted position instead of appending, so the list stays alphabetical
-            // without replacing the collection (which would reset the combo box selection).
-            var comparer = StringComparer.CurrentCultureIgnoreCase;
-            foreach (var p in desired)
+            SyncSortedInPlace(SelectableProjects, selectable);
+
+            foreach (var slot in QuickSelectItems)
             {
-                if (ConfiguredProjects.Contains(p))
+                var own = slot.SelectedProject;
+                var wanted = !string.IsNullOrWhiteSpace(own) && !selectable.Contains(own)
+                    ? selectable.Concat(new[] { own }).OrderBy(p => p, StringComparer.CurrentCultureIgnoreCase).ToList()
+                    : selectable;
+
+                SyncSortedInPlace(slot.AvailableProjects, wanted);
+            }
+
+            if (removedSlot)
+                SaveProjectnames();
+        }
+
+        /// <summary>
+        /// Makes <paramref name="target"/> equal to the (already sorted) <paramref name="desired"/>
+        /// list by removing, adding and moving single entries instead of replacing the
+        /// collection, so a bound combo box keeps its current selection.
+        /// </summary>
+        private static void SyncSortedInPlace(ObservableCollection<string> target, IList<string> desired)
+        {
+            for (int i = target.Count - 1; i >= 0; i--)
+            {
+                if (!desired.Contains(target[i]))
+                    target.RemoveAt(i);
+            }
+
+            for (int i = 0; i < desired.Count; i++)
+            {
+                if (i < target.Count && target[i] == desired[i])
                     continue;
 
-                int index = 0;
-                while (index < ConfiguredProjects.Count && comparer.Compare(ConfiguredProjects[index], p) <= 0)
-                    index++;
-
-                ConfiguredProjects.Insert(index, p);
+                int existing = target.IndexOf(desired[i]);
+                if (existing > i)
+                    target.Move(existing, i);
+                else
+                    target.Insert(i, desired[i]);
             }
         }
 
@@ -489,9 +525,9 @@ namespace Zeitmanagement.ViewModel
         {
             var item = new QuickSelectItemViewModel(BeginOrResume, StopBooking, PauseBooking, SaveProjectnames, RemoveQuickSelectItem);
 
-            foreach (var project in db.GetProjects())
+            foreach (var project in SelectableProjects)
             {
-                item.AvailableProjects.Add(project.Projektname);
+                item.AvailableProjects.Add(project);
             }
 
             return item;
@@ -538,9 +574,8 @@ namespace Zeitmanagement.ViewModel
             Properties.Settings.Default.QuickSelectProjects = string.Join(";", selectedProjects);
             Properties.Settings.Default.Save();
 
-            // Keep the floating window's project list - and, in case the renamed slot was one of
-            // the currently-running ones, its active-slots display - in sync with the slots.
-            UpdateConfiguredProjects();
+            // In case the renamed slot was one of the currently-running ones, keep the floating
+            // window's active-slots display in sync with the slots.
             UpdateActiveState();
         }
 
@@ -561,7 +596,7 @@ namespace Zeitmanagement.ViewModel
             }
 
             EnsureTrailingEmptyRow();
-            UpdateConfiguredProjects();
+            ReloadProjects();
             UpdateActiveState();
         }
     }

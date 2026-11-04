@@ -49,12 +49,13 @@ namespace Zeitmanagement.Helpers
                 "Start setzt eine Buchung fort, Pause beendet den laufenden Abschnitt und hält die Zeile frei, Stop beendet die Buchung ganz.",
                 "Jeder beendete Abschnitt wird sofort als Buchung gespeichert. Die Laufzeit zählt über Pausen hinweg weiter, bis du stoppst.",
                 "Solange eine Zeile läuft, lässt sich ihr Projekt nicht ändern. Mit dem X entfernst du eine Zeile.",
+                "Zur Auswahl stehen alle Projekte, auch neu angelegte. Ein Projekt, das du unter „Projekte“ für Quick Select ausgeschaltet hast, wird nicht angeboten.",
                 "„Quick Switch öffnen“ zeigt das kleine Schnellwechsel-Fenster."),
 
             new HelpTopic("", "Quick Switch", "QuickSelect",
                 "Das kleine Fenster für den schnellen Projektwechsel nebenbei.",
                 "Öffnen über „Quick Switch öffnen“ im Quick Select oder per Klick auf einen Hinweis des Tray-Symbols. In den Einstellungen kann es auch beim Programmstart aufgehen.",
-                "„Projekt starten“ bietet die Projekte an, die du im Quick Select eingerichtet hast. Die Buchung startet, sobald du eins wählst.",
+                "„Projekt starten“ bietet alle Projekte an, außer denen, die du unter „Projekte“ für Quick Select ausgeschaltet hast. Die Buchung startet, sobald du eins wählst.",
                 "Jedes laufende Projekt hat eigene Knöpfe zum Pausieren, Fortsetzen und Stoppen.",
                 "„Vordergrund“ hält das Fenster über allen anderen Fenstern.",
                 "Teilst du in Teams deinen Bildschirm, bekommt das Fenster einen roten Rahmen – es ist dann im Meeting zu sehen."),
@@ -85,6 +86,7 @@ namespace Zeitmanagement.Helpers
                 "Projekte anlegen, bearbeiten und auswerten.",
                 "„Neues Projekt“ öffnet das Formular: Projektname, Kunde, Kostenträger und ob das Projekt extern ist.",
                 "Über die Symbole in einer Zeile bearbeitest oder löschst du ein Projekt.",
+                "Der Schalter „Quick Select“ bestimmt, ob ein Projekt im Quick Select und im Quick Switch wählbar ist. Neue Projekte sind sofort dabei, Buchungen bleiben auch bei ausgeschaltetem Projekt erhalten.",
                 "Die Suche filtert nach Name, Kunde und Kostenträger. Mit Von/Bis und „Filtern“ siehst du die Stunden in einem Zeitraum."),
 
             new HelpTopic("", "Einstellungen", "Settings",

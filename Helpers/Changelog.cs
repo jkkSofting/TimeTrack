@@ -53,6 +53,11 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.45.0", new DateTime(2026, 11, 4), "Alle Projekte im Quick Select",
+                Neu("Unter „Projekte“ legt der Schalter „Quick Select“ fest, ob ein Projekt im Quick Select und im Quick Switch wählbar ist. Standardmäßig sind alle Projekte dabei."),
+                Verbessert("Das Quick-Switch-Fenster bietet jetzt alle Projekte zum Starten an, nicht mehr nur die im Quick Select eingerichteten."),
+                Behoben("Neu angelegte, umbenannte oder gelöschte Projekte erscheinen sofort im Quick Select und im Quick Switch, nicht erst nach einem Neustart.")),
+
             new ChangelogRelease("2026.44.0", new DateTime(2026, 10, 30), "Designs, Hilfe & Neuigkeiten",
                 Neu("Hilfe & Neuigkeiten: Diese Seite erklärt alle Bereiche von TimeTrack und zeigt, was sich mit jeder Version geändert hat. Nach einem Update weist ein „Neu“ in der Seitenleiste darauf hin."),
                 Neu("Designs: Standard, Wald, Ozean, Halloween, Weihnachten, Ostern, VfB Stuttgart und Werder Bremen – jedes in einer hellen und einer dunklen Variante. Auswahl in den Einstellungen, wird sofort übernommen."),
