@@ -94,7 +94,7 @@ namespace Zeitmanagement.Helpers
                 "Design: Motiv und Helligkeit (wie Windows, hell, dunkel) wählen. Saisonale Designs erscheinen rund um Halloween, Weihnachten und Ostern von selbst, wenn du das nicht abschaltest.",
                 "Start & Fenster: mit Windows starten, normal oder minimiert starten, auf Wunsch gleich mit Quick Switch.",
                 "Automatisierung: Buchungen bei Sperrbildschirm oder Ruhemodus nach einer Wartezeit beenden und erinnern lassen, wenn kein Projekt läuft.",
-                "Updates: TimeTrack sucht regelmäßig nach neuen Versionen. „Installieren“ spielt ein Update ein, die App startet danach neu.",
+                "Updates: TimeTrack sucht regelmäßig nach neuen Versionen. „Installieren“ spielt ein Update ein, die App startet danach neu. Alle Versionen und eine Anleitung stehen auch auf github.com/jkkSofting/TimeTrack-Releases.",
                 "Datensicherung: Sicherungen erstellen und eine vorhandene Sicherung wiederherstellen."),
 
             new HelpTopic("", "Tray-Symbol & Hinweise", null,
