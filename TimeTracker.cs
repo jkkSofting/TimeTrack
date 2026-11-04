@@ -134,6 +134,15 @@ public sealed class TimeTracker : IDisposable
                 cmd.ExecuteNonQuery();
             }
 
+            // Migration: Datenbanken vor "alle Projekte im Quick Select" haben noch keine Spalte quickselect_aktiv.
+            // Bestehende Projekte bleiben dadurch (DEFAULT 1) im Quick Select wählbar.
+            cmd.CommandText = "SELECT COUNT(*) FROM pragma_table_info('projects') WHERE name = 'quickselect_aktiv';";
+            if (Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) == 0)
+            {
+                cmd.CommandText = "ALTER TABLE projects ADD COLUMN quickselect_aktiv INTEGER NOT NULL DEFAULT 1;";
+                cmd.ExecuteNonQuery();
+            }
+
             tx.Commit();
         }
     }
@@ -205,7 +214,7 @@ public sealed class TimeTracker : IDisposable
     {
         using (var cmd = _conn.CreateCommand())
         {
-            cmd.CommandText = "SELECT projektname, kunde, anzahl_stunden, kostentraeger, ist_extern FROM projects ORDER BY projektname;";
+            cmd.CommandText = "SELECT projektname, kunde, anzahl_stunden, kostentraeger, ist_extern, quickselect_aktiv FROM projects ORDER BY projektname;";
             using (var r = cmd.ExecuteReader())
             {
                 while (r.Read())
@@ -216,10 +225,29 @@ public sealed class TimeTracker : IDisposable
                         Kunde = r.GetString(1),
                         AnzahlStunden = r.GetDouble(2),
                         Kostentraeger = r.GetString(3),
-                        IstExtern = r.GetInt32(4) != 0
+                        IstExtern = r.GetInt32(4) != 0,
+                        QuickSelectAktiv = r.GetInt32(5) != 0
                     };
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Legt fest, ob ein Projekt im Quick Select und im Quick-Switch-Fenster wählbar ist.
+    /// Buchungen auf das Projekt bleiben davon unberührt.
+    /// </summary>
+    public void SetProjectQuickSelectActive(string projektname, bool aktiv)
+    {
+        if (string.IsNullOrWhiteSpace(projektname))
+            throw new ArgumentException("Projektname darf nicht leer sein.", nameof(projektname));
+
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = "UPDATE projects SET quickselect_aktiv = @aktiv WHERE projektname = @name;";
+            cmd.Parameters.AddWithValue("@aktiv", aktiv ? 1 : 0);
+            cmd.Parameters.AddWithValue("@name", projektname);
+            cmd.ExecuteNonQuery();
         }
     }
 
@@ -611,6 +639,7 @@ public sealed class TimeTracker : IDisposable
         public double AnzahlStunden { get; set; }
         public string Kostentraeger { get; set; }
         public bool IstExtern { get; set; }     // vom Kunden bezahlt
+        public bool QuickSelectAktiv { get; set; } // im Quick Select / Quick Switch wählbar
     }
 
     public class TimeEntryRow
