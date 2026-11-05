@@ -16,14 +16,6 @@
         <views:EntriesView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type vm:QuickSelectViewModel}">
-        <views:QuickSelectView />
-    </DataTemplate>
-
-    <DataTemplate DataType="{x:Type vm:QuickSelectItemViewModel}">
-        <views:QuickSelectItemView />
-    </DataTemplate>
-
     <DataTemplate DataType="{x:Type vm:FragmentationViewModel}">
         <views:FragmentationView />
     </DataTemplate>

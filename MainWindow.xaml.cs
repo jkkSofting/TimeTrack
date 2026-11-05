@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Zeitmanagement.ViewModel;
+using Zeitmanagement.Views;
 
 namespace Zeitmanagement
 {
@@ -25,6 +26,12 @@ namespace Zeitmanagement
         {
             InitializeComponent();
             DataContext = new MainViewModel();
+        }
+
+        private void OpenQuickSwitch_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel mainViewModel)
+                FloatingQuickSelectWindow.ShowOrActivate(mainViewModel.QuickSelectViewModel, this);
         }
     }
 }

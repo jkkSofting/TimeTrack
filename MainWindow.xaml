@@ -135,14 +135,13 @@
                             GroupName="Nav"
                             IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=dashboard}"
                             Style="{StaticResource NavItem}" />
-                        <RadioButton
-                            views:Ui.Glyph="&#xE768;"
-                            Command="{Binding SelectViewCommand}"
-                            CommandParameter="QuickSelect"
-                            Content="Quick Select"
-                            GroupName="Nav"
-                            IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=quickselect}"
-                            Style="{StaticResource NavItem}" />
+                        <!--  Keine Seite, sondern das kleine Quick-Switch-Fenster zum Starten, Pausieren und Stoppen von Buchungen  -->
+                        <Button
+                            views:Ui.Glyph="&#xE8A7;"
+                            Click="OpenQuickSwitch_Click"
+                            Content="Quick Switch"
+                            Style="{StaticResource NavAction}"
+                            ToolTip="Kleines, immer sichtbares Fenster zum schnellen Wechseln zwischen Projekten öffnen" />
                         <RadioButton
                             views:Ui.Glyph="&#xE787;"
                             Command="{Binding SelectViewCommand}"

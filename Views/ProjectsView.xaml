@@ -287,7 +287,7 @@
                             SortMemberPath="Stunden" />
                         <DataGridTemplateColumn
                             Width="Auto"
-                            Header="Quick Select"
+                            Header="Quick Switch"
                             SortMemberPath="QuickSelectAktiv">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -300,7 +300,7 @@
                                         HorizontalAlignment="Center"
                                         IsChecked="{Binding QuickSelectAktiv, UpdateSourceTrigger=PropertyChanged}"
                                         Style="{StaticResource Switch}"
-                                        ToolTip="Ein: Das Projekt ist im Quick Select und im Quick Switch wählbar. Aus: Es wird dort nicht angeboten. Bestehende Buchungen bleiben unberührt." />
+                                        ToolTip="Ein: Das Projekt ist im Quick Switch wählbar. Aus: Es wird dort nicht angeboten. Bestehende Buchungen bleiben unberührt." />
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>

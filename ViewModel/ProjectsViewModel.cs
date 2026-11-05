@@ -97,8 +97,8 @@ namespace Zeitmanagement.ViewModel
         public DelegateCommand CancelEditProjectCommand { get; }
 
         /// <summary>
-        /// Called whenever the set of projects (or which of them are enabled for Quick Select)
-        /// changed, so the Quick Select / Quick Switch lists can pick it up without a restart.
+        /// Called whenever the set of projects (or which of them are enabled for Quick Switch)
+        /// changed, so the Quick Switch window can pick it up without a restart.
         /// </summary>
         private readonly Action _projectsChanged;
 
@@ -339,7 +339,7 @@ namespace Zeitmanagement.ViewModel
         public string Kunde { get => _kunde; set => SetProperty(ref _kunde, value); }
         public string Kostentraeger { get => _kostentraeger; set => SetProperty(ref _kostentraeger, value); }
         public bool IstExtern { get => _istExtern; set { SetProperty(ref _istExtern, value); RaisePropertyChanged(nameof(TypText)); } }
-        /// <summary>Whether the project is offered in Quick Select and the Quick Switch window.</summary>
+        /// <summary>Whether the project is offered in the Quick Switch window.</summary>
         public bool QuickSelectAktiv { get => _quickSelectAktiv; set => SetProperty(ref _quickSelectAktiv, value); }
         public string TypText => _istExtern ? "Extern" : "Intern";
         public int Buchungen { get => _buchungen; set => SetProperty(ref _buchungen, value); }
