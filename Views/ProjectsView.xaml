@@ -291,9 +291,14 @@
                             SortMemberPath="QuickSelectAktiv">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
+                                    <!--
+                                        UpdateSourceTrigger ausdrücklich auf PropertyChanged: Die Zeilen des DataGrids hängen an
+                                        einer BindingGroup, in der Standard-Bindings erst bei deren Commit schreiben - und der
+                                        gibt es im schreibgeschützten Grid nie. Ohne das bliebe der Schalter wirkungslos.
+                                    -->
                                     <CheckBox
                                         HorizontalAlignment="Center"
-                                        IsChecked="{Binding QuickSelectAktiv}"
+                                        IsChecked="{Binding QuickSelectAktiv, UpdateSourceTrigger=PropertyChanged}"
                                         Style="{StaticResource Switch}"
                                         ToolTip="Ein: Das Projekt ist im Quick Select und im Quick Switch wählbar. Aus: Es wird dort nicht angeboten. Bestehende Buchungen bleiben unberührt." />
                                 </DataTemplate>
