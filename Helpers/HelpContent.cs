@@ -33,9 +33,9 @@ namespace Zeitmanagement.Helpers
             new HelpTopic("", "Erste Schritte", null,
                 "In drei Schritten zur ersten Buchung.",
                 "Lege unter „Projekte“ deine Projekte an – mit Kunde und Kostenträger, und als „extern“ markiert, wenn der Kunde die Zeit bezahlt.",
-                "Wähle im „Quick Select“ die Projekte, an denen du regelmäßig arbeitest. Die Buchung startet, sobald ein Projekt gewählt ist.",
+                "Öffne in der Seitenleiste „Quick Switch“ und wähle ein Projekt. Die Buchung startet, sobald es gewählt ist.",
                 "Wechsle zwischen Projekten mit Pause, Stop und Start. Jede Buchung landet automatisch in der „Stundenbuchung“, wo du sie korrigieren oder ergänzen kannst.",
-                "Für den Alltag praktisch: das kleine Quick-Switch-Fenster, das immer sichtbar bleibt."),
+                "Für den Alltag praktisch: Das kleine Quick-Switch-Fenster kann immer sichtbar bleiben."),
 
             new HelpTopic("", "Dashboard", "Dashboard",
                 "Dein Tag und dein Jahr auf einen Blick.",
@@ -43,20 +43,12 @@ namespace Zeitmanagement.Helpers
                 "Die Heatmap zeigt die Aktivität der letzten 12 Monate. Ein Klick auf einen Tag öffnet ihn in der Stundenbuchung.",
                 "Der Vergleich übersetzt deine Arbeitszeit in etwas Greifbares. Der Würfel holt einen neuen Vergleich."),
 
-            new HelpTopic("", "Quick Select", "QuickSelect",
-                "Projekte starten, pausieren und stoppen – bis zu 4 gleichzeitig.",
-                "Wähle in einer Zeile ein Projekt: Die Buchung startet sofort. Darunter erscheint automatisch eine neue, leere Zeile.",
-                "Start setzt eine Buchung fort, Pause beendet den laufenden Abschnitt und hält die Zeile frei, Stop beendet die Buchung ganz.",
+            new HelpTopic("", "Quick Switch", null,
+                "Das kleine Fenster zum Starten, Pausieren und Stoppen von Buchungen – bis zu 4 Projekte gleichzeitig.",
+                "Öffnen über „Quick Switch“ in der Seitenleiste, über „Quick Switch öffnen“ im Menü des Tray-Symbols oder per Klick auf einen Hinweis des Tray-Symbols. In den Einstellungen kann es auch beim Programmstart aufgehen.",
+                "„Projekt starten“ bietet alle Projekte an, auch neu angelegte – außer denen, die du unter „Projekte“ für Quick Switch ausgeschaltet hast. Die Buchung startet, sobald du eins wählst.",
+                "Jedes laufende Projekt hat eigene Knöpfe: Pause beendet den laufenden Abschnitt und hält das Projekt frei, Start setzt es fort, Stop beendet die Buchung ganz.",
                 "Jeder beendete Abschnitt wird sofort als Buchung gespeichert. Die Laufzeit zählt über Pausen hinweg weiter, bis du stoppst.",
-                "Solange eine Zeile läuft, lässt sich ihr Projekt nicht ändern. Mit dem X entfernst du eine Zeile.",
-                "Zur Auswahl stehen alle Projekte, auch neu angelegte. Ein Projekt, das du unter „Projekte“ für Quick Select ausgeschaltet hast, wird nicht angeboten.",
-                "„Quick Switch öffnen“ zeigt das kleine Schnellwechsel-Fenster."),
-
-            new HelpTopic("", "Quick Switch", "QuickSelect",
-                "Das kleine Fenster für den schnellen Projektwechsel nebenbei.",
-                "Öffnen über „Quick Switch öffnen“ im Quick Select oder per Klick auf einen Hinweis des Tray-Symbols. In den Einstellungen kann es auch beim Programmstart aufgehen.",
-                "„Projekt starten“ bietet alle Projekte an, außer denen, die du unter „Projekte“ für Quick Select ausgeschaltet hast. Die Buchung startet, sobald du eins wählst.",
-                "Jedes laufende Projekt hat eigene Knöpfe zum Pausieren, Fortsetzen und Stoppen.",
                 "„Vordergrund“ hält das Fenster über allen anderen Fenstern.",
                 "Teilst du in Teams deinen Bildschirm, bekommt das Fenster einen roten Rahmen – es ist dann im Meeting zu sehen."),
 
@@ -86,7 +78,7 @@ namespace Zeitmanagement.Helpers
                 "Projekte anlegen, bearbeiten und auswerten.",
                 "„Neues Projekt“ öffnet das Formular: Projektname, Kunde, Kostenträger und ob das Projekt extern ist.",
                 "Über die Symbole in einer Zeile bearbeitest oder löschst du ein Projekt.",
-                "Der Schalter „Quick Select“ bestimmt, ob ein Projekt im Quick Select und im Quick Switch wählbar ist. Neue Projekte sind sofort dabei, Buchungen bleiben auch bei ausgeschaltetem Projekt erhalten.",
+                "Der Schalter „Quick Switch“ bestimmt, ob ein Projekt im Quick-Switch-Fenster wählbar ist. Neue Projekte sind sofort dabei, Buchungen bleiben auch bei ausgeschaltetem Projekt erhalten.",
                 "Die Suche filtert nach Name, Kunde und Kostenträger. Mit Von/Bis und „Filtern“ siehst du die Stunden in einem Zeitraum."),
 
             new HelpTopic("", "Einstellungen", "Settings",
@@ -99,7 +91,7 @@ namespace Zeitmanagement.Helpers
 
             new HelpTopic("", "Tray-Symbol & Hinweise", null,
                 "TimeTrack läuft im Infobereich der Taskleiste weiter.",
-                "Ein Doppelklick auf das Tray-Symbol öffnet das Hauptfenster, das Kontextmenü bietet „Öffnen“ und „Beenden“.",
+                "Ein Doppelklick auf das Tray-Symbol öffnet das Hauptfenster, das Kontextmenü bietet „Öffnen“, „Quick Switch öffnen“ und „Beenden“.",
                 "Hinweise erscheinen, wenn eine Buchung automatisch beendet wurde, wenn länger kein Projekt läuft oder wenn ein Update bereitsteht.",
                 "Ein Klick auf einen Hinweis öffnet das Passende, meist den Quick Switch, bei Updates die Einstellungen."),
 

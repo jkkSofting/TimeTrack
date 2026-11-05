@@ -39,9 +39,9 @@ Die Updates kommen aus den [Releases](https://github.com/jkkSofting/TimeTrack-Re
 ## Erste Schritte
 
 1. Lege unter **Projekte** deine Projekte an – mit Kunde und Kostenträger, und als „extern“ markiert, wenn der Kunde die Zeit bezahlt.
-2. Wähle im **Quick Select** ein Projekt: Die Buchung startet sofort. Mit Pause, Stop und Start wechselst du zwischen Projekten.
+2. Öffne in der Seitenleiste **Quick Switch** und wähle ein Projekt: Die Buchung startet sofort. Mit Pause, Stop und Start wechselst du zwischen Projekten.
 3. Jede Buchung landet automatisch in der **Stundenbuchung**, wo du sie korrigieren oder nachtragen kannst.
-4. Für den Alltag praktisch: das kleine **Quick-Switch-Fenster**, das immer sichtbar bleibt.
+4. Für den Alltag praktisch: Das kleine **Quick-Switch-Fenster** kann immer sichtbar bleiben.
 
 Eine ausführlichere Erklärung aller Bereiche findest du in TimeTrack selbst unter **Hilfe & Neuigkeiten**.
 
@@ -50,12 +50,11 @@ Eine ausführlichere Erklärung aller Bereiche findest du in TimeTrack selbst un
 | Bereich | Wofür |
 | --- | --- |
 | **Dashboard** | Heute gebuchte Zeit, Durchschnitt der letzten Werktage, Top-Projekt und eine Aktivitäts-Heatmap der letzten 12 Monate. |
-| **Quick Select** | Projekte starten, pausieren und stoppen – bis zu 4 gleichzeitig. Jeder beendete Abschnitt wird sofort als Buchung gespeichert. |
-| **Quick Switch** | Kleines, immer sichtbares Fenster für den schnellen Projektwechsel nebenbei. Bekommt einen roten Rahmen, solange du in Teams deinen Bildschirm teilst. |
+| **Quick Switch** | Kleines Fenster zum Starten, Pausieren und Stoppen von Projekten – bis zu 4 gleichzeitig, auf Wunsch immer sichtbar. Jeder beendete Abschnitt wird sofort als Buchung gespeichert. Bekommt einen roten Rahmen, solange du in Teams deinen Bildschirm teilst. |
 | **Stundenbuchung** | Alle Buchungen eines Tages als Zeitstrahl ansehen, nachtragen und korrigieren. Zeigt Pausen (auch die gesetzliche Pause) und die real gearbeitete Zeit. |
 | **Fragmentierung** | Wie zersplittert war dein Tag, deine Woche oder dein Monat? |
 | **SAP-Verrechnung** | Was am Monatsende wirklich im SAP gebucht werden muss: Externe Zeit deckt parallele interne Zeit ab. |
-| **Projekte** | Projekte anlegen, bearbeiten und auswerten; festlegen, welche im Quick Select wählbar sind. |
+| **Projekte** | Projekte anlegen, bearbeiten und auswerten; festlegen, welche im Quick Switch wählbar sind. |
 | **Einstellungen** | Design (hell/dunkel, mehrere Motive, saisonale Designs), Programmstart, Automatisierung, Updates und Datensicherung. |
 | **Tray-Symbol** | TimeTrack läuft im Infobereich weiter und meldet sich, wenn eine Buchung automatisch beendet wurde, länger kein Projekt läuft oder ein Update bereitsteht. |
 | **Der Pinguin** | Das Maskottchen von TimeTrack. Klick ihn rechtzeitig an, dann wirft er dir einen Fisch zu. |
