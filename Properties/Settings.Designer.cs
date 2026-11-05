@@ -25,18 +25,6 @@ namespace Zeitmanagement.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string QuickSelectProjects {
-            get {
-                return ((string)(this["QuickSelectProjects"]));
-            }
-            set {
-                this["QuickSelectProjects"] = value;
-            }
-        }
-
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Normal")]
         public string StartupMode {
             get {

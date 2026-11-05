@@ -12,21 +12,25 @@ using Zeitmanagement.MVVM;
 
 namespace Zeitmanagement.ViewModel
 {
-    internal class QuickSelectViewModel:BaseViewModel
+    /// <summary>
+    /// Backs the floating Quick Switch window: which projects can be started, and the bookings
+    /// currently running or paused. Also runs the lock/sleep auto-stop and the idle reminder.
+    /// </summary>
+    internal class QuickSelectViewModel:BindableBase
     {
-        public ObservableCollection<QuickSelectItemViewModel> QuickSelectItems { get; set; } = new ObservableCollection<QuickSelectItemViewModel>();
-
         /// <summary>
-        /// All projects that may be picked for Quick Select, i.e. every project except those the
+        /// All projects that may be picked in Quick Switch, i.e. every project except those the
         /// user disabled in the project overview, in alphabetical order. Serves as the item
-        /// source for the floating window's "start a project" combo box and as the template for
-        /// each slot's own project list. Kept current by <see cref="ReloadProjects"/>.
+        /// source for the floating window's "start a project" combo box. Kept current by
+        /// <see cref="ReloadProjects"/>.
         /// </summary>
         public ObservableCollection<string> SelectableProjects { get; } = new ObservableCollection<string>();
 
         /// <summary>
-        /// The projects currently running, in parallel, up to <see cref="MaxActiveSlots"/> at a
-        /// time. Serves as the item source for the floating window's slot list.
+        /// The projects currently running or paused, in parallel, up to <see cref="MaxActiveSlots"/>
+        /// at a time, in the order they were started. A slot lives exactly as long as its booking
+        /// is open: it is added on start and dropped on stop. Serves as the item source for the
+        /// floating window's slot list.
         /// </summary>
         public ObservableCollection<QuickSelectItemViewModel> ActiveSlots { get; } = new ObservableCollection<QuickSelectItemViewModel>();
 
@@ -53,7 +57,7 @@ namespace Zeitmanagement.ViewModel
 
             StartNewSlotCommand = new DelegateCommand(StartNewSlotExecute, StartNewSlotCanExecute);
 
-            LoadProjectnames();
+            ReloadProjects();
             UpdateActiveState();
 
             // Keeps the "running since" elapsed display in the floating window live.
@@ -62,11 +66,6 @@ namespace Zeitmanagement.ViewModel
             _statusTimer.Start();
 
             InitializeSessionAutomation();
-        }
-
-        public override void Refresh()
-        {
-            ReloadProjects();
         }
 
         #region Floating window state
@@ -139,8 +138,7 @@ namespace Zeitmanagement.ViewModel
             if (string.IsNullOrWhiteSpace(PendingNewProject)) return false;
             if (ActiveSlots.Count >= MaxActiveSlots) return false;
 
-            var existing = QuickSelectItems.FirstOrDefault(q => q.SelectedProject == PendingNewProject);
-            return existing == null || !existing.IsActive;
+            return FindSlot(PendingNewProject) == null;
         }
 
         private void StartNewSlotExecute(object obj)
@@ -148,19 +146,14 @@ namespace Zeitmanagement.ViewModel
             var project = PendingNewProject;
             if (string.IsNullOrWhiteSpace(project)) return;
 
-            // Reuse an existing slot for this project if the user already configured one in the
-            // main window's Quick Select list; otherwise create one so it's persisted the same
-            // way a manually-added row would be.
-            var slot = QuickSelectItems.FirstOrDefault(q => q.SelectedProject == project);
-            if (slot == null)
+            var now = DateTime.Now;
+            ActiveSlots.Add(new QuickSelectItemViewModel(project, ResumeBooking, StopBooking, PauseBooking)
             {
-                slot = CreateQuickSelectItem();
-                slot.SetSelectedProjectSilently(project);
-                QuickSelectItems.Insert(Math.Max(0, QuickSelectItems.Count - 1), slot);
-                SaveProjectnames();
-            }
+                Start = now.ToString("HH:mm"),
+                StartedAt = now
+            });
 
-            BeginOrResume(project);
+            UpdateActiveState();
 
             // PendingNewProject is deliberately left set to the just-started project: once it's
             // stopped again, the combo box still shows it selected and "Start" is enabled again,
@@ -169,10 +162,9 @@ namespace Zeitmanagement.ViewModel
 
         /// <summary>
         /// Re-reads the project list from the database, so projects that were added, renamed,
-        /// deleted or (de)activated for Quick Select since the last call show up - in the
-        /// floating window's combo box as well as in every slot's project list - without a
-        /// restart. Idle slots whose project no longer qualifies are dropped; a running one
-        /// keeps its project until it is stopped.
+        /// deleted or (de)activated for Quick Switch since the last call show up in the floating
+        /// window's combo box without a restart. A running slot keeps its project until it is
+        /// stopped.
         /// </summary>
         public void ReloadProjects()
         {
@@ -182,34 +174,7 @@ namespace Zeitmanagement.ViewModel
                 .OrderBy(p => p, StringComparer.CurrentCultureIgnoreCase)
                 .ToList();
 
-            // Drop the stale slots before touching any project list: removing a slot's selected
-            // project from its combo box's items would write null back into SelectedProject
-            // (and re-enter SaveProjectnames) halfway through this update.
-            bool removedSlot = false;
-            for (int i = QuickSelectItems.Count - 1; i >= 0; i--)
-            {
-                var slot = QuickSelectItems[i];
-                if (!string.IsNullOrWhiteSpace(slot.SelectedProject) && !slot.IsActive && !selectable.Contains(slot.SelectedProject))
-                {
-                    QuickSelectItems.RemoveAt(i);
-                    removedSlot = true;
-                }
-            }
-
             SyncSortedInPlace(SelectableProjects, selectable);
-
-            foreach (var slot in QuickSelectItems)
-            {
-                var own = slot.SelectedProject;
-                var wanted = !string.IsNullOrWhiteSpace(own) && !selectable.Contains(own)
-                    ? selectable.Concat(new[] { own }).OrderBy(p => p, StringComparer.CurrentCultureIgnoreCase).ToList()
-                    : selectable;
-
-                SyncSortedInPlace(slot.AvailableProjects, wanted);
-            }
-
-            if (removedSlot)
-                SaveProjectnames();
         }
 
         /// <summary>
@@ -239,28 +204,14 @@ namespace Zeitmanagement.ViewModel
         }
 
         /// <summary>
-        /// Recomputes the "currently active" display state from the slots: which ones are
-        /// running in parallel (up to <see cref="MaxActiveSlots"/>) and whether another one can
-        /// still be started.
+        /// Recomputes the "currently active" display state from the slots: whether any is open
+        /// and whether another one (up to <see cref="MaxActiveSlots"/> in parallel) can still be
+        /// started.
         /// </summary>
         private void UpdateActiveState()
         {
-            var active = QuickSelectItems.Where(q => q.IsActive).ToList();
-
-            for (int i = ActiveSlots.Count - 1; i >= 0; i--)
-            {
-                if (!active.Contains(ActiveSlots[i]))
-                    ActiveSlots.RemoveAt(i);
-            }
-
-            foreach (var item in active)
-            {
-                if (!ActiveSlots.Contains(item))
-                    ActiveSlots.Add(item);
-            }
-
-            IsAnyActive = active.Count > 0;
-            CanStartMoreSlots = active.Count < MaxActiveSlots;
+            IsAnyActive = ActiveSlots.Count > 0;
+            CanStartMoreSlots = ActiveSlots.Count < MaxActiveSlots;
 
             StartNewSlotCommand.RaiseCanExecuteChanged();
             UpdateElapsed();
@@ -347,9 +298,9 @@ namespace Zeitmanagement.ViewModel
 
         private void AutoStopActiveBooking(string reason)
         {
-            // Snapshot first: StopBooking mutates QuickSelectItems' IsActive flags as it goes,
-            // so iterating the live query would skip entries.
-            var activeProjects = QuickSelectItems.Where(q => q.IsActive).Select(q => q.SelectedProject).ToList();
+            // Snapshot first: StopBooking removes the slots from ActiveSlots as it goes, so
+            // iterating the live collection would skip entries.
+            var activeProjects = ActiveSlots.Select(q => q.SelectedProject).ToList();
             if (activeProjects.Count == 0)
                 return;
 
@@ -400,43 +351,25 @@ namespace Zeitmanagement.ViewModel
 
         #endregion
 
-        /// <summary>
-        /// Starts a fresh slot's booking, or resumes one that's paused. Unlike a single-active
-        /// model, this never touches other slots: several projects can run in parallel, up to
-        /// <see cref="MaxActiveSlots"/> at once.
-        /// </summary>
-        private void BeginOrResume(string selectedProject)
+        private QuickSelectItemViewModel FindSlot(string project)
         {
-            var calledProject = QuickSelectItems.FirstOrDefault(q => q.SelectedProject != null && q.SelectedProject.Equals(selectedProject));
-            if (calledProject == null) return;
+            return ActiveSlots.FirstOrDefault(q => q.SelectedProject != null && q.SelectedProject.Equals(project));
+        }
+
+        /// <summary>
+        /// Resumes <paramref name="selectedProject"/>'s paused slot with a new segment. Unlike a
+        /// single-active model, this never touches other slots: several projects can run in
+        /// parallel, up to <see cref="MaxActiveSlots"/> at once.
+        /// </summary>
+        private void ResumeBooking(string selectedProject)
+        {
+            var calledProject = FindSlot(selectedProject);
+            if (calledProject == null || !calledProject.IsPaused) return;
 
             var now = DateTime.Now;
-
-            if (calledProject.IsPaused)
-            {
-                calledProject.Start = now.ToString("HH:mm");
-                calledProject.StartedAt = now;
-                calledProject.IsPaused = false;
-            }
-            else if (!calledProject.IsActive)
-            {
-                var activeCount = QuickSelectItems.Count(q => q.IsActive);
-                if (activeCount >= MaxActiveSlots)
-                {
-                    MessageBox.Show(
-                        $"Es können maximal {MaxActiveSlots} Projekte gleichzeitig laufen. Bitte zuerst ein anderes Projekt stoppen.",
-                        "Maximal erreicht",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                    return;
-                }
-
-                calledProject.Start = now.ToString("HH:mm");
-                calledProject.IsActive = true;
-                calledProject.StartedAt = now;
-            }
-            // else: already running - the Start/Resume control is disabled in that case, so
-            // this is just a defensive no-op.
+            calledProject.Start = now.ToString("HH:mm");
+            calledProject.StartedAt = now;
+            calledProject.IsPaused = false;
 
             UpdateActiveState();
         }
@@ -449,8 +382,8 @@ namespace Zeitmanagement.ViewModel
         /// </summary>
         private void StopBooking(string selectedProject)
         {
-            var calledProject = QuickSelectItems.FirstOrDefault(q => q.SelectedProject != null && q.SelectedProject.Equals(selectedProject));
-            if (calledProject == null || !calledProject.IsActive) return;
+            var calledProject = FindSlot(selectedProject);
+            if (calledProject == null) return;
 
             if (!calledProject.IsPaused)
             {
@@ -458,10 +391,7 @@ namespace Zeitmanagement.ViewModel
                 UpdateDatabase(calledProject);
             }
 
-            calledProject.IsActive = false;
-            calledProject.IsPaused = false;
-            calledProject.StartedAt = null;
-            calledProject.ResetAccumulatedElapsed();
+            ActiveSlots.Remove(calledProject);
 
             UpdateActiveState();
         }
@@ -473,8 +403,8 @@ namespace Zeitmanagement.ViewModel
         /// </summary>
         private void PauseBooking(string selectedProject)
         {
-            var calledProject = QuickSelectItems.FirstOrDefault(q => q.SelectedProject != null && q.SelectedProject.Equals(selectedProject));
-            if (calledProject == null || !calledProject.IsActive || calledProject.IsPaused) return;
+            var calledProject = FindSlot(selectedProject);
+            if (calledProject == null || calledProject.IsPaused) return;
 
             var now = DateTime.Now;
             calledProject.End = now.ToString("HH:mm");
@@ -515,89 +445,6 @@ namespace Zeitmanagement.ViewModel
                 t = t.Add(TimeSpan.FromMinutes(1));
 
             return t.ToString(@"hh\:mm", CultureInfo.InvariantCulture);
-        }
-
-        /// <summary>
-        /// Builds a new slot with the current project list, wired to the shared booking/save/
-        /// remove callbacks.
-        /// </summary>
-        private QuickSelectItemViewModel CreateQuickSelectItem()
-        {
-            var item = new QuickSelectItemViewModel(BeginOrResume, StopBooking, PauseBooking, SaveProjectnames, RemoveQuickSelectItem);
-
-            foreach (var project in SelectableProjects)
-            {
-                item.AvailableProjects.Add(project);
-            }
-
-            return item;
-        }
-
-        /// <summary>
-        /// Enforces the "one trailing empty row" invariant: any empty row that isn't last is
-        /// dropped, and a fresh empty row is appended whenever the last row has been filled in.
-        /// </summary>
-        private void EnsureTrailingEmptyRow()
-        {
-            for (int i = QuickSelectItems.Count - 2; i >= 0; i--)
-            {
-                if (string.IsNullOrWhiteSpace(QuickSelectItems[i].SelectedProject))
-                    QuickSelectItems.RemoveAt(i);
-            }
-
-            if (QuickSelectItems.Count == 0 || !string.IsNullOrWhiteSpace(QuickSelectItems[QuickSelectItems.Count - 1].SelectedProject))
-            {
-                QuickSelectItems.Add(CreateQuickSelectItem());
-            }
-        }
-
-        /// <summary>
-        /// Handles the row's delete button: clearing the project lets <see cref="SaveProjectnames"/>
-        /// reconcile the row away via <see cref="EnsureTrailingEmptyRow"/>.
-        /// </summary>
-        private void RemoveQuickSelectItem(QuickSelectItemViewModel item)
-        {
-            if (item.IsActive) return;
-
-            item.SelectedProject = string.Empty;
-        }
-
-        private void SaveProjectnames()
-        {
-            EnsureTrailingEmptyRow();
-
-            // Only the filled-in slots are persisted; the trailing empty row is re-created on load.
-            var selectedProjects = QuickSelectItems
-                .Select(item => item.SelectedProject)
-                .Where(p => !string.IsNullOrWhiteSpace(p));
-
-            Properties.Settings.Default.QuickSelectProjects = string.Join(";", selectedProjects);
-            Properties.Settings.Default.Save();
-
-            // In case the renamed slot was one of the currently-running ones, keep the floating
-            // window's active-slots display in sync with the slots.
-            UpdateActiveState();
-        }
-
-        public void LoadProjectnames()
-        {
-            QuickSelectItems.Clear();
-
-            string serialized = Properties.Settings.Default.QuickSelectProjects;
-            var savedProjects = string.IsNullOrEmpty(serialized)
-                ? Enumerable.Empty<string>()
-                : serialized.Split(';').Where(p => !string.IsNullOrWhiteSpace(p));
-
-            foreach (var project in savedProjects)
-            {
-                var item = CreateQuickSelectItem();
-                item.SetSelectedProjectSilently(project);
-                QuickSelectItems.Add(item);
-            }
-
-            EnsureTrailingEmptyRow();
-            ReloadProjects();
-            UpdateActiveState();
         }
     }
 }
