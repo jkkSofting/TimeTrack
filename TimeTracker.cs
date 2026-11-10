@@ -234,7 +234,7 @@ public sealed class TimeTracker : IDisposable
     }
 
     /// <summary>
-    /// Legt fest, ob ein Projekt im Quick Select und im Quick-Switch-Fenster wählbar ist.
+    /// Legt fest, ob ein Projekt im Quick-Switch-Fenster wählbar ist.
     /// Buchungen auf das Projekt bleiben davon unberührt.
     /// </summary>
     public void SetProjectQuickSelectActive(string projektname, bool aktiv)
@@ -639,7 +639,7 @@ public sealed class TimeTracker : IDisposable
         public double AnzahlStunden { get; set; }
         public string Kostentraeger { get; set; }
         public bool IstExtern { get; set; }     // vom Kunden bezahlt
-        public bool QuickSelectAktiv { get; set; } // im Quick Select / Quick Switch wählbar
+        public bool QuickSelectAktiv { get; set; } // im Quick Switch wählbar
     }
 
     public class TimeEntryRow

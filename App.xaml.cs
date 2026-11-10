@@ -46,7 +46,7 @@ namespace Zeitmanagement
 
             if (startupMode == StartupMode.NormalWithFloating || startupMode == StartupMode.MinimizedWithFloating)
             {
-                QuickSelectView.ShowFloatingWindow(mainViewModel.QuickSelectViewModel, mainWindow);
+                FloatingQuickSelectWindow.ShowOrActivate(mainViewModel.QuickSelectViewModel, mainWindow);
             }
 
             _trayService = new TrayNotificationService(mainWindow);

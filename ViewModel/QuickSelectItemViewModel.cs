@@ -8,58 +8,34 @@ using Zeitmanagement.MVVM;
 
 namespace Zeitmanagement.ViewModel
 {
+    /// <summary>
+    /// One project booking in the floating Quick Switch window. A slot exists exactly as long as
+    /// its booking is running or paused: <see cref="QuickSelectViewModel"/> creates it when the
+    /// project is started and drops it once it is stopped.
+    /// </summary>
     public class QuickSelectItemViewModel:BindableBase
     {
         private readonly Action<string> _begin;
         private readonly Action<string> _stop;
         private readonly Action<string> _pause;
-        private readonly Action _saveProjectnames;
-        private readonly Action<QuickSelectItemViewModel> _removeRequested;
 
-        public QuickSelectItemViewModel(Action<string> begin, Action<string> stop, Action<string> pause, Action saveProjectnames, Action<QuickSelectItemViewModel> removeRequested)
+        public QuickSelectItemViewModel(string project, Action<string> begin, Action<string> stop, Action<string> pause)
         {
+            SelectedProject = project;
             _begin = begin;
             _stop = stop;
             _pause = pause;
-            _saveProjectnames = saveProjectnames;
-            _removeRequested = removeRequested;
 
             StartTimerCommand = new DelegateCommand(StartTimerCommandExecute, StartTimerCommandCanExecute);
-            EndTimerCommand = new DelegateCommand(EndTimerCommandExecute, EndTimerCommandCanExecute);
+            EndTimerCommand = new DelegateCommand(EndTimerCommandExecute);
             PauseTimerCommand = new DelegateCommand(PauseTimerCommandExecute, PauseTimerCommandCanExecute);
-            RemoveCommand = new DelegateCommand(RemoveCommandExecute, RemoveCommandCanExecute);
         }
-
-
-        public ObservableCollection<string> AvailableProjects { get; set; } = new ObservableCollection<string>();
 
         private string _start;
         private string _end;
 
-        private string _selectedProject = "";
-
-        public string SelectedProject
-        {
-            get => _selectedProject;
-            set
-            {
-                // Configuring which project a slot refers to (done in the main window's Quick
-                // Select list) must not, by itself, start a booking - it's just editing the
-                // list of available slots. Only the floating window's "start a project" combo
-                // box (QuickSelectViewModel.PendingNewProject) auto-starts on selection.
-                SetProperty(ref _selectedProject, value);
-                _saveProjectnames.Invoke();
-            }
-        }
-
-        /// <summary>
-        /// Sets the selected project without notifying the parent view model, so restoring
-        /// saved slots on load doesn't trigger a save/reconcile cycle per row.
-        /// </summary>
-        internal void SetSelectedProjectSilently(string project)
-        {
-            SetProperty(ref _selectedProject, project ?? string.Empty, nameof(SelectedProject));
-        }
+        /// <summary>The project this slot books its time on.</summary>
+        public string SelectedProject { get; }
 
         public string End
         {
@@ -80,18 +56,11 @@ namespace Zeitmanagement.ViewModel
             }
         }
 
-        private bool _isActive;
-        public bool IsActive
-        {
-            get => _isActive;
-            set => SetProperty(ref _isActive, value);
-        }
-
         private bool _isPaused;
         /// <summary>
-        /// Whether this slot is reserved (<see cref="IsActive"/>) but currently not accruing
-        /// time - the booking for the segment up to the pause has already been persisted, and
-        /// the slot is waiting to be resumed or stopped.
+        /// Whether this slot is reserved but currently not accruing time - the booking for the
+        /// segment up to the pause has already been persisted, and the slot is waiting to be
+        /// resumed or stopped.
         /// </summary>
         public bool IsPaused
         {
@@ -112,21 +81,20 @@ namespace Zeitmanagement.ViewModel
         /// <summary>
         /// The exact moment this slot's current segment started, used for the elapsed-time
         /// display so it stays correct across midnight instead of re-deriving a start time from
-        /// today's date. Null while the slot isn't actively running (stopped or paused).
+        /// today's date. Null while the slot is paused.
         /// </summary>
         public DateTime? StartedAt { get; set; }
 
         /// <summary>
-        /// Running time accumulated over segments already closed out by a pause, within the
-        /// current start-to-stop session, so <see cref="ElapsedText"/> keeps counting across a
-        /// pause/resume cycle instead of restarting at zero.
+        /// Running time accumulated over segments already closed out by a pause, so
+        /// <see cref="ElapsedText"/> keeps counting across a pause/resume cycle instead of
+        /// restarting at zero.
         /// </summary>
         private TimeSpan _accumulatedElapsed = TimeSpan.Zero;
 
         /// <summary>
         /// Folds the segment since <see cref="StartedAt"/> into <see cref="_accumulatedElapsed"/>.
-        /// Called by the owning view model whenever a running segment ends, whether by pausing
-        /// or stopping.
+        /// Called by the owning view model when a running segment ends by pausing.
         /// </summary>
         public void AccumulateElapsed(DateTime now)
         {
@@ -135,12 +103,6 @@ namespace Zeitmanagement.ViewModel
             var running = now - StartedAt.Value;
             if (running > TimeSpan.Zero) _accumulatedElapsed += running;
         }
-
-        /// <summary>
-        /// Clears the running total once the slot is fully stopped, so a later fresh start
-        /// begins counting from zero again.
-        /// </summary>
-        public void ResetAccumulatedElapsed() => _accumulatedElapsed = TimeSpan.Zero;
 
         private string _elapsedText = "";
         /// <summary>
@@ -157,12 +119,6 @@ namespace Zeitmanagement.ViewModel
 
         public void RefreshElapsed()
         {
-            if (!IsActive)
-            {
-                ElapsedText = "";
-                return;
-            }
-
             var elapsed = _accumulatedElapsed;
             if (!IsPaused && StartedAt != null)
             {
@@ -176,7 +132,6 @@ namespace Zeitmanagement.ViewModel
         public DelegateCommand StartTimerCommand { get; set; }
         public DelegateCommand EndTimerCommand { get; set; }
         public DelegateCommand PauseTimerCommand { get; set; }
-        public DelegateCommand RemoveCommand { get; set; }
 
 
         public void StartTimerCommandExecute(object obj)
@@ -186,19 +141,13 @@ namespace Zeitmanagement.ViewModel
 
         public bool StartTimerCommandCanExecute(object obj)
         {
-            // Enabled to start a fresh slot, or to resume one that's paused - disabled only
-            // while it's actively running (that's what the pause/stop buttons are for).
-            return !IsActive || IsPaused;
+            // Only offered to resume a paused slot - a running one has the pause/stop buttons.
+            return IsPaused;
         }
 
         public void EndTimerCommandExecute(object obj)
         {
             _stop.Invoke(SelectedProject);
-        }
-
-        public bool EndTimerCommandCanExecute(object obj)
-        {
-            return IsActive;
         }
 
         public void PauseTimerCommandExecute(object obj)
@@ -208,17 +157,7 @@ namespace Zeitmanagement.ViewModel
 
         public bool PauseTimerCommandCanExecute(object obj)
         {
-            return IsActive && !IsPaused;
-        }
-
-        public void RemoveCommandExecute(object obj)
-        {
-            _removeRequested?.Invoke(this);
-        }
-
-        public bool RemoveCommandCanExecute(object obj)
-        {
-            return !IsActive && !string.IsNullOrWhiteSpace(SelectedProject);
+            return !IsPaused;
         }
     }
 }

@@ -24,6 +24,7 @@ namespace Zeitmanagement.Helpers
 
             var menu = new Forms.ContextMenuStrip();
             menu.Items.Add("Öffnen", null, (s, e) => RestoreMainWindow());
+            menu.Items.Add("Quick Switch öffnen", null, (s, e) => OpenQuickSwitch());
             menu.Items.Add("Beenden", null, (s, e) => Application.Current.Shutdown());
 
             _notifyIcon = new Forms.NotifyIcon
@@ -55,7 +56,7 @@ namespace Zeitmanagement.Helpers
         private void OpenQuickSwitch()
         {
             if (_mainWindow.DataContext is MainViewModel mainViewModel)
-                QuickSelectView.ShowFloatingWindow(mainViewModel.QuickSelectViewModel, _mainWindow);
+                FloatingQuickSelectWindow.ShowOrActivate(mainViewModel.QuickSelectViewModel, _mainWindow);
         }
 
         public void Dispose()

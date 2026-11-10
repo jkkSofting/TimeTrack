@@ -117,12 +117,6 @@
     <Compile Include="Views\ProjectsView.xaml.cs">
       <DependentUpon>ProjectsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\QuickSelectItemView.xaml.cs">
-      <DependentUpon>QuickSelectItemView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\QuickSelectView.xaml.cs">
-      <DependentUpon>QuickSelectView.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Views\FishWindow.xaml.cs">
       <DependentUpon>FishWindow.xaml</DependentUpon>
     </Compile>
@@ -167,14 +161,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\ProjectsView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\QuickSelectItemView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\QuickSelectView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

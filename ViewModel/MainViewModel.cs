@@ -18,7 +18,7 @@ namespace Zeitmanagement.ViewModel
         private readonly BaseViewModel _dashboardView;
         private readonly BaseViewModel _projectView;
         private readonly BaseViewModel _entriesView;
-        private readonly BaseViewModel _quickSelectView;
+        private readonly QuickSelectViewModel _quickSelect;
         private readonly BaseViewModel _fragmentationView;
         private readonly BaseViewModel _sapBookingView;
         private readonly BaseViewModel _settingsView;
@@ -41,10 +41,11 @@ namespace Zeitmanagement.ViewModel
         }
 
         /// <summary>
-        /// Exposes the shared Quick Select view model so the app-startup logic can open the
-        /// floating window against the same instance the Quick Select view is bound to.
+        /// The view model behind the floating Quick Switch window. It has no page of its own but
+        /// has to outlive any single window, since it tracks the running bookings and the
+        /// lock/sleep automation.
         /// </summary>
-        public QuickSelectViewModel QuickSelectViewModel => (QuickSelectViewModel)_quickSelectView;
+        public QuickSelectViewModel QuickSelectViewModel => _quickSelect;
 
         /// <summary>The "Hilfe &amp; Neuigkeiten" page, also bound by the navigation for its "Neu" badge.</summary>
         public HelpViewModel Help => _helpView;
@@ -92,11 +93,11 @@ namespace Zeitmanagement.ViewModel
 
 
             _dashboardView = new DashboardViewModel(OpenDay);
-            // New/renamed/deleted/(de)activated projects must show up in Quick Select and the
-            // Quick Switch window right away, not only after the next start.
+            // New/renamed/deleted/(de)activated projects must show up in the Quick Switch window
+            // right away, not only after the next start.
             _projectView = new ProjectsViewModel(() => QuickSelectViewModel.ReloadProjects());
             _entriesView = new EntriesViewModel();
-            _quickSelectView = new QuickSelectViewModel();
+            _quickSelect = new QuickSelectViewModel();
             _fragmentationView = new FragmentationViewModel();
             _sapBookingView = new SapBookingViewModel();
             _settingsView = new SettingsViewModel();
@@ -156,9 +157,6 @@ namespace Zeitmanagement.ViewModel
                     break;
                 case "projects":
                     RightSide = _projectView;
-                    break;
-                case "quickselect":
-                    RightSide = _quickSelectView;
                     break;
                 case "fragmentation":
                     RightSide = _fragmentationView;

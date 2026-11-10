@@ -316,6 +316,41 @@
         </Setter>
     </Style>
 
+    <!--  Eintrag der Seitenleiste, der keine Seite zeigt, sondern etwas öffnet (z. B. das Quick-Switch-Fenster)  -->
+    <Style x:Key="NavAction" TargetType="Button">
+        <Setter Property="Foreground" Value="{DynamicResource Theme.SidebarText}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Margin" Value="10,2" />
+        <Setter Property="FontSize" Value="13.5" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border
+                            x:Name="bd"
+                            Background="Transparent"
+                            CornerRadius="{StaticResource ControlRadius}" />
+                        <StackPanel Margin="14,9" Orientation="Horizontal">
+                            <TextBlock
+                                Width="20"
+                                Margin="0,0,12,0"
+                                Foreground="{TemplateBinding Foreground}"
+                                Style="{StaticResource Text.Icon}"
+                                Text="{TemplateBinding views:Ui.Glyph}" />
+                            <ContentPresenter VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </StackPanel>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource Theme.SidebarHover}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!--  Segment eines Umschalters (mehrere RadioButtons in einer gemeinsamen Umrandung)  -->
     <Style x:Key="Segment" TargetType="RadioButton">
         <Setter Property="Foreground" Value="{DynamicResource Theme.TextMuted}" />

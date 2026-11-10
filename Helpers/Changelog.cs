@@ -53,6 +53,13 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.45.3", new DateTime(2026, 11, 5), "Quick Switch statt Quick Select",
+                Neu("„Quick Switch“ in der Seitenleiste öffnet das Quick-Switch-Fenster direkt, ebenso „Quick Switch öffnen“ im Menü des Tray-Symbols."),
+                Verbessert("Die Seite „Quick Select“ entfällt: Welche Projekte im Quick Switch wählbar sind, bestimmt allein der Schalter unter „Projekte“. Er heißt jetzt „Quick Switch“.")),
+
+            new ChangelogRelease("2026.45.2", new DateTime(2026, 11, 5), "",
+                Behoben("Der Schalter „Quick Select“ unter „Projekte“ wurde nicht übernommen: Ein ausgeschaltetes Projekt blieb im Quick Switch und im Quick Select wählbar. Der Schalter wirkt jetzt sofort.")),
+
             new ChangelogRelease("2026.45.1", new DateTime(2026, 11, 4), "",
                 Verbessert("Updates kommen jetzt aus einem eigenen Release-Repository (github.com/jkkSofting/TimeTrack-Releases), in dem auch eine Anleitung und alle Neuigkeiten stehen. Für dich ändert sich nichts.")),
 
