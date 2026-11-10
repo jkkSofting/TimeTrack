@@ -168,6 +168,14 @@
                             GroupName="Nav"
                             IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=sap}"
                             Style="{StaticResource NavItem}" />
+                        <RadioButton
+                            views:Ui.Glyph="&#xE9F9;"
+                            Command="{Binding SelectViewCommand}"
+                            CommandParameter="Controlling"
+                            Content="Projektcontrolling"
+                            GroupName="Nav"
+                            IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=controlling}"
+                            Style="{StaticResource NavItem}" />
 
                         <TextBlock Style="{StaticResource NavGroup}" Text="VERWALTUNG" />
                         <RadioButton

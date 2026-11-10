@@ -14,6 +14,30 @@ namespace Zeitmanagement.Helpers
         /// <summary>Letzter bekannter Stand eines Kostenträgers, der im gewählten Import fehlt (eigenes, älteres Quelldatum).</summary>
         public bool IsLastKnown { get; set; }
 
+        /// <summary>
+        /// Kontext des SAP-Projekts zum Import dieser Beobachtung (oder <c>null</c>). Alle Beträge darin gelten für das
+        /// ganze Projekt, nicht für dieses PSP-Element, und werden nie summiert.
+        /// </summary>
+        public ParentContext Context { get; set; }
+
+        public string Manager => Context == null ? null : Context.Manager;
+        public string ProjectStatus => Context == null ? null : Context.Status;
+        public string SapCustomer => Context == null ? null : Context.Customer;
+
+        /// <summary>Diese Zeile wurde durch eine Korrektur mit gleichem Quellstand überholt.</summary>
+        public bool IsSuperseded => !Observation.IsActive;
+
+        /// <summary>Hinweis zur Herkunft der Zeile (letzter bekannter Stand bzw. überholte Revision), sonst leer.</summary>
+        public string NoteText
+        {
+            get
+            {
+                if (IsSuperseded) return "Korrigiert in Import #" + Observation.ActiveImportId.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                if (IsLastKnown) return "Letzter bekannter Stand";
+                return string.Empty;
+            }
+        }
+
         public string CarrierKey => Observation.CarrierKey;
         public string CarrierText => Observation.CarrierText;
         public string PspName => Observation.PspName;

@@ -92,6 +92,9 @@ namespace Zeitmanagement.ViewModel
         public DelegateCommand FilterProjectsCommand { get; }
         public DelegateCommand ResetProjectsFilterCommand { get; }
 
+        /// <summary>Öffnet „Projektcontrolling“ mit dem Kostenträger des Projekts.</summary>
+        public DelegateCommand OpenControllingCommand { get; }
+
         public DelegateCommand StartEditProjectCommand { get; }
         public DelegateCommand SaveEditProjectCommand { get; }
         public DelegateCommand CancelEditProjectCommand { get; }
@@ -102,9 +105,12 @@ namespace Zeitmanagement.ViewModel
         /// </summary>
         private readonly Action _projectsChanged;
 
-        public ProjectsViewModel(Action projectsChanged = null)
+        private readonly Action<string> _openControlling;
+
+        public ProjectsViewModel(Action projectsChanged = null, Action<string> openControlling = null)
         {
             _projectsChanged = projectsChanged;
+            _openControlling = openControlling;
 
             ProjectsView = CollectionViewSource.GetDefaultView(Projects);
             ProjectsView.Filter = FilterProject;
@@ -113,6 +119,10 @@ namespace Zeitmanagement.ViewModel
             ToggleAddPanelCommand = new DelegateCommand(_ => IsAddPanelOpen = !IsAddPanelOpen);
             AddProjectCommand = new DelegateCommand(_ => AddProject(), _ => CanAddProject());
             DeleteProjectCommand = new DelegateCommand(p => DeleteProject(p as ProjectItemVM), p => p is ProjectItemVM);
+
+            OpenControllingCommand = new DelegateCommand(
+                p => _openControlling?.Invoke(((ProjectItemVM)p).Kostentraeger),
+                p => p is ProjectItemVM && _openControlling != null);
 
             StartEditProjectCommand = new DelegateCommand(p => StartEdit(p as ProjectItemVM), p => p is ProjectItemVM);
             SaveEditProjectCommand = new DelegateCommand(_ => SaveEdit(), _ => CanSaveEdit());

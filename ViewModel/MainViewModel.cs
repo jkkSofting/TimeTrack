@@ -21,6 +21,7 @@ namespace Zeitmanagement.ViewModel
         private readonly QuickSelectViewModel _quickSelect;
         private readonly BaseViewModel _fragmentationView;
         private readonly BaseViewModel _sapBookingView;
+        private readonly ProjectControllingViewModel _controllingView;
         private readonly BaseViewModel _settingsView;
         private readonly HelpViewModel _helpView;
 
@@ -95,7 +96,8 @@ namespace Zeitmanagement.ViewModel
             _dashboardView = new DashboardViewModel(OpenDay);
             // New/renamed/deleted/(de)activated projects must show up in the Quick Switch window
             // right away, not only after the next start.
-            _projectView = new ProjectsViewModel(() => QuickSelectViewModel.ReloadProjects());
+            _controllingView = new ProjectControllingViewModel(OpenDay);
+            _projectView = new ProjectsViewModel(() => QuickSelectViewModel.ReloadProjects(), OpenControlling);
             _entriesView = new EntriesViewModel();
             _quickSelect = new QuickSelectViewModel();
             _fragmentationView = new FragmentationViewModel();
@@ -164,6 +166,9 @@ namespace Zeitmanagement.ViewModel
                 case "sap":
                     RightSide = _sapBookingView;
                     break;
+                case "controlling":
+                    RightSide = _controllingView;
+                    break;
                 case "settings":
                     RightSide = _settingsView;
                     break;
@@ -182,6 +187,15 @@ namespace Zeitmanagement.ViewModel
         {
             _helpView.ShowChangelog();
             SelectViewCommandExecute("help");
+        }
+
+        /// <summary>
+        /// Öffnet „Projektcontrolling“ mit dem PSP-Element, das der Kostenträger enthält (aus der Projektseite heraus).
+        /// </summary>
+        private void OpenControlling(string kostentraeger)
+        {
+            SelectViewCommandExecute("controlling");
+            _controllingView.FocusCarrier(kostentraeger);
         }
 
         /// <summary>

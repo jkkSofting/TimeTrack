@@ -24,6 +24,10 @@
         <views:SapBookingView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type vm:ProjectControllingViewModel}">
+        <views:ProjectControllingView />
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
         <views:SettingsView />
     </DataTemplate>

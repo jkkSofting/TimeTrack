@@ -102,6 +102,7 @@
     <Compile Include="ViewModel\FragmentationViewModel.cs" />
     <Compile Include="ViewModel\HelpViewModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
+    <Compile Include="ViewModel\ProjectControllingViewModel.cs" />
     <Compile Include="ViewModel\ProjectsViewModel.cs" />
     <Compile Include="ViewModel\QuickSelectItemViewModel.cs" />
     <Compile Include="ViewModel\SapBookingViewModel.cs" />
@@ -127,6 +128,9 @@
     <Compile Include="Views\Ui.cs" />
     <Compile Include="Views\PenguinWindow.xaml.cs">
       <DependentUpon>PenguinWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ProjectControllingView.xaml.cs">
+      <DependentUpon>ProjectControllingView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ProjectsView.xaml.cs">
       <DependentUpon>ProjectsView.xaml</DependentUpon>
@@ -171,6 +175,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\PenguinWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ProjectControllingView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
