@@ -117,6 +117,38 @@ namespace Zeitmanagement.Tests
             Assert.True(data.XMin < T3 && data.XMax > T3);
         }
 
+        // ---------- Kostenträger-Filter ----------
+
+        [Fact]
+        public void Hidden_carriers_are_announced_and_an_all_hidden_chart_explains_itself()
+        {
+            var some = ControllingChartBuilder.Build(
+                new[] { Input("A", null, Obs("A", T1, 1000m, 500m)) }, null, ChartMode.Percent, true, null, ControllingChartBuilder.MaxSeries, hiddenByFilter: 2);
+
+            Assert.Contains(some.Notes, n => n.Contains("2 Kostenträger sind im Diagramm ausgeblendet"));
+            Assert.True(some.HasData);
+
+            var none = ControllingChartBuilder.Build(new ChartRowInput[0], null, ChartMode.Percent, true, null, ControllingChartBuilder.MaxSeries, hiddenByFilter: 3);
+
+            Assert.False(none.HasData);
+            Assert.Contains("Alle Kostenträger sind im Diagramm ausgeblendet", none.EmptyText);
+        }
+
+        [Fact]
+        public void A_higher_series_limit_shows_more_lines_when_the_user_picked_carriers()
+        {
+            var rows = Enumerable.Range(1, 14)
+                .Select(i => Input("R" + i.ToString("00"), null, Obs("R" + i.ToString("00"), T1, 1000m, i * 50m)))
+                .ToList();
+
+            var normal = Percent(rows);
+            var curated = ControllingChartBuilder.Build(rows, null, ChartMode.Percent, true, null, 16);
+
+            Assert.Equal(ControllingChartBuilder.MaxSeries, normal.Series.Count(s => s.Kind == ChartSeriesKind.Actual));
+            Assert.Equal(14, curated.Series.Count(s => s.Kind == ChartSeriesKind.Actual));
+            Assert.DoesNotContain(curated.Notes, n => n.Contains("Gezeigt werden"));
+        }
+
         // ---------- Stunden ----------
 
         [Fact]

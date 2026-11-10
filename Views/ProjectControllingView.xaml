@@ -561,6 +561,15 @@
                                         ToolTip="Stunden: aus Geld umgerechnet (Stundensatz des Projekts) und lokal gebuchte Stunden" />
                                 </StackPanel>
                             </Border>
+                            <ToggleButton
+                                Margin="0,0,8,6"
+                                local:Ui.Glyph="&#xE71C;"
+                                AutomationProperties.Name="Kostenträger im Diagramm ein- und ausblenden"
+                                Content="{Binding ChartCarrierSummary}"
+                                IsChecked="{Binding IsChartCarrierPanelOpen, Mode=TwoWay}"
+                                Style="{StaticResource Toggle.Accent}"
+                                ToolTip="Einzelne Kostenträger im Diagramm ein- oder ausblenden"
+                                Visibility="{Binding IsChartView, Converter={StaticResource BoolToVis}}" />
                             <Button
                                 Margin="0,0,0,6"
                                 Command="{Binding ResetFiltersCommand}"
@@ -815,11 +824,85 @@
 
                         <!--  Diagramm: Stand über die SAP-Daten, relativ oder in Stunden  -->
                         <Grid Grid.Row="2" Visibility="{Binding IsChartView, Converter={StaticResource BoolToVis}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="*" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
+
+                            <!--  Kostenträger-Filter des Diagramms (Häkchen = sichtbar)  -->
+                            <Border
+                                Width="280"
+                                Margin="0,0,10,0"
+                                Style="{StaticResource Inset}"
+                                Visibility="{Binding IsChartCarrierPanelOpen, Converter={StaticResource BoolToVis}}">
+                                <DockPanel>
+                                    <TextBlock
+                                        DockPanel.Dock="Top"
+                                        Style="{StaticResource Text.Label}"
+                                        Text="KOSTENTRÄGER IM DIAGRAMM" />
+                                    <Grid Margin="0,6,0,0" DockPanel.Dock="Top">
+                                        <TextBox
+                                            Padding="30,6,8,6"
+                                            local:Ui.Placeholder="Kostenträger suchen"
+                                            AutomationProperties.Name="Kostenträger in der Liste suchen"
+                                            Text="{Binding ChartCarrierSearch, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBlock
+                                            Margin="10,0,0,0"
+                                            HorizontalAlignment="Left"
+                                            FontSize="13"
+                                            Foreground="{DynamicResource Theme.TextSubtle}"
+                                            IsHitTestVisible="False"
+                                            Style="{StaticResource Text.Icon}"
+                                            Text="&#xE721;" />
+                                    </Grid>
+                                    <StackPanel
+                                        Margin="0,6,0,6"
+                                        DockPanel.Dock="Top"
+                                        Orientation="Horizontal">
+                                        <Button
+                                            Command="{Binding ChartShowAllCommand}"
+                                            Content="Alle einblenden"
+                                            ToolTip="Alle in der Liste gezeigten Kostenträger einblenden" />
+                                        <Button
+                                            Margin="6,0,0,0"
+                                            Command="{Binding ChartHideAllCommand}"
+                                            Content="Alle ausblenden"
+                                            ToolTip="Alle in der Liste gezeigten Kostenträger ausblenden (danach einzelne anhaken)" />
+                                    </StackPanel>
+                                    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                                        <ItemsControl ItemsSource="{Binding ChartCarriersView}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox
+                                                        Margin="0,3"
+                                                        IsChecked="{Binding IsShown, UpdateSourceTrigger=PropertyChanged}"
+                                                        ToolTip="{Binding Detail}">
+                                                        <StackPanel>
+                                                            <TextBlock
+                                                                FontWeight="SemiBold"
+                                                                Style="{StaticResource Text.Body}"
+                                                                Text="{Binding Text}"
+                                                                TextTrimming="CharacterEllipsis" />
+                                                            <TextBlock
+                                                                FontSize="11"
+                                                                Style="{StaticResource Text.Muted}"
+                                                                Text="{Binding Detail}"
+                                                                TextTrimming="CharacterEllipsis" />
+                                                        </StackPanel>
+                                                    </CheckBox>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </DockPanel>
+                            </Border>
+
                             <local:XyChart
+                                Grid.Column="1"
                                 MinHeight="240"
                                 AutomationProperties.HelpText="Beim Überfahren zeigt ein Hinweis den Stand am Punkt bzw. alle Werte zum nächsten SAP-Datum. Ein Klick wählt die Zeile. Die genauen Werte stehen in der Tabelle."
                                 AutomationProperties.Name="Diagramm: Stand der PSP-Elemente über die SAP-Stände"
@@ -827,6 +910,7 @@
                                 SeriesClickedCommand="{Binding SelectSeriesCommand}" />
                             <TextBlock
                                 Grid.Row="1"
+                                Grid.ColumnSpan="2"
                                 Margin="0,8,0,0"
                                 Style="{StaticResource WrapMuted}"
                                 Text="{Binding ChartNoteText}"

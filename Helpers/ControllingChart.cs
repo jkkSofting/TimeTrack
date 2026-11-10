@@ -134,7 +134,8 @@ namespace Zeitmanagement.Helpers
             ChartMode mode,
             bool showComputedHours,
             IReadOnlyList<LocalHoursPoint> localCumulative,
-            int maxSeries = MaxSeries)
+            int maxSeries = MaxSeries,
+            int hiddenByFilter = 0)
         {
             rows = rows ?? new List<ChartRowInput>();
             localCumulative = localCumulative ?? new List<LocalHoursPoint>();
@@ -215,7 +216,11 @@ namespace Zeitmanagement.Helpers
             if (candidates.Count > shown.Count)
             {
                 notes.Add("Gezeigt werden " + shown.Count.ToString(CultureInfo.InvariantCulture) + " von " + candidates.Count.ToString(CultureInfo.InvariantCulture) +
-                          " Zeilen (die mit dem höchsten Stand). Mit Suche und Filtern eingrenzen oder in der Tabelle eine Zeile wählen.");
+                          " Zeilen (die mit dem höchsten Stand). Mit Suche, Filtern oder dem Kostenträger-Filter eingrenzen.");
+            }
+            if (hiddenByFilter > 0)
+            {
+                notes.Add(hiddenByFilter.ToString(CultureInfo.InvariantCulture) + " Kostenträger sind im Diagramm ausgeblendet (Kostenträger-Filter).");
             }
             if (mode == ChartMode.Percent && withoutValue > 0)
                 notes.Add(withoutValue.ToString(CultureInfo.InvariantCulture) + " Zeile(n) ohne definierten Stand (kein positiver Plan oder Ist nicht geliefert) fehlen im Diagramm.");
@@ -234,7 +239,7 @@ namespace Zeitmanagement.Helpers
 
             if (!data.HasData)
             {
-                data.EmptyText = EmptyReason(rows.Count, mode, showComputedHours, withoutRate, withoutValue, selected != null);
+                data.EmptyText = EmptyReason(rows.Count, mode, showComputedHours, withoutRate, withoutValue, hiddenByFilter);
             }
 
             return data;
@@ -441,8 +446,9 @@ namespace Zeitmanagement.Helpers
             }
         }
 
-        private static string EmptyReason(int rowCount, ChartMode mode, bool showComputedHours, int withoutRate, int withoutValue, bool hasSelection)
+        private static string EmptyReason(int rowCount, ChartMode mode, bool showComputedHours, int withoutRate, int withoutValue, int hiddenByFilter)
         {
+            if (rowCount == 0 && hiddenByFilter > 0) return "Alle Kostenträger sind im Diagramm ausgeblendet. Im Kostenträger-Filter wieder einblenden.";
             if (rowCount == 0) return "Keine Zeilen zum Zeichnen. Filter zurücksetzen oder einen Import wählen.";
             if (mode == ChartMode.Percent)
                 return "Kein Stand zu zeichnen: Für keine Zeile ist der Verbrauch definiert (es braucht einen positiven Plan und ein gemeldetes Ist).";

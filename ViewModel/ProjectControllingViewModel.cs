@@ -79,6 +79,41 @@ namespace Zeitmanagement.ViewModel
         public Action<ProjectRateItem> RateEdited { get; set; }
     }
 
+    /// <summary>Ein Kostenträger in der Auswahlliste des Diagramms: Häkchen = im Diagramm sichtbar.</summary>
+    internal sealed class ChartCarrierItem : BindableBase
+    {
+        private bool _isShown;
+
+        public ChartCarrierItem(string key, string text, string detail, bool isShown)
+        {
+            Key = key;
+            Text = text;
+            Detail = detail;
+            _isShown = isShown;
+        }
+
+        public string Key { get; }
+        public string Text { get; }
+        public string Detail { get; }
+
+        public bool IsShown
+        {
+            get => _isShown;
+            set { if (SetProperty(ref _isShown, value)) Changed?.Invoke(this); }
+        }
+
+        /// <summary>Wird bei einem Klick auf das Häkchen ausgelöst (nicht bei Sammelaktionen).</summary>
+        public Action<ChartCarrierItem> Changed { get; set; }
+
+        /// <summary>Setzt das Häkchen ohne Rückruf; für „Alle ein-/ausblenden“, das danach einmal neu zeichnet.</summary>
+        public void SetSilently(bool value)
+        {
+            if (_isShown == value) return;
+            _isShown = value;
+            RaisePropertyChanged(nameof(IsShown));
+        }
+    }
+
     /// <summary>Eine Zeile des Kostenverlaufs: ein Importstand eines PSP-Elements mit Differenz zum vorigen Stand.</summary>
     internal sealed class CostHistoryItem
     {
@@ -158,6 +193,11 @@ namespace Zeitmanagement.ViewModel
             OpenDayCommand = new DelegateCommand(OpenDay, p => p is HoursBucket && _openDay != null);
             DismissMessageCommand = new DelegateCommand(_ => StatusMessage = null);
             SelectSeriesCommand = new DelegateCommand(SelectSeries, p => p is string);
+            ChartShowAllCommand = new DelegateCommand(_ => SetListedCarriers(true));
+            ChartHideAllCommand = new DelegateCommand(_ => SetListedCarriers(false));
+
+            ChartCarriersView = CollectionViewSource.GetDefaultView(ChartCarriers);
+            ChartCarriersView.Filter = FilterChartCarrier;
             ResetHoursRangeCommand = new DelegateCommand(_ => { HoursStartText = HoursEndText = string.Empty; });
         }
 
@@ -176,6 +216,10 @@ namespace Zeitmanagement.ViewModel
         public DelegateCommand DismissMessageCommand { get; }
         /// <summary>Wählt die Zeile zu einer angeklickten Linie des Diagramms (Kostenträger-Schlüssel als Parameter).</summary>
         public DelegateCommand SelectSeriesCommand { get; }
+        /// <summary>Blendet alle (in der Liste gerade angezeigten) Kostenträger im Diagramm ein.</summary>
+        public DelegateCommand ChartShowAllCommand { get; }
+        /// <summary>Blendet alle (in der Liste gerade angezeigten) Kostenträger im Diagramm aus.</summary>
+        public DelegateCommand ChartHideAllCommand { get; }
         public DelegateCommand ResetHoursRangeCommand { get; }
 
         // ===== Meldungen =====
@@ -381,7 +425,11 @@ namespace Zeitmanagement.ViewModel
         {
             if (!_isChartView) return;
 
-            var inputs = RowsView.Cast<ControllingOverviewRow>().Select(row =>
+            var visible = RowsView.Cast<ControllingOverviewRow>().ToList();
+            SyncChartCarriers(visible);
+
+            var shown = visible.Where(r => !_chartHidden.Contains(r.CarrierKey)).ToList();
+            var inputs = shown.Select(row =>
             {
                 List<ControllingObservation> history;
                 _histories.TryGetValue(row.CarrierKey, out history);
@@ -389,9 +437,89 @@ namespace Zeitmanagement.ViewModel
             }).ToList();
 
             var local = ControllingChartBuilder.LocalCumulative(SelectedRow == null ? null : _hoursEntries);
-            Chart = ControllingChartBuilder.Build(inputs, SelectedRow == null ? null : SelectedRow.CarrierKey, _chartMode, _showHoursColumns, local);
+
+            // Hat der Benutzer Kostenträger gezielt aus- oder eingeblendet, dürfen es mehr Linien sein als in der Voreinstellung.
+            var maxSeries = _chartHidden.Count > 0 ? 16 : ControllingChartBuilder.MaxSeries;
+            Chart = ControllingChartBuilder.Build(inputs, SelectedRow == null ? null : SelectedRow.CarrierKey, _chartMode, _showHoursColumns, local, maxSeries, visible.Count - shown.Count);
             RaisePropertyChanged(nameof(ChartNoteText));
             RaisePropertyChanged(nameof(HasChartNotes));
+        }
+
+        // ----- Kostenträger-Filter des Diagramms -----
+
+        // Schlüssel der Kostenträger, die der Benutzer im Diagramm ausgeblendet hat (bleibt über Tabellenfilter hinweg erhalten)
+        private readonly HashSet<string> _chartHidden = new HashSet<string>(StringComparer.Ordinal);
+
+        /// <summary>Auswahlliste: die Zeilen, die die Tabelle gerade zeigt, mit Häkchen für „im Diagramm sichtbar“.</summary>
+        public ObservableCollection<ChartCarrierItem> ChartCarriers { get; } = new ObservableCollection<ChartCarrierItem>();
+        public ICollectionView ChartCarriersView { get; }
+
+        private bool _isChartCarrierPanelOpen;
+        public bool IsChartCarrierPanelOpen { get => _isChartCarrierPanelOpen; set => SetProperty(ref _isChartCarrierPanelOpen, value); }
+
+        private string _chartCarrierSearch;
+        public string ChartCarrierSearch
+        {
+            get => _chartCarrierSearch;
+            set { if (SetProperty(ref _chartCarrierSearch, value)) ChartCarriersView.Refresh(); }
+        }
+
+        /// <summary>Beschriftung des Filterknopfs, z. B. „Kostenträger 5/12“.</summary>
+        public string ChartCarrierSummary
+        {
+            get
+            {
+                var shown = ChartCarriers.Count(c => c.IsShown);
+                return "Kostenträger " + shown.ToString(CultureInfo.InvariantCulture) + "/" + ChartCarriers.Count.ToString(CultureInfo.InvariantCulture);
+            }
+        }
+
+        private bool FilterChartCarrier(object item)
+        {
+            var c = item as ChartCarrierItem;
+            if (c == null) return false;
+            if (string.IsNullOrWhiteSpace(_chartCarrierSearch)) return true;
+            var q = _chartCarrierSearch.Trim();
+            return Has(c.Text, q) || Has(c.Detail, q);
+        }
+
+        /// <summary>Gleicht die Liste mit den Zeilen der Tabelle ab; vorhandene Auswahl bleibt erhalten.</summary>
+        private void SyncChartCarriers(IReadOnlyList<ControllingOverviewRow> visibleRows)
+        {
+            if (ChartCarriers.Select(c => c.Key).SequenceEqual(visibleRows.Select(r => r.CarrierKey))) return;
+
+            ChartCarriers.Clear();
+            foreach (var row in visibleRows)
+            {
+                ChartCarriers.Add(new ChartCarrierItem(row.CarrierKey, row.CarrierText, row.PspName, !_chartHidden.Contains(row.CarrierKey))
+                {
+                    Changed = OnChartCarrierToggled
+                });
+            }
+            RaisePropertyChanged(nameof(ChartCarrierSummary));
+        }
+
+        private void OnChartCarrierToggled(ChartCarrierItem item)
+        {
+            if (item.IsShown) _chartHidden.Remove(item.Key);
+            else _chartHidden.Add(item.Key);
+
+            RaisePropertyChanged(nameof(ChartCarrierSummary));
+            RebuildChart();
+        }
+
+        private void SetListedCarriers(bool show)
+        {
+            // gilt für die Einträge, die die Suche in der Liste gerade zeigt
+            foreach (var item in ChartCarriersView.Cast<ChartCarrierItem>().ToList())
+            {
+                if (show) _chartHidden.Remove(item.Key);
+                else _chartHidden.Add(item.Key);
+                item.SetSilently(show);
+            }
+
+            RaisePropertyChanged(nameof(ChartCarrierSummary));
+            RebuildChart();
         }
 
         private void SelectSeries(object parameter)
