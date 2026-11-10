@@ -80,6 +80,7 @@
     <Compile Include="Helpers\BackupHelper.cs" />
     <Compile Include="Helpers\CarrierMatching.cs" />
     <Compile Include="Helpers\Changelog.cs" />
+    <Compile Include="Helpers\ControllingChart.cs" />
     <Compile Include="Helpers\ControllingImportService.cs" />
     <Compile Include="Helpers\ControllingModels.cs" />
     <Compile Include="Helpers\ControllingOverview.cs" />

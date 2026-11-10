@@ -403,6 +403,36 @@ public sealed partial class TimeTracker
             .ToList();
     }
 
+    /// <summary>
+    /// Verläufe mehrerer PSP-Elemente in einer Abfrage (je Quellstand die aktive Revision, nach SAP-Datum aufsteigend) -
+    /// für das Diagramm, das viele Zeilen auf einmal zeichnet. Elemente ohne Beobachtung fehlen im Ergebnis.
+    /// </summary>
+    public Dictionary<string, List<ControllingObservation>> GetControllingHistories(IEnumerable<string> carrierKeys, string currencyContext)
+    {
+        var wanted = carrierKeys == null ? null : new HashSet<string>(carrierKeys, StringComparer.Ordinal);
+        var result = new Dictionary<string, List<ControllingObservation>>(StringComparer.Ordinal);
+        if (wanted != null && wanted.Count == 0) return result;
+
+        var rows = QueryObservations(
+            "WHERE i.currency_context = @ctx ORDER BY i.source_timestamp, i.id;",
+            cmd => cmd.Parameters.AddWithValue("@ctx", currencyContext));
+
+        foreach (var o in rows)
+        {
+            if (!o.IsActive) continue;
+            if (wanted != null && !wanted.Contains(o.CarrierKey)) continue;
+
+            List<ControllingObservation> list;
+            if (!result.TryGetValue(o.CarrierKey, out list))
+            {
+                list = new List<ControllingObservation>();
+                result[o.CarrierKey] = list;
+            }
+            list.Add(o);
+        }
+        return result;
+    }
+
     /// <summary>Alle Revisionen eines PSP-Elements zu einem Quellstand, die neueste zuerst.</summary>
     public List<ControllingObservation> GetControllingCarrierRevisions(string carrierKey, DateTime sourceTimestamp, string currencyContext)
     {

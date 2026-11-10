@@ -38,6 +38,7 @@
     <Compile Include="..\Helpers\BackupHelper.cs" Link="Linked\BackupHelper.cs" />
     <Compile Include="..\Helpers\CarrierMatching.cs" Link="Linked\CarrierMatching.cs" />
     <Compile Include="..\Helpers\ControllingModels.cs" Link="Linked\ControllingModels.cs" />
+    <Compile Include="..\Helpers\ControllingChart.cs" Link="Linked\ControllingChart.cs" />
     <Compile Include="..\Helpers\ControllingImportService.cs" Link="Linked\ControllingImportService.cs" />
     <Compile Include="..\Helpers\ControllingOverview.cs" Link="Linked\ControllingOverview.cs" />
     <Compile Include="..\Helpers\LocalHoursCalculator.cs" Link="Linked\LocalHoursCalculator.cs" />
