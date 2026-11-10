@@ -53,6 +53,13 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.46.0", new DateTime(2026, 11, 10), "Projektcontrolling",
+                Neu("„Projektcontrolling“ in der Seitenleiste: „Excel importieren“ liest Plan- und Ist-Kosten aus einer SAP-Projektcontrolling-Datei (.xlsx) – nur lesend. Importiert werden nur PSP-Elemente, die in einem Kostenträger deiner Projekte enthalten sind; der Kostenträger muss die PSP-Element-ID enthalten, aber nicht genau so heißen."),
+                Neu("Die Vorschau zeigt vor dem Speichern, was übernommen wird, samt Warnungen und Fehlern mit Blatt und Zelle. Der SAP-Stand kommt aus der Datei (fehlt er, gibst du ihn an), die Währung ist optional."),
+                Neu("Jeder Import ist ein Stand: Der Kostenverlauf zeigt die Stände nach SAP-Datum. Ein erneuter Import desselben Stands wird nicht doppelt gespeichert, eine Korrektur wird als Revision abgelegt."),
+                Neu("Lokaler Stundenverlauf je Kostenträger (Tag, Woche, Monat) aus deinen Buchungen. Er steht getrennt von den SAP-Geldbeträgen und ist nicht mit SAP abgestimmt."),
+                Verbessert("Unter „Projekte“ öffnet ein Symbol in der Zeile das Projektcontrolling mit dem Kostenträger des Projekts.")),
+
             new ChangelogRelease("2026.45.3", new DateTime(2026, 11, 5), "Quick Switch statt Quick Select",
                 Neu("„Quick Switch“ in der Seitenleiste öffnet das Quick-Switch-Fenster direkt, ebenso „Quick Switch öffnen“ im Menü des Tray-Symbols."),
                 Verbessert("Die Seite „Quick Select“ entfällt: Welche Projekte im Quick Switch wählbar sind, bestimmt allein der Schalter unter „Projekte“. Er heißt jetzt „Quick Switch“.")),
