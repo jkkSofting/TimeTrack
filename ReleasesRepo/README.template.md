@@ -54,7 +54,7 @@ Eine ausführlichere Erklärung aller Bereiche findest du in TimeTrack selbst un
 | **Stundenbuchung** | Alle Buchungen eines Tages als Zeitstrahl ansehen, nachtragen und korrigieren. Zeigt Pausen (auch die gesetzliche Pause) und die real gearbeitete Zeit. |
 | **Fragmentierung** | Wie zersplittert war dein Tag, deine Woche oder dein Monat? |
 | **SAP-Verrechnung** | Was am Monatsende wirklich im SAP gebucht werden muss: Externe Zeit deckt parallele interne Zeit ab. |
-| **Projektcontrolling** | SAP-Plan- und Ist-Kosten aus einer Excel-Datei zu deinen Kostenträgern ansehen (nur lesend), mit Kostenverlauf nach SAP-Stand. Mit deinem Stundensatz lassen sich die Beträge auch als rechnerische Stunden anzeigen. Daneben der lokale Stundenverlauf aus deinen Buchungen – getrennt von den Geldbeträgen. |
+| **Projektcontrolling** | SAP-Plan- und Ist-Kosten aus einer Excel-Datei zu deinen Kostenträgern ansehen (nur lesend), mit Kostenverlauf nach SAP-Stand. Mit dem Stundensatz, den du je Projekt einträgst, lassen sich die Beträge auch als rechnerische Stunden anzeigen. Daneben der lokale Stundenverlauf aus deinen Buchungen – getrennt von den Geldbeträgen. |
 | **Projekte** | Projekte anlegen, bearbeiten und auswerten; festlegen, welche im Quick Switch wählbar sind. |
 | **Einstellungen** | Design (hell/dunkel, mehrere Motive, saisonale Designs), Programmstart, Automatisierung, Updates und Datensicherung. |
 | **Tray-Symbol** | TimeTrack läuft im Infobereich weiter und meldet sich, wenn eine Buchung automatisch beendet wurde, länger kein Projekt läuft oder ein Update bereitsteht. |
