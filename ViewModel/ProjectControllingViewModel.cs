@@ -49,6 +49,9 @@ namespace Zeitmanagement.ViewModel
         public string ActualText { get; set; }
         public string RemainingText { get; set; }
         public string ConsumptionText { get; set; }
+        public string PlannedHoursText { get; set; }
+        public string ActualHoursText { get; set; }
+        public string RemainingHoursText { get; set; }
         public string PlanDeltaText { get; set; }
         public string ActualDeltaText { get; set; }
         public string FileName { get; set; }
@@ -263,6 +266,106 @@ namespace Zeitmanagement.ViewModel
             RaisePropertyChanged(nameof(VisibleCountText));
         }
 
+        // ===== Stundensatz: rechnerische Stunden aus Geld =====
+
+        private decimal? _hourlyRate;
+        private string _hourlyRateText;
+        private bool _suppressRateSave;
+
+        /// <summary>
+        /// Stundensatz, den du selbst einträgst. Er gilt für die Währung des gewählten Imports und wird nur zum Umrechnen von
+        /// Beträgen in rechnerische Stunden benutzt (Betrag ÷ Stundensatz). Ohne Eintrag wird nichts umgerechnet.
+        /// </summary>
+        public string HourlyRateText
+        {
+            get => _hourlyRateText;
+            set
+            {
+                if (!SetProperty(ref _hourlyRateText, value)) return;
+                if (!_suppressRateSave) OnHourlyRateTextChanged();
+            }
+        }
+
+        public bool HasHourlyRate => _hourlyRate.HasValue;
+
+        private string _hourlyRateError;
+        public string HourlyRateError
+        {
+            get => _hourlyRateError;
+            private set { if (SetProperty(ref _hourlyRateError, value)) RaisePropertyChanged(nameof(HasHourlyRateError)); }
+        }
+
+        public bool HasHourlyRateError => !string.IsNullOrEmpty(_hourlyRateError);
+
+        public string ConversionNote =>
+            _hourlyRate.HasValue
+                ? "Stunden (h) in den Tabellen sind aus Geld umgerechnet: Betrag ÷ Stundensatz (" + CostMath.FormatRate(_hourlyRate) + " pro Stunde, " + CurrencyText +
+                  "). Das ist eine Schätzung aus Geld, keine gebuchte Zeit und nicht mit den lokal erfassten Stunden abgestimmt."
+                : string.Empty;
+
+        private void OnHourlyRateTextChanged()
+        {
+            decimal? rate;
+            if (!CostMath.TryParseHourlyRate(_hourlyRateText, out rate))
+            {
+                HourlyRateError = "Bitte einen Stundensatz größer 0 eingeben, z. B. 95,50.";
+                return;
+            }
+
+            HourlyRateError = null;
+            if (SelectedImport != null)
+            {
+                try
+                {
+                    MainViewModel.DbInstance.SetControllingHourlyRate(SelectedImport.CurrencyContext, rate);
+                }
+                catch (Exception ex)
+                {
+                    HourlyRateError = "Der Stundensatz konnte nicht gespeichert werden: " + ex.Message;
+                    return;
+                }
+            }
+
+            ApplyHourlyRate(rate);
+        }
+
+        /// <summary>Liest den gespeicherten Satz zum Währungskontext des gewählten Imports und wendet ihn an.</summary>
+        private void LoadHourlyRate()
+        {
+            decimal? rate = null;
+            if (SelectedImport != null)
+                rate = MainViewModel.DbInstance.GetControllingHourlyRate(SelectedImport.CurrencyContext);
+
+            _suppressRateSave = true;
+            try
+            {
+                HourlyRateText = CostMath.FormatRate(rate);
+            }
+            finally
+            {
+                _suppressRateSave = false;
+            }
+
+            HourlyRateError = null;
+            ApplyHourlyRate(rate);
+        }
+
+        private void ApplyHourlyRate(decimal? rate)
+        {
+            _hourlyRate = rate;
+            foreach (var row in _currentRows.Concat(_lastKnownRows)) row.HourlyRate = rate;
+
+            RaisePropertyChanged(nameof(HasHourlyRate));
+            RaisePropertyChanged(nameof(ConversionNote));
+
+            if (SelectedRow != null)
+            {
+                CostHistory.Clear();
+                LoadCostHistory(MainViewModel.DbInstance, SelectedRow);
+                UpdateHoursComparison();
+            }
+        }
+
         // ===== Suche und Filter (ändern nie, was importiert werden darf) =====
 
         private string _searchText;
@@ -368,6 +471,7 @@ namespace Zeitmanagement.ViewModel
             }
 
             ApplyRows(keepKey);
+            LoadHourlyRate();
         }
 
         private ParentContext LoadContext(TimeTracker db, ControllingObservation observation)
@@ -613,6 +717,9 @@ namespace Zeitmanagement.ViewModel
                     ActualText = CostMath.FormatMoney(h.ActualCost),
                     RemainingText = CostMath.FormatMoney(h.RemainingCost),
                     ConsumptionText = h.Consumption.HasValue ? CostMath.FormatPercent(h.Consumption) : CostMath.NoBudgetText,
+                    PlannedHoursText = CostMath.FormatHours(h.PlannedCost, _hourlyRate),
+                    ActualHoursText = CostMath.FormatHours(h.ActualCost, _hourlyRate),
+                    RemainingHoursText = CostMath.FormatHours(h.RemainingCost, _hourlyRate),
                     PlanDeltaText = previous == null ? "–" : CostMath.FormatSignedMoney(CostMath.Delta(previous.PlannedCost, h.PlannedCost)),
                     ActualDeltaText = previous == null ? "–" : CostMath.FormatSignedMoney(CostMath.Delta(previous.ActualCost, h.ActualCost)),
                     FileName = h.FileName,
@@ -745,6 +852,27 @@ namespace Zeitmanagement.ViewModel
         private bool _hasHours;
         public bool HasHours { get => _hasHours; private set => SetProperty(ref _hasHours, value); }
 
+        private string _hoursCompareText;
+        /// <summary>Stellt rechnerische Stunden aus den Ist-Kosten und lokal gebuchte Stunden nebeneinander – ohne sie gleichzusetzen.</summary>
+        public string HoursCompareText { get => _hoursCompareText; private set { if (SetProperty(ref _hoursCompareText, value)) RaisePropertyChanged(nameof(HasHoursCompare)); } }
+        public bool HasHoursCompare => !string.IsNullOrEmpty(_hoursCompareText);
+
+        private void UpdateHoursComparison()
+        {
+            var row = SelectedRow;
+            if (row == null || !_hourlyRate.HasValue || !row.ActualCost.HasValue)
+            {
+                HoursCompareText = null;
+                return;
+            }
+
+            var booked = LocalHoursCalculator.Calculate(_hoursEntries, HoursBucketKind.Month).TotalMinutes;
+            HoursCompareText =
+                "Zum Vergleich: Die Ist-Kosten entsprechen bei " + CostMath.FormatRate(_hourlyRate) + " pro Stunde rechnerisch " +
+                CostMath.FormatHours(row.ActualCost, _hourlyRate) + " (aus Geld umgerechnet, nicht gebucht). Lokal gebucht sind in allen Zeiträumen " +
+                LocalHoursCalculator.FormatDecimalHours(booked) + ". Das sind zwei getrennte Größen, keine Abstimmung.";
+        }
+
         public string HoursDisclaimer =>
             "Lokal erfasste Stunden: Summe der Buchungen in dieser App für die verknüpften Projekte – nicht aus SAP und nicht mit SAP abgestimmt. " +
             "Parallele Buchungen zählen mehrfach. Die Zuordnung folgt dem aktuellen Kostenträger der Projekte; frühere Zuordnungen werden nicht rekonstruiert.";
@@ -791,6 +919,8 @@ namespace Zeitmanagement.ViewModel
                 ? string.Empty
                 : LocalHoursCalculator.FormatDecimalHours(result.TotalMinutes) + " (" + LocalHoursCalculator.FormatClock(result.TotalMinutes) + ") in " +
                   result.EntryCount.ToString(CultureInfo.InvariantCulture) + " Buchungen – lokal erfasst";
+
+            UpdateHoursComparison();
 
             if (SelectedRow == null) HoursMessage = null;
             else if (result.EntryCount == 0) HoursMessage = "Keine lokalen Buchungen vorhanden" + (from.HasValue || to.HasValue ? " (im gewählten Zeitraum)." : ".");

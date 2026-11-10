@@ -440,6 +440,75 @@ namespace Zeitmanagement.Helpers
                 : currencyCode.Trim().ToUpperInvariant();
         }
 
+        // ----- Umrechnung Geld -> Stunden über einen vom Benutzer eingetragenen Stundensatz -----
+
+        /// <summary>Größter erlaubter Stundensatz (schützt vor Tippfehlern wie 95000).</summary>
+        public const decimal MaxHourlyRate = 100000m;
+
+        /// <summary>Einstellungsschlüssel des Stundensatzes; der Satz gilt je Währungskontext, nie währungsübergreifend.</summary>
+        public static string HourlyRateKey(string currencyContext)
+        {
+            return "hourly_rate|" + currencyContext;
+        }
+
+        /// <summary>
+        /// Rechnerische Stunden: Betrag ÷ Stundensatz. Nur mit bekanntem Betrag und positivem Satz; ein negativer Betrag
+        /// (Überschreitung, Gutschrift) bleibt negativ. Das ist eine Schätzung aus Geld, keine gebuchte Zeit.
+        /// </summary>
+        public static decimal? ToHours(decimal? amount, decimal? hourlyRate)
+        {
+            if (!amount.HasValue || !hourlyRate.HasValue || hourlyRate.Value <= 0m) return null;
+            return amount.Value / hourlyRate.Value;
+        }
+
+        /// <summary>Rechnerische Stunden als Text ("833,33 h"); fehlender Betrag = "Nicht geliefert", ohne Satz "–".</summary>
+        public static string FormatHours(decimal? amount, decimal? hourlyRate)
+        {
+            if (!hourlyRate.HasValue || hourlyRate.Value <= 0m) return "–";
+            var hours = ToHours(amount, hourlyRate);
+            return hours.HasValue ? hours.Value.ToString("N2", German) + " h" : MissingText;
+        }
+
+        public static string FormatRate(decimal? rate)
+        {
+            return rate.HasValue ? rate.Value.ToString("N2", German) : string.Empty;
+        }
+
+        /// <summary>
+        /// Liest einen Stundensatz wie "95,50", "95.50" oder "1.234,56". Leer ist gültig und bedeutet "kein Satz" (<paramref name="rate"/> = null).
+        /// Liefert <c>false</c> bei Unlesbarem, Null, Negativem oder mehr als <see cref="MaxHourlyRate"/>.
+        /// </summary>
+        public static bool TryParseHourlyRate(string text, out decimal? rate)
+        {
+            rate = null;
+            var t = (text ?? string.Empty).Replace("\u00A0", string.Empty).Replace(" ", string.Empty).Trim();
+            if (t.Length == 0) return true;
+
+            var lastComma = t.LastIndexOf(',');
+            var lastDot = t.LastIndexOf('.');
+            char? decimalSeparator = null;
+            if (lastComma >= 0 && lastDot >= 0) decimalSeparator = lastComma > lastDot ? ',' : '.';
+            else if (lastComma >= 0) decimalSeparator = ',';
+            else if (lastDot >= 0 && t.IndexOf('.') == lastDot) decimalSeparator = '.';   // genau ein Punkt = Dezimalpunkt
+
+            var normalized = new System.Text.StringBuilder();
+            for (var i = 0; i < t.Length; i++)
+            {
+                var c = t[i];
+                if (char.IsDigit(c)) normalized.Append(c);
+                else if ((c == ',' || c == '.') && decimalSeparator == c && i == (c == ',' ? lastComma : lastDot)) normalized.Append('.');
+                else if ((c == ',' || c == '.') && decimalSeparator != c) continue;   // Tausendertrenner
+                else return false;
+            }
+
+            decimal value;
+            if (!decimal.TryParse(normalized.ToString(), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out value)) return false;
+            if (value <= 0m || value > MaxHourlyRate) return false;
+
+            rate = value;
+            return true;
+        }
+
         /// <summary>Betrag mit zwei Nachkommastellen; Währung wird nicht angehängt. Fehlend = "Nicht geliefert".</summary>
         public static string FormatMoney(decimal? value)
         {

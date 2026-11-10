@@ -85,6 +85,11 @@ public sealed partial class TimeTracker
             actual_cost         TEXT    NULL,
             UNIQUE(import_id, carrier_id)
         );
+        -- Einstellungen des Controllings (z. B. der Stundensatz je Währungskontext), damit Sicherungen sie mitnehmen
+        CREATE TABLE IF NOT EXISTS controlling_settings(
+            setting_key   TEXT PRIMARY KEY,
+            setting_value TEXT NOT NULL
+        );
         CREATE INDEX IF NOT EXISTS idx_controlling_snapshots_carrier ON controlling_snapshots(carrier_id);
         CREATE INDEX IF NOT EXISTS idx_controlling_snapshots_import  ON controlling_snapshots(import_id);
         ";
@@ -489,6 +494,53 @@ public sealed partial class TimeTracker
                 };
             }
         }
+    }
+
+    // ---------- Einstellungen (Stundensatz) ----------
+
+    /// <summary>Wert einer Controlling-Einstellung oder <c>null</c>.</summary>
+    public string GetControllingSetting(string key)
+    {
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = "SELECT setting_value FROM controlling_settings WHERE setting_key = @k;";
+            cmd.Parameters.AddWithValue("@k", key);
+            var value = cmd.ExecuteScalar();
+            return value == null || value == DBNull.Value ? null : Convert.ToString(value, CultureInfo.InvariantCulture);
+        }
+    }
+
+    /// <summary>Speichert eine Einstellung; <c>null</c> oder leer entfernt sie.</summary>
+    public void SetControllingSetting(string key, string value)
+    {
+        using (var cmd = _conn.CreateCommand())
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                cmd.CommandText = "DELETE FROM controlling_settings WHERE setting_key = @k;";
+                cmd.Parameters.AddWithValue("@k", key);
+            }
+            else
+            {
+                cmd.CommandText = @"
+                INSERT INTO controlling_settings (setting_key, setting_value) VALUES (@k, @v)
+                ON CONFLICT(setting_key) DO UPDATE SET setting_value = excluded.setting_value;";
+                cmd.Parameters.AddWithValue("@k", key);
+                cmd.Parameters.AddWithValue("@v", value);
+            }
+            cmd.ExecuteNonQuery();
+        }
+    }
+
+    /// <summary>Der eingetragene Stundensatz zum Währungskontext oder <c>null</c> (dann wird nichts umgerechnet).</summary>
+    public decimal? GetControllingHourlyRate(string currencyContext)
+    {
+        return CostMath.ParseInvariant(GetControllingSetting(CostMath.HourlyRateKey(currencyContext)));
+    }
+
+    public void SetControllingHourlyRate(string currencyContext, decimal? rate)
+    {
+        SetControllingSetting(CostMath.HourlyRateKey(currencyContext), CostMath.ToInvariantText(rate));
     }
 
     // ---------- Löschen ----------

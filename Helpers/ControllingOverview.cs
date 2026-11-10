@@ -1,13 +1,38 @@
 // Target: .NET Framework + C# 7.3
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace Zeitmanagement.Helpers
 {
     /// <summary>Eine Zeile der Controlling-Übersicht: ein PSP-Element mit seinen Beträgen und den lokalen Projekten, die es enthalten.</summary>
-    public sealed class ControllingOverviewRow
+    public sealed class ControllingOverviewRow : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private decimal? _hourlyRate;
+
+        /// <summary>
+        /// Vom Benutzer eingetragener Stundensatz (Währungskontext der Beträge) oder <c>null</c>. Nur damit lassen sich
+        /// Beträge als rechnerische Stunden anzeigen; ohne Satz wird nichts umgerechnet.
+        /// </summary>
+        public decimal? HourlyRate
+        {
+            get { return _hourlyRate; }
+            set
+            {
+                if (_hourlyRate == value) return;
+                _hourlyRate = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty)); // alles neu lesen
+            }
+        }
+
+        /// <summary>Plan, Ist und Rest als rechnerische Stunden (Betrag ÷ Stundensatz) - keine gebuchte Zeit.</summary>
+        public string PlannedHoursText => CostMath.FormatHours(PlannedCost, _hourlyRate);
+        public string ActualHoursText => CostMath.FormatHours(ActualCost, _hourlyRate);
+        public string RemainingHoursText => CostMath.FormatHours(RemainingCost, _hourlyRate);
+
         public ControllingObservation Observation { get; set; }
         public List<LocalProjectInfo> LinkedProjects { get; } = new List<LocalProjectInfo>();
 

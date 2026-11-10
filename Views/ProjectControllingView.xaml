@@ -244,6 +244,10 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
                 <StackPanel
                     VerticalAlignment="Center"
@@ -256,10 +260,15 @@
                     <ComboBox
                         MinWidth="380"
                         AutomationProperties.Name="Importstand wählen"
-                        DisplayMemberPath="Label"
                         ItemsSource="{Binding Imports}"
                         SelectedItem="{Binding SelectedImport, Mode=TwoWay}"
-                        ToolTip="Jeder Import ist eine unveränderliche Charge. Der neueste SAP-Stand ist vorausgewählt." />
+                        ToolTip="Jeder Import ist eine unveränderliche Charge. Der neueste SAP-Stand ist vorausgewählt.">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                 </StackPanel>
 
                 <WrapPanel
@@ -299,7 +308,45 @@
                             <TextBlock Style="{StaticResource Text.Body}" Text="{Binding CurrencyText}" />
                         </StackPanel>
                     </Border>
+                    <Border
+                        Margin="0,2,8,2"
+                        Padding="12,3"
+                        Style="{StaticResource Pill}"
+                        ToolTip="Dein Stundensatz in der Währung dieses Imports. Damit werden Beträge als rechnerische Stunden (Betrag ÷ Stundensatz) angezeigt. Leer lassen = keine Umrechnung.">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Style="{StaticResource Text.Muted}"
+                                Text="Stundensatz " />
+                            <TextBox
+                                Width="86"
+                                Padding="6,3"
+                                local:Ui.Placeholder="z. B. 95,50"
+                                AutomationProperties.Name="Stundensatz pro Stunde"
+                                Text="{Binding HourlyRateText, UpdateSourceTrigger=PropertyChanged, Delay=700}" />
+                            <TextBlock
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource Text.Muted}"
+                                Text="pro Stunde" />
+                        </StackPanel>
+                    </Border>
+                    <TextBlock
+                        Margin="0,2,8,2"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource Theme.Danger}"
+                        Style="{StaticResource WrapMuted}"
+                        Text="{Binding HourlyRateError}"
+                        Visibility="{Binding HasHourlyRateError, Converter={StaticResource BoolToVis}}" />
                 </WrapPanel>
+
+                <TextBlock
+                    Grid.Row="1"
+                    Grid.ColumnSpan="2"
+                    Margin="0,4,0,0"
+                    Style="{StaticResource WrapMuted}"
+                    Text="{Binding ConversionNote}"
+                    Visibility="{Binding HasHourlyRate, Converter={StaticResource BoolToVis}}" />
             </Grid>
 
             <!--  ===== Leerzustand: noch nichts importiert =====  -->
@@ -544,6 +591,48 @@
                                 <DataGridTemplateColumn
                                     Width="125"
                                     MinWidth="90"
+                                    Header="Plan (h, umger.)"
+                                    Visibility="{Binding Data.HasHourlyRate, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock
+                                                Style="{StaticResource Amount}"
+                                                Text="{Binding PlannedHoursText}"
+                                                ToolTip="Aus Geld umgerechnet (Betrag ÷ Stundensatz), nicht gebucht" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn
+                                    Width="125"
+                                    MinWidth="90"
+                                    Header="Ist (h, umger.)"
+                                    Visibility="{Binding Data.HasHourlyRate, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock
+                                                Style="{StaticResource Amount}"
+                                                Text="{Binding ActualHoursText}"
+                                                ToolTip="Aus Geld umgerechnet (Betrag ÷ Stundensatz), nicht gebucht" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn
+                                    Width="125"
+                                    MinWidth="90"
+                                    Header="Rest (h, umger.)"
+                                    Visibility="{Binding Data.HasHourlyRate, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock
+                                                Style="{StaticResource Amount}"
+                                                Text="{Binding RemainingHoursText}"
+                                                ToolTip="Aus Geld umgerechnet (Betrag ÷ Stundensatz), nicht gebucht" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn
+                                    Width="125"
+                                    MinWidth="90"
                                     Header="Verbrauch"
                                     SortMemberPath="Consumption">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -738,6 +827,14 @@
                                             TextWrapping="Wrap" />
                                     </StackPanel>
                                 </UniformGrid>
+                                <StackPanel Margin="0,8,0,0" Visibility="{Binding HasHourlyRate, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Style="{StaticResource Text.Label}" Text="UMGERECHNET IN STUNDEN (BETRAG ÷ STUNDENSATZ, NICHT GEBUCHT)" TextWrapping="Wrap" />
+                                    <UniformGrid Margin="0,2,0,0" Columns="3">
+                                        <TextBlock Style="{StaticResource Text.Body}" Text="{Binding SelectedRow.PlannedHoursText, StringFormat='Plan {0}'}" />
+                                        <TextBlock Style="{StaticResource Text.Body}" Text="{Binding SelectedRow.ActualHoursText, StringFormat='Ist {0}'}" />
+                                        <TextBlock Style="{StaticResource Text.Body}" Text="{Binding SelectedRow.RemainingHoursText, StringFormat='Rest {0}'}" />
+                                    </UniformGrid>
+                                </StackPanel>
                                 <Border
                                     Margin="0,8,0,0"
                                     DataContext="{Binding SelectedRow}"
@@ -834,6 +931,21 @@
                                             <DataGridTextColumn Width="110" Binding="{Binding ActualText}" Header="Ist" />
                                             <DataGridTextColumn Width="110" Binding="{Binding RemainingText}" Header="Rest" />
                                             <DataGridTextColumn Width="120" Binding="{Binding ConsumptionText}" Header="Verbrauch" />
+                                            <DataGridTextColumn
+                                                Width="120"
+                                                Binding="{Binding PlannedHoursText}"
+                                                Header="Plan (h, umger.)"
+                                                Visibility="{Binding Data.HasHourlyRate, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}" />
+                                            <DataGridTextColumn
+                                                Width="120"
+                                                Binding="{Binding ActualHoursText}"
+                                                Header="Ist (h, umger.)"
+                                                Visibility="{Binding Data.HasHourlyRate, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}" />
+                                            <DataGridTextColumn
+                                                Width="120"
+                                                Binding="{Binding RemainingHoursText}"
+                                                Header="Rest (h, umger.)"
+                                                Visibility="{Binding Data.HasHourlyRate, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}" />
                                             <DataGridTextColumn Width="110" Binding="{Binding PlanDeltaText}" Header="Δ Plan" />
                                             <DataGridTextColumn Width="110" Binding="{Binding ActualDeltaText}" Header="Δ Ist" />
                                             <DataGridTextColumn Width="200" Binding="{Binding FileName}" Header="Datei" />
@@ -944,6 +1056,11 @@
                                         Style="{StaticResource Text.Body}"
                                         Text="{Binding HoursTotalText}"
                                         TextWrapping="Wrap" />
+                                    <TextBlock
+                                        Margin="0,6,0,0"
+                                        Style="{StaticResource WrapMuted}"
+                                        Text="{Binding HoursCompareText}"
+                                        Visibility="{Binding HasHoursCompare, Converter={StaticResource BoolToVis}}" />
                                     <TextBlock
                                         Margin="0,6,0,0"
                                         Style="{StaticResource WrapMuted}"
