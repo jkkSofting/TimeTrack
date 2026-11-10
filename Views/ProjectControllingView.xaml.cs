@@ -6,9 +6,9 @@ namespace Zeitmanagement.Views
     public partial class ProjectControllingView : UserControl
     {
         /// <summary>Ab dieser Breite steht der Detailbereich neben der Übersicht, sonst darunter.</summary>
-        private const double SideBySideMinWidth = 1500;
+        private const double SideBySideMinWidth = 1600;
 
-        private const double DetailSideWidth = 600;
+        private const double DetailSideWidth = 560;
         private const double DetailBelowHeight = 440;
 
         private bool? _sideBySide;

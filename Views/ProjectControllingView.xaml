@@ -340,7 +340,7 @@
                 Visibility="{Binding HasImports, Converter={StaticResource BoolToVis}}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition x:Name="DetailColumn" Width="600" />
+                    <ColumnDefinition x:Name="DetailColumn" Width="560" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
@@ -459,7 +459,6 @@
                             AutomationProperties.Name="Übersicht der importierten PSP-Elemente"
                             CanUserAddRows="False"
                             CanUserResizeColumns="True"
-                            EnableColumnVirtualization="True"
                             EnableRowVirtualization="True"
                             HorizontalScrollBarVisibility="Auto"
                             IsReadOnly="True"
@@ -510,6 +509,71 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
                                 <DataGridTemplateColumn
+                                    Width="115"
+                                    MinWidth="90"
+                                    Header="Plan"
+                                    SortMemberPath="PlannedCost">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Style="{StaticResource AmountPlan}" Text="{Binding PlannedText}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn
+                                    Width="115"
+                                    MinWidth="90"
+                                    Header="Ist"
+                                    SortMemberPath="ActualCost">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Style="{StaticResource AmountActual}" Text="{Binding ActualText}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn
+                                    Width="115"
+                                    MinWidth="90"
+                                    Header="Rest"
+                                    SortMemberPath="RemainingCost">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Style="{StaticResource AmountRemaining}" Text="{Binding RemainingText}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn
+                                    Width="125"
+                                    MinWidth="90"
+                                    Header="Verbrauch"
+                                    SortMemberPath="Consumption">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock
+                                                HorizontalAlignment="Right"
+                                                Style="{StaticResource Text.Body}"
+                                                Text="{Binding ConsumptionText}"
+                                                TextTrimming="CharacterEllipsis"
+                                                ToolTip="{Binding ConsumptionText}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn
+                                    Width="165"
+                                    MinWidth="110"
+                                    Header="Status"
+                                    SortMemberPath="StatusText">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource StatusPill}">
+                                                <TextBlock
+                                                    FontSize="12"
+                                                    Text="{Binding StatusText}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn
                                     Width="210"
                                     MinWidth="100"
                                     Header="PSP-Name"
@@ -536,71 +600,6 @@
                                                 Text="{Binding ParentName}"
                                                 TextTrimming="CharacterEllipsis"
                                                 ToolTip="{Binding ParentName}" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn
-                                    Width="130"
-                                    MinWidth="90"
-                                    Header="Plan"
-                                    SortMemberPath="PlannedCost">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Style="{StaticResource AmountPlan}" Text="{Binding PlannedText}" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn
-                                    Width="130"
-                                    MinWidth="90"
-                                    Header="Ist"
-                                    SortMemberPath="ActualCost">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Style="{StaticResource AmountActual}" Text="{Binding ActualText}" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn
-                                    Width="130"
-                                    MinWidth="90"
-                                    Header="Rest"
-                                    SortMemberPath="RemainingCost">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Style="{StaticResource AmountRemaining}" Text="{Binding RemainingText}" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn
-                                    Width="140"
-                                    MinWidth="90"
-                                    Header="Budgetverbrauch"
-                                    SortMemberPath="Consumption">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock
-                                                HorizontalAlignment="Right"
-                                                Style="{StaticResource Text.Body}"
-                                                Text="{Binding ConsumptionText}"
-                                                TextTrimming="CharacterEllipsis"
-                                                ToolTip="{Binding ConsumptionText}" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn
-                                    Width="170"
-                                    MinWidth="110"
-                                    Header="Status"
-                                    SortMemberPath="StatusText">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Border Style="{StaticResource StatusPill}">
-                                                <TextBlock
-                                                    FontSize="12"
-                                                    Text="{Binding StatusText}"
-                                                    TextTrimming="CharacterEllipsis" />
-                                            </Border>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>

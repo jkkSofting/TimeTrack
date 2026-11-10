@@ -1042,7 +1042,9 @@ namespace Zeitmanagement.ViewModel
             if (resetInputs)
             {
                 _userTimestampText = string.Empty;
-                _currencyCodeText = string.Empty;
+                // Die Währung, die der Benutzer beim letzten Import gewählt hat, wird vorbelegt (nie stillschweigend EUR).
+                var lastImport = Imports.FirstOrDefault(i => !string.IsNullOrEmpty(i.CurrencyCode));
+                _currencyCodeText = lastImport == null ? string.Empty : lastImport.CurrencyCode;
                 RaisePropertyChanged(nameof(UserTimestampText));
                 RaisePropertyChanged(nameof(CurrencyCodeText));
             }
