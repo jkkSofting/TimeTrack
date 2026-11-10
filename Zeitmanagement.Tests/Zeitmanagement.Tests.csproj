@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Tests für den Projektcontrolling-Import (Excel-Reader, Zuordnung, Speicher, lokaler Stundenverlauf).
+    Ausführen (im Repository-Stamm):  dotnet test Zeitmanagement.Tests
+
+    Die Tests brauchen weder Excel noch die Originaldatei: Alle Arbeitsmappen entstehen synthetisch mit dem
+    Open-XML-SDK, Datenbanken sind wegwerfbare Dateien im Temp-Ordner. Die zu testenden Quelldateien werden
+    verlinkt (kein Verweis auf das WPF-Projekt) und mit C# 7.3 wie das Hauptprojekt übersetzt.
+    Das Projekt gehört bewusst nicht zur Zeitmanagement.sln, damit der Release-Build es nicht mitbaut.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>Zeitmanagement.Tests</RootNamespace>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.1.1" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\TimeTracker.cs" Link="Linked\TimeTracker.cs" />
+    <Compile Include="..\TimeTracker.Controlling.cs" Link="Linked\TimeTracker.Controlling.cs" />
+    <Compile Include="..\Helpers\BackupHelper.cs" Link="Linked\BackupHelper.cs" />
+    <Compile Include="..\Helpers\CarrierMatching.cs" Link="Linked\CarrierMatching.cs" />
+    <Compile Include="..\Helpers\ControllingModels.cs" Link="Linked\ControllingModels.cs" />
+    <Compile Include="..\Helpers\ControllingImportService.cs" Link="Linked\ControllingImportService.cs" />
+    <Compile Include="..\Helpers\ControllingOverview.cs" Link="Linked\ControllingOverview.cs" />
+    <Compile Include="..\Helpers\LocalHoursCalculator.cs" Link="Linked\LocalHoursCalculator.cs" />
+    <Compile Include="..\Helpers\ProjectControllingExcelReader.cs" Link="Linked\ProjectControllingExcelReader.cs" />
+  </ItemGroup>
+
+</Project>

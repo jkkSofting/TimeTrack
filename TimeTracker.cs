@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Data.SQLite;
 using Zeitmanagement.Helpers;
 
-public sealed class TimeTracker : IDisposable
+public sealed partial class TimeTracker : IDisposable
 {
     private readonly string _dbPath;
     private readonly SQLiteConnection _conn;
@@ -142,6 +142,9 @@ public sealed class TimeTracker : IDisposable
                 cmd.CommandText = "ALTER TABLE projects ADD COLUMN quickselect_aktiv INTEGER NOT NULL DEFAULT 1;";
                 cmd.ExecuteNonQuery();
             }
+
+            // Projektcontrolling-Import (SAP-Excel): zusätzliche Tabellen, die Zeiterfassung bleibt unberührt.
+            EnsureControllingSchema(cmd);
 
             tx.Commit();
         }
