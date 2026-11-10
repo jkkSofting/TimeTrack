@@ -310,8 +310,57 @@ namespace Zeitmanagement.ViewModel
         // Projekt-ID → Stundensatz für den Währungskontext des gewählten Imports
         private Dictionary<int, decimal> _projectRates = new Dictionary<int, decimal>();
 
-        /// <summary>Mindestens ein PSP-Element hat einen Satz (oder widersprüchliche Sätze): Dann zeigen die Tabellen Stundenspalten.</summary>
+        /// <summary>Mindestens ein PSP-Element hat einen Satz (oder widersprüchliche Sätze): Dann lassen sich Stundenspalten zeigen.</summary>
         public bool HasHourlyRate => _currentRows.Concat(_lastKnownRows).Any(r => r.HasRate);
+
+        private bool _showHoursColumns = LoadShowHoursColumns();
+
+        /// <summary>
+        /// Berechnete Stunden (aus Geld) in den Tabellen anzeigen. Wer sie nicht sehen will, schaltet sie hier aus; die Wahl bleibt gespeichert.
+        /// </summary>
+        public bool ShowHoursColumns
+        {
+            get => _showHoursColumns;
+            set
+            {
+                if (!SetProperty(ref _showHoursColumns, value)) return;
+                SaveShowHoursColumns(value);
+                RaiseHoursVisibilityChanged();
+                UpdateHoursComparison();
+            }
+        }
+
+        /// <summary>Die berechneten Stundenspalten sind sichtbar: ein Satz ist eingetragen und der Schalter steht auf „an“.</summary>
+        public bool HoursColumnsVisible => HasHourlyRate && _showHoursColumns;
+
+        /// <summary>Der Detailbereich zeigt die Stunden der gewählten Zeile (Satz oder Widerspruch vorhanden, Schalter an).</summary>
+        public bool ShowDetailHours => _showHoursColumns && _selectedRow != null && _selectedRow.HasRate;
+
+        private void RaiseHoursVisibilityChanged()
+        {
+            RaisePropertyChanged(nameof(HasHourlyRate));
+            RaisePropertyChanged(nameof(HoursColumnsVisible));
+            RaisePropertyChanged(nameof(ShowDetailHours));
+        }
+
+        private static bool LoadShowHoursColumns()
+        {
+            try { return Properties.Settings.Default.ControllingShowHoursColumns; }
+            catch (Exception) { return true; }
+        }
+
+        private static void SaveShowHoursColumns(bool value)
+        {
+            try
+            {
+                Properties.Settings.Default.ControllingShowHoursColumns = value;
+                Properties.Settings.Default.Save();
+            }
+            catch (Exception)
+            {
+                // Die Wahl gilt trotzdem für diese Sitzung.
+            }
+        }
 
         public string ConversionNote =>
             HasHourlyRate
@@ -343,7 +392,7 @@ namespace Zeitmanagement.ViewModel
             foreach (var row in _currentRows.Concat(_lastKnownRows))
                 row.SetRate(ControllingRates.Resolve(row.LinkedProjects, _projectRates));
 
-            RaisePropertyChanged(nameof(HasHourlyRate));
+            RaiseHoursVisibilityChanged();
             RaisePropertyChanged(nameof(ConversionNote));
 
             if (SelectedRow != null)
@@ -595,6 +644,7 @@ namespace Zeitmanagement.ViewModel
                 if (!SetProperty(ref _selectedRow, value)) return;
                 CopyCarrierCommand.RaiseCanExecuteChanged();
                 LoadDetails();
+                RaisePropertyChanged(nameof(ShowDetailHours));
                 RaisePropertyChanged(nameof(HasSelection));
                 RaisePropertyChanged(nameof(HasNoSelection));
             }
@@ -884,7 +934,7 @@ namespace Zeitmanagement.ViewModel
         private void UpdateHoursComparison()
         {
             var row = SelectedRow;
-            if (row == null || !row.HourlyRate.HasValue || !row.ActualCost.HasValue)
+            if (row == null || !_showHoursColumns || !row.HourlyRate.HasValue || !row.ActualCost.HasValue)
             {
                 HoursCompareText = null;
                 return;

@@ -226,5 +226,17 @@ namespace Zeitmanagement.Properties {
                 this["SettingsUpgraded"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ControllingShowHoursColumns {
+            get {
+                return ((bool)(this["ControllingShowHoursColumns"]));
+            }
+            set {
+                this["ControllingShowHoursColumns"] = value;
+            }
+        }
     }
 }

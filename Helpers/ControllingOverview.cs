@@ -105,6 +105,18 @@ namespace Zeitmanagement.Helpers
             }
         }
 
+        /// <summary>Der Budgetverbrauch ist definiert (bekannter, streng positiver Plan und bekanntes Ist).</summary>
+        public bool HasConsumption => Consumption.HasValue;
+
+        /// <summary>Verbrauch als Anteil für den Fortschrittsbalken, auf 0 bis 1 begrenzt (eine Überschreitung füllt ihn ganz, der Text nennt den echten Wert).</summary>
+        public double ProgressValue => Consumption.HasValue ? (double)Math.Max(0m, Math.Min(1m, Consumption.Value)) : 0d;
+
+        /// <summary>Stand in Prozent ("42,0 %"), ohne definierten Verbrauch "–" (die Begründung steht in <see cref="ConsumptionText"/>).</summary>
+        public string ConsumptionPercentText => Consumption.HasValue ? CostMath.FormatPercent(Consumption) : "–";
+
+        /// <summary>Ab 90 % bis zum Plan: Der Balken warnt, der Status bleibt "Im Budget".</summary>
+        public bool IsNearLimit => Consumption.HasValue && Consumption.Value >= 0.9m && !IsOverrun;
+
         public bool IsOverrun => CostMath.IsOverrun(PlannedCost, ActualCost);
         public bool HasMissingPlan => !PlannedCost.HasValue;
         public bool HasNegativeAmount => (PlannedCost ?? 0m) < 0m || (ActualCost ?? 0m) < 0m;

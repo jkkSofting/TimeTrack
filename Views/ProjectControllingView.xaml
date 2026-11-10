@@ -121,6 +121,57 @@
             </Style.Triggers>
         </Style>
 
+        <!--
+            Schlanker Fortschrittsbalken für den Budgetverbrauch. Die Zahl steht immer daneben/darüber, die Farbe unterstützt nur:
+            Akzent normal, Warnfarbe ab 90 %, Gefahrenfarbe bei Überschreitung (der Balken ist dann voll, der Text nennt den echten Wert).
+        -->
+        <Style x:Key="ConsumptionBar" TargetType="ProgressBar">
+            <Setter Property="Minimum" Value="0" />
+            <Setter Property="Maximum" Value="1" />
+            <Setter Property="Height" Value="5" />
+            <Setter Property="Background" Value="{DynamicResource Theme.Track}" />
+            <Setter Property="Foreground" Value="{DynamicResource Theme.Accent}" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <Border
+                                x:Name="PART_Track"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="3" />
+                            <Border
+                                x:Name="PART_Indicator"
+                                HorizontalAlignment="Left"
+                                Background="{TemplateBinding Foreground}"
+                                CornerRadius="3" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsNearLimit}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource Theme.Warning}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsOverrun}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource Theme.Danger}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!--  Zeigt Elemente nur, wenn der Verbrauch NICHT definiert ist (Begründung statt Prozentzahl)  -->
+        <Style x:Key="WhenNoConsumption" TargetType="TextBlock" BasedOn="{StaticResource Text.Muted}">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasConsumption}" Value="False">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <!--  Zeile aus Beschriftung und Wert  -->
         <DataTemplate x:Key="DetailRow">
             <Grid>
@@ -456,6 +507,13 @@
                                 Content="Budget überschritten"
                                 IsChecked="{Binding OnlyOverrun}"
                                 ToolTip="Nur Zeilen, deren Ist den positiven Plan übersteigt" />
+                            <CheckBox
+                                Margin="0,0,12,6"
+                                VerticalAlignment="Center"
+                                Content="Berechnete Stunden (h) zeigen"
+                                IsChecked="{Binding ShowHoursColumns}"
+                                ToolTip="Blendet die aus Geld umgerechneten Stunden (Betrag ÷ Stundensatz) in Tabellen und Details ein oder aus. Die Wahl bleibt gespeichert."
+                                Visibility="{Binding HasHourlyRate, Converter={StaticResource BoolToVis}}" />
                             <Button
                                 Margin="0,0,0,6"
                                 Command="{Binding ResetFiltersCommand}"
@@ -477,12 +535,52 @@
                             CanUserAddRows="False"
                             CanUserResizeColumns="True"
                             EnableRowVirtualization="True"
+                            FrozenColumnCount="1"
                             HorizontalScrollBarVisibility="Auto"
                             IsReadOnly="True"
                             ItemsSource="{Binding RowsView}"
                             SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
                             VerticalScrollBarVisibility="Auto">
                             <DataGrid.Columns>
+                                <!--  Erste Spalte ist fixiert: Der Stand bleibt beim horizontalen Scrollen immer sichtbar  -->
+                                <DataGridTemplateColumn
+                                    Width="150"
+                                    MinWidth="120"
+                                    CanUserReorder="False"
+                                    Header="Stand"
+                                    SortMemberPath="Consumption">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel VerticalAlignment="Center" ToolTip="{Binding ConsumptionText}">
+                                                <TextBlock
+                                                    FontSize="14"
+                                                    FontWeight="SemiBold"
+                                                    Text="{Binding ConsumptionPercentText}"
+                                                    Visibility="{Binding HasConsumption, Converter={StaticResource BoolToVis}}">
+                                                    <TextBlock.Style>
+                                                        <Style BasedOn="{StaticResource Text.Body}" TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsNearLimit}" Value="True">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource Theme.Warning}" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsOverrun}" Value="True">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource Theme.Danger}" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <TextBlock Style="{StaticResource WhenNoConsumption}" Text="{Binding ConsumptionText}" />
+                                                <ProgressBar
+                                                    Margin="0,3,12,0"
+                                                    AutomationProperties.Name="Budgetverbrauch"
+                                                    Style="{StaticResource ConsumptionBar}"
+                                                    Value="{Binding ProgressValue, Mode=OneWay}"
+                                                    Visibility="{Binding HasConsumption, Converter={StaticResource BoolToVis}}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                                 <DataGridTemplateColumn
                                     Width="230"
                                     MinWidth="140"
@@ -562,7 +660,7 @@
                                     Width="125"
                                     MinWidth="90"
                                     Header="Plan (h, umger.)"
-                                    Visibility="{Binding Data.HasHourlyRate, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+                                    Visibility="{Binding Data.HoursColumnsVisible, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock
@@ -576,7 +674,7 @@
                                     Width="125"
                                     MinWidth="90"
                                     Header="Ist (h, umger.)"
-                                    Visibility="{Binding Data.HasHourlyRate, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+                                    Visibility="{Binding Data.HoursColumnsVisible, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock
@@ -590,29 +688,13 @@
                                     Width="125"
                                     MinWidth="90"
                                     Header="Rest (h, umger.)"
-                                    Visibility="{Binding Data.HasHourlyRate, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+                                    Visibility="{Binding Data.HoursColumnsVisible, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock
                                                 Style="{StaticResource Amount}"
                                                 Text="{Binding RemainingHoursText}"
                                                 ToolTip="Aus Geld umgerechnet (Betrag ÷ Stundensatz), nicht gebucht" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn
-                                    Width="125"
-                                    MinWidth="90"
-                                    Header="Verbrauch"
-                                    SortMemberPath="Consumption">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock
-                                                HorizontalAlignment="Right"
-                                                Style="{StaticResource Text.Body}"
-                                                Text="{Binding ConsumptionText}"
-                                                TextTrimming="CharacterEllipsis"
-                                                ToolTip="{Binding ConsumptionText}" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -835,7 +917,7 @@
                                             TextWrapping="Wrap" />
                                     </StackPanel>
                                 </UniformGrid>
-                                <StackPanel Margin="0,8,0,0" Visibility="{Binding SelectedRow.HasRate, Converter={StaticResource BoolToVis}}">
+                                <StackPanel Margin="0,8,0,0" Visibility="{Binding ShowDetailHours, Converter={StaticResource BoolToVis}}">
                                     <TextBlock Style="{StaticResource Text.Label}" Text="UMGERECHNET IN STUNDEN (BETRAG ÷ STUNDENSATZ, NICHT GEBUCHT)" TextWrapping="Wrap" />
                                     <UniformGrid Margin="0,2,0,0" Columns="3">
                                         <TextBlock Style="{StaticResource Text.Body}" Text="{Binding SelectedRow.PlannedHoursText, StringFormat='Plan {0}'}" />
@@ -943,17 +1025,17 @@
                                                 Width="120"
                                                 Binding="{Binding PlannedHoursText}"
                                                 Header="Plan (h, umger.)"
-                                                Visibility="{Binding Data.HasHourlyRate, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}" />
+                                                Visibility="{Binding Data.HoursColumnsVisible, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}" />
                                             <DataGridTextColumn
                                                 Width="120"
                                                 Binding="{Binding ActualHoursText}"
                                                 Header="Ist (h, umger.)"
-                                                Visibility="{Binding Data.HasHourlyRate, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}" />
+                                                Visibility="{Binding Data.HoursColumnsVisible, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}" />
                                             <DataGridTextColumn
                                                 Width="120"
                                                 Binding="{Binding RemainingHoursText}"
                                                 Header="Rest (h, umger.)"
-                                                Visibility="{Binding Data.HasHourlyRate, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}" />
+                                                Visibility="{Binding Data.HoursColumnsVisible, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}" />
                                             <DataGridTextColumn Width="110" Binding="{Binding PlanDeltaText}" Header="Δ Plan" />
                                             <DataGridTextColumn Width="110" Binding="{Binding ActualDeltaText}" Header="Δ Ist" />
                                             <DataGridTextColumn Width="200" Binding="{Binding FileName}" Header="Datei" />
