@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
-using Microsoft.Win32;
+using System.Windows.Interop;
 using Zeitmanagement.Helpers;
 using Zeitmanagement.MVVM;
 
@@ -987,16 +987,41 @@ namespace Zeitmanagement.ViewModel
 
         private async void StartImport()
         {
-            var dialog = new OpenFileDialog
+            var path = ChooseFile();
+            if (path == null) return;
+
+            await LoadPreviewAsync(path, true);
+        }
+
+        /// <summary>
+        /// Dateiauswahl über den Windows-Forms-Dialog: Er zeigt die gewohnte Explorer-Ansicht (anders als der
+        /// WPF-Dialog) und hängt am Hauptfenster. Gibt den Pfad oder <c>null</c> bei Abbruch zurück.
+        /// </summary>
+        private static string ChooseFile()
+        {
+            using (var dialog = new System.Windows.Forms.OpenFileDialog
             {
                 Title = "SAP-Projektcontrolling-Datei wählen",
                 Filter = "Excel-Arbeitsmappe (*.xlsx)|*.xlsx",
                 CheckFileExists = true,
-                Multiselect = false
-            };
+                Multiselect = false,
+                RestoreDirectory = true
+            })
+            {
+                var result = dialog.ShowDialog(new WindowOwner(Application.Current == null ? null : Application.Current.MainWindow));
+                return result == System.Windows.Forms.DialogResult.OK ? dialog.FileName : null;
+            }
+        }
 
-            if (dialog.ShowDialog() != true) return;
-            await LoadPreviewAsync(dialog.FileName, true);
+        /// <summary>Macht ein WPF-Fenster zum Besitzer eines Windows-Forms-Dialogs.</summary>
+        private sealed class WindowOwner : System.Windows.Forms.IWin32Window
+        {
+            public WindowOwner(Window window)
+            {
+                Handle = window == null ? IntPtr.Zero : new WindowInteropHelper(window).Handle;
+            }
+
+            public IntPtr Handle { get; }
         }
 
         /// <summary>
