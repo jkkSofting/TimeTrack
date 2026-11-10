@@ -308,36 +308,6 @@
                             <TextBlock Style="{StaticResource Text.Body}" Text="{Binding CurrencyText}" />
                         </StackPanel>
                     </Border>
-                    <Border
-                        Margin="0,2,8,2"
-                        Padding="12,3"
-                        Style="{StaticResource Pill}"
-                        ToolTip="Dein Stundensatz in der Währung dieses Imports. Damit werden Beträge als rechnerische Stunden (Betrag ÷ Stundensatz) angezeigt. Leer lassen = keine Umrechnung.">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                Style="{StaticResource Text.Muted}"
-                                Text="Stundensatz " />
-                            <TextBox
-                                Width="86"
-                                Padding="6,3"
-                                local:Ui.Placeholder="z. B. 95,50"
-                                AutomationProperties.Name="Stundensatz pro Stunde"
-                                Text="{Binding HourlyRateText, UpdateSourceTrigger=PropertyChanged, Delay=700}" />
-                            <TextBlock
-                                Margin="6,0,0,0"
-                                VerticalAlignment="Center"
-                                Style="{StaticResource Text.Muted}"
-                                Text="pro Stunde" />
-                        </StackPanel>
-                    </Border>
-                    <TextBlock
-                        Margin="0,2,8,2"
-                        VerticalAlignment="Center"
-                        Foreground="{DynamicResource Theme.Danger}"
-                        Style="{StaticResource WrapMuted}"
-                        Text="{Binding HourlyRateError}"
-                        Visibility="{Binding HasHourlyRateError, Converter={StaticResource BoolToVis}}" />
                 </WrapPanel>
 
                 <TextBlock
@@ -789,19 +759,57 @@
                                 <ItemsControl ItemsSource="{Binding DetailProjects}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <StackPanel Margin="0,2" Orientation="Horizontal">
-                                                <TextBlock
-                                                    FontWeight="SemiBold"
-                                                    Style="{StaticResource Text.Body}"
-                                                    Text="{Binding Name}" />
-                                                <TextBlock
-                                                    Margin="8,0,0,0"
-                                                    Style="{StaticResource Text.Muted}"
-                                                    Text="{Binding Customer, StringFormat='· Kunde (lokal): {0}'}" />
-                                            </StackPanel>
+                                            <Grid Margin="0,3">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel VerticalAlignment="Center">
+                                                    <TextBlock
+                                                        FontWeight="SemiBold"
+                                                        Style="{StaticResource Text.Body}"
+                                                        Text="{Binding Name}"
+                                                        TextWrapping="Wrap" />
+                                                    <TextBlock
+                                                        Style="{StaticResource Text.Muted}"
+                                                        Text="{Binding Customer, StringFormat='Kunde (lokal): {0}'}"
+                                                        TextWrapping="Wrap" />
+                                                    <TextBlock
+                                                        Foreground="{DynamicResource Theme.Danger}"
+                                                        Style="{StaticResource WrapMuted}"
+                                                        Text="{Binding Error}"
+                                                        Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}" />
+                                                </StackPanel>
+                                                <StackPanel
+                                                    Grid.Column="1"
+                                                    VerticalAlignment="Center"
+                                                    Orientation="Horizontal"
+                                                    ToolTip="Stundensatz dieses Projekts (in der Währung des gewählten Imports). Er dient nur dazu, Geld in rechnerische Stunden umzurechnen. Leer lassen = keine Umrechnung.">
+                                                    <TextBlock
+                                                        Margin="0,0,6,0"
+                                                        VerticalAlignment="Center"
+                                                        Style="{StaticResource Text.Muted}"
+                                                        Text="Stundensatz" />
+                                                    <TextBox
+                                                        Width="80"
+                                                        Padding="6,3"
+                                                        local:Ui.Placeholder="z. B. 95,50"
+                                                        AutomationProperties.Name="Stundensatz des Projekts"
+                                                        Text="{Binding RateText, UpdateSourceTrigger=PropertyChanged, Delay=700}" />
+                                                    <TextBlock
+                                                        Margin="6,0,0,0"
+                                                        VerticalAlignment="Center"
+                                                        Style="{StaticResource Text.Muted}"
+                                                        Text="pro Stunde" />
+                                                </StackPanel>
+                                            </Grid>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
+                                <TextBlock
+                                    Margin="0,2,0,0"
+                                    Style="{StaticResource WrapMuted}"
+                                    Text="Der Stundensatz gehört zum Projekt (und zur Währung des Imports). Mit ihm werden Beträge als rechnerische Stunden angezeigt – nicht gebucht, nur umgerechnet." />
 
                                 <!--  Kernwerte des gewählten PSP-Elements  -->
                                 <UniformGrid
@@ -827,7 +835,7 @@
                                             TextWrapping="Wrap" />
                                     </StackPanel>
                                 </UniformGrid>
-                                <StackPanel Margin="0,8,0,0" Visibility="{Binding HasHourlyRate, Converter={StaticResource BoolToVis}}">
+                                <StackPanel Margin="0,8,0,0" Visibility="{Binding SelectedRow.HasRate, Converter={StaticResource BoolToVis}}">
                                     <TextBlock Style="{StaticResource Text.Label}" Text="UMGERECHNET IN STUNDEN (BETRAG ÷ STUNDENSATZ, NICHT GEBUCHT)" TextWrapping="Wrap" />
                                     <UniformGrid Margin="0,2,0,0" Columns="3">
                                         <TextBlock Style="{StaticResource Text.Body}" Text="{Binding SelectedRow.PlannedHoursText, StringFormat='Plan {0}'}" />

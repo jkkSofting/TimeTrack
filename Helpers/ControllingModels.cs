@@ -445,12 +445,6 @@ namespace Zeitmanagement.Helpers
         /// <summary>Größter erlaubter Stundensatz (schützt vor Tippfehlern wie 95000).</summary>
         public const decimal MaxHourlyRate = 100000m;
 
-        /// <summary>Einstellungsschlüssel des Stundensatzes; der Satz gilt je Währungskontext, nie währungsübergreifend.</summary>
-        public static string HourlyRateKey(string currencyContext)
-        {
-            return "hourly_rate|" + currencyContext;
-        }
-
         /// <summary>
         /// Rechnerische Stunden: Betrag ÷ Stundensatz. Nur mit bekanntem Betrag und positivem Satz; ein negativer Betrag
         /// (Überschreitung, Gutschrift) bleibt negativ. Das ist eine Schätzung aus Geld, keine gebuchte Zeit.

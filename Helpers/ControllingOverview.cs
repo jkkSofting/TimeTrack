@@ -11,27 +11,39 @@ namespace Zeitmanagement.Helpers
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private decimal? _hourlyRate;
+        public const string AmbiguousRateText = "Satz uneinheitlich";
 
         /// <summary>
-        /// Vom Benutzer eingetragener Stundensatz (Währungskontext der Beträge) oder <c>null</c>. Nur damit lassen sich
-        /// Beträge als rechnerische Stunden anzeigen; ohne Satz wird nichts umgerechnet.
+        /// Der für dieses PSP-Element geltende Stundensatz: der Satz der verknüpften Projekte, sofern sie sich einig sind.
+        /// <c>null</c> = kein Projekt hat einen Satz eingetragen, dann wird nichts umgerechnet.
         /// </summary>
-        public decimal? HourlyRate
+        public decimal? HourlyRate { get; private set; }
+
+        /// <summary>Die verknüpften Projekte haben verschiedene Sätze: Es wird nicht geraten, sondern nichts umgerechnet.</summary>
+        public bool IsRateAmbiguous { get; private set; }
+
+        /// <summary>Ein Satz oder ein Widerspruch liegt vor (die Stundenspalten haben dann etwas zu zeigen).</summary>
+        public bool HasRate => HourlyRate.HasValue || IsRateAmbiguous;
+
+        public void SetRate(RateResolution resolution)
         {
-            get { return _hourlyRate; }
-            set
-            {
-                if (_hourlyRate == value) return;
-                _hourlyRate = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty)); // alles neu lesen
-            }
+            resolution = resolution ?? RateResolution.None;
+            if (HourlyRate == resolution.Rate && IsRateAmbiguous == resolution.IsAmbiguous) return;
+
+            HourlyRate = resolution.Rate;
+            IsRateAmbiguous = resolution.IsAmbiguous;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty)); // alles neu lesen
         }
 
-        /// <summary>Plan, Ist und Rest als rechnerische Stunden (Betrag ÷ Stundensatz) - keine gebuchte Zeit.</summary>
-        public string PlannedHoursText => CostMath.FormatHours(PlannedCost, _hourlyRate);
-        public string ActualHoursText => CostMath.FormatHours(ActualCost, _hourlyRate);
-        public string RemainingHoursText => CostMath.FormatHours(RemainingCost, _hourlyRate);
+        /// <summary>Rechnerische Stunden (Betrag ÷ Stundensatz) für einen Betrag dieser Zeile - keine gebuchte Zeit.</summary>
+        public string FormatHours(decimal? amount)
+        {
+            return IsRateAmbiguous ? AmbiguousRateText : CostMath.FormatHours(amount, HourlyRate);
+        }
+
+        public string PlannedHoursText => FormatHours(PlannedCost);
+        public string ActualHoursText => FormatHours(ActualCost);
+        public string RemainingHoursText => FormatHours(RemainingCost);
 
         public ControllingObservation Observation { get; set; }
         public List<LocalProjectInfo> LinkedProjects { get; } = new List<LocalProjectInfo>();
@@ -108,6 +120,45 @@ namespace Zeitmanagement.Helpers
                 if (!ActualCost.HasValue) return "Ist nicht geliefert";
                 return "Im Budget";
             }
+        }
+    }
+
+    /// <summary>Ergebnis der Satzauflösung für ein PSP-Element.</summary>
+    public sealed class RateResolution
+    {
+        public static readonly RateResolution None = new RateResolution(null, false);
+
+        public RateResolution(decimal? rate, bool isAmbiguous)
+        {
+            Rate = rate;
+            IsAmbiguous = isAmbiguous;
+        }
+
+        public decimal? Rate { get; }
+        public bool IsAmbiguous { get; }
+    }
+
+    /// <summary>Stundensatz je Projekt: Bestimmt den Satz, der für ein PSP-Element gilt.</summary>
+    public static class ControllingRates
+    {
+        /// <summary>
+        /// Teilen sich mehrere Projekte einen Kostenträger, gilt der Satz, den alle eingetragenen Sätze gemeinsam haben.
+        /// Projekte ohne Satz bleiben außen vor; weichen die eingetragenen Sätze voneinander ab, ist das Ergebnis
+        /// "uneinheitlich" (keine Umrechnung, kein Mittelwert, kein erstes oder letztes Projekt).
+        /// </summary>
+        public static RateResolution Resolve(IEnumerable<LocalProjectInfo> linkedProjects, IDictionary<int, decimal> ratesByProject)
+        {
+            if (linkedProjects == null || ratesByProject == null) return RateResolution.None;
+
+            var rates = new List<decimal>();
+            foreach (var project in linkedProjects)
+            {
+                decimal rate;
+                if (ratesByProject.TryGetValue(project.Id, out rate) && rate > 0m && !rates.Contains(rate)) rates.Add(rate);
+            }
+
+            if (rates.Count == 0) return RateResolution.None;
+            return rates.Count == 1 ? new RateResolution(rates[0], false) : new RateResolution(null, true);
         }
     }
 

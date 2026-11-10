@@ -40,6 +40,45 @@ namespace Zeitmanagement.ViewModel
         public bool IsSelected { get => _isSelected; set => SetProperty(ref _isSelected, value); }
     }
 
+    /// <summary>
+    /// Ein lokales Projekt in den Details samt seinem Stundensatz. Der Satz gehört zum Projekt (nicht global) und gilt für die
+    /// Währung des gewählten Imports; er dient nur der Umrechnung von Geld in rechnerische Stunden.
+    /// </summary>
+    internal sealed class ProjectRateItem : BindableBase
+    {
+        private string _rateText;
+        private string _error;
+
+        public ProjectRateItem(LocalProjectInfo project, string initialRateText)
+        {
+            Id = project.Id;
+            Name = project.Name;
+            Customer = project.Customer;
+            _rateText = initialRateText ?? string.Empty;
+        }
+
+        public int Id { get; }
+        public string Name { get; }
+        public string Customer { get; }
+
+        public string RateText
+        {
+            get => _rateText;
+            set { if (SetProperty(ref _rateText, value)) RateEdited?.Invoke(this); }
+        }
+
+        public string Error
+        {
+            get => _error;
+            set { if (SetProperty(ref _error, value)) RaisePropertyChanged(nameof(HasError)); }
+        }
+
+        public bool HasError => !string.IsNullOrEmpty(_error);
+
+        /// <summary>Wird nach jeder Änderung des Textes ausgelöst (nicht beim Setzen des Anfangswerts).</summary>
+        public Action<ProjectRateItem> RateEdited { get; set; }
+    }
+
     /// <summary>Eine Zeile des Kostenverlaufs: ein Importstand eines PSP-Elements mit Differenz zum vorigen Stand.</summary>
     internal sealed class CostHistoryItem
     {
@@ -266,94 +305,43 @@ namespace Zeitmanagement.ViewModel
             RaisePropertyChanged(nameof(VisibleCountText));
         }
 
-        // ===== Stundensatz: rechnerische Stunden aus Geld =====
+        // ===== Stundensatz je Projekt: rechnerische Stunden aus Geld =====
 
-        private decimal? _hourlyRate;
-        private string _hourlyRateText;
-        private bool _suppressRateSave;
+        // Projekt-ID → Stundensatz für den Währungskontext des gewählten Imports
+        private Dictionary<int, decimal> _projectRates = new Dictionary<int, decimal>();
 
-        /// <summary>
-        /// Stundensatz, den du selbst einträgst. Er gilt für die Währung des gewählten Imports und wird nur zum Umrechnen von
-        /// Beträgen in rechnerische Stunden benutzt (Betrag ÷ Stundensatz). Ohne Eintrag wird nichts umgerechnet.
-        /// </summary>
-        public string HourlyRateText
-        {
-            get => _hourlyRateText;
-            set
-            {
-                if (!SetProperty(ref _hourlyRateText, value)) return;
-                if (!_suppressRateSave) OnHourlyRateTextChanged();
-            }
-        }
-
-        public bool HasHourlyRate => _hourlyRate.HasValue;
-
-        private string _hourlyRateError;
-        public string HourlyRateError
-        {
-            get => _hourlyRateError;
-            private set { if (SetProperty(ref _hourlyRateError, value)) RaisePropertyChanged(nameof(HasHourlyRateError)); }
-        }
-
-        public bool HasHourlyRateError => !string.IsNullOrEmpty(_hourlyRateError);
+        /// <summary>Mindestens ein PSP-Element hat einen Satz (oder widersprüchliche Sätze): Dann zeigen die Tabellen Stundenspalten.</summary>
+        public bool HasHourlyRate => _currentRows.Concat(_lastKnownRows).Any(r => r.HasRate);
 
         public string ConversionNote =>
-            _hourlyRate.HasValue
-                ? "Stunden (h) in den Tabellen sind aus Geld umgerechnet: Betrag ÷ Stundensatz (" + CostMath.FormatRate(_hourlyRate) + " pro Stunde, " + CurrencyText +
-                  "). Das ist eine Schätzung aus Geld, keine gebuchte Zeit und nicht mit den lokal erfassten Stunden abgestimmt."
+            HasHourlyRate
+                ? "Stunden (h) in den Tabellen sind aus Geld umgerechnet: Betrag ÷ Stundensatz des Projekts (in den Details je Projekt eingetragen, " + CurrencyText +
+                  "). Teilen sich Projekte einen Kostenträger mit unterschiedlichen Sätzen, steht „" + ControllingOverviewRow.AmbiguousRateText +
+                  "“. Das ist eine Schätzung aus Geld, keine gebuchte Zeit und nicht mit den lokal erfassten Stunden abgestimmt."
                 : string.Empty;
 
-        private void OnHourlyRateTextChanged()
+        /// <summary>Liest die Sätze zum Währungskontext des gewählten Imports und wendet sie auf alle Zeilen an.</summary>
+        private void LoadProjectRates()
         {
-            decimal? rate;
-            if (!CostMath.TryParseHourlyRate(_hourlyRateText, out rate))
-            {
-                HourlyRateError = "Bitte einen Stundensatz größer 0 eingeben, z. B. 95,50.";
-                return;
-            }
+            _projectRates = SelectedImport == null
+                ? new Dictionary<int, decimal>()
+                : MainViewModel.DbInstance.GetControllingProjectRates(SelectedImport.CurrencyContext);
 
-            HourlyRateError = null;
-            if (SelectedImport != null)
-            {
-                try
-                {
-                    MainViewModel.DbInstance.SetControllingHourlyRate(SelectedImport.CurrencyContext, rate);
-                }
-                catch (Exception ex)
-                {
-                    HourlyRateError = "Der Stundensatz konnte nicht gespeichert werden: " + ex.Message;
-                    return;
-                }
-            }
+            ApplyRates();
 
-            ApplyHourlyRate(rate);
+            // Die Sätze gelten je Währungskontext: Beim Wechsel des Imports zeigen die Projektzeilen die Sätze des neuen Kontexts.
+            if (SelectedRow != null)
+            {
+                DetailProjects.Clear();
+                foreach (var p in SelectedRow.LinkedProjects) DetailProjects.Add(CreateRateItem(p));
+            }
         }
 
-        /// <summary>Liest den gespeicherten Satz zum Währungskontext des gewählten Imports und wendet ihn an.</summary>
-        private void LoadHourlyRate()
+        /// <summary>Bestimmt je PSP-Element den geltenden Satz (siehe <see cref="ControllingRates.Resolve"/>) und frischt die Anzeige auf.</summary>
+        private void ApplyRates()
         {
-            decimal? rate = null;
-            if (SelectedImport != null)
-                rate = MainViewModel.DbInstance.GetControllingHourlyRate(SelectedImport.CurrencyContext);
-
-            _suppressRateSave = true;
-            try
-            {
-                HourlyRateText = CostMath.FormatRate(rate);
-            }
-            finally
-            {
-                _suppressRateSave = false;
-            }
-
-            HourlyRateError = null;
-            ApplyHourlyRate(rate);
-        }
-
-        private void ApplyHourlyRate(decimal? rate)
-        {
-            _hourlyRate = rate;
-            foreach (var row in _currentRows.Concat(_lastKnownRows)) row.HourlyRate = rate;
+            foreach (var row in _currentRows.Concat(_lastKnownRows))
+                row.SetRate(ControllingRates.Resolve(row.LinkedProjects, _projectRates));
 
             RaisePropertyChanged(nameof(HasHourlyRate));
             RaisePropertyChanged(nameof(ConversionNote));
@@ -364,6 +352,42 @@ namespace Zeitmanagement.ViewModel
                 LoadCostHistory(MainViewModel.DbInstance, SelectedRow);
                 UpdateHoursComparison();
             }
+        }
+
+        private ProjectRateItem CreateRateItem(LocalProjectInfo project)
+        {
+            decimal rate;
+            var item = new ProjectRateItem(project, _projectRates.TryGetValue(project.Id, out rate) ? CostMath.FormatRate(rate) : string.Empty);
+            item.RateEdited = OnProjectRateEdited;
+            return item;
+        }
+
+        private void OnProjectRateEdited(ProjectRateItem item)
+        {
+            decimal? rate;
+            if (!CostMath.TryParseHourlyRate(item.RateText, out rate))
+            {
+                item.Error = "Bitte einen Stundensatz größer 0 eingeben, z. B. 95,50.";
+                return;
+            }
+
+            if (SelectedImport == null) return;
+
+            try
+            {
+                MainViewModel.DbInstance.SetControllingProjectRate(item.Id, SelectedImport.CurrencyContext, rate);
+            }
+            catch (Exception ex)
+            {
+                item.Error = "Der Stundensatz konnte nicht gespeichert werden: " + ex.Message;
+                return;
+            }
+
+            item.Error = null;
+            if (rate.HasValue) _projectRates[item.Id] = rate.Value;
+            else _projectRates.Remove(item.Id);
+
+            ApplyRates();
         }
 
         // ===== Suche und Filter (ändern nie, was importiert werden darf) =====
@@ -471,7 +495,7 @@ namespace Zeitmanagement.ViewModel
             }
 
             ApplyRows(keepKey);
-            LoadHourlyRate();
+            LoadProjectRates();
         }
 
         private ParentContext LoadContext(TimeTracker db, ControllingObservation observation)
@@ -581,7 +605,7 @@ namespace Zeitmanagement.ViewModel
 
         public ObservableCollection<DetailItem> DetailItems { get; } = new ObservableCollection<DetailItem>();
         public ObservableCollection<DetailItem> ContextItems { get; } = new ObservableCollection<DetailItem>();
-        public ObservableCollection<LocalProjectInfo> DetailProjects { get; } = new ObservableCollection<LocalProjectInfo>();
+        public ObservableCollection<ProjectRateItem> DetailProjects { get; } = new ObservableCollection<ProjectRateItem>();
         public ObservableCollection<DetailItem> ImportItems { get; } = new ObservableCollection<DetailItem>();
         public ObservableCollection<string> ImportWarnings { get; } = new ObservableCollection<string>();
 
@@ -640,7 +664,7 @@ namespace Zeitmanagement.ViewModel
             var db = MainViewModel.DbInstance;
             var o = row.Observation;
 
-            foreach (var p in row.LinkedProjects) DetailProjects.Add(p);
+            foreach (var p in row.LinkedProjects) DetailProjects.Add(CreateRateItem(p));
 
             DetailItems.Add(new DetailItem("Kostenträger (PSP-Element)", o.CarrierText));
             DetailItems.Add(new DetailItem("PSP-Name", o.PspName));
@@ -717,9 +741,9 @@ namespace Zeitmanagement.ViewModel
                     ActualText = CostMath.FormatMoney(h.ActualCost),
                     RemainingText = CostMath.FormatMoney(h.RemainingCost),
                     ConsumptionText = h.Consumption.HasValue ? CostMath.FormatPercent(h.Consumption) : CostMath.NoBudgetText,
-                    PlannedHoursText = CostMath.FormatHours(h.PlannedCost, _hourlyRate),
-                    ActualHoursText = CostMath.FormatHours(h.ActualCost, _hourlyRate),
-                    RemainingHoursText = CostMath.FormatHours(h.RemainingCost, _hourlyRate),
+                    PlannedHoursText = row.FormatHours(h.PlannedCost),
+                    ActualHoursText = row.FormatHours(h.ActualCost),
+                    RemainingHoursText = row.FormatHours(h.RemainingCost),
                     PlanDeltaText = previous == null ? "–" : CostMath.FormatSignedMoney(CostMath.Delta(previous.PlannedCost, h.PlannedCost)),
                     ActualDeltaText = previous == null ? "–" : CostMath.FormatSignedMoney(CostMath.Delta(previous.ActualCost, h.ActualCost)),
                     FileName = h.FileName,
@@ -860,7 +884,7 @@ namespace Zeitmanagement.ViewModel
         private void UpdateHoursComparison()
         {
             var row = SelectedRow;
-            if (row == null || !_hourlyRate.HasValue || !row.ActualCost.HasValue)
+            if (row == null || !row.HourlyRate.HasValue || !row.ActualCost.HasValue)
             {
                 HoursCompareText = null;
                 return;
@@ -868,8 +892,8 @@ namespace Zeitmanagement.ViewModel
 
             var booked = LocalHoursCalculator.Calculate(_hoursEntries, HoursBucketKind.Month).TotalMinutes;
             HoursCompareText =
-                "Zum Vergleich: Die Ist-Kosten entsprechen bei " + CostMath.FormatRate(_hourlyRate) + " pro Stunde rechnerisch " +
-                CostMath.FormatHours(row.ActualCost, _hourlyRate) + " (aus Geld umgerechnet, nicht gebucht). Lokal gebucht sind in allen Zeiträumen " +
+                "Zum Vergleich: Die Ist-Kosten entsprechen bei " + CostMath.FormatRate(row.HourlyRate) + " pro Stunde rechnerisch " +
+                row.FormatHours(row.ActualCost) + " (aus Geld umgerechnet, nicht gebucht). Lokal gebucht sind in allen Zeiträumen " +
                 LocalHoursCalculator.FormatDecimalHours(booked) + ". Das sind zwei getrennte Größen, keine Abstimmung.";
         }
 

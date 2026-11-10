@@ -85,10 +85,13 @@ public sealed partial class TimeTracker
             actual_cost         TEXT    NULL,
             UNIQUE(import_id, carrier_id)
         );
-        -- Einstellungen des Controllings (z. B. der Stundensatz je Währungskontext), damit Sicherungen sie mitnehmen
-        CREATE TABLE IF NOT EXISTS controlling_settings(
-            setting_key   TEXT PRIMARY KEY,
-            setting_value TEXT NOT NULL
+        -- Stundensatz je lokalem Projekt (und Währungskontext) für die Umrechnung Geld -> rechnerische Stunden.
+        -- Gehört zum Projekt: Wird das Projekt gelöscht, entfällt sein Satz; Importe und Buchungen bleiben unberührt.
+        CREATE TABLE IF NOT EXISTS controlling_project_rates(
+            project_id       INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+            currency_context TEXT    NOT NULL,
+            hourly_rate      TEXT    NOT NULL,                 -- exakter Dezimaltext
+            PRIMARY KEY(project_id, currency_context)
         );
         CREATE INDEX IF NOT EXISTS idx_controlling_snapshots_carrier ON controlling_snapshots(carrier_id);
         CREATE INDEX IF NOT EXISTS idx_controlling_snapshots_import  ON controlling_snapshots(import_id);
@@ -496,51 +499,50 @@ public sealed partial class TimeTracker
         }
     }
 
-    // ---------- Einstellungen (Stundensatz) ----------
+    // ---------- Stundensatz je Projekt ----------
 
-    /// <summary>Wert einer Controlling-Einstellung oder <c>null</c>.</summary>
-    public string GetControllingSetting(string key)
+    /// <summary>Die eingetragenen Stundensätze der lokalen Projekte (Projekt-ID → Satz) zu einem Währungskontext.</summary>
+    public Dictionary<int, decimal> GetControllingProjectRates(string currencyContext)
     {
+        var result = new Dictionary<int, decimal>();
         using (var cmd = _conn.CreateCommand())
         {
-            cmd.CommandText = "SELECT setting_value FROM controlling_settings WHERE setting_key = @k;";
-            cmd.Parameters.AddWithValue("@k", key);
-            var value = cmd.ExecuteScalar();
-            return value == null || value == DBNull.Value ? null : Convert.ToString(value, CultureInfo.InvariantCulture);
+            cmd.CommandText = "SELECT project_id, hourly_rate FROM controlling_project_rates WHERE currency_context = @ctx;";
+            cmd.Parameters.AddWithValue("@ctx", currencyContext);
+            using (var r = cmd.ExecuteReader())
+            {
+                while (r.Read())
+                {
+                    var rate = CostMath.ParseInvariant(r.GetString(1));
+                    if (rate.HasValue && rate.Value > 0m) result[r.GetInt32(0)] = rate.Value;
+                }
+            }
         }
+        return result;
     }
 
-    /// <summary>Speichert eine Einstellung; <c>null</c> oder leer entfernt sie.</summary>
-    public void SetControllingSetting(string key, string value)
+    /// <summary>Setzt den Stundensatz eines Projekts für einen Währungskontext; <c>null</c> entfernt ihn.</summary>
+    public void SetControllingProjectRate(int projectId, string currencyContext, decimal? rate)
     {
         using (var cmd = _conn.CreateCommand())
         {
-            if (string.IsNullOrEmpty(value))
+            if (!rate.HasValue)
             {
-                cmd.CommandText = "DELETE FROM controlling_settings WHERE setting_key = @k;";
-                cmd.Parameters.AddWithValue("@k", key);
+                cmd.CommandText = "DELETE FROM controlling_project_rates WHERE project_id = @p AND currency_context = @ctx;";
+                cmd.Parameters.AddWithValue("@p", projectId);
+                cmd.Parameters.AddWithValue("@ctx", currencyContext);
             }
             else
             {
                 cmd.CommandText = @"
-                INSERT INTO controlling_settings (setting_key, setting_value) VALUES (@k, @v)
-                ON CONFLICT(setting_key) DO UPDATE SET setting_value = excluded.setting_value;";
-                cmd.Parameters.AddWithValue("@k", key);
-                cmd.Parameters.AddWithValue("@v", value);
+                INSERT INTO controlling_project_rates (project_id, currency_context, hourly_rate) VALUES (@p, @ctx, @v)
+                ON CONFLICT(project_id, currency_context) DO UPDATE SET hourly_rate = excluded.hourly_rate;";
+                cmd.Parameters.AddWithValue("@p", projectId);
+                cmd.Parameters.AddWithValue("@ctx", currencyContext);
+                cmd.Parameters.AddWithValue("@v", CostMath.ToInvariantText(rate));
             }
             cmd.ExecuteNonQuery();
         }
-    }
-
-    /// <summary>Der eingetragene Stundensatz zum Währungskontext oder <c>null</c> (dann wird nichts umgerechnet).</summary>
-    public decimal? GetControllingHourlyRate(string currencyContext)
-    {
-        return CostMath.ParseInvariant(GetControllingSetting(CostMath.HourlyRateKey(currencyContext)));
-    }
-
-    public void SetControllingHourlyRate(string currencyContext, decimal? rate)
-    {
-        SetControllingSetting(CostMath.HourlyRateKey(currencyContext), CostMath.ToInvariantText(rate));
     }
 
     // ---------- Löschen ----------
