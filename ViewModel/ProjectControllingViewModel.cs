@@ -133,6 +133,8 @@ namespace Zeitmanagement.ViewModel
         private bool _loading;
 
         private List<LocalProjectInfo> _projects = new List<LocalProjectInfo>();
+        // Verläufe (aktive Beobachtungen je PSP-Element) des gewählten Währungskontexts, für das Diagramm
+        private Dictionary<string, List<ControllingObservation>> _histories = new Dictionary<string, List<ControllingObservation>>(StringComparer.Ordinal);
         private List<ControllingOverviewRow> _currentRows = new List<ControllingOverviewRow>();
         private List<ControllingOverviewRow> _lastKnownRows = new List<ControllingOverviewRow>();
         private readonly Dictionary<string, ParentContext> _contextCache = new Dictionary<string, ParentContext>(StringComparer.Ordinal);
@@ -155,6 +157,7 @@ namespace Zeitmanagement.ViewModel
             CopyCarrierCommand = new DelegateCommand(CopyCarrier, p => p is ControllingOverviewRow || SelectedRow != null);
             OpenDayCommand = new DelegateCommand(OpenDay, p => p is HoursBucket && _openDay != null);
             DismissMessageCommand = new DelegateCommand(_ => StatusMessage = null);
+            SelectSeriesCommand = new DelegateCommand(SelectSeries, p => p is string);
             ResetHoursRangeCommand = new DelegateCommand(_ => { HoursStartText = HoursEndText = string.Empty; });
         }
 
@@ -171,6 +174,8 @@ namespace Zeitmanagement.ViewModel
         public DelegateCommand CopyCarrierCommand { get; }
         public DelegateCommand OpenDayCommand { get; }
         public DelegateCommand DismissMessageCommand { get; }
+        /// <summary>Wählt die Zeile zu einer angeklickten Linie des Diagramms (Kostenträger-Schlüssel als Parameter).</summary>
+        public DelegateCommand SelectSeriesCommand { get; }
         public DelegateCommand ResetHoursRangeCommand { get; }
 
         // ===== Meldungen =====
@@ -300,9 +305,102 @@ namespace Zeitmanagement.ViewModel
             RaisePropertyChanged(nameof(BatchModeText));
             RaisePropertyChanged(nameof(HasRows));
             RaisePropertyChanged(nameof(ShowEmptyRowsHint));
+            RaisePropertyChanged(nameof(ShowTableEmptyHint));
             RaisePropertyChanged(nameof(EmptyRowsText));
             RaisePropertyChanged(nameof(ModeHint));
             RaisePropertyChanged(nameof(VisibleCountText));
+        }
+
+        // ===== Ansicht: Tabelle oder Diagramm =====
+
+        private bool _isChartView;
+
+        /// <summary>Die Übersicht als Tabelle (bisherige Ansicht).</summary>
+        public bool IsTableView
+        {
+            get => !_isChartView;
+            set { if (value) SetChartView(false); }
+        }
+
+        /// <summary>Die Übersicht als X-Y-Diagramm (Stand über die SAP-Daten).</summary>
+        public bool IsChartView
+        {
+            get => _isChartView;
+            set { if (value) SetChartView(true); }
+        }
+
+        private ChartMode _chartMode = ChartMode.Percent;
+
+        /// <summary>Diagramm relativ: Ist ÷ Plan in Prozent.</summary>
+        public bool IsChartPercent
+        {
+            get => _chartMode == ChartMode.Percent;
+            set { if (value) SetChartMode(ChartMode.Percent); }
+        }
+
+        /// <summary>Diagramm in Stunden: aus Geld umgerechnet (Stundensatz des Projekts) und lokal gebucht.</summary>
+        public bool IsChartHours
+        {
+            get => _chartMode == ChartMode.Hours;
+            set { if (value) SetChartMode(ChartMode.Hours); }
+        }
+
+        private ChartData _chart;
+        public ChartData Chart { get => _chart; private set => SetProperty(ref _chart, value); }
+
+        public string ChartNoteText => _chart == null ? string.Empty : string.Join("\n", _chart.Notes);
+        public bool HasChartNotes => _chart != null && _chart.Notes.Count > 0;
+
+        /// <summary>Hinweis der leeren Tabelle gilt nur in der Tabellenansicht (das Diagramm erklärt sich selbst).</summary>
+        public bool ShowTableEmptyHint => ShowEmptyRowsHint && !_isChartView;
+
+        private void SetChartView(bool chart)
+        {
+            if (_isChartView == chart) return;
+            _isChartView = chart;
+            RaisePropertyChanged(nameof(IsTableView));
+            RaisePropertyChanged(nameof(IsChartView));
+            RaisePropertyChanged(nameof(ShowTableEmptyHint));
+            RebuildChart();
+        }
+
+        private void SetChartMode(ChartMode mode)
+        {
+            if (_chartMode == mode) return;
+            _chartMode = mode;
+            RaisePropertyChanged(nameof(IsChartPercent));
+            RaisePropertyChanged(nameof(IsChartHours));
+            RebuildChart();
+        }
+
+        /// <summary>
+        /// Baut das Diagramm aus den Zeilen, die die Tabelle gerade zeigt (nach Suche und Filtern), und – für die gewählte Zeile –
+        /// ihren lokal gebuchten Stunden. Läuft nur, solange das Diagramm angezeigt wird.
+        /// </summary>
+        private void RebuildChart()
+        {
+            if (!_isChartView) return;
+
+            var inputs = RowsView.Cast<ControllingOverviewRow>().Select(row =>
+            {
+                List<ControllingObservation> history;
+                _histories.TryGetValue(row.CarrierKey, out history);
+                return new ChartRowInput(row, history);
+            }).ToList();
+
+            var local = ControllingChartBuilder.LocalCumulative(SelectedRow == null ? null : _hoursEntries);
+            Chart = ControllingChartBuilder.Build(inputs, SelectedRow == null ? null : SelectedRow.CarrierKey, _chartMode, _showHoursColumns, local);
+            RaisePropertyChanged(nameof(ChartNoteText));
+            RaisePropertyChanged(nameof(HasChartNotes));
+        }
+
+        private void SelectSeries(object parameter)
+        {
+            var key = parameter as string;
+            if (key == null) return;
+
+            var row = Rows.FirstOrDefault(r => r.CarrierKey == key);
+            if (row != null) SelectedRow = row;
         }
 
         // ===== Stundensatz je Projekt: rechnerische Stunden aus Geld =====
@@ -327,6 +425,7 @@ namespace Zeitmanagement.ViewModel
                 SaveShowHoursColumns(value);
                 RaiseHoursVisibilityChanged();
                 UpdateHoursComparison();
+                RebuildChart();
             }
         }
 
@@ -401,6 +500,8 @@ namespace Zeitmanagement.ViewModel
                 LoadCostHistory(MainViewModel.DbInstance, SelectedRow);
                 UpdateHoursComparison();
             }
+
+            RebuildChart();
         }
 
         private ProjectRateItem CreateRateItem(LocalProjectInfo project)
@@ -473,6 +574,7 @@ namespace Zeitmanagement.ViewModel
             RowsView.Refresh();
             RaisePropertyChanged(nameof(VisibleCountText));
             RaisePropertyChanged(nameof(EmptyRowsText));
+            RebuildChart();
         }
 
         private bool FilterRow(object item)
@@ -541,6 +643,12 @@ namespace Zeitmanagement.ViewModel
 
                 foreach (var row in _currentRows.Concat(_lastKnownRows))
                     row.Context = LoadContext(db, row.Observation);
+
+                _histories = db.GetControllingHistories(_currentRows.Concat(_lastKnownRows).Select(r => r.CarrierKey), SelectedImport.CurrencyContext);
+            }
+            else
+            {
+                _histories = new Dictionary<string, List<ControllingObservation>>(StringComparer.Ordinal);
             }
 
             ApplyRows(keepKey);
@@ -645,6 +753,7 @@ namespace Zeitmanagement.ViewModel
                 CopyCarrierCommand.RaiseCanExecuteChanged();
                 LoadDetails();
                 RaisePropertyChanged(nameof(ShowDetailHours));
+                RebuildChart();
                 RaisePropertyChanged(nameof(HasSelection));
                 RaisePropertyChanged(nameof(HasNoSelection));
             }
@@ -956,6 +1065,7 @@ namespace Zeitmanagement.ViewModel
             var ids = HoursProjects.Where(p => p.IsSelected).Select(p => p.Id).ToList();
             _hoursEntries = ids.Count == 0 ? new List<LocalTimeEntry>() : MainViewModel.DbInstance.GetTimeEntriesForProjectIds(ids);
             RecalculateHours();
+            RebuildChart();
         }
 
         private static bool TryParseDate(string text, out DateTime? value)

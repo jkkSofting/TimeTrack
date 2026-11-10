@@ -514,6 +514,53 @@
                                 IsChecked="{Binding ShowHoursColumns}"
                                 ToolTip="Blendet die aus Geld umgerechneten Stunden (Betrag ÷ Stundensatz) in Tabellen und Details ein oder aus. Die Wahl bleibt gespeichert."
                                 Visibility="{Binding HasHourlyRate, Converter={StaticResource BoolToVis}}" />
+                            <Border
+                                Margin="0,0,8,6"
+                                Padding="3"
+                                Background="{DynamicResource Theme.Surface}"
+                                BorderBrush="{DynamicResource Theme.CardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="9">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton
+                                        local:Ui.Glyph="&#xE8A9;"
+                                        Content="Tabelle"
+                                        GroupName="OverviewView"
+                                        IsChecked="{Binding IsTableView, Mode=TwoWay}"
+                                        Style="{StaticResource Segment}"
+                                        ToolTip="Die Übersicht als Tabelle" />
+                                    <RadioButton
+                                        local:Ui.Glyph="&#xE9D2;"
+                                        Content="Diagramm"
+                                        GroupName="OverviewView"
+                                        IsChecked="{Binding IsChartView, Mode=TwoWay}"
+                                        Style="{StaticResource Segment}"
+                                        ToolTip="Den Stand als X-Y-Diagramm über die SAP-Daten zeigen" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                Margin="0,0,8,6"
+                                Padding="3"
+                                Background="{DynamicResource Theme.Surface}"
+                                BorderBrush="{DynamicResource Theme.CardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="9"
+                                Visibility="{Binding IsChartView, Converter={StaticResource BoolToVis}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton
+                                        Content="Relativ (%)"
+                                        GroupName="ChartMode"
+                                        IsChecked="{Binding IsChartPercent, Mode=TwoWay}"
+                                        Style="{StaticResource Segment}"
+                                        ToolTip="Stand in Prozent des Plans (Ist ÷ Plan), 100 % = Plan" />
+                                    <RadioButton
+                                        Content="Stunden"
+                                        GroupName="ChartMode"
+                                        IsChecked="{Binding IsChartHours, Mode=TwoWay}"
+                                        Style="{StaticResource Segment}"
+                                        ToolTip="Stunden: aus Geld umgerechnet (Stundensatz des Projekts) und lokal gebuchte Stunden" />
+                                </StackPanel>
+                            </Border>
                             <Button
                                 Margin="0,0,0,6"
                                 Command="{Binding ResetFiltersCommand}"
@@ -540,6 +587,7 @@
                             IsReadOnly="True"
                             ItemsSource="{Binding RowsView}"
                             SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+                            Visibility="{Binding IsTableView, Converter={StaticResource BoolToVis}}"
                             VerticalScrollBarVisibility="Auto">
                             <DataGrid.Columns>
                                 <!--  Erste Spalte ist fixiert: Der Stand bleibt beim horizontalen Scrollen immer sichtbar  -->
@@ -765,6 +813,26 @@
                             </DataGrid.Columns>
                         </DataGrid>
 
+                        <!--  Diagramm: Stand über die SAP-Daten, relativ oder in Stunden  -->
+                        <Grid Grid.Row="2" Visibility="{Binding IsChartView, Converter={StaticResource BoolToVis}}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <local:XyChart
+                                MinHeight="240"
+                                AutomationProperties.HelpText="Beim Überfahren zeigt ein Hinweis den Stand am Punkt bzw. alle Werte zum nächsten SAP-Datum. Ein Klick wählt die Zeile. Die genauen Werte stehen in der Tabelle."
+                                AutomationProperties.Name="Diagramm: Stand der PSP-Elemente über die SAP-Stände"
+                                Data="{Binding Chart}"
+                                SeriesClickedCommand="{Binding SelectSeriesCommand}" />
+                            <TextBlock
+                                Grid.Row="1"
+                                Margin="0,8,0,0"
+                                Style="{StaticResource WrapMuted}"
+                                Text="{Binding ChartNoteText}"
+                                Visibility="{Binding HasChartNotes, Converter={StaticResource BoolToVis}}" />
+                        </Grid>
+
                         <!--  Leerzustand der Tabelle  -->
                         <TextBlock
                             Grid.Row="2"
@@ -776,7 +844,7 @@
                             Text="{Binding EmptyRowsText}"
                             TextAlignment="Center">
                             <TextBlock.Visibility>
-                                <Binding Converter="{StaticResource BoolToVis}" Path="ShowEmptyRowsHint" />
+                                <Binding Converter="{StaticResource BoolToVis}" Path="ShowTableEmptyHint" />
                             </TextBlock.Visibility>
                         </TextBlock>
 
