@@ -191,12 +191,14 @@ namespace Zeitmanagement.Helpers
         public const string ThisYear = "thisYear";
         public const string LastYear = "lastYear";
         public const string Last30Days = "last30Days";
+        /// <summary>Alles, was zu den gewählten Projekten je gebucht wurde; der Zeitraum ergibt sich aus den Buchungen (kein fester Von/Bis).</summary>
+        public const string All = "all";
         public const string Custom = "custom";
 
         /// <summary>Die Schnellwahlen in der Reihenfolge der Anzeige.</summary>
         public static readonly string[] Keys =
         {
-            ThisMonth, LastMonth, ThisQuarter, LastQuarter, ThisYear, LastYear, Last30Days, Custom
+            ThisMonth, LastMonth, ThisQuarter, LastQuarter, ThisYear, LastYear, Last30Days, All, Custom
         };
 
         public static string Text(string key)
@@ -210,11 +212,15 @@ namespace Zeitmanagement.Helpers
                 case ThisYear: return "Dieses Jahr";
                 case LastYear: return "Letztes Jahr";
                 case Last30Days: return "Letzte 30 Tage";
+                case All: return "Alle Buchungen";
                 default: return "Benutzerdefiniert";
             }
         }
 
-        /// <summary>Von/Bis einer Schnellwahl, bezogen auf <paramref name="today"/>. "Benutzerdefiniert" hat keinen festen Zeitraum.</summary>
+        /// <summary>
+        /// Von/Bis einer Schnellwahl, bezogen auf <paramref name="today"/>. "Benutzerdefiniert" und "Alle Buchungen" haben keinen
+        /// festen Zeitraum (bei "Alle Buchungen" ergibt er sich aus den Buchungen der gewählten Projekte).
+        /// </summary>
         public static bool TryResolve(string key, DateTime today, out DateTime from, out DateTime to)
         {
             today = today.Date;

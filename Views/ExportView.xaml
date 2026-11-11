@@ -139,7 +139,10 @@
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <DatePicker AutomationProperties.Name="Von" SelectedDate="{Binding From, Mode=TwoWay}" />
+                                <DatePicker
+                                    AutomationProperties.Name="Von"
+                                    IsEnabled="{Binding IsRangeEditable}"
+                                    SelectedDate="{Binding From, Mode=TwoWay}" />
                                 <TextBlock
                                     Grid.Column="1"
                                     Margin="8,0"
@@ -149,8 +152,14 @@
                                 <DatePicker
                                     Grid.Column="2"
                                     AutomationProperties.Name="Bis"
+                                    IsEnabled="{Binding IsRangeEditable}"
                                     SelectedDate="{Binding To, Mode=TwoWay}" />
                             </Grid>
+                            <TextBlock
+                                Margin="0,8,0,0"
+                                Style="{StaticResource Hint}"
+                                Text="Alle Buchungen der gewählten Projekte, von der ersten bis zur letzten. Von und Bis zeigen diesen Zeitraum."
+                                Visibility="{Binding IsAllBookings, Converter={StaticResource BoolToVis}}" />
                             <TextBlock
                                 Margin="0,8,0,0"
                                 FontSize="12"

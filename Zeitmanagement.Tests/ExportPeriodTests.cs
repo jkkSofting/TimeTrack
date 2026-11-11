@@ -48,6 +48,7 @@ namespace Zeitmanagement.Tests
         {
             DateTime from, to;
             Assert.False(ExportPeriod.TryResolve(ExportPeriod.Custom, new DateTime(2026, 11, 11), out from, out to));
+            Assert.False(ExportPeriod.TryResolve(ExportPeriod.All, new DateTime(2026, 11, 11), out from, out to));   // ergibt sich aus den Buchungen
             Assert.False(ExportPeriod.TryResolve("irgendwas", new DateTime(2026, 11, 11), out from, out to));
         }
 
@@ -59,6 +60,9 @@ namespace Zeitmanagement.Tests
                 Assert.False(string.IsNullOrWhiteSpace(ExportPeriod.Text(key)));
             }
             Assert.Equal("Letzter Monat", ExportPeriod.Text(ExportPeriod.LastMonth));
+            Assert.Equal("Alle Buchungen", ExportPeriod.Text(ExportPeriod.All));
+            Assert.Contains(ExportPeriod.All, ExportPeriod.Keys);
+            Assert.True(Array.IndexOf(ExportPeriod.Keys, ExportPeriod.All) < Array.IndexOf(ExportPeriod.Keys, ExportPeriod.Custom), "Benutzerdefiniert bleibt am Ende");
             Assert.Equal("Benutzerdefiniert", ExportPeriod.Text(ExportPeriod.Custom));
         }
     }

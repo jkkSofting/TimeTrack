@@ -98,7 +98,11 @@ namespace Zeitmanagement.ViewModel
             // "Letzter Monat" bleibt eine Regel und gilt beim nächsten Start für den dann letzten Monat; nur ein von Hand
             // gewählter Zeitraum bleibt als fester Zeitraum stehen.
             DateTime from, to;
-            if (prefs.PeriodKey != null && prefs.PeriodKey != ExportPeriod.Custom && ExportPeriod.TryResolve(prefs.PeriodKey, DateTime.Today, out from, out to))
+            if (prefs.PeriodKey == ExportPeriod.All)
+            {
+                ApplyPreset(ExportPeriod.All);
+            }
+            else if (prefs.PeriodKey != null && prefs.PeriodKey != ExportPeriod.Custom && ExportPeriod.TryResolve(prefs.PeriodKey, DateTime.Today, out from, out to))
             {
                 ApplyPreset(prefs.PeriodKey);
             }
@@ -153,9 +157,26 @@ namespace Zeitmanagement.ViewModel
             get => _selectedPreset;
             set
             {
+                var wasAll = IsAllBookings;
                 if (value == null || !SetProperty(ref _selectedPreset, value)) return;
+                RaiseRangeModeChanged();
                 if (value.Key != ExportPeriod.Custom) ApplyPreset(value.Key);
+                else if (wasAll) OnRangeChanged();   // der bisherige Zeitraum bleibt als Von/Bis stehen und wird jetzt wirklich so geladen
             }
+        }
+
+        /// <summary>"Alle Buchungen": kein Datumsfilter, Von/Bis zeigen nur die erste und letzte Buchung der gewählten Projekte.</summary>
+        public bool IsAllBookings => _selectedPreset != null && _selectedPreset.Key == ExportPeriod.All;
+
+        /// <summary>Von/Bis lassen sich nur bei festem oder benutzerdefiniertem Zeitraum ändern.</summary>
+        public bool IsRangeEditable => !IsAllBookings;
+
+        private void RaiseRangeModeChanged()
+        {
+            RaisePropertyChanged(nameof(IsAllBookings));
+            RaisePropertyChanged(nameof(IsRangeEditable));
+            RaisePropertyChanged(nameof(RangeError));
+            RaisePropertyChanged(nameof(HasRangeError));
         }
 
         private bool _applyingPreset;
@@ -187,6 +208,7 @@ namespace Zeitmanagement.ViewModel
         {
             get
             {
+                if (IsAllBookings) return string.Empty;   // der Zeitraum ergibt sich aus den Buchungen
                 if (!_from.HasValue || !_to.HasValue) return "Bitte „Von“ und „Bis“ wählen.";
                 if (_from.Value.Date > _to.Value.Date) return "„Von“ liegt nach „Bis“.";
                 return string.Empty;
@@ -197,6 +219,15 @@ namespace Zeitmanagement.ViewModel
 
         private void ApplyPreset(string key)
         {
+            if (key == ExportPeriod.All)
+            {
+                _selectedPreset = Presets.First(p => p.Key == ExportPeriod.All);
+                RaisePropertyChanged(nameof(SelectedPreset));
+                RaiseRangeModeChanged();
+                OnRangeChanged();   // lädt alle Buchungen und leitet Von/Bis aus den gewählten Projekten ab
+                return;
+            }
+
             DateTime from, to;
             if (!ExportPeriod.TryResolve(key, DateTime.Today, out from, out to)) return;
 
@@ -205,6 +236,7 @@ namespace Zeitmanagement.ViewModel
             {
                 _selectedPreset = Presets.First(p => p.Key == key);
                 RaisePropertyChanged(nameof(SelectedPreset));
+                RaiseRangeModeChanged();
                 _suspend++;
                 From = from;
                 To = to;
@@ -323,6 +355,7 @@ namespace Zeitmanagement.ViewModel
             _selectedNames.Clear();
             foreach (var p in ProjectItems.Where(p => p.IsSelected)) _selectedNames.Add(p.Name);
             RaisePropertyChanged(nameof(ProjectSelectionText));
+            if (IsAllBookings) UpdateAllBookingsRange();
             LoadStoredMeta();
             Rebuild();
         }
@@ -706,9 +739,14 @@ namespace Zeitmanagement.ViewModel
             _entries = new List<TimeTracker.TimeEntryRow>();
             if (HasRangeError) return;
 
+            // "Alle Buchungen": ohne Datumsgrenze lesen. Die Daten stehen als Text "yyyy-MM-dd" in der Datenbank, der Vergleich
+            // greift deshalb auch für die äußersten Werte.
+            var from = IsAllBookings ? DateTime.MinValue : _from.Value.Date;
+            var to = IsAllBookings ? DateTime.MaxValue : _to.Value.Date;
+
             try
             {
-                _entries = MainViewModel.DbInstance.GetTimeEntriesBetween(_from.Value.Date, _to.Value.Date);
+                _entries = MainViewModel.DbInstance.GetTimeEntriesBetween(from, to);
             }
             catch (Exception ex)
             {
@@ -733,15 +771,41 @@ namespace Zeitmanagement.ViewModel
                     ? ExportFormat.Plural(s.Key, "Buchung", "Buchungen") + " · " + ExportFormat.Decimal(s.Value) + " h"
                     : "keine Buchungen";
             }
+
+            if (IsAllBookings) UpdateAllBookingsRange();
+        }
+
+        /// <summary>
+        /// Setzt Von/Bis auf die erste und letzte Buchung der gewählten Projekte (leer, wenn es keine gibt). Das ist der
+        /// Leistungszeitraum im Dokument; ändern kann man ihn in diesem Modus nicht.
+        /// </summary>
+        private void UpdateAllBookingsRange()
+        {
+            var dates = _entries.Where(e => _selectedNames.Contains(e.Projektname ?? string.Empty)).Select(e => e.Datum.Date).ToList();
+
+            _applyingPreset = true;
+            try
+            {
+                From = dates.Count == 0 ? (DateTime?)null : dates.Min();
+                To = dates.Count == 0 ? (DateTime?)null : dates.Max();
+            }
+            finally
+            {
+                _applyingPreset = false;
+            }
         }
 
         private ExportOptions BuildOptions()
         {
             if (HasRangeError) return null;
+
+            // Bei "Alle Buchungen" ohne gewähltes Projekt oder ohne Buchungen gibt es keinen Zeitraum: Der Bericht bleibt leer.
+            var from = (_from ?? DateTime.Today).Date;
+            var to = (_to ?? from).Date;
             return new ExportOptions
             {
-                From = _from.Value.Date,
-                To = _to.Value.Date,
+                From = from,
+                To = to,
                 ProjectNames = _selectedNames.ToList(),
                 Kind = _kind,
                 Grouping = _grouping,
