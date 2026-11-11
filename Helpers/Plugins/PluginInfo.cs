@@ -48,5 +48,17 @@ namespace Zeitmanagement.Helpers.Plugins
 
         /// <summary>Der Host, den das Plugin in <see cref="TimeTrackPlugin.Initialize"/> bekommen hat.</summary>
         public IPluginHost Host { get; set; }
+
+        /// <summary>Letzte Änderung der Plugin-DLL beim Finden (UTC), <c>null</c>, wenn sie fehlt.</summary>
+        public System.DateTime? FileStampUtc { get; set; }
+
+        /// <summary>Geladen, aber Ordner oder DLL sind inzwischen weg (erkannt beim erneuten Suchen).</summary>
+        public bool IsMissing { get; set; }
+
+        /// <summary>Geladen, aber im Ordner liegt inzwischen eine andere DLL; sie wird beim nächsten Start geladen.</summary>
+        public bool UpdateOnDisk { get; set; }
+
+        /// <summary>Version der DLL im Ordner bei <see cref="UpdateOnDisk"/>.</summary>
+        public string VersionOnDisk { get; set; }
     }
 }

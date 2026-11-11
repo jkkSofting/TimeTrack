@@ -48,8 +48,13 @@ Ein Plugin liegt in `C:\ProgramData\Kaltenmark-Engineering\TimeTracker\Plugins\<
 `<Name>.dll` (Ordnername = Name der DLL) plus ihren Abhängigkeiten. Der Ordner liegt neben der Datenbank, übersteht
 Updates und braucht keine Administratorrechte.
 
+- TimeTrack sucht beim Start, bei jedem Öffnen der Einstellungen und mit „Nach Plugins suchen“ (Einstellungen →
+  Plugins) nach Plugins. Das Suchen lädt nichts; ein neu abgelegtes Plugin erscheint sofort zum Aktivieren.
 - Ein neu gefundenes Plugin ist deaktiviert. Vor dem Aktivieren führt TimeTrack keinen Code daraus aus; Name, Version
   und Beschreibung in den Einstellungen stammen aus den Dateieigenschaften (`Product`, `Version`, `Description`).
+- **Neue Version eines Plugins:** TimeTrack beenden und die Dateien ersetzen. Bei laufendem TimeTrack ist die DLL
+  gesperrt, lässt sich aber umbenennen; die neue daneben legen. „Nach Plugins suchen“ zeigt dann „neue Fassung“
+  (erkannt am Änderungsdatum der DLL) und bietet den Neustart an.
 - Aktivieren und Deaktivieren wirken nach einem Neustart (.NET Framework kann Assemblies nicht entladen). Die Wahl steht
   in `plugin_records` unter `plugin_id = '$host'`, `collection = 'enabled'`, Schlüssel = Ordnername.
 - Aus dem Internet geladene DLLs blockiert Windows; die Einstellungen sagen dann, wie man sie freigibt.

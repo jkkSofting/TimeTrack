@@ -61,7 +61,7 @@ public sealed class MyPlugin : TimeTrackPlugin
 
 | Schritt | Wer | Was passiert |
 | --- | --- | --- |
-| Finden | TimeTrack beim Start | Jeder Unterordner von `C:\ProgramData\Kaltenmark-Engineering\TimeTracker\Plugins\` ist ein Plugin, `<Ordner>\<Ordner>.dll` seine Assembly. Ohne Aktivierung wird **kein Code** daraus ausgeführt; Name, Version und Beschreibung in den Einstellungen kommen aus den Dateieigenschaften (`Product`, `Version`, `Description`) |
+| Finden | TimeTrack beim Start, beim Öffnen der Einstellungen und mit „Nach Plugins suchen“ | Jeder Unterordner von `C:\ProgramData\Kaltenmark-Engineering\TimeTracker\Plugins\` ist ein Plugin, `<Ordner>\<Ordner>.dll` seine Assembly. Ohne Aktivierung wird **kein Code** daraus ausgeführt; Name, Version und Beschreibung in den Einstellungen kommen aus den Dateieigenschaften (`Product`, `Version`, `Description`) |
 | Aktivieren | Benutzer | Einstellungen → Plugins, Schalter mit Rückfrage; wirkt nach einem Neustart |
 | Laden | TimeTrack | `Assembly.LoadFrom`, Suche nach genau einer öffentlichen, nicht abstrakten Ableitung von `TimeTrackPlugin` mit parameterlosem Konstruktor, Prüfung von `Id` und `MinimumHostApiVersion` |
 | `Initialize(host)` | TimeTrack, UI-Thread | Einmal, nach dem Aufbau der eingebauten Seiten. Nur hier darf das Plugin Seiten und Einstellungsbereiche registrieren |
@@ -69,7 +69,9 @@ public sealed class MyPlugin : TimeTrackPlugin
 | Einstellungen öffnen | Benutzer | Beim ersten Anzeigen `PluginSettingsSection.CreateView()` |
 | `Shutdown()` | TimeTrack beim Beenden, UI-Thread | Einmal für jedes geladene Plugin |
 
-Deaktivieren wirkt ebenfalls erst nach einem Neustart: .NET Framework kann Assemblies nicht entladen.
+Deaktivieren wirkt ebenfalls erst nach einem Neustart: .NET Framework kann Assemblies nicht entladen. Aus demselben
+Grund läuft eine neue Fassung eines Plugins erst nach einem Neustart; erneutes Suchen erkennt eine ausgetauschte DLL
+(Änderungsdatum) und meldet sie in den Einstellungen.
 
 ## 3. `TimeTrackPlugin`
 

@@ -26,6 +26,21 @@ namespace Zeitmanagement.Helpers.Plugins
         public string NavigationKey { get; }
     }
 
+    /// <summary>Ergebnis von <see cref="PluginManager.Rescan"/>.</summary>
+    internal sealed class PluginRescanResult
+    {
+        public PluginRescanResult(int total, int added, int removed)
+        {
+            Total = total;
+            Added = added;
+            Removed = removed;
+        }
+
+        public int Total { get; }
+        public int Added { get; }
+        public int Removed { get; }
+    }
+
     /// <summary>
     /// Verwaltet die Plugins einer Sitzung: welche aktiviert sind (in <c>plugin_records</c> unter
     /// <see cref="PluginStorage.HostId"/>), Laden beim Start, ihre Seiten und Einstellungsbereiche, Beenden.
@@ -60,8 +75,81 @@ namespace Zeitmanagement.Helpers.Plugins
         /// <summary>Hinweis am Tray-Symbol (Titel, Text, Klick); verbindet App.xaml.cs mit dem Tray.</summary>
         public event Action<string, string, Action> NotificationRequested;
 
-        /// <summary>Ob Aktivieren oder Deaktivieren in dieser Sitzung einen Neustart braucht.</summary>
-        public bool RestartRequired => _plugins.Any(p => p.IsEnabled != WasEnabledAtStart(p));
+        /// <summary>
+        /// Ob etwas erst nach einem Neustart wirkt: geänderte Aktivierung, eine neue DLL eines laufenden Plugins oder ein
+        /// entfernter Ordner eines laufenden Plugins.
+        /// </summary>
+        public bool RestartRequired => _plugins.Any(p =>
+            p.IsEnabled != WasEnabledAtStart(p) || (p.State == PluginState.Loaded && p.IsEnabled && (p.UpdateOnDisk || p.IsMissing)));
+
+        /// <summary>
+        /// Durchsucht den Plugin-Ordner erneut, ohne etwas zu laden: Neue Plugins erscheinen (zum Aktivieren), entfernte
+        /// verschwinden, und für laufende Plugins wird erkannt, ob ihre DLL ersetzt oder entfernt wurde. Laufende Plugins
+        /// bleiben unverändert in Betrieb; neue Dateien wirken erst nach einem Neustart.
+        /// </summary>
+        public PluginRescanResult Rescan()
+        {
+            List<PluginInfo> discovered;
+            try
+            {
+                discovered = _loader.Discover(IsEnabledStored);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceWarning("Plugin-Ordner konnte nicht durchsucht werden: {0}", ex);
+                return new PluginRescanResult(_plugins.Count, 0, 0);
+            }
+
+            var result = new List<PluginInfo>();
+            var added = 0;
+            var removed = 0;
+            foreach (var found in discovered)
+            {
+                var known = _plugins.FirstOrDefault(p => string.Equals(p.FolderName, found.FolderName, StringComparison.OrdinalIgnoreCase));
+                if (known == null)
+                {
+                    // Neu seit dem Start: nichts davon ausgeführt, Aktivierung wirkt nach einem Neustart.
+                    if (!_enabledAtStart.ContainsKey(found.FolderName))
+                        _enabledAtStart[found.FolderName] = false;
+                    result.Add(found);
+                    added++;
+                    continue;
+                }
+
+                known.IsMissing = false;
+                if (known.State == PluginState.Loaded)
+                {
+                    known.UpdateOnDisk = found.FileStampUtc != known.FileStampUtc;
+                    known.VersionOnDisk = known.UpdateOnDisk ? found.VersionText : null;
+                }
+                else
+                {
+                    // Nicht geladen: Angaben aus den (vielleicht ausgetauschten) Dateien übernehmen.
+                    known.DisplayName = found.DisplayName;
+                    known.VersionText = found.VersionText;
+                    known.Description = found.Description;
+                    known.AssemblyPath = found.AssemblyPath;
+                    known.FileStampUtc = found.FileStampUtc;
+                }
+                result.Add(known);
+            }
+
+            foreach (var gone in _plugins.Where(p => discovered.All(d => !string.Equals(d.FolderName, p.FolderName, StringComparison.OrdinalIgnoreCase))))
+            {
+                if (gone.State == PluginState.Loaded)
+                {
+                    gone.IsMissing = true;
+                    result.Add(gone);
+                }
+                else
+                {
+                    removed++;
+                }
+            }
+
+            _plugins = result.OrderBy(p => p.FolderName, StringComparer.OrdinalIgnoreCase).ToList();
+            return new PluginRescanResult(_plugins.Count, added, removed);
+        }
 
         public static string NavigationKey(string pluginId, string pageKey)
         {

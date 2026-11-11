@@ -77,6 +77,14 @@ namespace Zeitmanagement.Helpers.Plugins
                     State = PluginState.Disabled
                 };
                 ReadFileProperties(info);
+                try
+                {
+                    info.FileStampUtc = File.Exists(info.AssemblyPath) ? File.GetLastWriteTimeUtc(info.AssemblyPath) : (DateTime?)null;
+                }
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+                {
+                    info.FileStampUtc = null;
+                }
                 result.Add(info);
             }
             return result;

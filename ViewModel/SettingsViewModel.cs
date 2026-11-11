@@ -315,6 +315,9 @@ namespace Zeitmanagement.ViewModel
             {
                 AvailableBackups.Add(backup);
             }
+
+            // Bei jedem Öffnen der Einstellungen: neu in den Plugin-Ordner gelegte oder ausgetauschte Plugins erkennen.
+            Plugins?.Rescan(showResult: false);
         }
 
         /// <summary>

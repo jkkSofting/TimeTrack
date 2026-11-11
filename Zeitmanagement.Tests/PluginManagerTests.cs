@@ -137,6 +137,68 @@ public class PagesPlugin : TimeTrackPlugin
         }
 
         [Fact]
+        public void Rescan_finds_a_plugin_added_after_the_start_without_loading_it()
+        {
+            var manager = Manager();
+            Assert.Empty(manager.Plugins);
+
+            var folder = Plugin("later");
+            var result = manager.Rescan();
+
+            Assert.Equal(1, result.Added);
+            var info = Assert.Single(manager.Plugins);
+            Assert.Equal(folder, info.FolderName);
+            Assert.Equal(PluginState.Disabled, info.State);
+            Assert.Null(info.Instance);
+            Assert.False(manager.RestartRequired);
+
+            manager.SetEnabled(info, true);
+            Assert.True(manager.RestartRequired);
+
+            Assert.Equal(0, manager.Rescan().Added);
+            Assert.Same(info, Assert.Single(manager.Plugins));
+        }
+
+        [Fact]
+        public void Rescan_notices_a_replaced_dll_of_a_running_plugin()
+        {
+            var folder = Plugin("updated");
+            _db.Db.SetPluginRecord(PluginStorage.HostId, "enabled", folder, "true");
+            var manager = Manager();
+            var info = manager.Plugins.Single();
+            Assert.Equal(PluginState.Loaded, info.State);
+
+            Assert.Equal(0, manager.Rescan().Added);
+            Assert.False(info.UpdateOnDisk);
+            Assert.False(manager.RestartRequired);
+
+            // Eine geladene DLL ist gesperrt, lässt sich aber umbenennen; daneben kommt die neue Fassung.
+            var old = info.AssemblyPath + ".old";
+            File.Move(info.AssemblyPath, old);
+            File.Copy(old, info.AssemblyPath);
+            File.SetLastWriteTimeUtc(info.AssemblyPath, DateTime.UtcNow.AddMinutes(5));
+            manager.Rescan();
+
+            Assert.True(info.UpdateOnDisk);
+            Assert.True(manager.RestartRequired);
+            Assert.Equal(PluginState.Loaded, info.State);
+        }
+
+        [Fact]
+        public void Rescan_drops_a_removed_plugin_that_was_not_loaded()
+        {
+            var folder = Plugin("removed");
+            var manager = Manager();
+            Assert.Single(manager.Plugins);
+
+            Directory.Delete(Path.Combine(_root, folder), true);
+            var result = manager.Rescan();
+
+            Assert.Equal(1, result.Removed);
+            Assert.Empty(manager.Plugins);
+        }
+
+        [Fact]
         public void Navigation_requests_of_a_plugin_reach_the_main_window()
         {
             var folder = Plugin("pages-e");

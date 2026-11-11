@@ -21,11 +21,67 @@ namespace Zeitmanagement.ViewModel
                 (manager?.Plugins ?? new PluginInfo[0]).Select(info => new PluginItemViewModel(manager, info, OnEnabledChanged)));
             OpenFolderCommand = new DelegateCommand(_ => OpenFolder());
             RestartCommand = new DelegateCommand(_ => Restart());
+            RescanCommand = new DelegateCommand(_ => Rescan(showResult: true));
         }
 
         public ObservableCollection<PluginItemViewModel> Items { get; }
 
         public bool HasNoPlugins => Items.Count == 0;
+
+        public DelegateCommand RescanCommand { get; }
+
+        private string _rescanText;
+        /// <summary>Ergebnis von „Nach Plugins suchen“, z. B. „1 neues Plugin gefunden.“</summary>
+        public string RescanText
+        {
+            get => _rescanText;
+            private set => SetProperty(ref _rescanText, value);
+        }
+
+        /// <summary>
+        /// Durchsucht den Plugin-Ordner erneut (auch beim Öffnen der Einstellungen). Einträge unveränderter Plugins bleiben
+        /// erhalten, damit ihre Einstellungsbereiche nicht neu aufgebaut werden.
+        /// </summary>
+        public void Rescan(bool showResult)
+        {
+            if (_manager == null)
+                return;
+
+            var result = _manager.Rescan();
+            var previous = Items.ToList();
+            Items.Clear();
+            foreach (var info in _manager.Plugins)
+            {
+                var existing = previous.FirstOrDefault(item => ReferenceEquals(item.Info, info));
+                if (existing != null)
+                {
+                    existing.Refresh();
+                    Items.Add(existing);
+                }
+                else
+                {
+                    Items.Add(new PluginItemViewModel(_manager, info, OnEnabledChanged));
+                }
+            }
+
+            RaisePropertyChanged(nameof(HasNoPlugins));
+            RaisePropertyChanged(nameof(RestartRequired));
+
+            if (showResult)
+                RescanText = DescribeRescan(result, Items.Any(i => i.Info.UpdateOnDisk || i.Info.IsMissing));
+        }
+
+        private static string DescribeRescan(PluginRescanResult result, bool changedOnDisk)
+        {
+            var parts = new List<string>();
+            if (result.Added == 1) parts.Add("1 neues Plugin gefunden");
+            else if (result.Added > 1) parts.Add(result.Added + " neue Plugins gefunden");
+            if (result.Removed > 0) parts.Add(result.Removed + " entfernt");
+            if (changedOnDisk) parts.Add("geänderte Dateien bei laufenden Plugins");
+
+            var text = parts.Count == 0 ? "Keine Änderungen im Plugin-Ordner" : string.Join(", ", parts);
+            return text + $" ({result.Total} Plugin{(result.Total == 1 ? "" : "s")} insgesamt), Stand {DateTime.Now:HH:mm}.";
+        }
 
         public string FolderPath => _manager?.PluginsRoot ?? PluginLoader.DefaultPluginsRoot;
 
@@ -76,6 +132,19 @@ namespace Zeitmanagement.ViewModel
                 .ToList();
         }
 
+        public PluginInfo Info => _info;
+
+        /// <summary>Nach erneutem Suchen: Anzeige aus dem (aktualisierten) <see cref="PluginInfo"/> neu lesen.</summary>
+        public void Refresh()
+        {
+            RaisePropertyChanged(nameof(Name));
+            RaisePropertyChanged(nameof(VersionText));
+            RaisePropertyChanged(nameof(Description));
+            RaisePropertyChanged(nameof(HasDescription));
+            RaisePropertyChanged(nameof(StatusText));
+            RaisePropertyChanged(nameof(IsEnabled));
+        }
+
         public string Name => _info.DisplayName;
 
         public string VersionText => string.IsNullOrEmpty(_info.VersionText) ? null : "Version " + _info.VersionText;
@@ -93,6 +162,12 @@ namespace Zeitmanagement.ViewModel
             get
             {
                 var running = _info.State == PluginState.Loaded;
+                if (running && _info.IsMissing)
+                    return "Aktiv bis zum nächsten Start; der Plugin-Ordner wurde entfernt";
+                if (running && _info.IsEnabled && _info.UpdateOnDisk)
+                    return "Aktiv; im Ordner liegt eine neue Fassung" +
+                           (string.IsNullOrEmpty(_info.VersionOnDisk) ? "" : " (Version " + _info.VersionOnDisk + ")") +
+                           ", sie wird beim nächsten Start geladen";
                 if (_info.IsEnabled && !running && _info.State == PluginState.Disabled)
                     return "Wird beim nächsten Start geladen";
                 if (!_info.IsEnabled && running)
