@@ -22,6 +22,7 @@ namespace Zeitmanagement.ViewModel
         private readonly BaseViewModel _fragmentationView;
         private readonly BaseViewModel _sapBookingView;
         private readonly ProjectControllingViewModel _controllingView;
+        private readonly ExportViewModel _exportView;
         private readonly BaseViewModel _settingsView;
         private readonly HelpViewModel _helpView;
 
@@ -97,11 +98,12 @@ namespace Zeitmanagement.ViewModel
             // New/renamed/deleted/(de)activated projects must show up in the Quick Switch window
             // right away, not only after the next start.
             _controllingView = new ProjectControllingViewModel(OpenDay);
-            _projectView = new ProjectsViewModel(() => QuickSelectViewModel.ReloadProjects(), OpenControlling);
+            _projectView = new ProjectsViewModel(() => QuickSelectViewModel.ReloadProjects(), OpenControlling, OpenExport);
             _entriesView = new EntriesViewModel();
             _quickSelect = new QuickSelectViewModel();
             _fragmentationView = new FragmentationViewModel();
             _sapBookingView = new SapBookingViewModel();
+            _exportView = new ExportViewModel();
             _settingsView = new SettingsViewModel();
             _helpView = new HelpViewModel(SelectViewCommandExecute);
 
@@ -169,6 +171,9 @@ namespace Zeitmanagement.ViewModel
                 case "controlling":
                     RightSide = _controllingView;
                     break;
+                case "export":
+                    RightSide = _exportView;
+                    break;
                 case "settings":
                     RightSide = _settingsView;
                     break;
@@ -196,6 +201,15 @@ namespace Zeitmanagement.ViewModel
         {
             SelectViewCommandExecute("controlling");
             _controllingView.FocusCarrier(kostentraeger);
+        }
+
+        /// <summary>
+        /// Öffnet den „Tätigkeitsnachweis“ mit genau diesem Projekt gewählt (aus der Projektseite heraus).
+        /// </summary>
+        private void OpenExport(string projektname)
+        {
+            _exportView.SelectOnly(projektname);
+            SelectViewCommandExecute("export");
         }
 
         /// <summary>

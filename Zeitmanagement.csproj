@@ -46,6 +46,18 @@
     <Reference Include="DocumentFormat.OpenXml.Framework, Version=3.1.1.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
       <HintPath>packages\DocumentFormat.OpenXml.Framework.3.1.1\lib\net46\DocumentFormat.OpenXml.Framework.dll</HintPath>
     </Reference>
+    <Reference Include="MigraDoc.DocumentObjectModel-gdi, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>packages\PDFsharp-MigraDoc-gdi.1.50.5147\lib\net20\MigraDoc.DocumentObjectModel-gdi.dll</HintPath>
+    </Reference>
+    <Reference Include="MigraDoc.Rendering-gdi, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>packages\PDFsharp-MigraDoc-gdi.1.50.5147\lib\net20\MigraDoc.Rendering-gdi.dll</HintPath>
+    </Reference>
+    <Reference Include="PdfSharp-gdi, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>packages\PDFsharp-MigraDoc-gdi.1.50.5147\lib\net20\PdfSharp-gdi.dll</HintPath>
+    </Reference>
+    <Reference Include="PdfSharp.Charting-gdi, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>packages\PDFsharp-MigraDoc-gdi.1.50.5147\lib\net20\PdfSharp.Charting-gdi.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.SQLite, Version=1.0.119.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
@@ -76,6 +88,7 @@
     </ApplicationDefinition>
     <Compile Include="TimeTracker.cs" />
     <Compile Include="TimeTracker.Controlling.cs" />
+    <Compile Include="TimeTracker.Export.cs" />
     <Compile Include="Helpers\AutostartHelper.cs" />
     <Compile Include="Helpers\BackupHelper.cs" />
     <Compile Include="Helpers\CarrierMatching.cs" />
@@ -84,12 +97,21 @@
     <Compile Include="Helpers\ControllingImportService.cs" />
     <Compile Include="Helpers\ControllingModels.cs" />
     <Compile Include="Helpers\ControllingOverview.cs" />
+    <Compile Include="Helpers\CsvExporter.cs" />
+    <Compile Include="Helpers\ExportFileName.cs" />
+    <Compile Include="Helpers\ExportModels.cs" />
+    <Compile Include="Helpers\ExportPrefs.cs" />
+    <Compile Include="Helpers\ExportReportBuilder.cs" />
     <Compile Include="Helpers\LocalHoursCalculator.cs" />
+    <Compile Include="Helpers\FileDialogHelper.cs" />
     <Compile Include="Helpers\HelpContent.cs" />
+    <Compile Include="Helpers\PdfExporter.cs" />
+    <Compile Include="Helpers\PdfReportLayout.cs" />
     <Compile Include="Helpers\OverlayWindowHelper.cs" />
     <Compile Include="Helpers\PenguinEasterEgg.cs" />
     <Compile Include="Helpers\PresentationDetector.cs" />
     <Compile Include="Helpers\ProjectControllingExcelReader.cs" />
+    <Compile Include="Helpers\SafeFile.cs" />
     <Compile Include="Helpers\SapBookingCalculator.cs" />
     <Compile Include="Helpers\SessionActivityMonitor.cs" />
     <Compile Include="Helpers\StartupMode.cs" />
@@ -100,6 +122,7 @@
     <Compile Include="ViewModel\BaseViewModel.cs" />
     <Compile Include="ViewModel\DashboardViewModel.cs" />
     <Compile Include="ViewModel\EntriesViewModel.cs" />
+    <Compile Include="ViewModel\ExportViewModel.cs" />
     <Compile Include="ViewModel\FragmentationViewModel.cs" />
     <Compile Include="ViewModel\HelpViewModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
@@ -117,6 +140,9 @@
     <Compile Include="Views\DoubleToGridLengthConverter.cs" />
     <Compile Include="Views\EntriesView.xaml.cs">
       <DependentUpon>EntriesView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ExportView.xaml.cs">
+      <DependentUpon>ExportView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\FragmentationView.xaml.cs">
       <DependentUpon>FragmentationView.xaml</DependentUpon>
@@ -166,6 +192,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\EntriesView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ExportView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

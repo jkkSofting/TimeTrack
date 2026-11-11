@@ -53,6 +53,18 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.46.1", new DateTime(2026, 11, 11), "Tätigkeitsnachweis",
+                Neu("„Tätigkeitsnachweis“ in der Seitenleiste: Du wählst einen Zeitraum (Schnellwahl wie „Letzter Monat“, „Alle Buchungen“ der gewählten Projekte oder Von/Bis) und deine Projekte und exportierst die Buchungen als PDF oder CSV. Eine Vorschau zeigt vorher, was im Nachweis steht, mit Gesamtzeit, Arbeitstagen und jeder Buchung."),
+                Neu("Das PDF ist ein A4-Dokument: Titel und Zeitraum, Auftragnehmer und Auftraggeber, Eckdaten mit Kostenträger, Zusammenfassung (bei mehreren Projekten mit Stunden und Kostenträger je Projekt), Einzelnachweis mit Zwischen- und Gesamtsumme und eine Bemerkung. Die Tabellenkopfzeile wiederholt sich auf jeder Seite, die Fußzeile nennt die Seitenzahl."),
+                Neu("Gliederung nach Tag (die Tagessumme lässt sich abschalten), Projekt oder Kalenderwoche, Dauer dezimal (1,50), als h:mm (1:30) oder beides, Uhrzeiten sowie Projekt- und Kostenträger-Spalte nach Wunsch, auf Wunsch im Querformat. Dein Name und deine Anschrift als Auftragnehmer bleiben für den nächsten Nachweis gespeichert."),
+                Neu("Standard ist die minutengenaue Dauer: Es wird nichts gerundet. Nur auf ausdrücklichen Wunsch rundet der Nachweis die Dauer jeder Buchung kaufmännisch auf 5, 10, 15 oder 30 Minuten und nennt dann die ungerundete Summe. Die Rundung wird nie gemerkt, jeder Nachweis beginnt wieder ohne."),
+                Neu("Die CSV-Datei hat eine Zeile je Buchung und passt zum deutschen Excel (UTF-8, Semikolon, Dezimalkomma); alternativ international mit Komma und Dezimalpunkt. Text, der mit = + - oder @ beginnt, wird entschärft, damit Excel ihn nicht als Formel ausführt."),
+                Neu("„PDF-Vorschau“ erzeugt den Nachweis als temporäre Datei und öffnet ihn im PDF-Programm, ohne zu speichern. So prüfst du das Aussehen, bevor du den Nachweis ablegst."),
+                Neu("Auftrags-/Bestellnummer und Auftraggeber (Name, Anschrift) trägst du einmal ein; TimeTrack merkt sie für das Projekt und füllt sie beim nächsten Nachweis wieder ein. Auftragnehmer und Auftraggeber sind optional: Der Auftraggeber steht nur im PDF, wenn du „Auftraggeber im Dokument zeigen“ wählst. Optional steht ein eigenes Logo oben rechts im PDF."),
+                Neu("TimeTrack merkt sich deine letzte Auswahl: Optionen, Projekte und die Schnellwahl des Zeitraums. „Letzter Monat“ gilt beim nächsten Mal für den dann letzten Monat."),
+                Neu("Unter „Projekte“ öffnet ein Symbol in der Zeile den Tätigkeitsnachweis mit diesem Projekt."),
+                Neu("Vor dem Export prüft TimeTrack die Buchungen und warnt vor fehlenden Beschreibungen, Überschneidungen im selben Projekt, nicht lesbaren Zeiten (diese Buchungen fehlen im Nachweis, sie werden nie mit erfundener Dauer gezählt), Dauer 0 und mehr als 12 Stunden an einem Tag. Betroffene Zeilen sind in der Vorschau hinterlegt.")),
+
             new ChangelogRelease("2026.46.0", new DateTime(2026, 11, 10), "Projektcontrolling",
                 Neu("„Projektcontrolling“ in der Seitenleiste: „Excel importieren“ liest Plan- und Ist-Kosten aus einer SAP-Projektcontrolling-Datei (.xlsx) – nur lesend. Importiert werden nur PSP-Elemente, die in einem Kostenträger deiner Projekte enthalten sind; der Kostenträger muss die PSP-Element-ID enthalten, aber nicht genau so heißen."),
                 Neu("Die Vorschau zeigt vor dem Speichern, was übernommen wird, samt Warnungen und Fehlern mit Blatt und Zelle. Der SAP-Stand kommt aus der Datei (fehlt er, gibst du ihn an), die Währung ist optional."),
