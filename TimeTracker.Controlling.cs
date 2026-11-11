@@ -93,6 +93,12 @@ public sealed partial class TimeTracker
             hourly_rate      TEXT    NOT NULL,                 -- exakter Dezimaltext
             PRIMARY KEY(project_id, currency_context)
         );
+        -- Standard-Stundensatz (je Währungskontext): gilt für jedes Projekt ohne eigenen Satz in controlling_project_rates.
+        -- Gehört keinem Projekt; wie die Projektsätze nur eine Vorgabe für die Umrechnung Geld -> rechnerische Stunden.
+        CREATE TABLE IF NOT EXISTS controlling_default_rates(
+            currency_context TEXT NOT NULL PRIMARY KEY,
+            hourly_rate      TEXT NOT NULL                     -- exakter Dezimaltext
+        );
         CREATE INDEX IF NOT EXISTS idx_controlling_snapshots_carrier ON controlling_snapshots(carrier_id);
         CREATE INDEX IF NOT EXISTS idx_controlling_snapshots_import  ON controlling_snapshots(import_id);
         ";
@@ -568,6 +574,44 @@ public sealed partial class TimeTracker
                 INSERT INTO controlling_project_rates (project_id, currency_context, hourly_rate) VALUES (@p, @ctx, @v)
                 ON CONFLICT(project_id, currency_context) DO UPDATE SET hourly_rate = excluded.hourly_rate;";
                 cmd.Parameters.AddWithValue("@p", projectId);
+                cmd.Parameters.AddWithValue("@ctx", currencyContext);
+                cmd.Parameters.AddWithValue("@v", CostMath.ToInvariantText(rate));
+            }
+            cmd.ExecuteNonQuery();
+        }
+    }
+
+    /// <summary>
+    /// Der Standard-Stundensatz zu einem Währungskontext, oder <c>null</c>, wenn keiner eingetragen ist. Er gilt für jedes Projekt,
+    /// das keinen eigenen Satz hat (siehe <see cref="GetControllingProjectRates"/>).
+    /// </summary>
+    public decimal? GetControllingDefaultRate(string currencyContext)
+    {
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = "SELECT hourly_rate FROM controlling_default_rates WHERE currency_context = @ctx;";
+            cmd.Parameters.AddWithValue("@ctx", currencyContext);
+            var text = cmd.ExecuteScalar() as string;
+            var rate = CostMath.ParseInvariant(text);
+            return rate.HasValue && rate.Value > 0m ? rate : null;
+        }
+    }
+
+    /// <summary>Setzt den Standard-Stundensatz eines Währungskontexts; <c>null</c> (oder ein Satz bis 0) entfernt ihn.</summary>
+    public void SetControllingDefaultRate(string currencyContext, decimal? rate)
+    {
+        using (var cmd = _conn.CreateCommand())
+        {
+            if (!rate.HasValue || rate.Value <= 0m)
+            {
+                cmd.CommandText = "DELETE FROM controlling_default_rates WHERE currency_context = @ctx;";
+                cmd.Parameters.AddWithValue("@ctx", currencyContext);
+            }
+            else
+            {
+                cmd.CommandText = @"
+                INSERT INTO controlling_default_rates (currency_context, hourly_rate) VALUES (@ctx, @v)
+                ON CONFLICT(currency_context) DO UPDATE SET hourly_rate = excluded.hourly_rate;";
                 cmd.Parameters.AddWithValue("@ctx", currencyContext);
                 cmd.Parameters.AddWithValue("@v", CostMath.ToInvariantText(rate));
             }

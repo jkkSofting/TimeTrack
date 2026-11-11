@@ -359,6 +359,37 @@
                             <TextBlock Style="{StaticResource Text.Body}" Text="{Binding CurrencyText}" />
                         </StackPanel>
                     </Border>
+
+                    <!--  Standard-Stundensatz: gilt für jedes Projekt ohne eigenen Satz (der Satz im Projekt überschreibt ihn)  -->
+                    <StackPanel
+                        Margin="0,2,8,2"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal"
+                        ToolTip="Standard-Stundensatz in der Währung des gewählten Imports. Er gilt für jedes Projekt, das keinen eigenen Satz hat; ein Satz in den Details eines Projekts überschreibt ihn nur für dieses Projekt. Er dient nur dazu, Geld in rechnerische Stunden umzurechnen. Leer = keine Vorgabe.">
+                        <TextBlock
+                            Margin="0,0,6,0"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource Text.Muted}"
+                            Text="Standard-Stundensatz" />
+                        <TextBox
+                            Width="80"
+                            Padding="6,3"
+                            local:Ui.Placeholder="z. B. 95,50"
+                            AutomationProperties.Name="Standard-Stundensatz"
+                            Text="{Binding DefaultRateText, UpdateSourceTrigger=PropertyChanged, Delay=700}" />
+                        <TextBlock
+                            Margin="6,0,0,0"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource Text.Muted}"
+                            Text="pro Stunde" />
+                    </StackPanel>
+                    <TextBlock
+                        Margin="0,2,8,2"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource Theme.Danger}"
+                        Style="{StaticResource WrapMuted}"
+                        Text="{Binding DefaultRateError}"
+                        Visibility="{Binding HasDefaultRateError, Converter={StaticResource BoolToVis}}" />
                 </WrapPanel>
 
                 <TextBlock
@@ -1018,7 +1049,7 @@
                                                     Grid.Column="1"
                                                     VerticalAlignment="Center"
                                                     Orientation="Horizontal"
-                                                    ToolTip="Stundensatz dieses Projekts (in der Währung des gewählten Imports). Er dient nur dazu, Geld in rechnerische Stunden umzurechnen. Leer lassen = keine Umrechnung.">
+                                                    ToolTip="Stundensatz dieses Projekts (in der Währung des gewählten Imports). Er überschreibt den Standard-Stundensatz nur für dieses Projekt und dient nur dazu, Geld in rechnerische Stunden umzurechnen. Leer lassen = der Standard-Stundensatz gilt; ohne Standard keine Umrechnung.">
                                                     <TextBlock
                                                         Margin="0,0,6,0"
                                                         VerticalAlignment="Center"
@@ -1027,7 +1058,7 @@
                                                     <TextBox
                                                         Width="80"
                                                         Padding="6,3"
-                                                        local:Ui.Placeholder="z. B. 95,50"
+                                                        local:Ui.Placeholder="{Binding Placeholder}"
                                                         AutomationProperties.Name="Stundensatz des Projekts"
                                                         Text="{Binding RateText, UpdateSourceTrigger=PropertyChanged, Delay=700}" />
                                                     <TextBlock
@@ -1043,7 +1074,7 @@
                                 <TextBlock
                                     Margin="0,2,0,0"
                                     Style="{StaticResource WrapMuted}"
-                                    Text="Der Stundensatz gehört zum Projekt (und zur Währung des Imports). Mit ihm werden Beträge als rechnerische Stunden angezeigt – nicht gebucht, nur umgerechnet." />
+                                    Text="Der Stundensatz gilt für die Währung des Imports und überschreibt den Standard-Stundensatz aus der Kopfzeile nur für dieses Projekt; ein leeres Feld nimmt den Standard. Mit ihm werden Beträge als rechnerische Stunden angezeigt – nicht gebucht, nur umgerechnet." />
 
                                 <!--  Kernwerte des gewählten PSP-Elements  -->
                                 <UniformGrid
