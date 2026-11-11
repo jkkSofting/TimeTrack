@@ -12,10 +12,10 @@
     <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
     <!--
         Radius aller Buttons, Eingabefelder, Auswahllisten und ihrer Aufklapp-Fenster: bewusst fast eckig.
-        Ein einziger Wert für alle; Karten (CardRadius) und Kapseln haben ihre eigenen.
+        Ein einziger Wert für alle. Karten und Innenflächen nutzen CardRadius, kleine Kapseln (Pill, Badges) behalten ihren Radius.
     -->
     <CornerRadius x:Key="ControlRadius">2</CornerRadius>
-    <CornerRadius x:Key="CardRadius">14</CornerRadius>
+    <CornerRadius x:Key="CardRadius">2</CornerRadius>
 
     <BooleanToVisibilityConverter x:Key="BoolToVis" />
     <views:EqualsConverter x:Key="Equals" />
@@ -114,7 +114,7 @@
         <Setter Property="Background" Value="{DynamicResource Theme.Surface}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Theme.CardBorder}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="CornerRadius" Value="{StaticResource CardRadius}" />
         <Setter Property="Padding" Value="12" />
     </Style>
 

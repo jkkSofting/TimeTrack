@@ -157,7 +157,7 @@
                                 Width="40"
                                 Height="40"
                                 Background="{DynamicResource Theme.AccentSoft}"
-                                CornerRadius="10">
+                                CornerRadius="{StaticResource CardRadius}">
                                 <TextBlock
                                     HorizontalAlignment="Center"
                                     FontSize="18"

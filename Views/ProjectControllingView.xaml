@@ -1227,7 +1227,7 @@
                                         Background="{DynamicResource Theme.WarningSoft}"
                                         BorderBrush="{DynamicResource Theme.Warning}"
                                         BorderThickness="1"
-                                        CornerRadius="8">
+                                        CornerRadius="{StaticResource CardRadius}">
                                         <TextBlock
                                             Foreground="{DynamicResource Theme.Warning}"
                                             Style="{StaticResource WrapMuted}"

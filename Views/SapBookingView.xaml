@@ -104,7 +104,7 @@
                                         Background="{DynamicResource Theme.Surface}"
                                         BorderBrush="{Binding Accent}"
                                         BorderThickness="0,3,0,0"
-                                        CornerRadius="10">
+                                        CornerRadius="{StaticResource CardRadius}">
                                         <StackPanel>
                                             <TextBlock Style="{StaticResource Muted}" Text="{Binding Title}" />
                                             <TextBlock

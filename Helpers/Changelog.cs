@@ -64,7 +64,7 @@ namespace Zeitmanagement.Helpers
                 Neu("TimeTrack merkt sich deine letzte Auswahl: Optionen, Projekte und die Schnellwahl des Zeitraums. „Letzter Monat“ gilt beim nächsten Mal für den dann letzten Monat."),
                 Neu("Unter „Projekte“ öffnet ein Symbol in der Zeile den Tätigkeitsnachweis mit diesem Projekt."),
                 Neu("Vor dem Export prüft TimeTrack die Buchungen und warnt vor fehlenden Beschreibungen, Überschneidungen im selben Projekt, nicht lesbaren Zeiten (diese Buchungen fehlen im Nachweis, sie werden nie mit erfundener Dauer gezählt), Dauer 0 und mehr als 12 Stunden an einem Tag. Betroffene Zeilen sind in der Vorschau hinterlegt."),
-                Verbessert("Buttons, Eingabefelder, Auswahllisten und ihre Aufklapp-Fenster haben nur noch einen sehr kleinen Eckenradius und wirken eckiger. Karten und Kapseln bleiben abgerundet.")),
+                Verbessert("Buttons, Eingabefelder, Auswahllisten und ihre Aufklapp-Fenster haben nur noch einen sehr kleinen Eckenradius und wirken eckiger. Ebenso Karten und Innenflächen; nur kleine Kapseln (Status, „Neu“-Marken) bleiben rund.")),
 
             new ChangelogRelease("2026.46.0", new DateTime(2026, 11, 10), "Projektcontrolling",
                 Neu("„Projektcontrolling“ in der Seitenleiste: „Excel importieren“ liest Plan- und Ist-Kosten aus einer SAP-Projektcontrolling-Datei (.xlsx) – nur lesend. Importiert werden nur PSP-Elemente, die in einem Kostenträger deiner Projekte enthalten sind; der Kostenträger muss die PSP-Element-ID enthalten, aber nicht genau so heißen."),

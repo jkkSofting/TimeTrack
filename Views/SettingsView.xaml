@@ -66,7 +66,7 @@
                             Background="{DynamicResource Theme.Surface}"
                             BorderBrush="{DynamicResource Theme.CardBorder}"
                             BorderThickness="2"
-                            CornerRadius="12">
+                            CornerRadius="{StaticResource CardRadius}">
                             <ContentPresenter />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -91,13 +91,13 @@
                 BorderBrush="{Binding CardBorder}"
                 BorderThickness="1"
                 ClipToBounds="True"
-                CornerRadius="7">
+                CornerRadius="{StaticResource CardRadius}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="20" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <Border Background="{Binding Sidebar}" CornerRadius="6,0,0,6">
+                    <Border Background="{Binding Sidebar}" CornerRadius="2,0,0,2">
                         <StackPanel Margin="4,9,4,0">
                             <Border
                                 Height="3"
@@ -122,7 +122,7 @@
                         Background="{Binding Card}"
                         BorderBrush="{Binding CardBorder}"
                         BorderThickness="1"
-                        CornerRadius="5">
+                        CornerRadius="{StaticResource CardRadius}">
                         <StackPanel>
                             <Border
                                 Width="28"
@@ -312,7 +312,7 @@
                             Margin="0,4,0,0"
                             Padding="10,8"
                             Background="{DynamicResource Theme.AccentSoft}"
-                            CornerRadius="8">
+                            CornerRadius="{StaticResource CardRadius}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock
                                     Margin="0,0,8,0"

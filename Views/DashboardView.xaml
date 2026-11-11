@@ -19,7 +19,7 @@
         <Style x:Key="IconBadge" TargetType="Border">
             <Setter Property="Width" Value="46" />
             <Setter Property="Height" Value="46" />
-            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="CornerRadius" Value="{StaticResource CardRadius}" />
             <Setter Property="VerticalAlignment" Value="Top" />
             <Setter Property="Background" Value="{DynamicResource Theme.AccentSoft}" />
             <Setter Property="Padding" Value="12" />

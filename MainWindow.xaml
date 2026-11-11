@@ -69,7 +69,7 @@
                     Margin="18,10,18,0"
                     Padding="10,6"
                     Background="{DynamicResource Theme.SidebarSelected}"
-                    CornerRadius="8"
+                    CornerRadius="{StaticResource CardRadius}"
                     DockPanel.Dock="Top">
                     <TextBlock
                         x:Name="Greeting"
