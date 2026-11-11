@@ -149,6 +149,9 @@ public sealed partial class TimeTracker : IDisposable
             // Angaben für den Tätigkeitsnachweis (Auftragsnummer, Auftraggeber): eine zusätzliche Tabelle je Projekt.
             EnsureExportSchema(cmd);
 
+            // Ablage der Plugins (Zuordnungen, Übertragungsstände, verschlüsselte Zugangsdaten): eine zusätzliche Tabelle.
+            EnsurePluginSchema(cmd);
+
             tx.Commit();
         }
     }

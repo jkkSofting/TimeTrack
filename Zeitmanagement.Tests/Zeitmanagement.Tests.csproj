@@ -31,12 +31,18 @@
   <ItemGroup>
     <Reference Include="System.IO.Compression" />
     <Reference Include="WindowsBase" />
+    <Reference Include="System.Security" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System.Xaml" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\TimeTracker.cs" Link="Linked\TimeTracker.cs" />
     <Compile Include="..\TimeTracker.Controlling.cs" Link="Linked\TimeTracker.Controlling.cs" />
     <Compile Include="..\TimeTracker.Export.cs" Link="Linked\TimeTracker.Export.cs" />
+    <Compile Include="..\TimeTracker.Plugins.cs" Link="Linked\TimeTracker.Plugins.cs" />
+    <Compile Include="..\Helpers\Plugins\PluginStorage.cs" Link="Linked\PluginStorage.cs" />
     <Compile Include="..\Helpers\BackupHelper.cs" Link="Linked\BackupHelper.cs" />
     <Compile Include="..\Helpers\CarrierMatching.cs" Link="Linked\CarrierMatching.cs" />
     <Compile Include="..\Helpers\ControllingModels.cs" Link="Linked\ControllingModels.cs" />
@@ -53,6 +59,10 @@
     <Compile Include="..\Helpers\SafeFile.cs" Link="Linked\SafeFile.cs" />
     <Compile Include="..\Helpers\PdfReportLayout.cs" Link="Linked\PdfReportLayout.cs" />
     <Compile Include="..\Helpers\ProjectControllingExcelReader.cs" Link="Linked\ProjectControllingExcelReader.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TimeTrack.Plugins.Abstractions\TimeTrack.Plugins.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>
