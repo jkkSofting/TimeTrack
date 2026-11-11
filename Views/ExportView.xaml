@@ -27,7 +27,7 @@
             <Setter Property="Background" Value="{DynamicResource Theme.Surface}" />
             <Setter Property="BorderBrush" Value="{DynamicResource Theme.CardBorder}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="CornerRadius" Value="{StaticResource ControlRadius}" />
         </Style>
 
         <Style x:Key="Hint" TargetType="TextBlock">

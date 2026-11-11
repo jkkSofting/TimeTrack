@@ -452,7 +452,7 @@
                                 Background="{DynamicResource Theme.Surface}"
                                 BorderBrush="{DynamicResource Theme.CardBorder}"
                                 BorderThickness="1"
-                                CornerRadius="9">
+                                CornerRadius="{StaticResource ControlRadius}">
                                 <StackPanel Orientation="Horizontal">
                                     <RadioButton
                                         Content="{Binding BatchModeText}"
@@ -520,7 +520,7 @@
                                 Background="{DynamicResource Theme.Surface}"
                                 BorderBrush="{DynamicResource Theme.CardBorder}"
                                 BorderThickness="1"
-                                CornerRadius="9">
+                                CornerRadius="{StaticResource ControlRadius}">
                                 <StackPanel Orientation="Horizontal">
                                     <RadioButton
                                         local:Ui.Glyph="&#xE8A9;"
@@ -544,7 +544,7 @@
                                 Background="{DynamicResource Theme.Surface}"
                                 BorderBrush="{DynamicResource Theme.CardBorder}"
                                 BorderThickness="1"
-                                CornerRadius="9"
+                                CornerRadius="{StaticResource ControlRadius}"
                                 Visibility="{Binding IsChartView, Converter={StaticResource BoolToVis}}">
                                 <StackPanel Orientation="Horizontal">
                                     <RadioButton
@@ -1125,7 +1125,7 @@
                                     Background="{DynamicResource Theme.Surface}"
                                     BorderBrush="{DynamicResource Theme.CardBorder}"
                                     BorderThickness="1"
-                                    CornerRadius="9">
+                                    CornerRadius="{StaticResource ControlRadius}">
                                     <StackPanel Orientation="Horizontal">
                                         <RadioButton
                                             Content="Kostenverlauf"
@@ -1227,7 +1227,7 @@
                                         Background="{DynamicResource Theme.WarningSoft}"
                                         BorderBrush="{DynamicResource Theme.Warning}"
                                         BorderThickness="1"
-                                        CornerRadius="8">
+                                        CornerRadius="{StaticResource CardRadius}">
                                         <TextBlock
                                             Foreground="{DynamicResource Theme.Warning}"
                                             Style="{StaticResource WrapMuted}"
@@ -1241,7 +1241,7 @@
                                             Background="{DynamicResource Theme.Surface}"
                                             BorderBrush="{DynamicResource Theme.CardBorder}"
                                             BorderThickness="1"
-                                            CornerRadius="9">
+                                            CornerRadius="{StaticResource ControlRadius}">
                                             <StackPanel Orientation="Horizontal">
                                                 <RadioButton Content="Tag" GroupName="HoursKind" IsChecked="{Binding IsHoursDay, Mode=TwoWay}" Style="{StaticResource Segment}" />
                                                 <RadioButton Content="Woche" GroupName="HoursKind" IsChecked="{Binding IsHoursWeek, Mode=TwoWay}" Style="{StaticResource Segment}" ToolTip="ISO-Wochen, beginnend am Montag" />

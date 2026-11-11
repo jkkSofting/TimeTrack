@@ -450,7 +450,7 @@
                                                             Background="Transparent"
                                                             BorderBrush="Transparent"
                                                             BorderThickness="1"
-                                                            CornerRadius="6">
+                                                            CornerRadius="{StaticResource ControlRadius}">
                                                             <DockPanel VerticalAlignment="Center" LastChildFill="True">
                                                                 <TextBlock
                                                                     Width="86"

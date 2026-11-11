@@ -10,8 +10,12 @@
 
     <!--  ===== Grundlagen =====  -->
     <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
-    <CornerRadius x:Key="ControlRadius">8</CornerRadius>
-    <CornerRadius x:Key="CardRadius">14</CornerRadius>
+    <!--
+        Radius aller Buttons, Eingabefelder, Auswahllisten und ihrer Aufklapp-Fenster: bewusst fast eckig.
+        Ein einziger Wert für alle. Karten und Innenflächen nutzen CardRadius, kleine Kapseln (Pill, Badges) behalten ihren Radius.
+    -->
+    <CornerRadius x:Key="ControlRadius">2</CornerRadius>
+    <CornerRadius x:Key="CardRadius">2</CornerRadius>
 
     <BooleanToVisibilityConverter x:Key="BoolToVis" />
     <views:EqualsConverter x:Key="Equals" />
@@ -22,8 +26,8 @@
                 <ControlTemplate>
                     <Rectangle
                         Margin="-3"
-                        RadiusX="10"
-                        RadiusY="10"
+                        RadiusX="3"
+                        RadiusY="3"
                         SnapsToDevicePixels="True"
                         Stroke="{DynamicResource Theme.Accent}"
                         StrokeThickness="2" />
@@ -110,7 +114,7 @@
         <Setter Property="Background" Value="{DynamicResource Theme.Surface}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Theme.CardBorder}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="CornerRadius" Value="{StaticResource CardRadius}" />
         <Setter Property="Padding" Value="12" />
     </Style>
 
@@ -366,7 +370,7 @@
                         Background="Transparent"
                         BorderBrush="Transparent"
                         BorderThickness="1"
-                        CornerRadius="7">
+                        CornerRadius="{StaticResource ControlRadius}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock
                                 x:Name="glyph"
@@ -477,7 +481,7 @@
                             Background="{DynamicResource Theme.Control}"
                             BorderBrush="{DynamicResource Theme.ControlBorder}"
                             BorderThickness="1.5"
-                            CornerRadius="5">
+                            CornerRadius="{StaticResource ControlRadius}">
                             <Path
                                 x:Name="check"
                                 Data="M 3,7.5 L 6,10.5 L 12,4"
@@ -657,7 +661,7 @@
                                     Background="{DynamicResource Theme.Popup}"
                                     BorderBrush="{DynamicResource Theme.ControlBorder}"
                                     BorderThickness="1"
-                                    CornerRadius="10"
+                                    CornerRadius="{StaticResource ControlRadius}"
                                     Effect="{DynamicResource Theme.PopupShadow}">
                                     <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto">
                                         <StackPanel IsItemsHost="True" />
@@ -686,7 +690,7 @@
                                     x:Name="bd"
                                     Padding="{TemplateBinding Padding}"
                                     Background="{TemplateBinding Background}"
-                                    CornerRadius="6">
+                                    CornerRadius="{StaticResource ControlRadius}">
                                     <ContentPresenter TextElement.Foreground="{DynamicResource Theme.Text}" />
                                 </Border>
                                 <ControlTemplate.Triggers>
@@ -812,7 +816,7 @@
                         Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="1"
-                        CornerRadius="6">
+                        CornerRadius="{StaticResource ControlRadius}">
                         <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}">
                             <ContentPresenter.Resources>
                                 <Style TargetType="TextBlock">
@@ -949,7 +953,7 @@
                         Background="Transparent"
                         BorderBrush="Transparent"
                         BorderThickness="1"
-                        CornerRadius="6">
+                        CornerRadius="{StaticResource ControlRadius}">
                         <ContentPresenter
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
@@ -991,7 +995,7 @@
                         Height="44"
                         Margin="2"
                         Background="Transparent"
-                        CornerRadius="6">
+                        CornerRadius="{StaticResource ControlRadius}">
                         <ContentPresenter
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
@@ -1024,7 +1028,7 @@
                         x:Name="bd"
                         Padding="8,4"
                         Background="Transparent"
-                        CornerRadius="6">
+                        CornerRadius="{StaticResource ControlRadius}">
                         <ContentPresenter
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
@@ -1064,7 +1068,7 @@
                             Background="{DynamicResource Theme.Popup}"
                             BorderBrush="{DynamicResource Theme.ControlBorder}"
                             BorderThickness="1"
-                            CornerRadius="10">
+                            CornerRadius="{StaticResource ControlRadius}">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -1141,8 +1145,8 @@
                             x:Name="PART_DisabledVisual"
                             Fill="{DynamicResource Theme.Popup}"
                             Opacity="0"
-                            RadiusX="10"
-                            RadiusY="10"
+                            RadiusX="2"
+                            RadiusY="2"
                             Visibility="Collapsed" />
                     </Grid>
                     <ControlTemplate.Triggers>
