@@ -96,7 +96,8 @@ namespace Zeitmanagement.Helpers
                 "Inhalt: Gliederung nach Tag, Projekt oder Kalenderwoche mit Zwischensummen. Die Dauer zeigst du dezimal (1,50), als h:mm (1:30) oder beides. Uhrzeiten, Projekt- und Kostenträger-Spalte schaltest du ein und aus. „Extern“ oder „Intern“ begrenzt die Projekte nach dem Kennzeichen unter „Projekte“.",
                 "Rundung: Auf Wunsch wird die Dauer jeder Buchung kaufmännisch auf 5, 10, 15 oder 30 Minuten gerundet. Das Dokument nennt dann die ungerundete Summe, damit nichts stillschweigend abweicht. Jede Buchung zählt einzeln; läuft Zeit parallel in mehreren Projekten, zählt sie in jedem voll. Eine Buchung über Mitternacht zählt am Tag ihres Beginns.",
                 "„PDF speichern“ erzeugt ein A4-Dokument mit Titel und Zeitraum, Auftragnehmer und Auftraggeber, Zusammenfassung, Einzelnachweis mit Gesamtsumme, Bemerkung und einem Unterschriftsfeld. Die Kopfzeile der Tabelle wiederholt sich auf jeder Seite, die Fußzeile nennt die Seitenzahl. Unter „Dokument“ ändern Titel, Bemerkung, Querformat, Unterschriftsfeld und Fußzeile das Aussehen.",
-                "„Auftragnehmer & Auftraggeber“ nimmt die Angaben für den Briefkopf auf. Dein Name und deine Anschrift bleiben für den nächsten Nachweis gespeichert; der Auftraggeber ist der Kunde der gewählten Projekte, bis du etwas anderes einträgst.",
+                "„Auftragnehmer & Auftraggeber“ nimmt die Angaben für den Briefkopf auf. Dein Name und deine Anschrift bleiben für den nächsten Nachweis gespeichert; der Auftraggeber ist der Kunde der gewählten Projekte, bis du etwas anderes einträgst. Auftrags-/Bestellnummer, Auftraggeber und Anschrift merkt sich TimeTrack für das Projekt, sobald du einen Nachweis mit genau einem Projekt gespeichert hast, und füllt sie beim nächsten Mal wieder ein. Ein Logo (PNG oder JPEG) steht oben rechts im PDF; die Datei bleibt dort, wo sie liegt.",
+                "„PDF-Vorschau“ öffnet den Nachweis als temporäre Datei im PDF-Programm, ohne zu speichern und ohne etwas zu merken. Die letzte gespeicherte Auswahl (Optionen, Projekte, Zeitraum-Schnellwahl) ist beim nächsten Öffnen wieder da; „Letzter Monat“ gilt dann für den dann letzten Monat.",
                 "„CSV speichern“ schreibt eine Zeile je Buchung (Datum, Wochentag, Von, Bis, Dauer, Projekt, Kunde, Kostenträger, extern/intern, Beschreibung) als UTF-8-Datei. Standard sind Semikolon und Dezimalkomma, wie das deutsche Excel sie erwartet; „International“ nimmt Komma und Dezimalpunkt. Beginnt ein Text mit = + - oder @, setzt TimeTrack ein Hochkomma davor, damit Excel ihn nicht als Formel ausführt.",
                 "Nach dem Speichern öffnest du die Datei oder ihren Ordner direkt aus der Seite. Ist die Datei noch in einem PDF-Programm oder Excel geöffnet, meldet TimeTrack das und schreibt nichts Halbes."),
 
@@ -106,7 +107,8 @@ namespace Zeitmanagement.Helpers
                 "Über die Symbole in einer Zeile bearbeitest oder löschst du ein Projekt.",
                 "Der Schalter „Quick Switch“ bestimmt, ob ein Projekt im Quick-Switch-Fenster wählbar ist. Neue Projekte sind sofort dabei, Buchungen bleiben auch bei ausgeschaltetem Projekt erhalten.",
                 "Die Suche filtert nach Name, Kunde und Kostenträger. Mit Von/Bis und „Filtern“ siehst du die Stunden in einem Zeitraum.",
-                "Das Diagramm-Symbol in einer Zeile öffnet das „Projektcontrolling“ mit dem Kostenträger des Projekts."),
+                "Das Diagramm-Symbol in einer Zeile öffnet das „Projektcontrolling“ mit dem Kostenträger des Projekts.",
+                "Das Dokument-Symbol in einer Zeile öffnet den „Tätigkeitsnachweis“ mit diesem Projekt."),
 
             new HelpTopic("", "Einstellungen", "Settings",
                 "TimeTrack an dich anpassen. Das Design gilt sofort, alles andere nach „Speichern“.",

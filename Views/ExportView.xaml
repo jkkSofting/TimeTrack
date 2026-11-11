@@ -80,6 +80,13 @@
                 DockPanel.Dock="Right"
                 Orientation="Horizontal">
                 <Button
+                    local:Ui.Glyph="&#xE890;"
+                    Command="{Binding PreviewPdfCommand}"
+                    Content="PDF-Vorschau"
+                    Style="{StaticResource Button.Ghost}"
+                    ToolTip="Erzeugt das PDF als temporäre Datei und öffnet es, ohne zu speichern. So prüfst du das Aussehen." />
+                <Button
+                    Margin="8,0,0,0"
                     local:Ui.Glyph="&#xE8A9;"
                     Command="{Binding ExportCsvCommand}"
                     Content="CSV speichern"
@@ -420,6 +427,32 @@
                                         local:Ui.Placeholder="optional"
                                         AutomationProperties.Name="Auftrags- oder Bestellnummer"
                                         Text="{Binding ReferenceNumber}" />
+                                    <TextBlock
+                                        Margin="2,4,0,0"
+                                        Style="{StaticResource Hint}"
+                                        Text="Nummer und Auftraggeber merkt sich TimeTrack für das Projekt, wenn du genau ein Projekt exportierst." />
+
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="LOGO (OPTIONAL)" />
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                            <Button Command="{Binding ChooseLogoCommand}" Content="Wählen …" />
+                                            <Button
+                                                Margin="6,0,0,0"
+                                                Command="{Binding RemoveLogoCommand}"
+                                                Content="Entfernen"
+                                                Style="{StaticResource Button.Ghost}" />
+                                        </StackPanel>
+                                        <TextBlock
+                                            Margin="0,0,8,0"
+                                            VerticalAlignment="Center"
+                                            Style="{StaticResource Text.Muted}"
+                                            Text="{Binding LogoText}"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </DockPanel>
+                                    <TextBlock
+                                        Margin="2,4,0,0"
+                                        Style="{StaticResource Hint}"
+                                        Text="PNG oder JPEG, erscheint oben rechts im PDF. Die Datei bleibt, wo sie ist." />
                                 </StackPanel>
                             </Border>
                         </StackPanel>

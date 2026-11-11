@@ -51,11 +51,15 @@ namespace Zeitmanagement.ViewModel
             ProjectsView.Filter = FilterProject;
 
             _suspend++;
-            ApplyPreset(ExportPeriod.ThisMonth);
             _issuerBlock = ReadSetting(() => Properties.Settings.Default.ExportIssuerBlock);
+            _logoPath = ReadSetting(() => Properties.Settings.Default.ExportLogoPath);
+            ApplyPrefs(ExportPrefs.FromJson(ReadSetting(() => Properties.Settings.Default.ExportPrefsJson)));
             _suspend--;
 
             RefreshCommand = new DelegateCommand(_ => Refresh());
+            PreviewPdfCommand = new DelegateCommand(async _ => await PreviewAsync(), _ => CanExport);
+            ChooseLogoCommand = new DelegateCommand(_ => ChooseLogo());
+            RemoveLogoCommand = new DelegateCommand(_ => SetLogo(string.Empty), _ => HasLogo);
             SelectAllVisibleCommand = new DelegateCommand(_ => SetVisibleSelection(true));
             ClearSelectionCommand = new DelegateCommand(_ => ClearSelection());
             ToggleMetaPanelCommand = new DelegateCommand(_ => IsMetaPanelOpen = !IsMetaPanelOpen);
@@ -63,6 +67,80 @@ namespace Zeitmanagement.ViewModel
             ExportCsvCommand = new DelegateCommand(async _ => await ExportAsync(false), _ => CanExport);
             OpenResultCommand = new DelegateCommand(_ => OpenResult(), _ => HasResult);
             ShowResultInFolderCommand = new DelegateCommand(_ => ShowResultInFolder(), _ => HasResult);
+        }
+
+        // ---------- Gemerkte Auswahl ----------
+
+        /// <summary>Übernimmt die zuletzt exportierte Auswahl; ohne gespeicherte Auswahl gelten die Standardwerte (dieser Monat).</summary>
+        private void ApplyPrefs(ExportPrefs prefs)
+        {
+            _kind = prefs.GetKind();
+            _grouping = prefs.GetGrouping();
+            _durationFormat = prefs.GetDurationFormat();
+            _selectedRounding = RoundingChoices.First(r => r.Minutes == prefs.GetRoundingMinutes());
+            _showTimes = prefs.GetShowTimes();
+            _alwaysShowProjectColumn = prefs.AlwaysShowProjectColumn;
+            _showCarrierColumn = prefs.ShowCarrierColumn;
+            if (!string.IsNullOrWhiteSpace(prefs.Title)) _title = prefs.Title;
+            _landscape = prefs.Landscape;
+            _showSignature = prefs.GetShowSignature();
+            _showBranding = prefs.GetShowBranding();
+            _csvInternational = prefs.CsvInternational;
+            _csvIsoDates = prefs.CsvIsoDates;
+            _csvTotalRow = prefs.CsvTotalRow;
+
+            _selectedNames.Clear();
+            foreach (var name in prefs.ProjectNames ?? new List<string>())
+            {
+                if (!string.IsNullOrEmpty(name)) _selectedNames.Add(name);
+            }
+
+            // "Letzter Monat" bleibt eine Regel und gilt beim nächsten Start für den dann letzten Monat; nur ein von Hand
+            // gewählter Zeitraum bleibt als fester Zeitraum stehen.
+            DateTime from, to;
+            if (prefs.PeriodKey != null && prefs.PeriodKey != ExportPeriod.Custom && ExportPeriod.TryResolve(prefs.PeriodKey, DateTime.Today, out from, out to))
+            {
+                ApplyPreset(prefs.PeriodKey);
+            }
+            else if (prefs.PeriodKey == ExportPeriod.Custom && prefs.TryGetCustomRange(out from, out to))
+            {
+                _applyingPreset = true;
+                _selectedPreset = Presets.First(p => p.Key == ExportPeriod.Custom);
+                _from = from;
+                _to = to;
+                _applyingPreset = false;
+            }
+            else
+            {
+                ApplyPreset(ExportPeriod.ThisMonth);
+            }
+        }
+
+        private void SavePrefs()
+        {
+            var prefs = new ExportPrefs
+            {
+                PeriodKey = _selectedPreset.Key,
+                From = _from.HasValue ? ExportPrefs.FormatDate(_from.Value) : null,
+                To = _to.HasValue ? ExportPrefs.FormatDate(_to.Value) : null,
+                ProjectNames = _selectedNames.OrderBy(n => n, StringComparer.Ordinal).ToList(),
+                Kind = _kind.ToString(),
+                Grouping = _grouping.ToString(),
+                DurationFormat = _durationFormat.ToString(),
+                RoundingMinutes = _selectedRounding.Minutes,
+                ShowTimes = _showTimes,
+                AlwaysShowProjectColumn = _alwaysShowProjectColumn,
+                ShowCarrierColumn = _showCarrierColumn,
+                Title = _title,
+                Landscape = _landscape,
+                ShowSignature = _showSignature,
+                ShowBranding = _showBranding,
+                CsvInternational = _csvInternational,
+                CsvIsoDates = _csvIsoDates,
+                CsvTotalRow = _csvTotalRow
+            };
+            var json = prefs.ToJson();
+            WriteSetting(() => Properties.Settings.Default.ExportPrefsJson = json);
         }
 
         // ---------- Zeitraum ----------
@@ -245,6 +323,7 @@ namespace Zeitmanagement.ViewModel
             _selectedNames.Clear();
             foreach (var p in ProjectItems.Where(p => p.IsSelected)) _selectedNames.Add(p.Name);
             RaisePropertyChanged(nameof(ProjectSelectionText));
+            LoadStoredMeta();
             Rebuild();
         }
 
@@ -253,6 +332,7 @@ namespace Zeitmanagement.ViewModel
         {
             _selectedNames.Clear();
             if (!string.IsNullOrEmpty(projectName)) _selectedNames.Add(projectName);
+            _metaDirty = false;   // die gemerkten Angaben dieses Projekts sollen erscheinen
             _searchText = string.Empty;
             _customerFilter = AllCustomers;
             RaisePropertyChanged(nameof(SearchText));
@@ -364,6 +444,80 @@ namespace Zeitmanagement.ViewModel
             }
         }
 
+        private string _logoPath;
+        public bool HasLogo => !string.IsNullOrEmpty(_logoPath);
+
+        /// <summary>Name der Logo-Datei für die Anzeige; weist darauf hin, wenn die Datei fehlt (dann bleibt der Nachweis ohne Logo).</summary>
+        public string LogoText
+        {
+            get
+            {
+                if (!HasLogo) return "Kein Logo";
+                var name = Path.GetFileName(_logoPath);
+                return File.Exists(_logoPath) ? name : name + " (Datei nicht gefunden)";
+            }
+        }
+
+        private void ChooseLogo()
+        {
+            var start = HasLogo ? Path.GetDirectoryName(_logoPath) : ReadSetting(() => Properties.Settings.Default.ExportLastFolder);
+            var path = FileDialogHelper.ChooseImagePath("Logo für den Nachweis wählen", start);
+            if (path == null) return;
+
+            string error;
+            if (!IsUsableImage(path, out error))
+            {
+                ShowError(error);
+                return;
+            }
+            SetLogo(path);
+        }
+
+        private void SetLogo(string path)
+        {
+            _logoPath = path ?? string.Empty;
+            RaisePropertyChanged(nameof(HasLogo));
+            RaisePropertyChanged(nameof(LogoText));
+            RemoveLogoCommand.RaiseCanExecuteChanged();
+            WriteSetting(() => Properties.Settings.Default.ExportLogoPath = _logoPath);
+        }
+
+        /// <summary>Ein Logo muss sich als Bild lesen lassen und darf nicht riesig sein (es steckt in jedem PDF).</summary>
+        private static bool IsUsableImage(string path, out string error)
+        {
+            error = null;
+            try
+            {
+                if (new FileInfo(path).Length > 5 * 1024 * 1024)
+                {
+                    error = "Das Bild ist größer als 5 MB. Nimm bitte eine kleinere Datei (ein Logo braucht meist nur wenige hundert KB).";
+                    return false;
+                }
+
+                using (var image = System.Drawing.Image.FromFile(path))
+                {
+                    if (image.Width < 1 || image.Height < 1)
+                    {
+                        error = "Das Bild hat keine Größe.";
+                        return false;
+                    }
+                }
+                return true;
+            }
+            catch (Exception ex) when (ex is OutOfMemoryException || ex is ArgumentException || ex is IOException || ex is UnauthorizedAccessException)
+            {
+                // GDI+ meldet "kein Bild" als OutOfMemoryException.
+                error = "Diese Datei lässt sich nicht als Bild lesen. Erlaubt sind PNG und JPEG.";
+                return false;
+            }
+        }
+
+        // Auftraggeber und Nummer gehören zum Projekt: Sie werden beim Wählen eines einzelnen Projekts geladen und nach einem
+        // Export dieses Projekts gespeichert. Hat der Nutzer sie von Hand geändert (_metaDirty), überschreibt ein Wechsel der
+        // Auswahl sie nicht.
+        private bool _metaDirty;
+        private bool _loadingMeta;
+
         private string _clientName;
         private bool _clientNameEdited;
         /// <summary>Auftraggeber; ohne eigene Eingabe der Kunde der gewählten Projekte.</summary>
@@ -374,14 +528,81 @@ namespace Zeitmanagement.ViewModel
             {
                 if (!SetProperty(ref _clientName, value)) return;
                 _clientNameEdited = !string.IsNullOrWhiteSpace(value);
+                if (!_loadingMeta) _metaDirty = true;
             }
         }
 
         private string _clientBlock;
-        public string ClientBlock { get => _clientBlock; set => SetProperty(ref _clientBlock, value); }
+        public string ClientBlock
+        {
+            get => _clientBlock;
+            set { if (SetProperty(ref _clientBlock, value) && !_loadingMeta) _metaDirty = true; }
+        }
 
         private string _referenceNumber;
-        public string ReferenceNumber { get => _referenceNumber; set => SetProperty(ref _referenceNumber, value); }
+        public string ReferenceNumber
+        {
+            get => _referenceNumber;
+            set { if (SetProperty(ref _referenceNumber, value) && !_loadingMeta) _metaDirty = true; }
+        }
+
+        /// <summary>Lädt die gemerkten Angaben des (ersten) gewählten Projekts, sofern der Nutzer nicht selbst etwas eingetragen hat.</summary>
+        private void LoadStoredMeta()
+        {
+            if (_metaDirty) return;
+
+            TimeTracker.ExportProjectMeta found = null;
+            foreach (var name in _selectedNames.OrderBy(n => n, StringComparer.Ordinal))
+            {
+                try
+                {
+                    var meta = MainViewModel.DbInstance.GetExportProjectMeta(name);
+                    if (meta != null && !meta.IsEmpty)
+                    {
+                        found = meta;
+                        break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("Nachweis-Angaben konnten nicht gelesen werden: " + ex.Message);
+                }
+            }
+
+            _loadingMeta = true;
+            try
+            {
+                ReferenceNumber = found?.Auftragsnummer ?? string.Empty;
+                ClientBlock = found?.AuftraggeberBlock ?? string.Empty;
+                _clientNameEdited = false;
+                ClientName = found?.AuftraggeberName ?? string.Empty;   // leer: Rebuild setzt wieder den Kunden ein
+            }
+            finally
+            {
+                _loadingMeta = false;
+            }
+        }
+
+        /// <summary>Merkt Nummer und Auftraggeber für das Projekt, wenn der Nachweis genau ein Projekt enthält.</summary>
+        private void SaveStoredMeta(ExportReport report, string reference, string clientName, string clientBlock, bool clientNameEdited)
+        {
+            if (report == null || report.Projects.Count != 1) return;
+
+            try
+            {
+                MainViewModel.DbInstance.SaveExportProjectMeta(report.Projects[0].Project, new TimeTracker.ExportProjectMeta
+                {
+                    Auftragsnummer = reference,
+                    AuftraggeberName = clientNameEdited ? clientName : null,
+                    AuftraggeberBlock = clientBlock
+                });
+                _metaDirty = false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Nachweis-Angaben konnten nicht gespeichert werden: " + ex.Message);
+            }
+        }
 
         // ---------- Vorschau ----------
 
@@ -414,6 +635,7 @@ namespace Zeitmanagement.ViewModel
             {
                 LoadProjects();
                 LoadEntries();
+                LoadStoredMeta();
             }
             finally
             {
@@ -557,6 +779,7 @@ namespace Zeitmanagement.ViewModel
             RaisePropertyChanged(nameof(CanExport));
             ExportPdfCommand.RaiseCanExecuteChanged();
             ExportCsvCommand.RaiseCanExecuteChanged();
+            PreviewPdfCommand.RaiseCanExecuteChanged();
         }
 
         private void UpdateClientDefault()
@@ -577,6 +800,9 @@ namespace Zeitmanagement.ViewModel
         public DelegateCommand ToggleMetaPanelCommand { get; }
         public DelegateCommand ExportPdfCommand { get; }
         public DelegateCommand ExportCsvCommand { get; }
+        public DelegateCommand PreviewPdfCommand { get; }
+        public DelegateCommand ChooseLogoCommand { get; }
+        public DelegateCommand RemoveLogoCommand { get; }
         public DelegateCommand OpenResultCommand { get; }
         public DelegateCommand ShowResultInFolderCommand { get; }
 
@@ -590,6 +816,7 @@ namespace Zeitmanagement.ViewModel
                 RaisePropertyChanged(nameof(CanExport));
                 ExportPdfCommand.RaiseCanExecuteChanged();
                 ExportCsvCommand.RaiseCanExecuteChanged();
+                PreviewPdfCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -613,6 +840,7 @@ namespace Zeitmanagement.ViewModel
                 Note = Note,
                 ShowSignature = ShowSignature,
                 ShowBranding = ShowBranding,
+                LogoPath = HasLogo && File.Exists(_logoPath) ? _logoPath : null,
                 CreatedAt = DateTime.Now,
                 AppVersion = _appVersion,
                 Orientation = Landscape ? ExportOrientation.Landscape : ExportOrientation.Portrait
@@ -627,6 +855,10 @@ namespace Zeitmanagement.ViewModel
             var report = _report;
             var meta = BuildMeta();
             var csv = new CsvOptions { International = CsvInternational, IsoDates = CsvIsoDates, IncludeTotalRow = CsvTotalRow };
+            var reference = ReferenceNumber;
+            var clientName = ClientName;
+            var clientBlock = ClientBlock;
+            var clientNameEdited = _clientNameEdited;
             var extension = pdf ? "pdf" : "csv";
 
             var path = FileDialogHelper.ChooseSavePath(
@@ -653,6 +885,10 @@ namespace Zeitmanagement.ViewModel
                 ShowResultInFolderCommand.RaiseCanExecuteChanged();
                 var folder = Path.GetDirectoryName(path);
                 WriteSetting(() => Properties.Settings.Default.ExportLastFolder = folder ?? string.Empty);
+
+                // Erst nach erfolgreichem Schreiben: Was im fertigen Nachweis steht, ist beim nächsten Mal wieder da.
+                SaveStoredMeta(report, reference, clientName, clientBlock, clientNameEdited);
+                SavePrefs();
             }
             catch (UnauthorizedAccessException)
             {
@@ -670,6 +906,56 @@ namespace Zeitmanagement.ViewModel
             finally
             {
                 IsBusy = false;
+            }
+        }
+
+        /// <summary>
+        /// Erzeugt den Nachweis als temporäre PDF-Datei und öffnet sie im PDF-Programm, ohne nach einem Speicherort zu fragen
+        /// und ohne etwas zu merken. So lässt sich das Aussehen prüfen, bevor man speichert.
+        /// </summary>
+        private async Task PreviewAsync()
+        {
+            if (!CanExport) return;
+
+            var report = _report;
+            var meta = BuildMeta();
+            var folder = Path.Combine(Path.GetTempPath(), "TimeTrack-Vorschau");
+            var path = Path.Combine(folder, "Vorschau_" + DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture) + ".pdf");
+
+            IsBusy = true;
+            try
+            {
+                await Task.Run(() =>
+                {
+                    Directory.CreateDirectory(folder);
+                    DeleteOldPreviews(folder);
+                    PdfExporter.WriteFile(path, report, meta);
+                });
+                Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                ShowError("Die Vorschau konnte nicht erstellt oder geöffnet werden.\n\n" + ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        /// <summary>Räumt Vorschauen vom Vortag und älter weg; eine noch geöffnete Datei bleibt einfach liegen.</summary>
+        private static void DeleteOldPreviews(string folder)
+        {
+            foreach (var file in Directory.GetFiles(folder, "Vorschau_*.pdf"))
+            {
+                try
+                {
+                    if (File.GetLastWriteTime(file) < DateTime.Now.AddDays(-1)) File.Delete(file);
+                }
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+                {
+                    // gerade geöffnet oder gesperrt: beim nächsten Mal
+                }
             }
         }
 

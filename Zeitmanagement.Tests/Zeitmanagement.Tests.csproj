@@ -36,6 +36,7 @@
   <ItemGroup>
     <Compile Include="..\TimeTracker.cs" Link="Linked\TimeTracker.cs" />
     <Compile Include="..\TimeTracker.Controlling.cs" Link="Linked\TimeTracker.Controlling.cs" />
+    <Compile Include="..\TimeTracker.Export.cs" Link="Linked\TimeTracker.Export.cs" />
     <Compile Include="..\Helpers\BackupHelper.cs" Link="Linked\BackupHelper.cs" />
     <Compile Include="..\Helpers\CarrierMatching.cs" Link="Linked\CarrierMatching.cs" />
     <Compile Include="..\Helpers\ControllingModels.cs" Link="Linked\ControllingModels.cs" />
@@ -45,6 +46,7 @@
     <Compile Include="..\Helpers\CsvExporter.cs" Link="Linked\CsvExporter.cs" />
     <Compile Include="..\Helpers\ExportFileName.cs" Link="Linked\ExportFileName.cs" />
     <Compile Include="..\Helpers\ExportModels.cs" Link="Linked\ExportModels.cs" />
+    <Compile Include="..\Helpers\ExportPrefs.cs" Link="Linked\ExportPrefs.cs" />
     <Compile Include="..\Helpers\ExportReportBuilder.cs" Link="Linked\ExportReportBuilder.cs" />
     <Compile Include="..\Helpers\LocalHoursCalculator.cs" Link="Linked\LocalHoursCalculator.cs" />
     <Compile Include="..\Helpers\PdfExporter.cs" Link="Linked\PdfExporter.cs" />

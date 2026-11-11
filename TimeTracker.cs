@@ -146,6 +146,9 @@ public sealed partial class TimeTracker : IDisposable
             // Projektcontrolling-Import (SAP-Excel): zusätzliche Tabellen, die Zeiterfassung bleibt unberührt.
             EnsureControllingSchema(cmd);
 
+            // Angaben für den Tätigkeitsnachweis (Auftragsnummer, Auftraggeber): eine zusätzliche Tabelle je Projekt.
+            EnsureExportSchema(cmd);
+
             tx.Commit();
         }
     }

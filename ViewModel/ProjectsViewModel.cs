@@ -95,6 +95,9 @@ namespace Zeitmanagement.ViewModel
         /// <summary>Öffnet „Projektcontrolling“ mit dem Kostenträger des Projekts.</summary>
         public DelegateCommand OpenControllingCommand { get; }
 
+        /// <summary>Öffnet den „Tätigkeitsnachweis“ mit diesem Projekt gewählt.</summary>
+        public DelegateCommand OpenExportCommand { get; }
+
         public DelegateCommand StartEditProjectCommand { get; }
         public DelegateCommand SaveEditProjectCommand { get; }
         public DelegateCommand CancelEditProjectCommand { get; }
@@ -106,11 +109,13 @@ namespace Zeitmanagement.ViewModel
         private readonly Action _projectsChanged;
 
         private readonly Action<string> _openControlling;
+        private readonly Action<string> _openExport;
 
-        public ProjectsViewModel(Action projectsChanged = null, Action<string> openControlling = null)
+        public ProjectsViewModel(Action projectsChanged = null, Action<string> openControlling = null, Action<string> openExport = null)
         {
             _projectsChanged = projectsChanged;
             _openControlling = openControlling;
+            _openExport = openExport;
 
             ProjectsView = CollectionViewSource.GetDefaultView(Projects);
             ProjectsView.Filter = FilterProject;
@@ -123,6 +128,10 @@ namespace Zeitmanagement.ViewModel
             OpenControllingCommand = new DelegateCommand(
                 p => _openControlling?.Invoke(((ProjectItemVM)p).Kostentraeger),
                 p => p is ProjectItemVM && _openControlling != null);
+
+            OpenExportCommand = new DelegateCommand(
+                p => _openExport?.Invoke(((ProjectItemVM)p).Projektname),
+                p => p is ProjectItemVM && _openExport != null);
 
             StartEditProjectCommand = new DelegateCommand(p => StartEdit(p as ProjectItemVM), p => p is ProjectItemVM);
             SaveEditProjectCommand = new DelegateCommand(_ => SaveEdit(), _ => CanSaveEdit());

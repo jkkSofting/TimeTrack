@@ -59,6 +59,10 @@ namespace Zeitmanagement.Helpers
                 Neu("Gliederung nach Tag, Projekt oder Kalenderwoche, Dauer dezimal (1,50), als h:mm (1:30) oder beides, Uhrzeiten sowie Projekt- und Kostenträger-Spalte nach Wunsch, auf Wunsch im Querformat. Dein Name und deine Anschrift als Auftragnehmer bleiben für den nächsten Nachweis gespeichert."),
                 Neu("Auf Wunsch rundet der Nachweis die Dauer jeder Buchung kaufmännisch auf 5, 10, 15 oder 30 Minuten. Das Dokument nennt dann die ungerundete Summe."),
                 Neu("Die CSV-Datei hat eine Zeile je Buchung und passt zum deutschen Excel (UTF-8, Semikolon, Dezimalkomma); alternativ international mit Komma und Dezimalpunkt. Text, der mit = + - oder @ beginnt, wird entschärft, damit Excel ihn nicht als Formel ausführt."),
+                Neu("„PDF-Vorschau“ erzeugt den Nachweis als temporäre Datei und öffnet ihn im PDF-Programm, ohne zu speichern. So prüfst du das Aussehen, bevor du den Nachweis ablegst."),
+                Neu("Auftrags-/Bestellnummer und Auftraggeber (Name, Anschrift) trägst du einmal ein; TimeTrack merkt sie für das Projekt und füllt sie beim nächsten Nachweis wieder ein. Optional steht ein eigenes Logo oben rechts im PDF."),
+                Neu("TimeTrack merkt sich deine letzte Auswahl: Optionen, Projekte und die Schnellwahl des Zeitraums. „Letzter Monat“ gilt beim nächsten Mal für den dann letzten Monat."),
+                Neu("Unter „Projekte“ öffnet ein Symbol in der Zeile den Tätigkeitsnachweis mit diesem Projekt."),
                 Neu("Vor dem Export prüft TimeTrack die Buchungen und warnt vor fehlenden Beschreibungen, Überschneidungen im selben Projekt, nicht lesbaren Zeiten (diese Buchungen fehlen im Nachweis, sie werden nie mit erfundener Dauer gezählt), Dauer 0 und mehr als 12 Stunden an einem Tag. Betroffene Zeilen sind in der Vorschau hinterlegt.")),
 
             new ChangelogRelease("2026.46.0", new DateTime(2026, 11, 10), "Projektcontrolling",

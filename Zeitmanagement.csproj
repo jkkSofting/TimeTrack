@@ -88,6 +88,7 @@
     </ApplicationDefinition>
     <Compile Include="TimeTracker.cs" />
     <Compile Include="TimeTracker.Controlling.cs" />
+    <Compile Include="TimeTracker.Export.cs" />
     <Compile Include="Helpers\AutostartHelper.cs" />
     <Compile Include="Helpers\BackupHelper.cs" />
     <Compile Include="Helpers\CarrierMatching.cs" />
@@ -99,6 +100,7 @@
     <Compile Include="Helpers\CsvExporter.cs" />
     <Compile Include="Helpers\ExportFileName.cs" />
     <Compile Include="Helpers\ExportModels.cs" />
+    <Compile Include="Helpers\ExportPrefs.cs" />
     <Compile Include="Helpers\ExportReportBuilder.cs" />
     <Compile Include="Helpers\LocalHoursCalculator.cs" />
     <Compile Include="Helpers\FileDialogHelper.cs" />
