@@ -1,7 +1,7 @@
 # MAP-Plugin für TimeTrack: Vorgehensplan
 
-Status: nur Plan, es wurde kein Anwendungsverhalten geändert.
-Branch: `feature/map-plugin`.
+Status: umgesetzt, Review ausstehend (Stand 2026-11-11, siehe Abschnitt 9).
+Branch: `feature/map-plugin` (TimeTrack, Teil A) und `feature/timetrack-api` (MAP, Teile B und C).
 Grundlage: Stand `main` von TimeTrack (2026.46.1) und Stand `develop` von MAP (2026.45.0), gelesen am 2026-11-11.
 
 ## 1. Kurzfassung
@@ -250,3 +250,27 @@ Fertig ist das Vorhaben, wenn:
 5. **Verteilung:** Plugin als ZIP zum Entpacken von Hand, oder soll der Update-Mechanismus später auch Plugins aktualisieren?
 6. **Erreichbarkeit:** Ist MAP von allen Arbeitsplätzen per HTTPS erreichbar, auch aus dem Firmennetz mit Proxy?
 7. **Spätere Ausbaustufe:** Tickets aus MAP als Vorschläge beim Buchen im Quick Switch. Das bräuchte eine Erweiterung des Vertrags und ist nicht Teil der ersten Version.
+
+## 9. Umsetzung und Abweichungen vom Plan
+
+| Teil | Wo | Stand |
+| --- | --- | --- |
+| A | TimeTrack, `feature/map-plugin` | Vertrag, Lader, Host, Speicher, Navigation, Einstellungen, Hilfe, Changelog (2026.47.0), `PLUGINS.md`, Beispiel-Plugin, Tests |
+| B | MAP, `feature/timetrack-api` | Zugriffstoken, `/api/v1`, `WorkingHoursService`, Migration, Profil, Kennzeichen „TimeTrack“, Doku, Änderungsdokument `docs/changes/timetrack-api.md`, Tests |
+| C | MAP, `feature/timetrack-api`, Ordner `TimeTrackPlugin/` | Plugin mit eigener Solution, README, Tests |
+
+Abweichungen und Entscheidungen:
+
+- **Ort des Plugins (offene Frage 1):** im MAP-Repo unter `TimeTrackPlugin/`, weil dieses Repo öffentlich ist. Die
+  Vertrags-DLL liegt dort als Binärkopie in `lib/` (Pfad per `-p:TimeTrackAbstractionsPath=` überschreibbar).
+- **Plugin-Ordner:** `Plugins\<Name>\<Name>.dll`, der Ordner heißt wie die DLL (z. B. `Plugins\TimeTrack.Plugin.Map\`).
+  So kann TimeTrack ein deaktiviertes Plugin anzeigen, ohne Code daraus auszuführen (Name und Version aus den
+  Dateieigenschaften). Die Aktivierung steht in `plugin_records` unter `$host`/`enabled`.
+- **Vertrag:** `PluginPage` nimmt eine Ansichtsfabrik und einen `Refresh`-Rückruf; ein eigenes ViewModel verlangt der
+  Vertrag nicht. Dazu `IPluginUi.OpenSettings()` und ein optionaler Klick-Rückruf bei Hinweisen.
+- **Migration:** eine Migration `AddApiTokensAndWorkingHoursExternalId` statt zwei.
+- **Projekt-Zuordnung:** zusätzlich „Nicht nach MAP übertragen“ und ein optionales Standard-Ticket je Projekt. Die
+  Zuordnung gilt auf Projektebene; Bestellungen dienen nur dem PSP-Vorschlag.
+- **Beschreibungen:** Der gebuchte Ticket-Schlüssel und der Standardtext „Quick Select“ fallen in MAP weg.
+- **Rundung (offene Frage 4):** zwei Nachkommastellen, sonst ungerundet.
+- Offen bleiben die Fragen 2 (Zustimmung des MAP-Teams), 3, 5, 6 und 7.
