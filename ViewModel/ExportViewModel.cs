@@ -583,10 +583,14 @@ namespace Zeitmanagement.ViewModel
             }
         }
 
-        /// <summary>Merkt Nummer und Auftraggeber für das Projekt, wenn der Nachweis genau ein Projekt enthält.</summary>
-        private void SaveStoredMeta(ExportReport report, string reference, string clientName, string clientBlock, bool clientNameEdited)
+        /// <summary>
+        /// Merkt Nummer und Auftraggeber für das Projekt, wenn genau ein Projekt gewählt ist und der Nachweis dieses Projekt
+        /// enthält. Bei mehreren gewählten Projekten bliebe unklar, zu welchem die Angaben gehören (geladen wurden sie vom ersten
+        /// Projekt, das welche hat), und sie könnten die eines anderen Projekts überschreiben.
+        /// </summary>
+        private void SaveStoredMeta(ExportReport report, string selectedProject, string reference, string clientName, string clientBlock, bool clientNameEdited)
         {
-            if (report == null || report.Projects.Count != 1) return;
+            if (report == null || selectedProject == null || report.Projects.Count != 1 || report.Projects[0].Project != selectedProject) return;
 
             try
             {
@@ -859,6 +863,7 @@ namespace Zeitmanagement.ViewModel
             var clientName = ClientName;
             var clientBlock = ClientBlock;
             var clientNameEdited = _clientNameEdited;
+            var selectedProject = _selectedNames.Count == 1 ? _selectedNames.First() : null;
             var extension = pdf ? "pdf" : "csv";
 
             var path = FileDialogHelper.ChooseSavePath(
@@ -887,7 +892,7 @@ namespace Zeitmanagement.ViewModel
                 WriteSetting(() => Properties.Settings.Default.ExportLastFolder = folder ?? string.Empty);
 
                 // Erst nach erfolgreichem Schreiben: Was im fertigen Nachweis steht, ist beim nächsten Mal wieder da.
-                SaveStoredMeta(report, reference, clientName, clientBlock, clientNameEdited);
+                SaveStoredMeta(report, selectedProject, reference, clientName, clientBlock, clientNameEdited);
                 SavePrefs();
             }
             catch (UnauthorizedAccessException)

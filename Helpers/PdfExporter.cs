@@ -19,12 +19,13 @@ namespace Zeitmanagement.Helpers
         }
 
         /// <summary>
-        /// Schreibt die Datei erst, wenn das PDF vollständig gerendert ist: Ein Fehler beim Rendern hinterlässt keine halbe Datei,
-        /// und eine gesperrte Zieldatei (im PDF-Programm geöffnet) meldet sich als <see cref="IOException"/>.
+        /// Schreibt die Datei erst, wenn das PDF vollständig gerendert ist, und dann über eine temporäre Datei
+        /// (<see cref="SafeFile"/>): Ein Fehler beim Rendern oder Schreiben hinterlässt keine halbe Datei und lässt eine vorhandene
+        /// unangetastet. Eine gesperrte Zieldatei (im PDF-Programm geöffnet) meldet sich als <see cref="IOException"/>.
         /// </summary>
         public static void WriteFile(string path, ExportReport report, ExportMeta meta)
         {
-            File.WriteAllBytes(path, ToBytes(report, meta));
+            SafeFile.WriteAllBytes(path, ToBytes(report, meta));
         }
 
         public static byte[] Render(Document document)

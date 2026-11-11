@@ -207,16 +207,36 @@ namespace Zeitmanagement.Tests
         }
 
         [Fact]
-        public void Details_by_day_show_the_date_once_and_a_subtotal_only_for_days_with_several_bookings()
+        public void Details_by_day_repeat_the_date_dimmed_and_add_a_subtotal_only_for_days_with_several_bookings()
         {
-            var rows = RowTexts(Details(PdfReportLayout.Build(Report(Options(), SomeEntries()), Meta())));
+            var table = Details(PdfReportLayout.Build(Report(Options(), SomeEntries()), Meta()));
+            var rows = RowTexts(table);
 
             Assert.Equal("Mo 05.10.2026 | 09:00 – 10:30 | 1,50 | Projekt Alpha | Konzept erstellt", rows[1]);
-            Assert.Equal(" | 11:00 – 12:00 | 1,00 | Projekt Alpha | Abstimmung mit dem Kunden", rows[2]);
+            Assert.Equal("Mo 05.10.2026 | 11:00 – 12:00 | 1,00 | Projekt Alpha | Abstimmung mit dem Kunden", rows[2]);
             Assert.Equal("Tagessumme | 2,50 |", rows[3].TrimEnd());
             Assert.StartsWith("Di 06.10.2026 | 09:00 – 11:15 | 2,25 | Projekt Beta", rows[4]);
             Assert.StartsWith("Gesamt | 4,75", rows[5]);
             Assert.Equal(6, rows.Count);
+
+            // Die erste Zeile eines Tages trägt das Datum normal, die Folgezeilen gedämpft: So fehlt es nach einem Seitenumbruch nicht.
+            var muted = Color.FromRgb(0x5B, 0x66, 0x75).Argb;
+            Assert.NotEqual(muted, ((Paragraph)table.Rows[1].Cells[0].Elements[0]).Format.Font.Color.Argb);
+            Assert.Equal(muted, ((Paragraph)table.Rows[2].Cells[0].Elements[0]).Format.Font.Color.Argb);
+            Assert.NotEqual(muted, ((Paragraph)table.Rows[4].Cells[0].Elements[0]).Format.Font.Color.Argb);
+        }
+
+        [Fact]
+        public void Without_the_times_column_the_subtotal_label_is_short_enough_for_the_date_column()
+        {
+            var options = Options();
+            options.ShowTimes = false;
+            options.Grouping = ExportGrouping.ByProject;
+
+            var rows = RowTexts(Details(PdfReportLayout.Build(Report(options, SomeEntries()), Meta())));
+
+            Assert.Contains(rows, r => r.StartsWith("Summe | 2,50"));
+            Assert.DoesNotContain(rows, r => r.StartsWith("Summe Projekt"));
         }
 
         [Fact]
@@ -255,6 +275,59 @@ namespace Zeitmanagement.Tests
             options.ShowCarrierColumn = true;
             var withCarrier = Report(options, E(1, "2026-10-05", "09:00", "10:00", "Projekt Alpha"));
             Assert.Equal("Datum | Zeit | Dauer (h) | Kostenträger | Tätigkeit", RowTexts(Details(PdfReportLayout.Build(withCarrier, Meta())))[0]);
+        }
+
+        [Theory]
+        [InlineData(false, ExportDurationFormat.Decimal)]
+        [InlineData(false, ExportDurationFormat.Both)]
+        [InlineData(true, ExportDurationFormat.Both)]
+        public void No_table_is_wider_than_the_printable_area(bool landscape, ExportDurationFormat format)
+        {
+            var options = Options();
+            options.DurationFormat = format;
+            options.ShowCarrierColumn = true;
+            options.ShowProjectColumn = true;
+            var meta = Meta();
+            meta.Orientation = landscape ? ExportOrientation.Landscape : ExportOrientation.Portrait;
+            var printableMm = (landscape ? 297.0 : 210.0) - 40.0;
+
+            var document = PdfReportLayout.Build(Report(options, SomeEntries()), meta);
+
+            foreach (var table in Tables(document))
+            {
+                var widthMm = table.Columns.Cast<Column>().Sum(c => c.Width.Millimeter);
+                Assert.True(widthMm <= printableMm + 0.01, "Tabelle " + CellText(table.Rows[0].Cells[0]) + " ist " + widthMm + " mm breit, erlaubt " + printableMm);
+            }
+
+            var details = Details(document);
+            var columns = details.Columns.Cast<Column>().ToList();
+            Assert.True(columns.Last().Width.Millimeter >= 40 - 0.01, "Die Tätigkeit braucht mindestens 40 mm");
+            // Datum, Zeit und Dauer werden nie schmaler gemacht, sonst bricht das Datum um: nur Projekt und Kostenträger geben nach.
+            Assert.True(columns[0].Width.Millimeter >= 27 - 0.01, "Die Datumsspalte ist zu schmal");
+            Assert.True(columns[1].Width.Millimeter >= 26 - 0.01, "Die Zeitspalte ist zu schmal");
+        }
+
+        [Fact]
+        public void A_locked_target_file_fails_with_an_io_error_and_keeps_the_old_content()
+        {
+            var dir = Path.Combine(Path.GetTempPath(), "TimeTrackTests", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            var path = Path.Combine(dir, "gesperrt.pdf");
+            File.WriteAllText(path, "alt");
+
+            try
+            {
+                using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None))   // wie ein PDF-Programm, das die Datei offen hält
+                {
+                    Assert.Throws<IOException>(() => PdfExporter.WriteFile(path, Report(Options(), SomeEntries()), Meta()));
+                }
+
+                Assert.Equal("alt", File.ReadAllText(path));
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
         }
 
         [Fact]

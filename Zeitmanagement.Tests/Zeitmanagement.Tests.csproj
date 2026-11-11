@@ -50,6 +50,7 @@
     <Compile Include="..\Helpers\ExportReportBuilder.cs" Link="Linked\ExportReportBuilder.cs" />
     <Compile Include="..\Helpers\LocalHoursCalculator.cs" Link="Linked\LocalHoursCalculator.cs" />
     <Compile Include="..\Helpers\PdfExporter.cs" Link="Linked\PdfExporter.cs" />
+    <Compile Include="..\Helpers\SafeFile.cs" Link="Linked\SafeFile.cs" />
     <Compile Include="..\Helpers\PdfReportLayout.cs" Link="Linked\PdfReportLayout.cs" />
     <Compile Include="..\Helpers\ProjectControllingExcelReader.cs" Link="Linked\ProjectControllingExcelReader.cs" />
   </ItemGroup>

@@ -359,7 +359,22 @@ namespace Zeitmanagement.Helpers
             });
             if (report.ShowProjectColumn && !byProject) columns.Add(new Col { Key = "project", Header = "Projekt", Mm = 32 });
             if (options.ShowCarrierColumn) columns.Add(new Col { Key = "carrier", Header = "Kostenträger", Mm = 30 });
-            columns.Add(new Col { Key = "text", Header = "Tätigkeit", Mm = Math.Max(40, width - columns.Sum(c => c.Mm)) });
+            // Die Tätigkeit bekommt den Rest, mindestens aber 40 mm. Wird es dafür zu eng (Hochformat mit allen Spalten), werden nur
+            // Projekt und Kostenträger schmaler (Namen dürfen umbrechen); Datum, Zeit und Dauer behalten ihre Breite, damit sie nie
+            // umbrechen. So ragt die Tabelle nie über den Satzspiegel hinaus.
+            const double MinTextMm = 40;
+            const double MinFlexMm = 20;
+            var flexible = columns.Where(c => c.Key == "project" || c.Key == "carrier").ToList();
+            var fixedMm = columns.Where(c => !flexible.Contains(c)).Sum(c => c.Mm);
+            var flexMm = flexible.Sum(c => c.Mm);
+            if (flexMm > 0 && width - fixedMm - flexMm < MinTextMm)
+            {
+                var target = Math.Max(MinFlexMm * flexible.Count, width - fixedMm - MinTextMm);
+                var factor = target / flexMm;
+                foreach (var c in flexible) c.Mm *= factor;
+                flexMm = flexible.Sum(c => c.Mm);
+            }
+            columns.Add(new Col { Key = "text", Header = "Tätigkeit", Mm = Math.Max(MinTextMm, width - fixedMm - flexMm) });
 
             var table = NewTable(section);
             foreach (var c in columns) table.AddColumn(Unit.FromMillimeter(c.Mm));
@@ -395,10 +410,12 @@ namespace Zeitmanagement.Helpers
                     var row = table.AddRow();
                     row.Borders.Bottom.Width = 0.5;
                     row.Borders.Bottom.Color = Hair;
-                    var showDate = options.Grouping != ExportGrouping.ByDay || i == 0;
+                    // Das Datum steht in jeder Zeile: Bei "Nach Tag" in den Folgezeilen eines Tages gedämpft, damit auch nach einem
+                    // Seitenumbruch klar ist, zu welchem Tag eine Zeile gehört.
+                    var dimDate = options.Grouping == ExportGrouping.ByDay && i > 0;
                     for (var c = 0; c < columns.Count; c++)
                     {
-                        FillCell(row.Cells[c], columns[c], line, showDate, options);
+                        FillCell(row.Cells[c], columns[c], line, dimDate, options);
                     }
                     last = row;
                 }
@@ -408,21 +425,23 @@ namespace Zeitmanagement.Helpers
                 {
                     if (last != null) last.KeepWith = 1;
                     var label = options.Grouping == ExportGrouping.ByDay ? "Tagessumme" : "Summe " + Clean(group.Title);
-                    last = SumRow(table, columns.Count, durIndex, label, ExportFormat.Duration(group.Minutes, options.DurationFormat), false);
+                    var shortLabel = options.Grouping == ExportGrouping.ByDay ? "Tagessumme" : "Summe";   // wenn die Beschriftung nur eine Spalte hat
+                    last = SumRow(table, columns.Count, durIndex, label, shortLabel, ExportFormat.Duration(group.Minutes, options.DurationFormat), false);
                 }
             }
 
             if (last != null) last.KeepWith = 1;
-            SumRow(table, columns.Count, durIndex, "Gesamt", ExportFormat.Duration(report.TotalMinutes, options.DurationFormat), true);
+            SumRow(table, columns.Count, durIndex, "Gesamt", "Gesamt", ExportFormat.Duration(report.TotalMinutes, options.DurationFormat), true);
             Spacer(section, 10);
         }
 
-        private static void FillCell(Cell cell, Col column, ExportLine line, bool showDate, ExportOptions options)
+        private static void FillCell(Cell cell, Col column, ExportLine line, bool dimDate, ExportOptions options)
         {
             switch (column.Key)
             {
                 case "date":
-                    if (showDate) cell.AddParagraph(line.WeekdayText + " " + line.DateText);
+                    var date = cell.AddParagraph(line.WeekdayText + " " + line.DateText);
+                    if (dimDate) date.Format.Font.Color = Muted;
                     break;
                 case "time":
                     cell.AddParagraph(line.Start + " – " + line.End);
@@ -453,7 +472,7 @@ namespace Zeitmanagement.Helpers
         }
 
         /// <summary>Zwischen- oder Gesamtsumme: Beschriftung rechtsbündig über den Spalten vor der Dauer, die Dauer in ihrer Spalte.</summary>
-        private static Row SumRow(Table table, int columnCount, int durIndex, string label, string duration, bool grand)
+        private static Row SumRow(Table table, int columnCount, int durIndex, string label, string shortLabel, string duration, bool grand)
         {
             var row = table.AddRow();
             row.Format.Font.Bold = true;
@@ -469,13 +488,14 @@ namespace Zeitmanagement.Helpers
                 row.Borders.Bottom.Color = Hair;
             }
 
+            // Ohne Uhrzeiten-Spalte hat die Beschriftung nur die schmale Datumsspalte: dort passt nur die Kurzform.
             var labelCell = row.Cells[0];
             if (durIndex > 1)
             {
                 labelCell.MergeRight = durIndex - 1;
                 labelCell.Format.Alignment = ParagraphAlignment.Right;
             }
-            labelCell.AddParagraph(label);
+            labelCell.AddParagraph(durIndex > 1 ? label : shortLabel);
             Right(row.Cells[durIndex].AddParagraph(duration));
             if (durIndex < columnCount - 1) row.Cells[durIndex + 1].MergeRight = columnCount - durIndex - 2;
             return row;

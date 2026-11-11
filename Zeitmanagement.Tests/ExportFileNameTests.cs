@@ -76,7 +76,7 @@ namespace Zeitmanagement.Tests
 
             var name = ExportFileName.Suggest(report, "Nachweis\\Titel", "pdf");
 
-            Assert.Empty(name.Where(c => Path.GetInvalidFileNameChars().Contains(c)));
+            Assert.DoesNotContain(name, c => Path.GetInvalidFileNameChars().Contains(c));
             Assert.EndsWith(".pdf", name);
         }
 
@@ -91,6 +91,30 @@ namespace Zeitmanagement.Tests
         public void Sanitize_replaces_trims_and_protects_reserved_names(string input, string expected)
         {
             Assert.Equal(expected, ExportFileName.Sanitize(input));
+        }
+
+        [Fact]
+        public void The_period_survives_even_when_title_and_project_are_very_long()
+        {
+            var longProject = new string('P', 120);
+            var october = Report("2026-10-01", "2026-10-31", new[] { longProject, "K" });
+            var november = Report("2026-11-01", "2026-11-30", new[] { longProject, "K" });
+
+            var a = ExportFileName.Suggest(october, new string('T', 80), "pdf");
+            var b = ExportFileName.Suggest(november, new string('T', 80), "pdf");
+
+            Assert.EndsWith("_2026-10.pdf", a);
+            Assert.EndsWith("_2026-11.pdf", b);
+            Assert.NotEqual(a, b);
+            Assert.True(a.Length <= 100 + ".pdf".Length, "Länge " + a.Length);
+        }
+
+        [Fact]
+        public void The_period_survives_for_a_long_custom_range_too()
+        {
+            var report = Report("2026-10-05", "2026-12-20", new[] { new string('P', 200), "K" });
+
+            Assert.EndsWith("_2026-10-05_bis_2026-12-20.pdf", ExportFileName.Suggest(report, null, "pdf"));
         }
 
         [Fact]

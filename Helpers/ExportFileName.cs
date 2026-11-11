@@ -25,19 +25,25 @@ namespace Zeitmanagement.Helpers
         {
             if (report == null) throw new ArgumentNullException(nameof(report));
 
-            var parts = new System.Collections.Generic.List<string>
+            var head = new System.Collections.Generic.List<string>
             {
                 string.IsNullOrWhiteSpace(title) ? "Tätigkeitsnachweis" : title.Trim()
             };
 
             var subject = Subject(report);
-            if (subject.Length > 0) parts.Add(subject);
+            if (subject.Length > 0) head.Add(subject);
 
             var o = report.Options;
-            if (o != null) parts.Add(PeriodPart(o.From.Date, o.To.Date));
+            var period = o == null ? string.Empty : Sanitize(PeriodPart(o.From.Date, o.To.Date));
+
+            // Der Zeitraum steht am Ende und muss immer erhalten bleiben: Würde er beim Kürzen langer Titel oder Projektnamen
+            // abgeschnitten, bekämen verschiedene Monate denselben Namen und das nächste Speichern überschriebe das vorige.
+            var room = period.Length == 0 ? MaxStemLength : Math.Max(10, MaxStemLength - period.Length - 1);
+            var stem = Sanitize(string.Join("_", head), room);
+            if (period.Length > 0) stem += "_" + period;
 
             var ext = string.IsNullOrWhiteSpace(extension) ? string.Empty : "." + extension.Trim().TrimStart('.');
-            return Sanitize(string.Join("_", parts.Select(p => Sanitize(p)))) + ext;
+            return Sanitize(stem) + ext;
         }
 
         /// <summary>
@@ -45,6 +51,11 @@ namespace Zeitmanagement.Helpers
         /// kürzt zu lange Namen und schützt vor reservierten Namen wie "CON".
         /// </summary>
         public static string Sanitize(string name)
+        {
+            return Sanitize(name, MaxStemLength);
+        }
+
+        private static string Sanitize(string name, int maxLength)
         {
             var invalid = Path.GetInvalidFileNameChars();
             var sb = new StringBuilder();
@@ -54,7 +65,7 @@ namespace Zeitmanagement.Helpers
             }
 
             var result = sb.ToString().Trim().TrimEnd('.', ' ');
-            if (result.Length > MaxStemLength) result = result.Substring(0, MaxStemLength).TrimEnd('.', ' ');
+            if (result.Length > maxLength) result = result.Substring(0, maxLength).TrimEnd('.', ' ');
             if (result.Length == 0) result = "Export";
 
             // Reservierte Gerätenamen sind auch mit Endung ("CON.pdf") nicht erlaubt.

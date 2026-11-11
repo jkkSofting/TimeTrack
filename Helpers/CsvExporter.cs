@@ -79,7 +79,7 @@ namespace Zeitmanagement.Helpers
 
         public static void WriteFile(string path, ExportReport report, CsvOptions options = null)
         {
-            File.WriteAllBytes(path, ToBytes(Build(report, options)));
+            SafeFile.WriteAllBytes(path, ToBytes(Build(report, options)));
         }
 
         private static List<Column> Columns(ExportOptions export, CsvOptions csv, CultureInfo culture)

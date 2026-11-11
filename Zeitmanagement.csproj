@@ -111,6 +111,7 @@
     <Compile Include="Helpers\PenguinEasterEgg.cs" />
     <Compile Include="Helpers\PresentationDetector.cs" />
     <Compile Include="Helpers\ProjectControllingExcelReader.cs" />
+    <Compile Include="Helpers\SafeFile.cs" />
     <Compile Include="Helpers\SapBookingCalculator.cs" />
     <Compile Include="Helpers\SessionActivityMonitor.cs" />
     <Compile Include="Helpers\StartupMode.cs" />
