@@ -123,6 +123,12 @@ $msbuild = Find-Tool `
     -SearchRoot "C:\Program Files\Microsoft Visual Studio" `
     -FileName "MSBuild.exe"
 
+# Erst die NuGet-Pakete holen (packages\ liegt nicht im Git, z. B. PDFsharp/MigraDoc für den Tätigkeitsnachweis),
+# dann bauen. Bei einem Projekt mit packages.config geht der Restore nur über die Projektmappe.
+Invoke-NativeCommand -FilePath $msbuild `
+    -ArgumentList @($slnPath, "/t:Restore", "/p:RestorePackagesConfig=true", "/v:minimal", "/nologo") `
+    -StepName "NuGet-Restore"
+
 Invoke-NativeCommand -FilePath $msbuild `
     -ArgumentList @($slnPath, "/t:Build", "/p:Configuration=Release", "/v:minimal", "/nologo") `
     -StepName "Release-Build"

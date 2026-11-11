@@ -25,6 +25,7 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.1.1" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+    <PackageReference Include="PDFsharp-MigraDoc-gdi" Version="1.50.5147" />
   </ItemGroup>
 
   <ItemGroup>
@@ -45,6 +46,8 @@
     <Compile Include="..\Helpers\ExportModels.cs" Link="Linked\ExportModels.cs" />
     <Compile Include="..\Helpers\ExportReportBuilder.cs" Link="Linked\ExportReportBuilder.cs" />
     <Compile Include="..\Helpers\LocalHoursCalculator.cs" Link="Linked\LocalHoursCalculator.cs" />
+    <Compile Include="..\Helpers\PdfExporter.cs" Link="Linked\PdfExporter.cs" />
+    <Compile Include="..\Helpers\PdfReportLayout.cs" Link="Linked\PdfReportLayout.cs" />
     <Compile Include="..\Helpers\ProjectControllingExcelReader.cs" Link="Linked\ProjectControllingExcelReader.cs" />
   </ItemGroup>
 

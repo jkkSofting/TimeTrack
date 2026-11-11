@@ -167,7 +167,7 @@ namespace Zeitmanagement.Helpers
         public int RawTotalMinutes { get; set; }
         /// <summary>Tage, an denen mindestens eine Buchung liegt.</summary>
         public int WorkDays { get; set; }
-        public int AverageMinutesPerWorkDay => WorkDays == 0 ? 0 : (int)Math.Round(TotalMinutes / (double)WorkDays);
+        public int AverageMinutesPerWorkDay => WorkDays == 0 ? 0 : (int)Math.Round(TotalMinutes / (double)WorkDays, MidpointRounding.AwayFromZero);
         public DateTime? FirstDate { get; set; }
         public DateTime? LastDate { get; set; }
         public bool HasWarnings => Warnings.Count > 0;

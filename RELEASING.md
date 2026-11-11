@@ -93,11 +93,13 @@ Beide Dateien müssen exakt dieselbe Versionsnummer bekommen (Format `Jahr.Minor
 ## 2. Release-Build erzeugen
 
 ```powershell
-& "C:\Program Files\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin\MSBuild.exe" `
-  "Zeitmanagement.sln" /t:Build /p:Configuration=Release
+$msbuild = "C:\Program Files\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin\MSBuild.exe"
+& $msbuild "Zeitmanagement.sln" /t:Restore /p:RestorePackagesConfig=true
+& $msbuild "Zeitmanagement.sln" /t:Build /p:Configuration=Release
 ```
 
-Erzeugt `bin\Release\Zeitmanagement.exe` mit der neuen Version.
+Der Restore holt die NuGet-Pakete (`packages\` liegt nicht im Git, z. B. PDFsharp/MigraDoc für den Tätigkeitsnachweis); er
+geht bei diesem `packages.config`-Projekt nur über die Projektmappe. Erzeugt `bin\Release\Zeitmanagement.exe` mit der neuen Version.
 
 ## 3. Installer kompilieren
 
