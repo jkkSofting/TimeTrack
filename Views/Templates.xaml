@@ -39,4 +39,9 @@
     <DataTemplate DataType="{x:Type vm:HelpViewModel}">
         <views:HelpView />
     </DataTemplate>
+
+    <!--  Seite eines Plugins: die vom Plugin gelieferte Ansicht, über Besuche hinweg dieselbe Instanz  -->
+    <DataTemplate DataType="{x:Type vm:PluginPageViewModel}">
+        <views:PluginViewHost View="{Binding View}" />
+    </DataTemplate>
 </ResourceDictionary>

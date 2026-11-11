@@ -1,10 +1,8 @@
 // Target: .NET Framework + C# 7.3
 using System;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.CSharp;
 using TimeTrack.Plugins;
 using Xunit;
 using Zeitmanagement.Helpers.Plugins;
@@ -50,31 +48,9 @@ public class TestPlugin : TimeTrackPlugin
             return Compile(folder ?? UniqueFolder(), source);
         }
 
-        private static string UniqueFolder()
-        {
-            return "TestPlugin" + Guid.NewGuid().ToString("N").Substring(0, 12);
-        }
+        private static string UniqueFolder() => TestPluginCompiler.UniqueFolder();
 
-        /// <summary>Übersetzt <paramref name="source"/> nach <c>&lt;root&gt;\&lt;folder&gt;\&lt;folder&gt;.dll</c>.</summary>
-        private string Compile(string folder, string source)
-        {
-            var dir = Path.Combine(_root, folder);
-            Directory.CreateDirectory(dir);
-            using (var provider = new CSharpCodeProvider())
-            {
-                var parameters = new CompilerParameters
-                {
-                    OutputAssembly = Path.Combine(dir, folder + ".dll"),
-                    GenerateInMemory = false,
-                    GenerateExecutable = false
-                };
-                parameters.ReferencedAssemblies.Add("System.dll");
-                parameters.ReferencedAssemblies.Add(typeof(TimeTrackPlugin).Assembly.Location);
-                var result = provider.CompileAssemblyFromSource(parameters, source);
-                Assert.False(result.Errors.HasErrors, string.Join("\n", result.Errors.Cast<CompilerError>().Select(e => e.ToString())));
-            }
-            return folder;
-        }
+        private string Compile(string folder, string source) => TestPluginCompiler.Compile(_root, folder, source);
 
         private static IPluginHost FakeHost(PluginInfo info, TimeTrackPlugin plugin)
         {

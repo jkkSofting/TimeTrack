@@ -45,6 +45,8 @@
     <Compile Include="..\Helpers\Plugins\PluginStorage.cs" Link="Linked\PluginStorage.cs" />
     <Compile Include="..\Helpers\Plugins\PluginInfo.cs" Link="Linked\PluginInfo.cs" />
     <Compile Include="..\Helpers\Plugins\PluginLoader.cs" Link="Linked\PluginLoader.cs" />
+    <Compile Include="..\Helpers\Plugins\PluginHost.cs" Link="Linked\PluginHost.cs" />
+    <Compile Include="..\Helpers\Plugins\PluginManager.cs" Link="Linked\PluginManager.cs" />
     <Compile Include="..\Helpers\BackupHelper.cs" Link="Linked\BackupHelper.cs" />
     <Compile Include="..\Helpers\CarrierMatching.cs" Link="Linked\CarrierMatching.cs" />
     <Compile Include="..\Helpers\ControllingModels.cs" Link="Linked\ControllingModels.cs" />

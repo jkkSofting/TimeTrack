@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Threading;
 using Zeitmanagement.Helpers;
+using Zeitmanagement.Helpers.Plugins;
 using Zeitmanagement.MVVM;
 
 namespace Zeitmanagement.ViewModel
@@ -25,6 +26,8 @@ namespace Zeitmanagement.ViewModel
         private readonly ExportViewModel _exportView;
         private readonly BaseViewModel _settingsView;
         private readonly HelpViewModel _helpView;
+        private readonly PluginManager _plugins;
+        private readonly Dictionary<string, PluginPageViewModel> _pluginPages = new Dictionary<string, PluginPageViewModel>();
 
         private object _rightSide;
 
@@ -74,6 +77,14 @@ namespace Zeitmanagement.ViewModel
             private set => SetProperty(ref _currentView, value);
         }
 
+        /// <summary>The plugins of this session (loaded at start, shut down by <see cref="App"/> on exit).</summary>
+        public PluginManager Plugins => _plugins;
+
+        /// <summary>Navigation entries of the plugin pages, shown in their own group below the built-in pages.</summary>
+        public ObservableCollection<PluginNavigationItem> PluginNavigationItems { get; } = new ObservableCollection<PluginNavigationItem>();
+
+        public bool HasPluginPages => PluginNavigationItems.Count > 0;
+
         /// <summary>Switches the current theme between its light and dark variant.</summary>
         public DelegateCommand ToggleDarkModeCommand { get; }
 
@@ -104,7 +115,17 @@ namespace Zeitmanagement.ViewModel
             _fragmentationView = new FragmentationViewModel();
             _sapBookingView = new SapBookingViewModel();
             _exportView = new ExportViewModel();
-            _settingsView = new SettingsViewModel();
+
+            // Plugins nach den festen Seiten laden: Ein fehlerhaftes Plugin darf den Start nicht verhindern.
+            _plugins = new PluginManager(DbInstance) { NavigateHandler = SelectViewCommandExecute };
+            _plugins.LoadAll();
+            foreach (var page in _plugins.Pages)
+            {
+                _pluginPages[page.NavigationKey] = new PluginPageViewModel(page);
+                PluginNavigationItems.Add(new PluginNavigationItem(page));
+            }
+
+            _settingsView = new SettingsViewModel(_plugins);
             _helpView = new HelpViewModel(SelectViewCommandExecute);
 
             SelectViewCommandExecute("dashboard");
@@ -181,8 +202,13 @@ namespace Zeitmanagement.ViewModel
                     RightSide = _helpView;
                     break;
                 default:
+                    if (_pluginPages.TryGetValue(mode, out var pluginPage))
+                        RightSide = pluginPage;
                     break;
             }
+
+            foreach (var item in PluginNavigationItems)
+                item.IsSelected = item.Key == mode;
 
             ((BaseViewModel)RightSide).Refresh();
         }

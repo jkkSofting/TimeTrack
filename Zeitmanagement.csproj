@@ -112,6 +112,8 @@
     <Compile Include="Helpers\Plugins\PluginStorage.cs" />
     <Compile Include="Helpers\Plugins\PluginInfo.cs" />
     <Compile Include="Helpers\Plugins\PluginLoader.cs" />
+    <Compile Include="Helpers\Plugins\PluginHost.cs" />
+    <Compile Include="Helpers\Plugins\PluginManager.cs" />
     <Compile Include="Helpers\OverlayWindowHelper.cs" />
     <Compile Include="Helpers\PenguinEasterEgg.cs" />
     <Compile Include="Helpers\PresentationDetector.cs" />
@@ -131,6 +133,8 @@
     <Compile Include="ViewModel\FragmentationViewModel.cs" />
     <Compile Include="ViewModel\HelpViewModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
+    <Compile Include="ViewModel\PluginPageViewModel.cs" />
+    <Compile Include="ViewModel\PluginSettingsViewModel.cs" />
     <Compile Include="ViewModel\ProjectControllingViewModel.cs" />
     <Compile Include="ViewModel\ProjectsViewModel.cs" />
     <Compile Include="ViewModel\QuickSelectItemViewModel.cs" />
@@ -156,6 +160,7 @@
       <DependentUpon>HelpView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\NullToVisibilityConverter.cs" />
+    <Compile Include="Views\PluginViewHost.cs" />
     <Compile Include="Views\XyChart.cs" />
     <Compile Include="Views\NumberFormatterConverter.cs" />
     <Compile Include="Views\Ui.cs" />
