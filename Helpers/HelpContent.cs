@@ -116,7 +116,17 @@ namespace Zeitmanagement.Helpers
                 "Start & Fenster: mit Windows starten, normal oder minimiert starten, auf Wunsch gleich mit Quick Switch.",
                 "Automatisierung: Buchungen bei Sperrbildschirm oder Ruhemodus nach einer Wartezeit beenden und erinnern lassen, wenn kein Projekt läuft.",
                 "Updates: TimeTrack sucht regelmäßig nach neuen Versionen. „Installieren“ spielt ein Update ein, die App startet danach neu. Alle Versionen und eine Anleitung stehen auch auf github.com/jkkSofting/TimeTrack-Releases.",
-                "Datensicherung: Sicherungen erstellen und eine vorhandene Sicherung wiederherstellen."),
+                "Datensicherung: Sicherungen erstellen und eine vorhandene Sicherung wiederherstellen.",
+                "Plugins: gefundene Plugins ein- und ausschalten, Fehler ansehen, den Plugin-Ordner öffnen und die Einstellungen der Plugins bearbeiten."),
+
+            new HelpTopic("\uEA86", "Plugins", "Settings",
+                "TimeTrack um eigene Seiten erweitern.",
+                "Ein Plugin ist ein Ordner mit einer DLL. Lege ihn in den Plugin-Ordner (Einstellungen → Plugins → „Plugin-Ordner öffnen“, also C:\\ProgramData\\Kaltenmark-Engineering\\TimeTracker\\Plugins). Der Ordner muss so heißen wie die DLL, z. B. „TimeTrack.Plugin.Map\\TimeTrack.Plugin.Map.dll“.",
+                "Starte TimeTrack neu. Das Plugin erscheint in den Einstellungen unter „Plugins“, zunächst ausgeschaltet. Schalte es ein, bestätige die Rückfrage und klicke „Jetzt neu starten“.",
+                "Ein Plugin läuft mit allen Rechten von TimeTrack. Aktiviere nur Plugins aus einer Quelle, der du vertraust.",
+                "Die Seiten des Plugins stehen in der Seitenleiste unter „Plugins“, seine Einstellungen in den Einstellungen unter seinem Eintrag.",
+                "Lädt ein Plugin nicht, steht der Grund in Rot unter seinem Namen. Bei „Windows blockiert die Datei“: Rechtsklick auf die DLL → Eigenschaften → „Zulassen“ anhaken, dann neu starten.",
+                "Ausschalten wirkt ebenfalls nach einem Neustart. Was das Plugin gespeichert hat, bleibt erhalten und ist in jeder Datensicherung enthalten."),
 
             new HelpTopic("", "Tray-Symbol & Hinweise", null,
                 "TimeTrack läuft im Infobereich der Taskleiste weiter.",
