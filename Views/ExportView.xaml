@@ -342,6 +342,12 @@
                                 Content="Kostenträger-Spalte zeigen"
                                 IsChecked="{Binding ShowCarrierColumn}"
                                 Style="{StaticResource OptionCheck}" />
+                            <CheckBox
+                                Content="Tagessumme zeigen"
+                                IsChecked="{Binding ShowDaySubtotals}"
+                                IsEnabled="{Binding IsGroupByDay}"
+                                Style="{StaticResource OptionCheck}"
+                                ToolTip="Bei „Nach Tag“: unter Tagen mit mehreren Buchungen steht die Summe des Tages. Bei den anderen Gliederungen gibt es sie nicht." />
                         </StackPanel>
                     </Border>
 

@@ -28,6 +28,7 @@ namespace Zeitmanagement.Helpers
         [DataMember(Name = "showTimes")] public bool? ShowTimes { get; set; }
         [DataMember(Name = "alwaysProject")] public bool AlwaysShowProjectColumn { get; set; }
         [DataMember(Name = "carrier")] public bool ShowCarrierColumn { get; set; }
+        [DataMember(Name = "daySums")] public bool? ShowDaySubtotals { get; set; }
 
         [DataMember(Name = "title")] public string Title { get; set; }
         [DataMember(Name = "landscape")] public bool Landscape { get; set; }
@@ -74,6 +75,7 @@ namespace Zeitmanagement.Helpers
         public ExportDurationFormat GetDurationFormat() { return ParseEnum(DurationFormat, ExportDurationFormat.Decimal); }
 
         public bool GetShowTimes() { return ShowTimes ?? true; }
+        public bool GetShowDaySubtotals() { return ShowDaySubtotals ?? true; }
         public bool GetShowBranding() { return ShowBranding ?? true; }
 
         /// <summary>Der Zeitraum, falls er fest gespeichert ist (Benutzerdefiniert); sonst <c>false</c>.</summary>

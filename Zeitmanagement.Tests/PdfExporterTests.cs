@@ -241,6 +241,25 @@ namespace Zeitmanagement.Tests
         }
 
         [Fact]
+        public void The_day_subtotal_can_be_switched_off_and_only_concerns_the_grouping_by_day()
+        {
+            var options = Options();
+            options.ShowDaySubtotals = false;
+
+            var rows = RowTexts(Details(PdfReportLayout.Build(Report(options, SomeEntries()), Meta())));
+
+            // Ohne Tagessumme: Kopfzeile, drei Buchungen, Gesamtsumme.
+            Assert.Equal(5, rows.Count);
+            Assert.DoesNotContain(rows, r => r.StartsWith("Tagessumme"));
+            Assert.StartsWith("Gesamt | 4,75", rows.Last());
+
+            // Die Zwischensummen je Projekt gehören zur Gliederung und bleiben, auch wenn die Tagessumme aus ist.
+            options.Grouping = ExportGrouping.ByProject;
+            var byProject = RowTexts(Details(PdfReportLayout.Build(Report(options, SomeEntries()), Meta())));
+            Assert.Contains(byProject, r => r.StartsWith("Summe Projekt Alpha"));
+        }
+
+        [Fact]
         public void Without_the_times_column_the_subtotal_label_is_short_enough_for_the_date_column()
         {
             var options = Options();

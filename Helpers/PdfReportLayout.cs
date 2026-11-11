@@ -411,7 +411,9 @@ namespace Zeitmanagement.Helpers
                     last = row;
                 }
 
-                var withSubtotal = options.Grouping != ExportGrouping.ByDay || group.Count > 1;
+                // Bei "Nach Tag" ist die Tagessumme wählbar (und nur bei mehreren Buchungen am Tag sinnvoll); die Zwischensummen je
+                // Projekt und je Woche gehören zur jeweiligen Gliederung.
+                var withSubtotal = options.Grouping != ExportGrouping.ByDay || (options.ShowDaySubtotals && group.Count > 1);
                 if (withSubtotal)
                 {
                     if (last != null) last.KeepWith = 1;
