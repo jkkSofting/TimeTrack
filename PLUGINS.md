@@ -5,6 +5,8 @@ Einstellungsbereiche ergänzen, Projekte und Buchungen lesen und eigene Daten in
 Buchungen ändern kann es nicht.
 
 Ein lauffähiges Beispiel liegt in [Samples/TimeTrack.Plugin.Sample](Samples/TimeTrack.Plugin.Sample/SamplePlugin.cs).
+Die vollständige Referenz aller Typen und Mitglieder der Plugin-API steht in
+[TimeTrack.Plugins.Abstractions/README.md](TimeTrack.Plugins.Abstractions/README.md); diese Datei hier ist die Anleitung.
 
 ## Aufbau
 
