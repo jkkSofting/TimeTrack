@@ -40,11 +40,18 @@
     <ApplicationIcon>TimeTrack Logo.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DocumentFormat.OpenXml, Version=3.1.1.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
+      <HintPath>packages\DocumentFormat.OpenXml.3.1.1\lib\net46\DocumentFormat.OpenXml.dll</HintPath>
+    </Reference>
+    <Reference Include="DocumentFormat.OpenXml.Framework, Version=3.1.1.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
+      <HintPath>packages\DocumentFormat.OpenXml.Framework.3.1.1\lib\net46\DocumentFormat.OpenXml.Framework.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.SQLite, Version=1.0.119.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
       <HintPath>packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\lib\net46\System.Data.SQLite.dll</HintPath>
     </Reference>
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Transactions" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -68,13 +75,21 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="TimeTracker.cs" />
+    <Compile Include="TimeTracker.Controlling.cs" />
     <Compile Include="Helpers\AutostartHelper.cs" />
     <Compile Include="Helpers\BackupHelper.cs" />
+    <Compile Include="Helpers\CarrierMatching.cs" />
     <Compile Include="Helpers\Changelog.cs" />
+    <Compile Include="Helpers\ControllingChart.cs" />
+    <Compile Include="Helpers\ControllingImportService.cs" />
+    <Compile Include="Helpers\ControllingModels.cs" />
+    <Compile Include="Helpers\ControllingOverview.cs" />
+    <Compile Include="Helpers\LocalHoursCalculator.cs" />
     <Compile Include="Helpers\HelpContent.cs" />
     <Compile Include="Helpers\OverlayWindowHelper.cs" />
     <Compile Include="Helpers\PenguinEasterEgg.cs" />
     <Compile Include="Helpers\PresentationDetector.cs" />
+    <Compile Include="Helpers\ProjectControllingExcelReader.cs" />
     <Compile Include="Helpers\SapBookingCalculator.cs" />
     <Compile Include="Helpers\SessionActivityMonitor.cs" />
     <Compile Include="Helpers\StartupMode.cs" />
@@ -88,6 +103,7 @@
     <Compile Include="ViewModel\FragmentationViewModel.cs" />
     <Compile Include="ViewModel\HelpViewModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
+    <Compile Include="ViewModel\ProjectControllingViewModel.cs" />
     <Compile Include="ViewModel\ProjectsViewModel.cs" />
     <Compile Include="ViewModel\QuickSelectItemViewModel.cs" />
     <Compile Include="ViewModel\SapBookingViewModel.cs" />
@@ -109,10 +125,14 @@
       <DependentUpon>HelpView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\NullToVisibilityConverter.cs" />
+    <Compile Include="Views\XyChart.cs" />
     <Compile Include="Views\NumberFormatterConverter.cs" />
     <Compile Include="Views\Ui.cs" />
     <Compile Include="Views\PenguinWindow.xaml.cs">
       <DependentUpon>PenguinWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ProjectControllingView.xaml.cs">
+      <DependentUpon>ProjectControllingView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ProjectsView.xaml.cs">
       <DependentUpon>ProjectsView.xaml</DependentUpon>
@@ -157,6 +177,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\PenguinWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ProjectControllingView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

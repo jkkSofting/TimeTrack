@@ -309,6 +309,13 @@
                                 <DataTemplate>
                                     <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
                                         <Button
+                                            Margin="0,0,4,0"
+                                            local:Ui.Glyph="&#xE9F9;"
+                                            Command="{Binding DataContext.OpenControllingCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource Button.IconGhost}"
+                                            ToolTip="Projektcontrolling: importierte SAP-Kosten zu diesem Kostenträger anzeigen" />
+                                        <Button
                                             local:Ui.Glyph="&#xE70F;"
                                             Command="{Binding DataContext.StartEditProjectCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             CommandParameter="{Binding}"

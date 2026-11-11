@@ -53,6 +53,17 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.46.0", new DateTime(2026, 11, 10), "Projektcontrolling",
+                Neu("„Projektcontrolling“ in der Seitenleiste: „Excel importieren“ liest Plan- und Ist-Kosten aus einer SAP-Projektcontrolling-Datei (.xlsx) – nur lesend. Importiert werden nur PSP-Elemente, die in einem Kostenträger deiner Projekte enthalten sind; der Kostenträger muss die PSP-Element-ID enthalten, aber nicht genau so heißen."),
+                Neu("Die Vorschau zeigt vor dem Speichern, was übernommen wird, samt Warnungen und Fehlern mit Blatt und Zelle. Der SAP-Stand kommt aus der Datei (fehlt er, gibst du ihn an), die Währung ist optional."),
+                Neu("Jeder Import ist ein Stand: Der Kostenverlauf zeigt die Stände nach SAP-Datum. Ein erneuter Import desselben Stands wird nicht doppelt gespeichert, eine Korrektur wird als Revision abgelegt."),
+                Neu("Lokaler Stundenverlauf je Kostenträger (Tag, Woche, Monat) aus deinen Buchungen. Er steht getrennt von den SAP-Geldbeträgen und ist nicht mit SAP abgestimmt."),
+                Neu("Stundensatz je Projekt: In den Details trägst du für jedes Projekt seinen Stundensatz ein (je Währung des Imports). Damit rechnet TimeTrack Plan, Ist und Rest zusätzlich in rechnerische Stunden um (Betrag ÷ Stundensatz). Haben Projekte am selben Kostenträger unterschiedliche Sätze, wird nicht umgerechnet. Die Stunden sind eine Schätzung aus Geld, keine gebuchte Zeit."),
+                Neu("Die erste Spalte der Übersicht, „Stand“, zeigt den Budgetverbrauch in Prozent mit einem kleinen Fortschrittsbalken. Sie bleibt beim horizontalen Scrollen stehen, sodass der Stand immer sichtbar ist."),
+                Neu("Berechnete Stunden (aus Geld umgerechnet) lassen sich mit „Berechnete Stunden (h) zeigen“ ein- und ausblenden. Die Wahl bleibt gespeichert."),
+                Neu("Diagramm: Im Projektcontrolling schaltest du zwischen „Tabelle“ und „Diagramm“ um. Das Diagramm zeigt den Stand je PSP-Element über die SAP-Daten – relativ in Prozent des Plans oder in Stunden (aus Geld umgerechnet, dazu für die gewählte Zeile Plan in Stunden und deine lokal gebuchten Stunden, kumuliert). Fährst du mit der Maus über einen Punkt, siehst du den Stand dort; neben einem Punkt zeigt eine Linie alle Werte zum nächsten SAP-Datum. Mit „Kostenträger“ blendest du einzelne Kostenträger im Diagramm ein und aus (mit Suche, „Alle einblenden“ und „Alle ausblenden“)."),
+                Verbessert("Unter „Projekte“ öffnet ein Symbol in der Zeile das Projektcontrolling mit dem Kostenträger des Projekts.")),
+
             new ChangelogRelease("2026.45.3", new DateTime(2026, 11, 5), "Quick Switch statt Quick Select",
                 Neu("„Quick Switch“ in der Seitenleiste öffnet das Quick-Switch-Fenster direkt, ebenso „Quick Switch öffnen“ im Menü des Tray-Symbols."),
                 Verbessert("Die Seite „Quick Select“ entfällt: Welche Projekte im Quick Switch wählbar sind, bestimmt allein der Schalter unter „Projekte“. Er heißt jetzt „Quick Switch“.")),
