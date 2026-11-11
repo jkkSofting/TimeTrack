@@ -226,7 +226,7 @@
                     Background="{DynamicResource Theme.Surface}"
                     BorderBrush="{DynamicResource Theme.CardBorder}"
                     BorderThickness="1"
-                    CornerRadius="10">
+                    CornerRadius="{StaticResource ControlRadius}">
                     <StackPanel Orientation="Horizontal">
                         <RadioButton
                             local:Ui.Glyph="&#xE789;"

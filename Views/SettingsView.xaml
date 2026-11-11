@@ -248,7 +248,7 @@
                                 Background="{DynamicResource Theme.Surface}"
                                 BorderBrush="{DynamicResource Theme.CardBorder}"
                                 BorderThickness="1"
-                                CornerRadius="10"
+                                CornerRadius="{StaticResource ControlRadius}"
                                 DockPanel.Dock="Right">
                                 <StackPanel Orientation="Horizontal">
                                     <RadioButton
