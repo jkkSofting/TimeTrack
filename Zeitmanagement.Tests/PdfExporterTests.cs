@@ -415,25 +415,22 @@ namespace Zeitmanagement.Tests
         }
 
         [Fact]
-        public void Notes_and_remark_are_printed_and_signature_is_optional()
+        public void Notes_and_remark_are_printed_and_there_is_no_signature_block()
         {
             var options = Options();
             options.RoundingMinutes = 15;
             var meta = Meta();
             meta.Note = "Abnahme am 12.11.";
 
-            var with = BodyText(PdfReportLayout.Build(Report(options, SomeEntries()), meta));
-            Assert.Contains("Hinweise", with);
-            Assert.Contains("auf 15 Minuten gerundet", with);
-            Assert.Contains("Bemerkung", with);
-            Assert.Contains("Abnahme am 12.11.", with);
-            Assert.Contains("Leistungsbestätigung", with);
-            Assert.Contains("Ort, Datum, Unterschrift Auftraggeber", with);
-            Assert.Contains("Ort, Datum, Unterschrift Auftragnehmer", with);
+            var text = BodyText(PdfReportLayout.Build(Report(options, SomeEntries()), meta));
 
-            meta.ShowSignature = false;
-            var without = BodyText(PdfReportLayout.Build(Report(options, SomeEntries()), meta));
-            Assert.DoesNotContain("Leistungsbestätigung", without);
+            Assert.Contains("Hinweise", text);
+            Assert.Contains("auf 15 Minuten gerundet", text);
+            Assert.Contains("Bemerkung", text);
+            Assert.Contains("Abnahme am 12.11.", text);
+            // Der Nachweis endet mit der Summe, der Hinweis und der Bemerkung: kein Unterschriftsfeld.
+            Assert.DoesNotContain("Leistungsbestätigung", text);
+            Assert.DoesNotContain("Unterschrift", text);
         }
 
         [Fact]

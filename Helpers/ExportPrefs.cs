@@ -31,7 +31,6 @@ namespace Zeitmanagement.Helpers
 
         [DataMember(Name = "title")] public string Title { get; set; }
         [DataMember(Name = "landscape")] public bool Landscape { get; set; }
-        [DataMember(Name = "signature")] public bool? ShowSignature { get; set; }
         [DataMember(Name = "branding")] public bool? ShowBranding { get; set; }
 
         [DataMember(Name = "csvInternational")] public bool CsvInternational { get; set; }
@@ -75,7 +74,6 @@ namespace Zeitmanagement.Helpers
         public ExportDurationFormat GetDurationFormat() { return ParseEnum(DurationFormat, ExportDurationFormat.Decimal); }
 
         public bool GetShowTimes() { return ShowTimes ?? true; }
-        public bool GetShowSignature() { return ShowSignature ?? true; }
         public bool GetShowBranding() { return ShowBranding ?? true; }
 
         /// <summary>Der Zeitraum, falls er fest gespeichert ist (Benutzerdefiniert); sonst <c>false</c>.</summary>

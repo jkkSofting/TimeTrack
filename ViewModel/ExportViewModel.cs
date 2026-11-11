@@ -82,7 +82,6 @@ namespace Zeitmanagement.ViewModel
             _showCarrierColumn = prefs.ShowCarrierColumn;
             if (!string.IsNullOrWhiteSpace(prefs.Title)) _title = prefs.Title;
             _landscape = prefs.Landscape;
-            _showSignature = prefs.GetShowSignature();
             _showBranding = prefs.GetShowBranding();
             _csvInternational = prefs.CsvInternational;
             _csvIsoDates = prefs.CsvIsoDates;
@@ -131,7 +130,6 @@ namespace Zeitmanagement.ViewModel
                 ShowCarrierColumn = _showCarrierColumn,
                 Title = _title,
                 Landscape = _landscape,
-                ShowSignature = _showSignature,
                 ShowBranding = _showBranding,
                 CsvInternational = _csvInternational,
                 CsvIsoDates = _csvIsoDates,
@@ -411,9 +409,6 @@ namespace Zeitmanagement.ViewModel
 
         private bool _landscape;
         public bool Landscape { get => _landscape; set => SetProperty(ref _landscape, value); }
-
-        private bool _showSignature = true;
-        public bool ShowSignature { get => _showSignature; set => SetProperty(ref _showSignature, value); }
 
         private bool _showBranding = true;
         public bool ShowBranding { get => _showBranding; set => SetProperty(ref _showBranding, value); }
@@ -840,7 +835,6 @@ namespace Zeitmanagement.ViewModel
                 ClientBlock = ClientBlock,
                 ReferenceNumber = ReferenceNumber,
                 Note = Note,
-                ShowSignature = ShowSignature,
                 ShowBranding = ShowBranding,
                 LogoPath = HasLogo && File.Exists(_logoPath) ? _logoPath : null,
                 CreatedAt = DateTime.Now,

@@ -29,7 +29,6 @@ namespace Zeitmanagement.Helpers
         /// <summary>Auftrags- oder Bestellnummer.</summary>
         public string ReferenceNumber { get; set; }
         public string Note { get; set; }
-        public bool ShowSignature { get; set; }
         public string LogoPath { get; set; }
         /// <summary>"Erstellt am … mit TimeTrack …" in der Fußzeile.</summary>
         public bool ShowBranding { get; set; }
@@ -39,7 +38,6 @@ namespace Zeitmanagement.Helpers
 
         public ExportMeta()
         {
-            ShowSignature = true;
             ShowBranding = true;
             CreatedAt = DateTime.Now;
         }
@@ -62,7 +60,7 @@ namespace Zeitmanagement.Helpers
     /// Rendern prüfbar; <see cref="PdfExporter"/> macht daraus die PDF-Datei.
     ///
     /// Aufbau: Kopf mit Titel und Zeitraum · Auftragnehmer/Auftraggeber · Eckdaten · Zusammenfassung (· Stunden je Projekt) ·
-    /// Einzelnachweis mit Zwischen- und Gesamtsumme · Hinweise · Bemerkung · Leistungsbestätigung. Die Fußzeile steht auf jeder Seite.
+    /// Einzelnachweis mit Zwischen- und Gesamtsumme · Hinweise · Bemerkung. Die Fußzeile steht auf jeder Seite.
     /// </summary>
     public static class PdfReportLayout
     {
@@ -119,7 +117,6 @@ namespace Zeitmanagement.Helpers
             AddDetails(section, report, options, width);
             AddNotes(section, report);
             AddRemark(section, meta);
-            if (meta.ShowSignature) AddSignature(section, width);
             return document;
         }
 
@@ -495,7 +492,7 @@ namespace Zeitmanagement.Helpers
             return row;
         }
 
-        // ---------- Hinweise, Bemerkung, Unterschrift ----------
+        // ---------- Hinweise und Bemerkung ----------
 
         private static void AddNotes(Section section, ExportReport report)
         {
@@ -531,48 +528,6 @@ namespace Zeitmanagement.Helpers
             var p = section.AddParagraph();
             AddLines(p, note);
             Spacer(section, 8);
-        }
-
-        private static void AddSignature(Section section, double width)
-        {
-            var title = section.AddParagraph("Leistungsbestätigung");
-            title.Format.Font.Bold = true;
-            title.Format.Font.Size = 10;
-            title.Format.SpaceBefore = 10;
-            title.Format.SpaceAfter = 2;
-            title.Format.KeepWithNext = true;
-            var text = section.AddParagraph("Die oben aufgeführten Tätigkeiten und Zeiten werden hiermit bestätigt.");
-            text.Format.Font.Color = Muted;
-            text.Format.KeepWithNext = true;
-
-            var half = (width - 16) / 2;
-            var table = section.AddTable();
-            table.Borders.Visible = false;
-            table.AddColumn(Unit.FromMillimeter(half));
-            table.AddColumn(Unit.FromMillimeter(16));
-            table.AddColumn(Unit.FromMillimeter(half));
-
-            var space = table.AddRow();
-            space.Height = Unit.FromMillimeter(18);
-            space.HeightRule = RowHeightRule.Exactly;
-            space.KeepWith = 1;
-
-            var line = table.AddRow();
-            foreach (var index in new[] { 0, 2 })
-            {
-                line.Cells[index].Borders.Top.Width = 0.75;
-                line.Cells[index].Borders.Top.Color = Ink;
-            }
-            Caption(line.Cells[0], "Ort, Datum, Unterschrift Auftraggeber");
-            Caption(line.Cells[2], "Ort, Datum, Unterschrift Auftragnehmer");
-        }
-
-        private static void Caption(Cell cell, string text)
-        {
-            var p = cell.AddParagraph(text);
-            p.Format.Font.Size = 8;
-            p.Format.Font.Color = Muted;
-            p.Format.SpaceBefore = 3;
         }
 
         private static void AddFooter(Section section, ExportReport report, ExportMeta meta, double width)

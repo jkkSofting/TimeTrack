@@ -97,14 +97,14 @@
                     Command="{Binding ExportPdfCommand}"
                     Content="PDF speichern"
                     Style="{StaticResource Button.Primary}"
-                    ToolTip="Tätigkeitsnachweis als PDF, zum Gegenzeichnen oder Versenden" />
+                    ToolTip="Tätigkeitsnachweis als PDF, zum Ablegen oder Versenden" />
             </StackPanel>
 
             <StackPanel VerticalAlignment="Center">
                 <TextBlock Style="{StaticResource Text.PageTitle}" Text="Tätigkeitsnachweis" />
                 <TextBlock
                     Style="{StaticResource Text.Subtitle}"
-                    Text="Buchungen eines Projekts und Zeitraums als PDF oder CSV exportieren, zum Gegenzeichnen oder für die Abrechnung."
+                    Text="Buchungen eines Projekts und Zeitraums als PDF oder CSV exportieren, als Nachweis oder für die Abrechnung."
                     TextWrapping="Wrap" />
             </StackPanel>
         </DockPanel>
@@ -366,9 +366,6 @@
 
                             <CheckBox
                                 Margin="0,12,0,0"
-                                Content="Unterschriftsfeld (Leistungsbestätigung)"
-                                IsChecked="{Binding ShowSignature}" />
-                            <CheckBox
                                 Content="Querformat"
                                 IsChecked="{Binding Landscape}"
                                 Style="{StaticResource OptionCheck}" />

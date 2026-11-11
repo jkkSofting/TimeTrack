@@ -25,7 +25,6 @@ namespace Zeitmanagement.Tests
                 ShowCarrierColumn = true,
                 Title = "Stundennachweis – Oktober",
                 Landscape = true,
-                ShowSignature = false,
                 ShowBranding = false,
                 CsvInternational = true,
                 CsvIsoDates = true,
@@ -44,7 +43,6 @@ namespace Zeitmanagement.Tests
             Assert.True(back.ShowCarrierColumn);
             Assert.Equal("Stundennachweis – Oktober", back.Title);
             Assert.True(back.Landscape);
-            Assert.False(back.GetShowSignature());
             Assert.False(back.GetShowBranding());
             Assert.True(back.CsvInternational);
             Assert.True(back.CsvIsoDates);
@@ -67,7 +65,6 @@ namespace Zeitmanagement.Tests
             Assert.Equal(ExportGrouping.ByDay, prefs.GetGrouping());
             Assert.Equal(ExportDurationFormat.Decimal, prefs.GetDurationFormat());
             Assert.True(prefs.GetShowTimes());
-            Assert.True(prefs.GetShowSignature());
             Assert.True(prefs.GetShowBranding());
             Assert.False(prefs.Landscape);
             Assert.Null(prefs.ProjectNames);
@@ -80,7 +77,6 @@ namespace Zeitmanagement.Tests
 
             Assert.Equal(ExportGrouping.ByProject, prefs.GetGrouping());
             Assert.True(prefs.GetShowTimes());            // nicht gespeichert = Standard (an), nicht aus
-            Assert.True(prefs.GetShowSignature());
             Assert.Equal(ExportDurationFormat.Decimal, prefs.GetDurationFormat());
         }
 
