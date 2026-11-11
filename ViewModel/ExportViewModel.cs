@@ -77,7 +77,6 @@ namespace Zeitmanagement.ViewModel
             _kind = prefs.GetKind();
             _grouping = prefs.GetGrouping();
             _durationFormat = prefs.GetDurationFormat();
-            _selectedRounding = RoundingChoices.First(r => r.Minutes == prefs.GetRoundingMinutes());
             _showTimes = prefs.GetShowTimes();
             _alwaysShowProjectColumn = prefs.AlwaysShowProjectColumn;
             _showCarrierColumn = prefs.ShowCarrierColumn;
@@ -127,7 +126,6 @@ namespace Zeitmanagement.ViewModel
                 Kind = _kind.ToString(),
                 Grouping = _grouping.ToString(),
                 DurationFormat = _durationFormat.ToString(),
-                RoundingMinutes = _selectedRounding.Minutes,
                 ShowTimes = _showTimes,
                 AlwaysShowProjectColumn = _alwaysShowProjectColumn,
                 ShowCarrierColumn = _showCarrierColumn,

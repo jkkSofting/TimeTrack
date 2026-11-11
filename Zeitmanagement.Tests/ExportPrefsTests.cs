@@ -20,7 +20,6 @@ namespace Zeitmanagement.Tests
                 Kind = ExportProjectKind.ExternalOnly.ToString(),
                 Grouping = ExportGrouping.ByWeek.ToString(),
                 DurationFormat = ExportDurationFormat.Both.ToString(),
-                RoundingMinutes = 15,
                 ShowTimes = false,
                 AlwaysShowProjectColumn = true,
                 ShowCarrierColumn = true,
@@ -40,7 +39,6 @@ namespace Zeitmanagement.Tests
             Assert.Equal(ExportProjectKind.ExternalOnly, back.GetKind());
             Assert.Equal(ExportGrouping.ByWeek, back.GetGrouping());
             Assert.Equal(ExportDurationFormat.Both, back.GetDurationFormat());
-            Assert.Equal(15, back.GetRoundingMinutes());
             Assert.False(back.GetShowTimes());
             Assert.True(back.AlwaysShowProjectColumn);
             Assert.True(back.ShowCarrierColumn);
@@ -68,7 +66,6 @@ namespace Zeitmanagement.Tests
             Assert.Equal(ExportProjectKind.All, prefs.GetKind());
             Assert.Equal(ExportGrouping.ByDay, prefs.GetGrouping());
             Assert.Equal(ExportDurationFormat.Decimal, prefs.GetDurationFormat());
-            Assert.Equal(0, prefs.GetRoundingMinutes());
             Assert.True(prefs.GetShowTimes());
             Assert.True(prefs.GetShowSignature());
             Assert.True(prefs.GetShowBranding());
@@ -100,18 +97,20 @@ namespace Zeitmanagement.Tests
             Assert.Equal(ExportDurationFormat.Decimal, prefs.GetDurationFormat());
         }
 
-        [Theory]
-        [InlineData(0, 0)]
-        [InlineData(5, 5)]
-        [InlineData(10, 10)]
-        [InlineData(15, 15)]
-        [InlineData(30, 30)]
-        [InlineData(7, 0)]
-        [InlineData(-15, 0)]
-        [InlineData(600, 0)]
-        public void Only_the_offered_rounding_steps_are_accepted(int stored, int expected)
+        [Fact]
+        public void Rounding_is_never_stored_so_it_can_not_come_back_unnoticed()
         {
-            Assert.Equal(expected, new ExportPrefs { RoundingMinutes = stored }.GetRoundingMinutes());
+            // Eine Rundung ändert die abrechenbare Zeit: Sie muss jedes Mal ausdrücklich gewählt werden.
+            Assert.DoesNotContain("round", new ExportPrefs().ToJson(), StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(typeof(ExportPrefs).GetProperties(), p => p.Name.IndexOf("Round", StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+
+        [Fact]
+        public void An_old_setting_that_still_contains_a_rounding_is_read_and_the_rounding_ignored()
+        {
+            var prefs = ExportPrefs.FromJson("{\"rounding\":15,\"grouping\":\"ByWeek\"}");
+
+            Assert.Equal(ExportGrouping.ByWeek, prefs.GetGrouping());
         }
 
         [Fact]

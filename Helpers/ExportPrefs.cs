@@ -11,6 +11,7 @@ namespace Zeitmanagement.Helpers
     /// <summary>
     /// Die zuletzt benutzte Auswahl des Tätigkeitsnachweises (Zeitraum, Projekte, Optionen), als JSON in den Benutzereinstellungen.
     /// Lesen wirft nie: Fehlt etwas oder ist der Text unlesbar, gelten die Standardwerte. Unbekannte Werte bleiben beim Standard.
+    /// Die Rundung der Dauer wird bewusst nie gemerkt: Sie ändert die abrechenbare Zeit und muss jedes Mal ausdrücklich gewählt werden.
     /// </summary>
     [DataContract]
     public sealed class ExportPrefs
@@ -24,7 +25,6 @@ namespace Zeitmanagement.Helpers
         [DataMember(Name = "kind")] public string Kind { get; set; }
         [DataMember(Name = "grouping")] public string Grouping { get; set; }
         [DataMember(Name = "duration")] public string DurationFormat { get; set; }
-        [DataMember(Name = "rounding")] public int RoundingMinutes { get; set; }
         [DataMember(Name = "showTimes")] public bool? ShowTimes { get; set; }
         [DataMember(Name = "alwaysProject")] public bool AlwaysShowProjectColumn { get; set; }
         [DataMember(Name = "carrier")] public bool ShowCarrierColumn { get; set; }
@@ -73,21 +73,6 @@ namespace Zeitmanagement.Helpers
         public ExportProjectKind GetKind() { return ParseEnum(Kind, ExportProjectKind.All); }
         public ExportGrouping GetGrouping() { return ParseEnum(Grouping, ExportGrouping.ByDay); }
         public ExportDurationFormat GetDurationFormat() { return ParseEnum(DurationFormat, ExportDurationFormat.Decimal); }
-
-        /// <summary>Nur die angebotenen Rundungsstufen; alles andere heißt nicht runden.</summary>
-        public int GetRoundingMinutes()
-        {
-            switch (RoundingMinutes)
-            {
-                case 5:
-                case 10:
-                case 15:
-                case 30:
-                    return RoundingMinutes;
-                default:
-                    return 0;
-            }
-        }
 
         public bool GetShowTimes() { return ShowTimes ?? true; }
         public bool GetShowSignature() { return ShowSignature ?? true; }

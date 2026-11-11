@@ -285,43 +285,37 @@ namespace Zeitmanagement.Helpers
         {
             Heading(section, "Stunden je Projekt", 0);
 
-            var showCarrier = options.ShowCarrierColumn;
+            // Der Kostenträger steht hier immer: Bei mehreren Projekten nennen die Eckdaten oben nur die Liste der Kostenträger,
+            // erst diese Tabelle ordnet jedem Projekt seinen Kostenträger zu.
             var table = NewTable(section);
-            var fixedWidth = 22 + 26 + 18 + (showCarrier ? 34 : 0);
-            table.AddColumn(Unit.FromMillimeter(width - fixedWidth));
-            if (showCarrier) table.AddColumn(Unit.FromMillimeter(34));
+            const double CarrierMm = 34;
+            table.AddColumn(Unit.FromMillimeter(width - (CarrierMm + 22 + 26 + 18)));
+            table.AddColumn(Unit.FromMillimeter(CarrierMm));
             table.AddColumn(Unit.FromMillimeter(22));
             table.AddColumn(Unit.FromMillimeter(26));
             table.AddColumn(Unit.FromMillimeter(18));
 
-            var headers = new List<string> { "Projekt" };
-            if (showCarrier) headers.Add("Kostenträger");
-            headers.AddRange(new[] { "Buchungen", "Stunden", "Anteil" });
-            var head = table.AddRow();
-            HeaderRow(head, headers, showCarrier ? 2 : 1);
+            HeaderRow(table.AddRow(), new List<string> { "Projekt", "Kostenträger", "Buchungen", "Stunden", "Anteil" }, 2);
 
             foreach (var p in report.Projects)
             {
                 var row = table.AddRow();
                 row.Borders.Bottom.Width = 0.5;
                 row.Borders.Bottom.Color = Hair;
-                var i = 0;
-                row.Cells[i++].AddParagraph(Clean(p.Project));
-                if (showCarrier) row.Cells[i++].AddParagraph(Clean(p.Carrier));
-                Right(row.Cells[i++].AddParagraph(p.Count.ToString(CultureInfo.InvariantCulture)));
-                Right(row.Cells[i++].AddParagraph(ExportFormat.Duration(p.Minutes, options.DurationFormat)));
-                Right(row.Cells[i].AddParagraph(p.SharePercent.ToString("0", ExportFormat.German) + " %"));
+                row.Cells[0].AddParagraph(Clean(p.Project));
+                row.Cells[1].AddParagraph(Clean(p.Carrier));
+                Right(row.Cells[2].AddParagraph(p.Count.ToString(CultureInfo.InvariantCulture)));
+                Right(row.Cells[3].AddParagraph(ExportFormat.Duration(p.Minutes, options.DurationFormat)));
+                Right(row.Cells[4].AddParagraph(p.SharePercent.ToString("0", ExportFormat.German) + " %"));
             }
 
             var sum = table.AddRow();
             sum.Shading.Color = Soft;
             sum.Format.Font.Bold = true;
-            var k = 0;
-            sum.Cells[k++].AddParagraph("Gesamt");
-            if (showCarrier) k++;
-            Right(sum.Cells[k++].AddParagraph(report.EntryCount.ToString(CultureInfo.InvariantCulture)));
-            Right(sum.Cells[k++].AddParagraph(ExportFormat.Duration(report.TotalMinutes, options.DurationFormat)));
-            Right(sum.Cells[k].AddParagraph(report.TotalMinutes > 0 ? "100 %" : "–"));
+            sum.Cells[0].AddParagraph("Gesamt");
+            Right(sum.Cells[2].AddParagraph(report.EntryCount.ToString(CultureInfo.InvariantCulture)));
+            Right(sum.Cells[3].AddParagraph(ExportFormat.Duration(report.TotalMinutes, options.DurationFormat)));
+            Right(sum.Cells[4].AddParagraph(report.TotalMinutes > 0 ? "100 %" : "–"));
             Spacer(section, 12);
         }
 

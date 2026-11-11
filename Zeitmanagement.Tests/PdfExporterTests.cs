@@ -173,6 +173,20 @@ namespace Zeitmanagement.Tests
         }
 
         [Fact]
+        public void The_carrier_is_always_in_the_document_even_with_every_optional_column_off()
+        {
+            // Der Kostenträger ist die Angabe, auf die es beim Nachweis ankommt: Er steht ohne jede Einstellung im Dokument.
+            var one = PdfReportLayout.Build(Report(Options(), E(1, "2026-10-05", "09:00", "10:00", "Projekt Alpha")), new ExportMeta());
+            var facts = Tables(one).Single(t => RowTexts(t).Any(r => r.StartsWith("Kostenträger")));
+            Assert.Contains("Kostenträger | 1500410A24RD001.01", RowTexts(facts));
+            Assert.DoesNotContain("Kostenträger", RowTexts(Details(one))[0]);
+
+            var several = PdfReportLayout.Build(Report(Options(), SomeEntries()), new ExportMeta());
+            var perProject = Tables(several).Single(t => CellText(t.Rows[0].Cells[0]) == "Projekt");
+            Assert.Contains("Projekt Beta | 1500410A24RD001.02", string.Join("\n", RowTexts(perProject)));
+        }
+
+        [Fact]
         public void Document_info_names_the_issuer_and_not_the_windows_user()
         {
             var document = PdfReportLayout.Build(Report(Options(), SomeEntries()), Meta());
@@ -339,10 +353,10 @@ namespace Zeitmanagement.Tests
             var perProject = Tables(several).Where(t => CellText(t.Rows[0].Cells[0]) == "Projekt").ToList();
             Assert.Single(perProject);
             var rows = RowTexts(perProject[0]);
-            Assert.Equal("Projekt | Buchungen | Stunden | Anteil", rows[0]);
-            Assert.Equal("Projekt Alpha | 2 | 2,50 | 53 %", rows[1]);
-            Assert.Equal("Projekt Beta | 1 | 2,25 | 47 %", rows[2]);
-            Assert.Equal("Gesamt | 3 | 4,75 | 100 %", rows[3]);
+            Assert.Equal("Projekt | Kostenträger | Buchungen | Stunden | Anteil", rows[0]);
+            Assert.Equal("Projekt Alpha | 1500410A24RD001.01 | 2 | 2,50 | 53 %", rows[1]);
+            Assert.Equal("Projekt Beta | 1500410A24RD001.02 | 1 | 2,25 | 47 %", rows[2]);
+            Assert.Equal("Gesamt |  | 3 | 4,75 | 100 %", rows[3]);
             Assert.DoesNotContain("Stunden je Projekt", BodyText(one));
         }
 
@@ -579,28 +593,50 @@ namespace Zeitmanagement.Tests
                 .ToArray();
 
             var options = Options();
-            options.DurationFormat = ExportDurationFormat.Both;
-            options.RoundingMinutes = 15;
+            options.DurationFormat = ExportDurationFormat.Both;   // jede Minute zählt: keine Rundung
             var meta = Meta();
             meta.Note = "Leistungen laut Auftrag PO-4711. Reisezeiten sind nicht enthalten.";
-            PdfExporter.WriteFile(Path.Combine(dir, "01-Monat-nach-Tag.pdf"), Report(options, month), meta);
+            var written = new List<string>();
+            Action<string, Action<string>> write = (name, action) => { var target = SamplePath(dir, name); action(target); written.Add(target); };
+
+            write("01-Monat-nach-Tag.pdf", t => PdfExporter.WriteFile(t, Report(options, month), meta));
 
             var byProject = Options();
             byProject.Grouping = ExportGrouping.ByProject;
             byProject.ShowCarrierColumn = true;
-            PdfExporter.WriteFile(Path.Combine(dir, "02-nach-Projekt.pdf"), Report(byProject, month), Meta());
+            write("02-nach-Projekt.pdf", t => PdfExporter.WriteFile(t, Report(byProject, month), Meta()));
 
             var landscape = Options();
             landscape.Grouping = ExportGrouping.ByWeek;
             var landscapeMeta = Meta();
             landscapeMeta.Orientation = ExportOrientation.Landscape;
-            PdfExporter.WriteFile(Path.Combine(dir, "03-nach-Woche-quer.pdf"), Report(landscape, month), landscapeMeta);
+            write("03-nach-Woche-quer.pdf", t => PdfExporter.WriteFile(t, Report(landscape, month), landscapeMeta));
 
-            PdfExporter.WriteFile(Path.Combine(dir, "04-kurz.pdf"), Report(Options(), SomeEntries()), Meta());
-            CsvExporter.WriteFile(Path.Combine(dir, "05-Monat.csv"), Report(Options(), month), new CsvOptions { IncludeTotalRow = true });
+            write("04-kurz.pdf", t => PdfExporter.WriteFile(t, Report(Options(), SomeEntries()), Meta()));
+            write("05-Monat.csv", t => CsvExporter.WriteFile(t, Report(Options(), month), new CsvOptions { IncludeTotalRow = true }));
 
-            Assert.True(File.Exists(Path.Combine(dir, "01-Monat-nach-Tag.pdf")));
-            Assert.True(File.Exists(Path.Combine(dir, "05-Monat.csv")));
+            Assert.Equal(5, written.Count);
+            Assert.All(written, f => Assert.True(File.Exists(f), f));
+        }
+
+        /// <summary>
+        /// Pfad für eine Beispieldatei. Ist die Datei gerade geöffnet (jemand sieht sie sich an), weicht der Test auf einen Namen mit
+        /// Uhrzeit aus, statt zu scheitern: So gibt es immer eine aktuelle Fassung.
+        /// </summary>
+        private static string SamplePath(string dir, string name)
+        {
+            var path = Path.Combine(dir, name);
+            if (!File.Exists(path)) return path;
+
+            try
+            {
+                using (new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) { }
+                return path;
+            }
+            catch (IOException)
+            {
+                return Path.Combine(dir, Path.GetFileNameWithoutExtension(name) + "-" + DateTime.Now.ToString("HHmmss", CultureInfo.InvariantCulture) + Path.GetExtension(name));
+            }
         }
     }
 }
