@@ -150,23 +150,27 @@ namespace Zeitmanagement.Helpers
         public bool IsAmbiguous { get; }
     }
 
-    /// <summary>Stundensatz je Projekt: Bestimmt den Satz, der für ein PSP-Element gilt.</summary>
+    /// <summary>Stundensatz je Projekt (mit Standard-Stundensatz als Vorgabe): Bestimmt den Satz, der für ein PSP-Element gilt.</summary>
     public static class ControllingRates
     {
         /// <summary>
-        /// Teilen sich mehrere Projekte einen Kostenträger, gilt der Satz, den alle eingetragenen Sätze gemeinsam haben.
-        /// Projekte ohne Satz bleiben außen vor; weichen die eingetragenen Sätze voneinander ab, ist das Ergebnis
-        /// "uneinheitlich" (keine Umrechnung, kein Mittelwert, kein erstes oder letztes Projekt).
+        /// Der Satz eines Projekts ist sein eigener, sonst der Standard-Stundensatz. Teilen sich mehrere Projekte einen Kostenträger,
+        /// gilt der Satz, den alle gemeinsam haben. Projekte ohne Satz (und ohne Standard) bleiben außen vor; weichen die Sätze
+        /// voneinander ab, ist das Ergebnis "uneinheitlich" (keine Umrechnung, kein Mittelwert, kein erstes oder letztes Projekt).
+        /// Ein Standard bis 0 zählt als nicht eingetragen.
         /// </summary>
-        public static RateResolution Resolve(IEnumerable<LocalProjectInfo> linkedProjects, IDictionary<int, decimal> ratesByProject)
+        public static RateResolution Resolve(IEnumerable<LocalProjectInfo> linkedProjects, IDictionary<int, decimal> ratesByProject, decimal? defaultRate = null)
         {
-            if (linkedProjects == null || ratesByProject == null) return RateResolution.None;
+            if (linkedProjects == null) return RateResolution.None;
+            if (ratesByProject == null) ratesByProject = new Dictionary<int, decimal>();
+            var fallback = defaultRate.HasValue && defaultRate.Value > 0m ? defaultRate : null;
 
             var rates = new List<decimal>();
             foreach (var project in linkedProjects)
             {
-                decimal rate;
-                if (ratesByProject.TryGetValue(project.Id, out rate) && rate > 0m && !rates.Contains(rate)) rates.Add(rate);
+                decimal own;
+                decimal? effective = ratesByProject.TryGetValue(project.Id, out own) && own > 0m ? own : fallback;
+                if (effective.HasValue && !rates.Contains(effective.Value)) rates.Add(effective.Value);
             }
 
             if (rates.Count == 0) return RateResolution.None;

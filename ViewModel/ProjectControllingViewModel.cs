@@ -41,13 +41,17 @@ namespace Zeitmanagement.ViewModel
     }
 
     /// <summary>
-    /// Ein lokales Projekt in den Details samt seinem Stundensatz. Der Satz gehört zum Projekt (nicht global) und gilt für die
-    /// Währung des gewählten Imports; er dient nur der Umrechnung von Geld in rechnerische Stunden.
+    /// Ein lokales Projekt in den Details samt seinem Stundensatz. Der Satz überschreibt den Standard-Stundensatz für dieses Projekt
+    /// (leer = der Standard gilt) und gilt für die Währung des gewählten Imports; er dient nur der Umrechnung von Geld in
+    /// rechnerische Stunden.
     /// </summary>
     internal sealed class ProjectRateItem : BindableBase
     {
         private string _rateText;
         private string _error;
+        private string _placeholder = ProjectRateItem.NoDefaultPlaceholder;
+
+        public const string NoDefaultPlaceholder = "z. B. 95,50";
 
         public ProjectRateItem(LocalProjectInfo project, string initialRateText)
         {
@@ -66,6 +70,9 @@ namespace Zeitmanagement.ViewModel
             get => _rateText;
             set { if (SetProperty(ref _rateText, value)) RateEdited?.Invoke(this); }
         }
+
+        /// <summary>Hinweis im leeren Feld: der Standard-Stundensatz, der dann für dieses Projekt gilt, oder ein Beispiel.</summary>
+        public string Placeholder { get => _placeholder; set => SetProperty(ref _placeholder, value); }
 
         public string Error
         {
@@ -591,10 +598,86 @@ namespace Zeitmanagement.ViewModel
 
         public string ConversionNote =>
             HasHourlyRate
-                ? "Stunden (h) in den Tabellen sind aus Geld umgerechnet: Betrag ÷ Stundensatz des Projekts (in den Details je Projekt eingetragen, " + CurrencyText +
+                ? "Stunden (h) in den Tabellen sind aus Geld umgerechnet: Betrag ÷ Stundensatz des Projekts (in den Details je Projekt eingetragen" +
+                  (_defaultRate.HasValue ? ", sonst der Standard-Stundensatz aus der Kopfzeile" : string.Empty) + ", " + CurrencyText +
                   "). Teilen sich Projekte einen Kostenträger mit unterschiedlichen Sätzen, steht „" + ControllingOverviewRow.AmbiguousRateText +
                   "“. Das ist eine Schätzung aus Geld, keine gebuchte Zeit und nicht mit den lokal erfassten Stunden abgestimmt."
                 : string.Empty;
+
+        // ----- Standard-Stundensatz: gilt für jedes Projekt ohne eigenen Satz, je Währungskontext des gewählten Imports -----
+
+        private decimal? _defaultRate;
+        private bool _loadingDefaultRate;
+        private string _defaultRateText = string.Empty;
+        private string _defaultRateError;
+
+        /// <summary>Standard-Stundensatz als Text (z. B. "95,50"); leer = keiner. Die Eingabe wird nach kurzer Pause gespeichert.</summary>
+        public string DefaultRateText
+        {
+            get => _defaultRateText;
+            set
+            {
+                if (!SetProperty(ref _defaultRateText, value)) return;
+                if (!_loadingDefaultRate) OnDefaultRateEdited();
+            }
+        }
+
+        public string DefaultRateError
+        {
+            get => _defaultRateError;
+            private set { if (SetProperty(ref _defaultRateError, value)) RaisePropertyChanged(nameof(HasDefaultRateError)); }
+        }
+
+        public bool HasDefaultRateError => !string.IsNullOrEmpty(_defaultRateError);
+
+        private void SetDefaultRateText(string text)
+        {
+            _loadingDefaultRate = true;
+            try
+            {
+                DefaultRateText = text;
+                DefaultRateError = null;
+            }
+            finally
+            {
+                _loadingDefaultRate = false;
+            }
+        }
+
+        private void OnDefaultRateEdited()
+        {
+            decimal? rate;
+            if (!CostMath.TryParseHourlyRate(DefaultRateText, out rate))
+            {
+                DefaultRateError = "Bitte einen Stundensatz größer 0 eingeben, z. B. 95,50.";
+                return;
+            }
+
+            if (SelectedImport == null) return;
+
+            try
+            {
+                MainViewModel.DbInstance.SetControllingDefaultRate(SelectedImport.CurrencyContext, rate);
+            }
+            catch (Exception ex)
+            {
+                DefaultRateError = "Der Standard-Stundensatz konnte nicht gespeichert werden: " + ex.Message;
+                return;
+            }
+
+            DefaultRateError = null;
+            _defaultRate = rate;
+            UpdateRatePlaceholders();
+            ApplyRates();
+        }
+
+        /// <summary>Im leeren Feld eines Projekts steht der Standard-Stundensatz, der dann für es gilt.</summary>
+        private string RatePlaceholder => _defaultRate.HasValue ? "Standard " + CostMath.FormatRate(_defaultRate) : ProjectRateItem.NoDefaultPlaceholder;
+
+        private void UpdateRatePlaceholders()
+        {
+            foreach (var item in DetailProjects) item.Placeholder = RatePlaceholder;
+        }
 
         /// <summary>Liest die Sätze zum Währungskontext des gewählten Imports und wendet sie auf alle Zeilen an.</summary>
         private void LoadProjectRates()
@@ -602,6 +685,10 @@ namespace Zeitmanagement.ViewModel
             _projectRates = SelectedImport == null
                 ? new Dictionary<int, decimal>()
                 : MainViewModel.DbInstance.GetControllingProjectRates(SelectedImport.CurrencyContext);
+            _defaultRate = SelectedImport == null
+                ? (decimal?)null
+                : MainViewModel.DbInstance.GetControllingDefaultRate(SelectedImport.CurrencyContext);
+            SetDefaultRateText(CostMath.FormatRate(_defaultRate));
 
             ApplyRates();
 
@@ -617,7 +704,7 @@ namespace Zeitmanagement.ViewModel
         private void ApplyRates()
         {
             foreach (var row in _currentRows.Concat(_lastKnownRows))
-                row.SetRate(ControllingRates.Resolve(row.LinkedProjects, _projectRates));
+                row.SetRate(ControllingRates.Resolve(row.LinkedProjects, _projectRates, _defaultRate));
 
             RaiseHoursVisibilityChanged();
             RaisePropertyChanged(nameof(ConversionNote));
@@ -636,6 +723,7 @@ namespace Zeitmanagement.ViewModel
         {
             decimal rate;
             var item = new ProjectRateItem(project, _projectRates.TryGetValue(project.Id, out rate) ? CostMath.FormatRate(rate) : string.Empty);
+            item.Placeholder = RatePlaceholder;
             item.RateEdited = OnProjectRateEdited;
             return item;
         }
