@@ -110,6 +110,8 @@
     <Compile Include="Helpers\PdfExporter.cs" />
     <Compile Include="Helpers\PdfReportLayout.cs" />
     <Compile Include="Helpers\Plugins\PluginStorage.cs" />
+    <Compile Include="Helpers\Plugins\PluginInfo.cs" />
+    <Compile Include="Helpers\Plugins\PluginLoader.cs" />
     <Compile Include="Helpers\OverlayWindowHelper.cs" />
     <Compile Include="Helpers\PenguinEasterEgg.cs" />
     <Compile Include="Helpers\PresentationDetector.cs" />
