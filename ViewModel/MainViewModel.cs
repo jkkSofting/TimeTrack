@@ -22,6 +22,7 @@ namespace Zeitmanagement.ViewModel
         private readonly BaseViewModel _fragmentationView;
         private readonly BaseViewModel _sapBookingView;
         private readonly ProjectControllingViewModel _controllingView;
+        private readonly ExportViewModel _exportView;
         private readonly BaseViewModel _settingsView;
         private readonly HelpViewModel _helpView;
 
@@ -102,6 +103,7 @@ namespace Zeitmanagement.ViewModel
             _quickSelect = new QuickSelectViewModel();
             _fragmentationView = new FragmentationViewModel();
             _sapBookingView = new SapBookingViewModel();
+            _exportView = new ExportViewModel();
             _settingsView = new SettingsViewModel();
             _helpView = new HelpViewModel(SelectViewCommandExecute);
 
@@ -168,6 +170,9 @@ namespace Zeitmanagement.ViewModel
                     break;
                 case "controlling":
                     RightSide = _controllingView;
+                    break;
+                case "export":
+                    RightSide = _exportView;
                     break;
                 case "settings":
                     RightSide = _settingsView;

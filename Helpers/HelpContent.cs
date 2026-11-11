@@ -89,6 +89,17 @@ namespace Zeitmanagement.Helpers
                 "„Letzter bekannter Stand“ zeigt Kostenträger, die im gewählten Import fehlen, mit ihrem eigenen, älteren Datum.",
                 "Die importierten Daten liegen in der TimeTrack-Datenbank und sind in Sicherungen enthalten. Die Excel-Datei selbst wird nicht behalten oder verändert."),
 
+            new HelpTopic("", "Tätigkeitsnachweis", "Export",
+                "Buchungen eines Projekts und Zeitraums als PDF oder CSV exportieren, zum Gegenzeichnen oder für die Abrechnung.",
+                "Links wählst du den Zeitraum (Schnellwahl wie „Letzter Monat“ oder Von/Bis) und mindestens ein Projekt. Mit Suche und Kunden-Auswahl findest du Projekte schnell; „Alle gezeigten wählen“ nimmt alle Projekte der Liste. Unter jedem Projekt steht, wie viele Buchungen und Stunden im Zeitraum liegen. Es wird nur exportiert, was du wählst.",
+                "Rechts siehst du vor dem Export, was im Nachweis steht: Gesamtzeit, Buchungen, Arbeitstage, Durchschnitt und jede Buchung. Warnungen weisen auf Buchungen ohne Beschreibung, Überschneidungen im selben Projekt, nicht lesbare Zeiten (sie fehlen im Nachweis), Dauer 0 und Tage über 12 Stunden hin. Betroffene Zeilen sind hinterlegt.",
+                "Inhalt: Gliederung nach Tag, Projekt oder Kalenderwoche mit Zwischensummen. Die Dauer zeigst du dezimal (1,50), als h:mm (1:30) oder beides. Uhrzeiten, Projekt- und Kostenträger-Spalte schaltest du ein und aus. „Extern“ oder „Intern“ begrenzt die Projekte nach dem Kennzeichen unter „Projekte“.",
+                "Rundung: Auf Wunsch wird die Dauer jeder Buchung kaufmännisch auf 5, 10, 15 oder 30 Minuten gerundet. Das Dokument nennt dann die ungerundete Summe, damit nichts stillschweigend abweicht. Jede Buchung zählt einzeln; läuft Zeit parallel in mehreren Projekten, zählt sie in jedem voll. Eine Buchung über Mitternacht zählt am Tag ihres Beginns.",
+                "„PDF speichern“ erzeugt ein A4-Dokument mit Titel und Zeitraum, Auftragnehmer und Auftraggeber, Zusammenfassung, Einzelnachweis mit Gesamtsumme, Bemerkung und einem Unterschriftsfeld. Die Kopfzeile der Tabelle wiederholt sich auf jeder Seite, die Fußzeile nennt die Seitenzahl. Unter „Dokument“ ändern Titel, Bemerkung, Querformat, Unterschriftsfeld und Fußzeile das Aussehen.",
+                "„Auftragnehmer & Auftraggeber“ nimmt die Angaben für den Briefkopf auf. Dein Name und deine Anschrift bleiben für den nächsten Nachweis gespeichert; der Auftraggeber ist der Kunde der gewählten Projekte, bis du etwas anderes einträgst.",
+                "„CSV speichern“ schreibt eine Zeile je Buchung (Datum, Wochentag, Von, Bis, Dauer, Projekt, Kunde, Kostenträger, extern/intern, Beschreibung) als UTF-8-Datei. Standard sind Semikolon und Dezimalkomma, wie das deutsche Excel sie erwartet; „International“ nimmt Komma und Dezimalpunkt. Beginnt ein Text mit = + - oder @, setzt TimeTrack ein Hochkomma davor, damit Excel ihn nicht als Formel ausführt.",
+                "Nach dem Speichern öffnest du die Datei oder ihren Ordner direkt aus der Seite. Ist die Datei noch in einem PDF-Programm oder Excel geöffnet, meldet TimeTrack das und schreibt nichts Halbes."),
+
             new HelpTopic("", "Projekte", "Projects",
                 "Projekte anlegen, bearbeiten und auswerten.",
                 "„Neues Projekt“ öffnet das Formular: Projektname, Kunde, Kostenträger und ob das Projekt extern ist.",

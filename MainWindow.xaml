@@ -176,6 +176,14 @@
                             GroupName="Nav"
                             IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=controlling}"
                             Style="{StaticResource NavItem}" />
+                        <RadioButton
+                            views:Ui.Glyph="&#xE8A5;"
+                            Command="{Binding SelectViewCommand}"
+                            CommandParameter="Export"
+                            Content="Tätigkeitsnachweis"
+                            GroupName="Nav"
+                            IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=export}"
+                            Style="{StaticResource NavItem}" />
 
                         <TextBlock Style="{StaticResource NavGroup}" Text="VERWALTUNG" />
                         <RadioButton

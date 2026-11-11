@@ -43,6 +43,7 @@
     <Compile Include="..\Helpers\ControllingImportService.cs" Link="Linked\ControllingImportService.cs" />
     <Compile Include="..\Helpers\ControllingOverview.cs" Link="Linked\ControllingOverview.cs" />
     <Compile Include="..\Helpers\CsvExporter.cs" Link="Linked\CsvExporter.cs" />
+    <Compile Include="..\Helpers\ExportFileName.cs" Link="Linked\ExportFileName.cs" />
     <Compile Include="..\Helpers\ExportModels.cs" Link="Linked\ExportModels.cs" />
     <Compile Include="..\Helpers\ExportReportBuilder.cs" Link="Linked\ExportReportBuilder.cs" />
     <Compile Include="..\Helpers\LocalHoursCalculator.cs" Link="Linked\LocalHoursCalculator.cs" />

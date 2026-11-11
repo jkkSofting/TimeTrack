@@ -178,6 +178,69 @@ namespace Zeitmanagement.Helpers
             : Projects.Count > 1;
     }
 
+    /// <summary>Schnellwahl für den Zeitraum des Nachweises: "Letzter Monat" und Co. als Von/Bis.</summary>
+    public static class ExportPeriod
+    {
+        public const string ThisMonth = "thisMonth";
+        public const string LastMonth = "lastMonth";
+        public const string ThisQuarter = "thisQuarter";
+        public const string LastQuarter = "lastQuarter";
+        public const string ThisYear = "thisYear";
+        public const string LastYear = "lastYear";
+        public const string Last30Days = "last30Days";
+        public const string Custom = "custom";
+
+        /// <summary>Die Schnellwahlen in der Reihenfolge der Anzeige.</summary>
+        public static readonly string[] Keys =
+        {
+            ThisMonth, LastMonth, ThisQuarter, LastQuarter, ThisYear, LastYear, Last30Days, Custom
+        };
+
+        public static string Text(string key)
+        {
+            switch (key)
+            {
+                case ThisMonth: return "Dieser Monat";
+                case LastMonth: return "Letzter Monat";
+                case ThisQuarter: return "Dieses Quartal";
+                case LastQuarter: return "Letztes Quartal";
+                case ThisYear: return "Dieses Jahr";
+                case LastYear: return "Letztes Jahr";
+                case Last30Days: return "Letzte 30 Tage";
+                default: return "Benutzerdefiniert";
+            }
+        }
+
+        /// <summary>Von/Bis einer Schnellwahl, bezogen auf <paramref name="today"/>. "Benutzerdefiniert" hat keinen festen Zeitraum.</summary>
+        public static bool TryResolve(string key, DateTime today, out DateTime from, out DateTime to)
+        {
+            today = today.Date;
+            var month = new DateTime(today.Year, today.Month, 1);
+            var quarter = new DateTime(today.Year, (today.Month - 1) / 3 * 3 + 1, 1);
+            from = to = today;
+
+            switch (key)
+            {
+                case ThisMonth:
+                    from = month; to = month.AddMonths(1).AddDays(-1); return true;
+                case LastMonth:
+                    from = month.AddMonths(-1); to = month.AddDays(-1); return true;
+                case ThisQuarter:
+                    from = quarter; to = quarter.AddMonths(3).AddDays(-1); return true;
+                case LastQuarter:
+                    from = quarter.AddMonths(-3); to = quarter.AddDays(-1); return true;
+                case ThisYear:
+                    from = new DateTime(today.Year, 1, 1); to = new DateTime(today.Year, 12, 31); return true;
+                case LastYear:
+                    from = new DateTime(today.Year - 1, 1, 1); to = new DateTime(today.Year - 1, 12, 31); return true;
+                case Last30Days:
+                    from = today.AddDays(-29); to = today; return true;
+                default:
+                    return false;
+            }
+        }
+    }
+
     /// <summary>Zahlen und Datumsangaben im Nachweis: immer deutsch und unabhängig von der Windows-Sprache.</summary>
     public static class ExportFormat
     {

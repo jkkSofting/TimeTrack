@@ -238,5 +238,53 @@ namespace Zeitmanagement.Properties {
                 this["ControllingShowHoursColumns"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ExportIssuerBlock {
+            get {
+                return ((string)(this["ExportIssuerBlock"]));
+            }
+            set {
+                this["ExportIssuerBlock"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ExportLogoPath {
+            get {
+                return ((string)(this["ExportLogoPath"]));
+            }
+            set {
+                this["ExportLogoPath"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ExportLastFolder {
+            get {
+                return ((string)(this["ExportLastFolder"]));
+            }
+            set {
+                this["ExportLastFolder"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ExportPrefsJson {
+            get {
+                return ((string)(this["ExportPrefsJson"]));
+            }
+            set {
+                this["ExportPrefsJson"] = value;
+            }
+        }
     }
 }
