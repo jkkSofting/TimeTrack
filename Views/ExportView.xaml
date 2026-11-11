@@ -396,7 +396,7 @@
                                     <TextBlock
                                         Margin="2,0,0,5"
                                         Style="{StaticResource Text.Label}"
-                                        Text="AUFTRAGNEHMER (DU)" />
+                                        Text="AUFTRAGNEHMER (DU, OPTIONAL)" />
                                     <TextBox
                                         MinHeight="84"
                                         VerticalContentAlignment="Top"
@@ -410,14 +410,21 @@
                                         Style="{StaticResource Hint}"
                                         Text="Die erste Zeile steht fett. Die Angabe bleibt für den nächsten Nachweis gespeichert." />
 
-                                    <TextBlock Style="{StaticResource FieldLabel}" Text="AUFTRAGGEBER" />
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="AUFTRAGGEBER (OPTIONAL)" />
+                                    <CheckBox
+                                        Content="Auftraggeber im Dokument zeigen"
+                                        IsChecked="{Binding ShowClient}"
+                                        ToolTip="Aus: Das Dokument nennt keinen Auftraggeber. Der Name ist mit dem Kunden der gewählten Projekte vorbelegt." />
                                     <TextBox
+                                        Margin="0,8,0,0"
                                         local:Ui.Placeholder="Name des Auftraggebers"
                                         AutomationProperties.Name="Name des Auftraggebers"
+                                        IsEnabled="{Binding ShowClient}"
                                         Text="{Binding ClientName}" />
                                     <TextBox
                                         Margin="0,6,0,0"
                                         MinHeight="64"
+                                        IsEnabled="{Binding ShowClient}"
                                         VerticalContentAlignment="Top"
                                         local:Ui.Placeholder="Anschrift, Ansprechpartner (optional)"
                                         AcceptsReturn="True"

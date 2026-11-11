@@ -173,6 +173,32 @@ namespace Zeitmanagement.Tests
         }
 
         [Fact]
+        public void Issuer_and_client_are_optional_each_and_the_carrier_stays()
+        {
+            var report = Report(Options(), SomeEntries());
+
+            var meta = Meta();
+            meta.ClientName = null;
+            meta.ClientBlock = null;
+            var withoutClient = BodyText(PdfReportLayout.Build(report, meta));
+            Assert.Contains("AUFTRAGNEHMER", withoutClient);
+            Assert.DoesNotContain("AUFTRAGGEBER", withoutClient);
+
+            meta = Meta();
+            meta.IssuerBlock = null;
+            var withoutIssuer = BodyText(PdfReportLayout.Build(report, meta));
+            Assert.DoesNotContain("AUFTRAGNEHMER", withoutIssuer);
+            Assert.Contains("AUFTRAGGEBER", withoutIssuer);
+
+            var neither = PdfReportLayout.Build(report, new ExportMeta());
+            var text = BodyText(neither);
+            Assert.DoesNotContain("AUFTRAGNEHMER", text);
+            Assert.DoesNotContain("AUFTRAGGEBER", text);
+            Assert.Contains("1500410A24RD001.01", text);   // Der Kostenträger steht in jedem Fall im Dokument
+            Assert.True(PdfExporter.Render(neither).Length > 1000);
+        }
+
+        [Fact]
         public void The_carrier_is_always_in_the_document_even_with_every_optional_column_off()
         {
             // Der Kostenträger ist die Angabe, auf die es beim Nachweis ankommt: Er steht ohne jede Einstellung im Dokument.

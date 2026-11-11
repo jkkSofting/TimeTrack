@@ -29,6 +29,8 @@ namespace Zeitmanagement.Helpers
         [DataMember(Name = "alwaysProject")] public bool AlwaysShowProjectColumn { get; set; }
         [DataMember(Name = "carrier")] public bool ShowCarrierColumn { get; set; }
         [DataMember(Name = "daySums")] public bool? ShowDaySubtotals { get; set; }
+        /// <summary>Der Auftraggeber steht nur im Dokument, wenn der Nutzer es will (Standard: nein).</summary>
+        [DataMember(Name = "showClient")] public bool ShowClient { get; set; }
 
         [DataMember(Name = "title")] public string Title { get; set; }
         [DataMember(Name = "landscape")] public bool Landscape { get; set; }

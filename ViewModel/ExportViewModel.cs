@@ -81,6 +81,7 @@ namespace Zeitmanagement.ViewModel
             _alwaysShowProjectColumn = prefs.AlwaysShowProjectColumn;
             _showCarrierColumn = prefs.ShowCarrierColumn;
             _showDaySubtotals = prefs.GetShowDaySubtotals();
+            _showClient = prefs.ShowClient;
             if (!string.IsNullOrWhiteSpace(prefs.Title)) _title = prefs.Title;
             _landscape = prefs.Landscape;
             _showBranding = prefs.GetShowBranding();
@@ -130,6 +131,7 @@ namespace Zeitmanagement.ViewModel
                 AlwaysShowProjectColumn = _alwaysShowProjectColumn,
                 ShowCarrierColumn = _showCarrierColumn,
                 ShowDaySubtotals = _showDaySubtotals,
+                ShowClient = _showClient,
                 Title = _title,
                 Landscape = _landscape,
                 ShowBranding = _showBranding,
@@ -516,6 +518,13 @@ namespace Zeitmanagement.ViewModel
         private bool _metaDirty;
         private bool _loadingMeta;
 
+        private bool _showClient;
+        /// <summary>
+        /// Auftraggeber im Dokument zeigen. Standard: nein, denn der Auftraggeber ist optional. Ohne Haken bleiben Name und Anschrift
+        /// aus dem Dokument, auch wenn sie ausgefüllt (oder mit dem Kunden vorbelegt) sind.
+        /// </summary>
+        public bool ShowClient { get => _showClient; set => SetProperty(ref _showClient, value); }
+
         private string _clientName;
         private bool _clientNameEdited;
         /// <summary>Auftraggeber; ohne eigene Eingabe der Kunde der gewählten Projekte.</summary>
@@ -837,8 +846,8 @@ namespace Zeitmanagement.ViewModel
             {
                 Title = Title,
                 IssuerBlock = IssuerBlock,
-                ClientName = ClientName,
-                ClientBlock = ClientBlock,
+                ClientName = ShowClient ? ClientName : null,
+                ClientBlock = ShowClient ? ClientBlock : null,
                 ReferenceNumber = ReferenceNumber,
                 Note = Note,
                 ShowBranding = ShowBranding,
