@@ -222,8 +222,22 @@ namespace Zeitmanagement.ViewModel
         }
 
         /// <summary>
+        /// The key of the slot the current pick would create (see <see cref="SlotKey"/>), or null while
+        /// nothing is picked.
+        /// </summary>
+        private string PendingSlotKey
+        {
+            get
+            {
+                if (IsTicketMode) return PendingNewTicket == null ? null : SlotKey.ForTicket(PendingNewTicket.Id);
+                return string.IsNullOrWhiteSpace(PendingNewProject) ? null : SlotKey.ForProject(PendingNewProject);
+            }
+        }
+
+        /// <summary>
         /// Why the current pick cannot be started although a slot is free, for the floating window; null
-        /// when it can be started or nothing is picked.
+        /// when it can be started or nothing is picked. Also null while the pick itself is the running
+        /// slot (it starts as soon as it is picked and stays picked), since nothing is wrong then.
         /// </summary>
         public string StartBlockedText
         {
@@ -231,6 +245,7 @@ namespace Zeitmanagement.ViewModel
             {
                 var project = PendingBookingProject;
                 if (project == null || ActiveSlots.Count >= MaxActiveSlots || !ProjectInUse(project)) return null;
+                if (FindSlot(PendingSlotKey) != null) return null;
 
                 return $"Für „{project}“ läuft bereits eine Buchung. Beende sie zuerst.";
             }
