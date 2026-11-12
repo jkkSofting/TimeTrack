@@ -479,12 +479,15 @@ namespace Zeitmanagement.Tests
         // ---------- Quick Switch für Tickets ----------
 
         [Fact]
-        public void Only_the_default_To_Do_column_is_offered_in_quick_switch()
+        public void Only_the_default_To_Do_column_of_a_project_board_is_offered_in_quick_switch()
         {
             using (var t = new TestDb())
             {
+                t.Db.AddOrEnsureProject("Alpha", "Kunde", "KT-1");
+                t.Db.EnsureTodoBoard("Alpha");
                 t.Db.EnsureTodoBoard(null);
-                Assert.Equal(new[] { true, false, false }, t.Db.GetTodoColumns(null).Select(c => c.QuickSwitch).ToArray());
+                Assert.Equal(new[] { true, false, false }, t.Db.GetTodoColumns("Alpha").Select(c => c.QuickSwitch).ToArray());
+                Assert.Equal(new[] { false, false, false }, t.Db.GetTodoColumns(null).Select(c => c.QuickSwitch).ToArray());
             }
         }
 

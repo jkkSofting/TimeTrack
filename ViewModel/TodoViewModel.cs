@@ -76,6 +76,7 @@ namespace Zeitmanagement.ViewModel
         {
             Id = row.Id;
             Name = row.Name;
+            QuickSwitch = row.QuickSwitch;
             AddTicketCommand = addTicketCommand;
             EditCommand = editCommand;
             DeleteCommand = deleteCommand;
@@ -89,6 +90,14 @@ namespace Zeitmanagement.ViewModel
         {
             get => _name;
             set => SetProperty(ref _name, value);
+        }
+
+        private bool _quickSwitch;
+        /// <summary>Ob die Tickets dieser Spalte im Quick Switch wählbar sind.</summary>
+        public bool QuickSwitch
+        {
+            get => _quickSwitch;
+            set => SetProperty(ref _quickSwitch, value);
         }
 
         public ObservableCollection<TodoTicketViewModel> Tickets { get; } = new ObservableCollection<TodoTicketViewModel>();
@@ -128,8 +137,15 @@ namespace Zeitmanagement.ViewModel
         /// <summary>Eintrag der Projektwahl für das allgemeine Board.</summary>
         public const string GeneralBoardLabel = "Ohne Projekt";
 
-        public TodoViewModel()
+        /// <summary>
+        /// Wird gerufen, wenn sich ändert, welche Tickets der Quick Switch anbietet (Ticket oder Spalte gespeichert,
+        /// verschoben, gelöscht), damit dessen Liste ohne Neustart stimmt.
+        /// </summary>
+        private readonly Action _quickSwitchChanged;
+
+        public TodoViewModel(Action quickSwitchChanged = null)
         {
+            _quickSwitchChanged = quickSwitchChanged;
             _addTicketCommand = new DelegateCommand(c => OpenNewTicket((TodoColumnViewModel)c));
             _editColumnCommand = new DelegateCommand(c => OpenColumn((TodoColumnViewModel)c));
             _deleteColumnCommand = new DelegateCommand(c => DeleteColumn((TodoColumnViewModel)c));
@@ -193,9 +209,13 @@ namespace Zeitmanagement.ViewModel
 
                 IsTicketEditorOpen = false;
                 IsColumnEditorOpen = false;
+                RaisePropertyChanged(nameof(IsProjectBoard));
                 LoadBoard(); // die Projektliste bleibt unberührt, solange die Auswahl noch läuft
             }
         }
+
+        /// <summary>Ob das Board zu einem Projekt gehört. Nur dann lässt sich der Quick Switch für Spalten einschalten.</summary>
+        public bool IsProjectBoard => SelectedProject != GeneralBoardLabel;
 
         /// <summary>Das Projekt des angezeigten Boards, <c>null</c> für das allgemeine Board.</summary>
         private string CurrentProject => SelectedProject == GeneralBoardLabel ? null : SelectedProject;
@@ -213,6 +233,7 @@ namespace Zeitmanagement.ViewModel
             {
                 _selectedProject = GeneralBoardLabel;
                 RaisePropertyChanged(nameof(SelectedProject));
+                RaisePropertyChanged(nameof(IsProjectBoard));
             }
         }
 
@@ -273,6 +294,7 @@ namespace Zeitmanagement.ViewModel
 
                 if (at != i) Columns.Move(at, i);
                 Columns[i].Name = row.Name;
+                Columns[i].QuickSwitch = row.QuickSwitch;
             }
 
             while (Columns.Count > rows.Count)
@@ -409,6 +431,7 @@ namespace Zeitmanagement.ViewModel
 
                 IsTicketEditorOpen = false;
                 LoadBoard();
+                _quickSwitchChanged?.Invoke();
             }
             catch (Exception ex)
             {
@@ -432,6 +455,7 @@ namespace Zeitmanagement.ViewModel
                 Db.DeleteTodoTicket(_editingTicketId.Value);
                 IsTicketEditorOpen = false;
                 LoadBoard();
+                _quickSwitchChanged?.Invoke();
             }
             catch (Exception ex)
             {
@@ -467,6 +491,7 @@ namespace Zeitmanagement.ViewModel
             }
 
             LoadBoard();
+            _quickSwitchChanged?.Invoke();
         }
 
         // ---------- Spalte bearbeiten ----------
@@ -505,6 +530,14 @@ namespace Zeitmanagement.ViewModel
             }
         }
 
+        private bool _columnQuickSwitch;
+        /// <summary>Ob die Tickets der Spalte im Quick Switch wählbar sind.</summary>
+        public bool ColumnQuickSwitch
+        {
+            get => _columnQuickSwitch;
+            set => SetProperty(ref _columnQuickSwitch, value);
+        }
+
         public DelegateCommand SaveColumnCommand { get; }
         public DelegateCommand CancelColumnCommand { get; }
         public DelegateCommand DeleteColumnCommand { get; }
@@ -517,6 +550,7 @@ namespace Zeitmanagement.ViewModel
             RaisePropertyChanged(nameof(IsEditingColumn));
             ColumnEditorTitle = "Neue Spalte";
             ColumnName = string.Empty;
+            ColumnQuickSwitch = false;
             RaiseColumnCommands();
             IsColumnEditorOpen = true;
         }
@@ -527,6 +561,7 @@ namespace Zeitmanagement.ViewModel
             RaisePropertyChanged(nameof(IsEditingColumn));
             ColumnEditorTitle = "Spalte bearbeiten";
             ColumnName = column.Name;
+            ColumnQuickSwitch = column.QuickSwitch;
             RaiseColumnCommands();
             IsColumnEditorOpen = true;
         }
@@ -542,13 +577,21 @@ namespace Zeitmanagement.ViewModel
         {
             try
             {
+                int columnId;
                 if (_editingColumnId.HasValue)
-                    Db.RenameTodoColumn(_editingColumnId.Value, ColumnName);
+                {
+                    columnId = _editingColumnId.Value;
+                    Db.RenameTodoColumn(columnId, ColumnName);
+                }
                 else
-                    Db.AddTodoColumn(CurrentProject, ColumnName);
+                {
+                    columnId = Db.AddTodoColumn(CurrentProject, ColumnName);
+                }
+                Db.SetTodoColumnQuickSwitch(columnId, ColumnQuickSwitch);
 
                 IsColumnEditorOpen = false;
                 LoadBoard();
+                _quickSwitchChanged?.Invoke();
             }
             catch (Exception ex)
             {
@@ -575,6 +618,7 @@ namespace Zeitmanagement.ViewModel
 
                 if (_editingColumnId == column.Id) IsColumnEditorOpen = false;
                 LoadBoard();
+                _quickSwitchChanged?.Invoke();
             }
             catch (Exception ex)
             {

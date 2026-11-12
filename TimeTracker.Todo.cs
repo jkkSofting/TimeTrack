@@ -75,13 +75,13 @@ public sealed partial class TimeTracker
         cmd.ExecuteNonQuery();
 
         // Migration: Boards vor dem Quick Switch für Tickets haben noch keine Spalte quickswitch. Bestehende Spalten
-        // namens „To Do“ gelten als angeboten (wie bei einem neuen Board), alle anderen nicht.
+        // namens „To Do“ eines Projekts gelten als angeboten (wie bei einem neuen Board), alle anderen nicht.
         cmd.CommandText = "SELECT COUNT(*) FROM pragma_table_info('todo_columns') WHERE name = 'quickswitch';";
         if (Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) == 0)
         {
             cmd.CommandText = "ALTER TABLE todo_columns ADD COLUMN quickswitch INTEGER NOT NULL DEFAULT 0;";
             cmd.ExecuteNonQuery();
-            cmd.CommandText = "UPDATE todo_columns SET quickswitch = 1 WHERE name = @n COLLATE NOCASE;";
+            cmd.CommandText = "UPDATE todo_columns SET quickswitch = 1 WHERE name = @n COLLATE NOCASE AND projekt_id IS NOT NULL;";
             cmd.Parameters.AddWithValue("@n", QuickSwitchDefaultColumn);
             cmd.ExecuteNonQuery();
             cmd.Parameters.Clear();
@@ -192,7 +192,8 @@ public sealed partial class TimeTracker
                         cmd.Parameters.AddWithValue("@n", DefaultTodoColumns[i]);
                         cmd.Parameters.AddWithValue("@pos", i);
                         cmd.Parameters.AddWithValue("@b", board);
-                        cmd.Parameters.AddWithValue("@qs", DefaultTodoColumns[i] == QuickSwitchDefaultColumn ? 1 : 0);
+                        // Nur auf dem Board eines Projekts: Auf ein Ticket des allgemeinen Boards lässt sich nichts buchen.
+                        cmd.Parameters.AddWithValue("@qs", DefaultTodoColumns[i] == QuickSwitchDefaultColumn && !(board is DBNull) ? 1 : 0);
                         cmd.ExecuteNonQuery();
                     }
                 }

@@ -116,6 +116,16 @@
                     </Grid.RowDefinitions>
 
                     <DockPanel Margin="2,0,0,8">
+                        <TextBlock
+                            Margin="0,0,6,0"
+                            VerticalAlignment="Center"
+                            DockPanel.Dock="Right"
+                            FontSize="13"
+                            Foreground="{DynamicResource Theme.TextMuted}"
+                            Style="{StaticResource Text.Icon}"
+                            Text="&#xE945;"
+                            ToolTip="Die Tickets dieser Spalte sind im Quick Switch wählbar."
+                            Visibility="{Binding QuickSwitch, Converter={StaticResource BoolToVis}}" />
                         <Button
                             Width="28"
                             Height="28"
@@ -379,6 +389,13 @@
                         MaxLength="60"
                         local:Ui.Placeholder="z. B. Warten auf Antwort"
                         Text="{Binding ColumnName, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <CheckBox
+                        Margin="0,14,0,0"
+                        Content="Tickets im Quick Switch anbieten"
+                        IsChecked="{Binding ColumnQuickSwitch, Mode=TwoWay}"
+                        Visibility="{Binding IsProjectBoard, Converter={StaticResource BoolToVis}}"
+                        ToolTip="Ein: Die Tickets dieser Spalte lassen sich im Quick Switch (Modus „Tickets“) wählen und werden auf das Projekt dieses Boards gebucht. Aus: Sie erscheinen dort nicht." />
 
                     <StackPanel
                         Margin="0,14,0,0"
