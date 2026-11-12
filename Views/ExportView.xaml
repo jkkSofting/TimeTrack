@@ -288,7 +288,7 @@
                                         GroupName="ExportGrouping"
                                         IsChecked="{Binding IsGroupByDay, Mode=TwoWay}"
                                         Style="{StaticResource Segment}"
-                                        ToolTip="Chronologisch, Tagessumme bei mehreren Buchungen am Tag" />
+                                        ToolTip="Chronologisch, mit Tagessumme" />
                                     <RadioButton
                                         Content="Nach Projekt"
                                         GroupName="ExportGrouping"
@@ -356,7 +356,7 @@
                                 IsChecked="{Binding ShowDaySubtotals}"
                                 IsEnabled="{Binding IsGroupByDay}"
                                 Style="{StaticResource OptionCheck}"
-                                ToolTip="Bei „Nach Tag“: unter Tagen mit mehreren Buchungen steht die Summe des Tages. Bei den anderen Gliederungen gibt es sie nicht." />
+                                ToolTip="Bei „Nach Tag“: unter jedem Tag steht die Summe des Tages. Bei den anderen Gliederungen gibt es sie nicht." />
                         </StackPanel>
                     </Border>
 

@@ -247,7 +247,7 @@ namespace Zeitmanagement.Tests
         }
 
         [Fact]
-        public void Details_by_day_repeat_the_date_dimmed_and_add_a_subtotal_only_for_days_with_several_bookings()
+        public void Details_by_day_repeat_the_date_dimmed_and_add_a_subtotal_under_every_day()
         {
             var table = Details(PdfReportLayout.Build(Report(Options(), SomeEntries()), Meta()));
             var rows = RowTexts(table);
@@ -256,8 +256,10 @@ namespace Zeitmanagement.Tests
             Assert.Equal("Mo 05.10.2026 | 11:00 – 12:00 | 1,00 | Projekt Alpha | Abstimmung mit dem Kunden", rows[2]);
             Assert.Equal("Tagessumme | 2,50 |", rows[3].TrimEnd());
             Assert.StartsWith("Di 06.10.2026 | 09:00 – 11:15 | 2,25 | Projekt Beta", rows[4]);
-            Assert.StartsWith("Gesamt | 4,75", rows[5]);
-            Assert.Equal(6, rows.Count);
+            // Auch ein Tag mit nur einer Buchung hat seine Tagessumme: So gehört jede Summe eindeutig zu dem Tag direkt darüber.
+            Assert.Equal("Tagessumme | 2,25 |", rows[5].TrimEnd());
+            Assert.StartsWith("Gesamt | 4,75", rows[6]);
+            Assert.Equal(7, rows.Count);
 
             // Die erste Zeile eines Tages trägt das Datum normal, die Folgezeilen gedämpft: So fehlt es nach einem Seitenumbruch nicht.
             var muted = Color.FromRgb(0x5B, 0x66, 0x75).Argb;

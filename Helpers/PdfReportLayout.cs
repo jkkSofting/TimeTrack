@@ -411,9 +411,10 @@ namespace Zeitmanagement.Helpers
                     last = row;
                 }
 
-                // Bei "Nach Tag" ist die Tagessumme wählbar (und nur bei mehreren Buchungen am Tag sinnvoll); die Zwischensummen je
-                // Projekt und je Woche gehören zur jeweiligen Gliederung.
-                var withSubtotal = options.Grouping != ExportGrouping.ByDay || (options.ShowDaySubtotals && group.Count > 1);
+                // Bei "Nach Tag" ist die Tagessumme wählbar und steht dann unter jedem Tag, auch bei nur einer Buchung: Sonst läse sich
+                // die Summe unter einem Tag mit mehreren Buchungen wie eine Summe über alle Zeilen darüber, also auch über Tage ohne
+                // eigene Summe. Die Zwischensummen je Projekt und je Woche gehören zur jeweiligen Gliederung.
+                var withSubtotal = options.Grouping != ExportGrouping.ByDay || options.ShowDaySubtotals;
                 if (withSubtotal)
                 {
                     if (last != null) last.KeepWith = 1;

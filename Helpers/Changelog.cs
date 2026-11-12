@@ -58,6 +58,7 @@ namespace Zeitmanagement.Helpers
                 Neu("Einstellungen → Plugins zeigt alle gefundenen Plugins mit Version und Status. Ein neu gefundenes Plugin ist zunächst aus und wird erst geladen, wenn du es einschaltest und TimeTrack neu startest. „Plugin-Ordner öffnen“ führt direkt zum Ordner, „Nach Plugins suchen“ findet neu abgelegte Plugins ohne Neustart (das passiert auch bei jedem Öffnen der Einstellungen) und erkennt ausgetauschte Dateien laufender Plugins."),
                 Neu("Ein fehlerhaftes Plugin verhindert den Start nicht: Es bleibt aus, und die Einstellungen nennen den Grund, zum Beispiel eine aus dem Internet geladene, von Windows blockierte Datei."),
                 Neu("Was ein Plugin speichert, liegt in der TimeTrack-Datenbank und ist in jeder Datensicherung enthalten. Zugangsdaten verschlüsselt Windows für deinen Benutzer; nach dem Wiederherstellen auf einem anderen Rechner musst du sie neu eingeben."),
+                Behoben("Tätigkeitsnachweis, „Nach Tag“: Die Tagessumme stand nur unter Tagen mit mehreren Buchungen und las sich dadurch wie eine zu niedrige Summe über mehrere Tage. Jetzt hat jeder Tag seine eigene Tagessumme."),
                 Verbessert("Tätigkeitsnachweis: Die Zusammenfassung im PDF (Gesamtzeit, Buchungen, Arbeitstage, Durchschnitt) lässt sich unter „Dokument“ mit „Zusammenfassung zeigen“ ausblenden.")),
 
             new ChangelogRelease("2026.46.1", new DateTime(2026, 11, 11), "Tätigkeitsnachweis",
