@@ -46,7 +46,9 @@ namespace Zeitmanagement.Helpers
             new HelpTopic("", "Quick Switch", null,
                 "Das kleine Fenster zum Starten, Pausieren und Stoppen von Buchungen – bis zu 4 Projekte gleichzeitig.",
                 "Öffnen über „Quick Switch“ in der Seitenleiste, über „Quick Switch öffnen“ im Menü des Tray-Symbols oder per Klick auf einen Hinweis des Tray-Symbols. In den Einstellungen kann es auch beim Programmstart aufgehen.",
-                "„Projekt starten“ bietet alle Projekte an, auch neu angelegte – außer denen, die du unter „Projekte“ für Quick Switch ausgeschaltet hast. Die Buchung startet, sobald du eins wählst.",
+                "„Starten“ hat zwei Modi: „Projekte“ bietet alle Projekte an, auch neu angelegte – außer denen, die du unter „Projekte“ für Quick Switch ausgeschaltet hast. „Tickets“ bietet To-Do-Tickets an. Die Buchung startet, sobald du eins wählst; TimeTrack merkt sich den Modus.",
+                "Ein Ticket buchst du auf das Projekt, zu dessen Board es gehört; als Buchungstext steht der Titel des Tickets (bei einem Projekt „Quick Select“). Welche Tickets erscheinen, legst du unter „To-Do“ fest: Im Spalten-Editor schaltest du „Tickets im Quick Switch anbieten“ ein. Standardmäßig gilt das für die Spalte „To Do“ jedes Projekts; Tickets im Board „Ohne Projekt“ fehlen, weil sich darauf nichts buchen lässt.",
+                "Auf ein Projekt läuft immer nur eine Buchung: Ist es schon aktiv, ob als Projekt oder über ein Ticket, beendest du es erst.",
                 "Jedes laufende Projekt hat eigene Knöpfe: Pause beendet den laufenden Abschnitt und hält das Projekt frei, Start setzt es fort, Stop beendet die Buchung ganz.",
                 "Jeder beendete Abschnitt wird sofort als Buchung gespeichert. Die Laufzeit zählt über Pausen hinweg weiter, bis du stoppst.",
                 "„Vordergrund“ hält das Fenster über allen anderen Fenstern.",
@@ -109,6 +111,7 @@ namespace Zeitmanagement.Helpers
                 "„Ticket hinzufügen“ unten in einer Spalte öffnet das Formular. Ein Ticket hat nur einen Titel und eine Beschreibung. „Speichern“ oder Strg+Enter legt es an.",
                 "Verschieben: Ziehe ein Ticket mit der Maus in eine andere Spalte oder an eine andere Stelle derselben Spalte. Ein Strich zeigt, wo es landet; über einer Spalte abgelegt, kommt es ans Ende.",
                 "Ein Klick auf ein Ticket öffnet es zum Bearbeiten. Dort wählst du auch die Spalte, wenn du lieber nicht ziehen willst, oder löschst das Ticket.",
+                "Quick Switch: Im Spalten-Editor (Stift-Symbol) schaltest du „Tickets im Quick Switch anbieten“ ein. Die Tickets dieser Spalte lassen sich dann im Quick Switch im Modus „Tickets“ starten; ein Blitz im Spaltenkopf zeigt, welche Spalten es sind. Neue Boards bieten die Spalte „To Do“ an. Auf dem Board „Ohne Projekt“ gibt es den Schalter nicht, denn die Zeit wird auf das Projekt des Boards gebucht.",
                 "Alles wird sofort gespeichert und ist in jeder Datensicherung enthalten. Löschst du ein Projekt, wird auch sein Board gelöscht."),
 
             new HelpTopic("\uE70B", "Notizen", "Notes",

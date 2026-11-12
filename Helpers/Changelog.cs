@@ -53,6 +53,12 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.47.2", new DateTime(2026, 11, 12), "Tickets im Quick Switch",
+                Neu("Quick Switch hat zwei Modi: „Projekte“ wie bisher und „Tickets“. Im Modus „Tickets“ wählst du ein To-Do-Ticket; die Buchung startet sofort und läuft auf das Projekt, zu dessen Board das Ticket gehört. Als Buchungstext steht der Titel des Tickets statt „Quick Select“. TimeTrack merkt sich den Modus."),
+                Neu("Welche Tickets der Quick Switch anbietet, legst du unter „To-Do“ fest: Im Editor einer Spalte (Stift-Symbol) schaltest du „Tickets im Quick Switch anbieten“ ein. Ein Blitz im Spaltenkopf zeigt, welche Spalten es sind. Neue Boards und bestehende Spalten „To Do“ eines Projekts bieten ihre Tickets von Anfang an an."),
+                Neu("Die Liste der Tickets passt sich sofort an, wenn du ein Ticket anlegst, verschiebst, umbenennst oder löschst, oder ein Projekt umbenennst oder löschst."),
+                Verbessert("Auf ein Projekt läuft immer nur eine Buchung. Ist es schon aktiv, nennt das Quick-Switch-Fenster den Grund, statt nichts zu tun. Die Liste im Fenster heißt jetzt „Aktive Buchungen“.")),
+
             new ChangelogRelease("2026.47.1.1", new DateTime(2026, 11, 12), "",
                 Behoben("To-Do und Notizen: Nach dem Speichern eines Tickets sprang die Auswahl bei „Board von“ auf leer. Das Projekt bleibt jetzt gewählt; dasselbe gilt für die Projektwahl und den Filter bei den Notizen.")),
 

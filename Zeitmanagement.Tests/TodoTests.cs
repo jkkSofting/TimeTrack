@@ -475,5 +475,93 @@ namespace Zeitmanagement.Tests
                 Assert.Equal("text", note.Text);
             }
         }
+
+        // ---------- Quick Switch für Tickets ----------
+
+        [Fact]
+        public void Only_the_default_To_Do_column_of_a_project_board_is_offered_in_quick_switch()
+        {
+            using (var t = new TestDb())
+            {
+                t.Db.AddOrEnsureProject("Alpha", "Kunde", "KT-1");
+                t.Db.EnsureTodoBoard("Alpha");
+                t.Db.EnsureTodoBoard(null);
+                Assert.Equal(new[] { true, false, false }, t.Db.GetTodoColumns("Alpha").Select(c => c.QuickSwitch).ToArray());
+                Assert.Equal(new[] { false, false, false }, t.Db.GetTodoColumns(null).Select(c => c.QuickSwitch).ToArray());
+            }
+        }
+
+        [Fact]
+        public void Quick_switch_lists_tickets_of_enabled_project_columns_sorted_without_the_general_board()
+        {
+            using (var t = new TestDb())
+            {
+                t.Db.AddOrEnsureProject("Beta", "Kunde", "KT-2");
+                t.Db.AddOrEnsureProject("Alpha", "Kunde", "KT-1");
+                t.Db.EnsureTodoBoard(null);
+                t.Db.EnsureTodoBoard("Alpha");
+                t.Db.EnsureTodoBoard("Beta");
+
+                var general = t.Db.GetTodoColumns(null)[0].Id;
+                var alpha = t.Db.GetTodoColumns("Alpha");
+                var beta = t.Db.GetTodoColumns("Beta");
+
+                t.Db.AddTodoTicket(general, "Ohne Projekt", "");
+                t.Db.AddTodoTicket(beta[0].Id, "B-Ticket", "");
+                t.Db.AddTodoTicket(alpha[0].Id, "zweites", "");
+                t.Db.AddTodoTicket(alpha[0].Id, "Erstes", "");
+                t.Db.AddTodoTicket(alpha[1].Id, "In Arbeit", ""); // Spalte nicht eingeschaltet
+
+                var tickets = t.Db.GetQuickSwitchTickets();
+                Assert.Equal(new[] { "Alpha/Erstes", "Alpha/zweites", "Beta/B-Ticket" },
+                    tickets.Select(x => x.Projektname + "/" + x.Titel).ToArray());
+            }
+        }
+
+        [Fact]
+        public void Quick_switch_follows_the_column_switch_ticket_moves_and_project_rename()
+        {
+            using (var t = new TestDb())
+            {
+                t.Db.AddOrEnsureProject("Alpha", "Kunde", "KT-1");
+                t.Db.EnsureTodoBoard("Alpha");
+                var cols = t.Db.GetTodoColumns("Alpha");
+                var ticket = t.Db.AddTodoTicket(cols[0].Id, "Aufgabe", "");
+                Assert.Single(t.Db.GetQuickSwitchTickets());
+
+                t.Db.MoveTodoTicket(ticket, cols[1].Id, 0);
+                Assert.Empty(t.Db.GetQuickSwitchTickets());
+
+                t.Db.SetTodoColumnQuickSwitch(cols[1].Id, true);
+                Assert.True(t.Db.GetTodoColumns("Alpha")[1].QuickSwitch);
+                Assert.Equal("Aufgabe", Assert.Single(t.Db.GetQuickSwitchTickets()).Titel);
+
+                t.Db.UpdateProject("Alpha", "Beta", "Kunde", "KT-1");
+                Assert.Equal("Beta", Assert.Single(t.Db.GetQuickSwitchTickets()).Projektname);
+
+                t.Db.SetTodoColumnQuickSwitch(cols[1].Id, false);
+                Assert.Empty(t.Db.GetQuickSwitchTickets());
+            }
+        }
+
+        [Fact]
+        public void Quick_switch_ticket_disappears_with_its_project_and_the_switch_survives_a_restart()
+        {
+            using (var t = new TestDb())
+            {
+                t.Db.AddOrEnsureProject("Alpha", "Kunde", "KT-1");
+                t.Db.EnsureTodoBoard("Alpha");
+                var cols = t.Db.GetTodoColumns("Alpha");
+                t.Db.AddTodoTicket(cols[0].Id, "Aufgabe", "");
+                t.Db.SetTodoColumnQuickSwitch(cols[0].Id, false);
+
+                t.Restart();
+                Assert.False(t.Db.GetTodoColumns("Alpha")[0].QuickSwitch);
+
+                t.Db.SetTodoColumnQuickSwitch(cols[0].Id, true);
+                t.Db.DeleteProject("Alpha");
+                Assert.Empty(t.Db.GetQuickSwitchTickets());
+            }
+        }
     }
 }
