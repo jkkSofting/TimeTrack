@@ -8,6 +8,45 @@ using Zeitmanagement.MVVM;
 
 namespace Zeitmanagement.ViewModel
 {
+    /// <summary>Builds the keys that tell Quick Switch slots apart: one per project, one per ticket.</summary>
+    public static class SlotKey
+    {
+        public static string ForProject(string project) => "p:" + project;
+        public static string ForTicket(int ticketId) => "t:" + ticketId.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// A To-Do ticket as offered in Quick Switch's ticket mode. Two options are equal when everything shown
+    /// is equal, so a renamed ticket is replaced in the list while untouched ones keep their place.
+    /// </summary>
+    public sealed class QuickSwitchTicketOption : IEquatable<QuickSwitchTicketOption>
+    {
+        public QuickSwitchTicketOption(int id, string title, string project)
+        {
+            Id = id;
+            Title = title;
+            Project = project;
+        }
+
+        public int Id { get; }
+        public string Title { get; }
+
+        /// <summary>The project of the ticket's board; the time is booked on it.</summary>
+        public string Project { get; }
+
+        /// <summary>What the drop-down shows. Sorted by project, so the project comes first.</summary>
+        public string Label => Project + " · " + Title;
+
+        public bool Equals(QuickSwitchTicketOption other) =>
+            other != null && Id == other.Id && Title == other.Title && Project == other.Project;
+
+        public override bool Equals(object obj) => Equals(obj as QuickSwitchTicketOption);
+
+        public override int GetHashCode() => Id;
+
+        public override string ToString() => Label;
+    }
+
     /// <summary>
     /// One project booking in the floating Quick Switch window. A slot exists exactly as long as
     /// its booking is running or paused: <see cref="QuickSelectViewModel"/> creates it when the
@@ -19,9 +58,28 @@ namespace Zeitmanagement.ViewModel
         private readonly Action<string> _stop;
         private readonly Action<string> _pause;
 
+        /// <summary>A slot that books on a whole project (the booking text stays "Quick Select").</summary>
         public QuickSelectItemViewModel(string project, Action<string> begin, Action<string> stop, Action<string> pause)
+            : this(SlotKey.ForProject(project), project, project, "Quick Select", null, begin, stop, pause)
         {
+        }
+
+        /// <summary>
+        /// A slot that books on the project of a To-Do ticket, with the ticket's title as booking text.
+        /// </summary>
+        public QuickSelectItemViewModel(QuickSwitchTicketOption ticket, Action<string> begin, Action<string> stop, Action<string> pause)
+            : this(SlotKey.ForTicket(ticket.Id), ticket.Project, ticket.Title, ticket.Title, ticket.Project, begin, stop, pause)
+        {
+        }
+
+        private QuickSelectItemViewModel(string key, string project, string title, string bookingText, string subtitle,
+            Action<string> begin, Action<string> stop, Action<string> pause)
+        {
+            Key = key;
             SelectedProject = project;
+            Title = title;
+            BookingText = bookingText;
+            _subtitle = subtitle;
             _begin = begin;
             _stop = stop;
             _pause = pause;
@@ -34,8 +92,20 @@ namespace Zeitmanagement.ViewModel
         private string _start;
         private string _end;
 
+        /// <summary>Identifies the slot: the project, or the ticket, it was started from (see <see cref="SlotKey"/>).</summary>
+        public string Key { get; }
+
         /// <summary>The project this slot books its time on.</summary>
         public string SelectedProject { get; }
+
+        /// <summary>What the floating window shows as the slot's name: the project, or the ticket's title.</summary>
+        public string Title { get; }
+
+        /// <summary>The booking text written to the time entry.</summary>
+        public string BookingText { get; }
+
+        // The project name shown next to the time for ticket slots; null for project slots.
+        private readonly string _subtitle;
 
         public string End
         {
@@ -76,7 +146,14 @@ namespace Zeitmanagement.ViewModel
         /// The floating window's status line for this slot: when the current segment started,
         /// or when it was paused.
         /// </summary>
-        public string StatusText => IsPaused ? $"pausiert seit {End}" : $"seit {Start}";
+        public string StatusText
+        {
+            get
+            {
+                var time = IsPaused ? $"pausiert seit {End}" : $"seit {Start}";
+                return _subtitle == null ? time : $"{_subtitle} · {time}";
+            }
+        }
 
         /// <summary>
         /// The exact moment this slot's current segment started, used for the elapsed-time
@@ -136,7 +213,7 @@ namespace Zeitmanagement.ViewModel
 
         public void StartTimerCommandExecute(object obj)
         {
-            _begin.Invoke(SelectedProject);
+            _begin.Invoke(Key);
         }
 
         public bool StartTimerCommandCanExecute(object obj)
@@ -147,12 +224,12 @@ namespace Zeitmanagement.ViewModel
 
         public void EndTimerCommandExecute(object obj)
         {
-            _stop.Invoke(SelectedProject);
+            _stop.Invoke(Key);
         }
 
         public void PauseTimerCommandExecute(object obj)
         {
-            _pause.Invoke(SelectedProject);
+            _pause.Invoke(Key);
         }
 
         public bool PauseTimerCommandCanExecute(object obj)

@@ -13,8 +13,8 @@ using Zeitmanagement.MVVM;
 namespace Zeitmanagement.ViewModel
 {
     /// <summary>
-    /// Backs the floating Quick Switch window: which projects can be started, and the bookings
-    /// currently running or paused. Also runs the lock/sleep auto-stop and the idle reminder.
+    /// Backs the floating Quick Switch window: which projects or To-Do tickets can be started, and the
+    /// bookings currently running or paused. Also runs the lock/sleep auto-stop and the idle reminder.
     /// </summary>
     internal class QuickSelectViewModel:BindableBase
     {
@@ -25,6 +25,13 @@ namespace Zeitmanagement.ViewModel
         /// <see cref="ReloadProjects"/>.
         /// </summary>
         public ObservableCollection<string> SelectableProjects { get; } = new ObservableCollection<string>();
+
+        /// <summary>
+        /// The To-Do tickets that may be picked in ticket mode: those in columns the user switched on for
+        /// Quick Switch (in the To-Do overview), on a project's board, sorted by project and title. Kept
+        /// current by <see cref="ReloadTickets"/>.
+        /// </summary>
+        public ObservableCollection<QuickSwitchTicketOption> Tickets { get; } = new ObservableCollection<QuickSwitchTicketOption>();
 
         /// <summary>
         /// The projects currently running or paused, in parallel, up to <see cref="MaxActiveSlots"/>
@@ -56,6 +63,9 @@ namespace Zeitmanagement.ViewModel
             db = MainViewModel.DbInstance;
 
             StartNewSlotCommand = new DelegateCommand(StartNewSlotExecute, StartNewSlotCanExecute);
+
+            _isTicketMode = Properties.Settings.Default.QuickSwitchTicketMode;
+            Tickets.CollectionChanged += (s, e) => RaisePropertyChanged(nameof(NoTicketsAvailable));
 
             ReloadProjects();
             UpdateActiveState();
@@ -108,6 +118,42 @@ namespace Zeitmanagement.ViewModel
         /// </summary>
         public bool MaxSlotsReached => !CanStartMoreSlots;
 
+        private bool _isTicketMode;
+        /// <summary>
+        /// Whether the "start" combo box offers To-Do tickets instead of projects. Remembered between
+        /// sessions. Switching only changes what is offered; nothing is started by it.
+        /// </summary>
+        public bool IsTicketMode
+        {
+            get => _isTicketMode;
+            set
+            {
+                if (!SetProperty(ref _isTicketMode, value)) return;
+
+                RaisePropertyChanged(nameof(IsProjectMode));
+                RaisePropertyChanged(nameof(NoTicketsAvailable));
+                RefreshStartState();
+
+                Properties.Settings.Default.QuickSwitchTicketMode = value;
+                Properties.Settings.Default.Save();
+            }
+        }
+
+        /// <summary>Inverse of <see cref="IsTicketMode"/>, so each radio button of the mode switch binds to a plain bool.</summary>
+        public bool IsProjectMode
+        {
+            get => !_isTicketMode;
+            set
+            {
+                if (value) IsTicketMode = false;
+            }
+        }
+
+        /// <summary>
+        /// Ticket mode is on but no ticket is offered, so the window can say where to switch tickets on.
+        /// </summary>
+        public bool NoTicketsAvailable => IsTicketMode && Tickets.Count == 0;
+
         private string _pendingNewProject;
         /// <summary>
         /// The project currently picked in the floating window's "start a project" combo box,
@@ -119,45 +165,116 @@ namespace Zeitmanagement.ViewModel
             set
             {
                 bool changed = SetProperty(ref _pendingNewProject, value);
-                StartNewSlotCommand.RaiseCanExecuteChanged();
+                RefreshStartState();
 
                 // Picking a project in the floating window's combo box should start it right
                 // away - no separate click on "Start" required. The selection is left in place
                 // afterwards (see StartNewSlotExecute) so that once the project is stopped again,
                 // it's still selected and a single click on "Start" restarts it - no need to
                 // reopen the combo box and pick it again.
-                if (changed && StartNewSlotCanExecute(null))
+                if (changed && IsProjectMode && StartNewSlotCanExecute(null))
                 {
                     StartNewSlotExecute(null);
                 }
             }
         }
 
+        private QuickSwitchTicketOption _pendingNewTicket;
+        /// <summary>
+        /// The ticket currently picked in ticket mode, waiting to be started via
+        /// <see cref="StartNewSlotCommand"/>. Like <see cref="PendingNewProject"/>, picking it starts it.
+        /// </summary>
+        public QuickSwitchTicketOption PendingNewTicket
+        {
+            get => _pendingNewTicket;
+            set
+            {
+                bool changed = SetProperty(ref _pendingNewTicket, value);
+                RefreshStartState();
+
+                if (changed && IsTicketMode && StartNewSlotCanExecute(null))
+                {
+                    StartNewSlotExecute(null);
+                }
+            }
+        }
+
+        /// <summary>
+        /// The project the current pick (project or ticket, depending on the mode) would book on, or
+        /// null while nothing is picked.
+        /// </summary>
+        private string PendingBookingProject
+        {
+            get
+            {
+                if (IsTicketMode) return PendingNewTicket?.Project;
+                return string.IsNullOrWhiteSpace(PendingNewProject) ? null : PendingNewProject;
+            }
+        }
+
+        /// <summary>
+        /// Whether a running or paused slot already books on <paramref name="project"/>. A second slot
+        /// on the same project would book overlapping times on it, so it is not allowed.
+        /// </summary>
+        private bool ProjectInUse(string project)
+        {
+            return ActiveSlots.Any(q => string.Equals(q.SelectedProject, project, StringComparison.Ordinal));
+        }
+
+        /// <summary>
+        /// Why the current pick cannot be started although a slot is free, for the floating window; null
+        /// when it can be started or nothing is picked.
+        /// </summary>
+        public string StartBlockedText
+        {
+            get
+            {
+                var project = PendingBookingProject;
+                if (project == null || ActiveSlots.Count >= MaxActiveSlots || !ProjectInUse(project)) return null;
+
+                return $"Für „{project}“ läuft bereits eine Buchung. Beende sie zuerst.";
+            }
+        }
+
+        public bool HasStartBlockedText => StartBlockedText != null;
+
+        /// <summary>Re-evaluates everything that depends on the current pick, the mode or the running slots.</summary>
+        private void RefreshStartState()
+        {
+            StartNewSlotCommand.RaiseCanExecuteChanged();
+            RaisePropertyChanged(nameof(StartBlockedText));
+            RaisePropertyChanged(nameof(HasStartBlockedText));
+        }
+
         private bool StartNewSlotCanExecute(object obj)
         {
-            if (string.IsNullOrWhiteSpace(PendingNewProject)) return false;
+            var project = PendingBookingProject;
+            if (project == null) return false;
             if (ActiveSlots.Count >= MaxActiveSlots) return false;
 
-            return FindSlot(PendingNewProject) == null;
+            return !ProjectInUse(project);
         }
 
         private void StartNewSlotExecute(object obj)
         {
-            var project = PendingNewProject;
-            if (string.IsNullOrWhiteSpace(project)) return;
+            if (!StartNewSlotCanExecute(null)) return;
+
+            QuickSelectItemViewModel slot;
+            if (IsTicketMode)
+                slot = new QuickSelectItemViewModel(PendingNewTicket, ResumeBooking, StopBooking, PauseBooking);
+            else
+                slot = new QuickSelectItemViewModel(PendingNewProject, ResumeBooking, StopBooking, PauseBooking);
 
             var now = DateTime.Now;
-            ActiveSlots.Add(new QuickSelectItemViewModel(project, ResumeBooking, StopBooking, PauseBooking)
-            {
-                Start = now.ToString("HH:mm"),
-                StartedAt = now
-            });
+            slot.Start = now.ToString("HH:mm");
+            slot.StartedAt = now;
+            ActiveSlots.Add(slot);
 
             UpdateActiveState();
 
-            // PendingNewProject is deliberately left set to the just-started project: once it's
+            // The pick is deliberately left set to the just-started project or ticket: once it's
             // stopped again, the combo box still shows it selected and "Start" is enabled again,
-            // so restarting the same project is a single click instead of reopening the combo box.
+            // so restarting it is a single click instead of reopening the combo box.
         }
 
         /// <summary>
@@ -175,6 +292,34 @@ namespace Zeitmanagement.ViewModel
                 .ToList();
 
             SyncSortedInPlace(SelectableProjects, selectable);
+
+            // Renamed or deleted projects change which tickets can be booked and on what.
+            ReloadTickets();
+        }
+
+        /// <summary>
+        /// Re-reads the tickets Quick Switch offers, so tickets that were added, moved to or from a
+        /// switched-on column, renamed or deleted in the To-Do overview show up without a restart. A
+        /// running slot keeps its ticket title until it is stopped.
+        /// </summary>
+        public void ReloadTickets()
+        {
+            var pendingId = _pendingNewTicket?.Id;
+
+            var desired = db.GetQuickSwitchTickets()
+                .Select(t => new QuickSwitchTicketOption(t.Id, t.Titel, t.Projektname))
+                .ToList();
+
+            SyncSortedInPlace(Tickets, desired);
+
+            // A renamed ticket is a new list entry, so the combo box dropped the pick: select the
+            // same ticket again, without starting it (this is no user action).
+            if (pendingId.HasValue && (_pendingNewTicket == null || !Tickets.Contains(_pendingNewTicket)))
+            {
+                _pendingNewTicket = Tickets.FirstOrDefault(t => t.Id == pendingId.Value);
+                RaisePropertyChanged(nameof(PendingNewTicket));
+                RefreshStartState();
+            }
         }
 
         /// <summary>
@@ -182,8 +327,10 @@ namespace Zeitmanagement.ViewModel
         /// list by removing, adding and moving single entries instead of replacing the
         /// collection, so a bound combo box keeps its current selection.
         /// </summary>
-        private static void SyncSortedInPlace(ObservableCollection<string> target, IList<string> desired)
+        private static void SyncSortedInPlace<T>(ObservableCollection<T> target, IList<T> desired)
         {
+            var same = EqualityComparer<T>.Default;
+
             for (int i = target.Count - 1; i >= 0; i--)
             {
                 if (!desired.Contains(target[i]))
@@ -192,7 +339,7 @@ namespace Zeitmanagement.ViewModel
 
             for (int i = 0; i < desired.Count; i++)
             {
-                if (i < target.Count && target[i] == desired[i])
+                if (i < target.Count && same.Equals(target[i], desired[i]))
                     continue;
 
                 int existing = target.IndexOf(desired[i]);
@@ -213,7 +360,7 @@ namespace Zeitmanagement.ViewModel
             IsAnyActive = ActiveSlots.Count > 0;
             CanStartMoreSlots = ActiveSlots.Count < MaxActiveSlots;
 
-            StartNewSlotCommand.RaiseCanExecuteChanged();
+            RefreshStartState();
             UpdateElapsed();
         }
 
@@ -300,21 +447,21 @@ namespace Zeitmanagement.ViewModel
         {
             // Snapshot first: StopBooking removes the slots from ActiveSlots as it goes, so
             // iterating the live collection would skip entries.
-            var activeProjects = ActiveSlots.Select(q => q.SelectedProject).ToList();
-            if (activeProjects.Count == 0)
+            var active = ActiveSlots.Select(q => new { q.Key, q.Title }).ToList();
+            if (active.Count == 0)
                 return;
 
-            foreach (var project in activeProjects)
+            foreach (var slot in active)
             {
                 // Reuses the same booking-end/persistence logic as the manual per-slot stop
                 // button, so there's a single place that ends a booking. Always a full stop -
                 // even a paused slot is cleared out rather than left reserved - since the
                 // session is going away (lock/sleep), not just a short interruption.
-                StopBooking(project);
+                StopBooking(slot.Key);
             }
 
-            var names = string.Join(", ", activeProjects.Select(p => $"\"{p}\""));
-            var verb = activeProjects.Count == 1 ? "wurde" : "wurden";
+            var names = string.Join(", ", active.Select(a => $"\"{a.Title}\""));
+            var verb = active.Count == 1 ? "wurde" : "wurden";
             NotificationRequested?.Invoke("Buchung beendet", $"{names} {verb} automatisch beendet ({reason}).");
         }
 
@@ -351,19 +498,19 @@ namespace Zeitmanagement.ViewModel
 
         #endregion
 
-        private QuickSelectItemViewModel FindSlot(string project)
+        private QuickSelectItemViewModel FindSlot(string key)
         {
-            return ActiveSlots.FirstOrDefault(q => q.SelectedProject != null && q.SelectedProject.Equals(project));
+            return ActiveSlots.FirstOrDefault(q => q.Key == key);
         }
 
         /// <summary>
-        /// Resumes <paramref name="selectedProject"/>'s paused slot with a new segment. Unlike a
+        /// Resumes the paused slot <paramref name="slotKey"/> with a new segment. Unlike a
         /// single-active model, this never touches other slots: several projects can run in
         /// parallel, up to <see cref="MaxActiveSlots"/> at once.
         /// </summary>
-        private void ResumeBooking(string selectedProject)
+        private void ResumeBooking(string slotKey)
         {
-            var calledProject = FindSlot(selectedProject);
+            var calledProject = FindSlot(slotKey);
             if (calledProject == null || !calledProject.IsPaused) return;
 
             var now = DateTime.Now;
@@ -375,14 +522,14 @@ namespace Zeitmanagement.ViewModel
         }
 
         /// <summary>
-        /// Fully stops <paramref name="selectedProject"/>'s slot, freeing it up for another
+        /// Fully stops the slot <paramref name="slotKey"/>, freeing it up for another
         /// project. If it's currently running, closes out and persists the running segment
         /// first; if it's paused, that segment was already persisted when it was paused, so
         /// there's nothing left to book.
         /// </summary>
-        private void StopBooking(string selectedProject)
+        private void StopBooking(string slotKey)
         {
-            var calledProject = FindSlot(selectedProject);
+            var calledProject = FindSlot(slotKey);
             if (calledProject == null) return;
 
             if (!calledProject.IsPaused)
@@ -397,13 +544,13 @@ namespace Zeitmanagement.ViewModel
         }
 
         /// <summary>
-        /// Pauses <paramref name="selectedProject"/>'s slot: persists the segment running up to
+        /// Pauses the slot <paramref name="slotKey"/>: persists the segment running up to
         /// now just like a stop would, but keeps the slot reserved so it can be resumed with a
         /// single click instead of going through the "start a project" combo box again.
         /// </summary>
-        private void PauseBooking(string selectedProject)
+        private void PauseBooking(string slotKey)
         {
-            var calledProject = FindSlot(selectedProject);
+            var calledProject = FindSlot(slotKey);
             if (calledProject == null || calledProject.IsPaused) return;
 
             var now = DateTime.Now;
@@ -428,7 +575,7 @@ namespace Zeitmanagement.ViewModel
 
             try
             {
-                MainViewModel.DbInstance.AddTimeEntry(DateTime.Today, selectedItem.Start, selectedItem.End, selectedItem.SelectedProject, "Quick Select");
+                MainViewModel.DbInstance.AddTimeEntry(DateTime.Today, selectedItem.Start, selectedItem.End, selectedItem.SelectedProject, selectedItem.BookingText);
             }
             catch (Exception ex)
             {

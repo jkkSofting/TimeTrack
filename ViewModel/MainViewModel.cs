@@ -117,7 +117,7 @@ namespace Zeitmanagement.ViewModel
             _fragmentationView = new FragmentationViewModel();
             _sapBookingView = new SapBookingViewModel();
             _exportView = new ExportViewModel();
-            _todoView = new TodoViewModel();
+            _todoView = new TodoViewModel(() => QuickSelectViewModel.ReloadTickets());
             _notesView = new NotesViewModel();
 
             // Plugins nach den festen Seiten laden: Ein fehlerhaftes Plugin darf den Start nicht verhindern.

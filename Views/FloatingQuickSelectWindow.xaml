@@ -52,6 +52,16 @@
             </Style.Triggers>
         </Style>
 
+        <!--  Umrandung des Umschalters Projekte/Tickets (zwei RadioButtons im Segment-Stil)  -->
+        <Style x:Key="SegmentBar" TargetType="Border">
+            <Setter Property="Padding" Value="3" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Background" Value="{DynamicResource Theme.Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Theme.CardBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="{StaticResource ControlRadius}" />
+        </Style>
+
         <!--  Status-Punkt: grün während der Slot läuft, gelb während er pausiert ist  -->
         <Style x:Key="StatusDot" TargetType="Ellipse">
             <Setter Property="Fill" Value="{DynamicResource Theme.Success}" />
@@ -93,7 +103,7 @@
             <TextBlock
                 Margin="2,14,0,6"
                 Style="{StaticResource Text.Label}"
-                Text="Aktive Projekte" />
+                Text="Aktive Buchungen" />
 
             <Border
                 Padding="12"
@@ -133,12 +143,14 @@
                                         FontSize="14"
                                         FontWeight="SemiBold"
                                         Foreground="{DynamicResource Theme.Text}"
-                                        Text="{Binding SelectedProject}"
-                                        TextTrimming="CharacterEllipsis" />
+                                        Text="{Binding Title}"
+                                        TextTrimming="CharacterEllipsis"
+                                        ToolTip="{Binding Title}" />
                                     <TextBlock
                                         FontSize="11"
                                         Foreground="{DynamicResource Theme.TextMuted}"
-                                        Text="{Binding StatusText}" />
+                                        Text="{Binding StatusText}"
+                                        TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
 
                                 <TextBlock
@@ -178,33 +190,86 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <!--  Neues Projekt parallel starten (bis zu MaxActiveSlots)  -->
-            <TextBlock
-                Margin="2,8,0,6"
-                Style="{StaticResource Text.Label}"
-                Text="Projekt starten"
-                Visibility="{Binding CanStartMoreSlots, Converter={StaticResource BoolToVis}}" />
-            <Grid Visibility="{Binding CanStartMoreSlots, Converter={StaticResource BoolToVis}}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <!--  Neue Buchung parallel starten (bis zu MaxActiveSlots), wahlweise für ein Projekt oder ein Ticket  -->
+            <StackPanel Visibility="{Binding CanStartMoreSlots, Converter={StaticResource BoolToVis}}">
+                <DockPanel Margin="2,8,0,6">
+                    <Border DockPanel.Dock="Right" Style="{StaticResource SegmentBar}">
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton
+                                Content="Projekte"
+                                GroupName="QuickSwitchMode"
+                                IsChecked="{Binding IsProjectMode, Mode=TwoWay}"
+                                Style="{StaticResource Segment}"
+                                ToolTip="Ein Projekt starten" />
+                            <RadioButton
+                                Content="Tickets"
+                                GroupName="QuickSwitchMode"
+                                IsChecked="{Binding IsTicketMode, Mode=TwoWay}"
+                                Style="{StaticResource Segment}"
+                                ToolTip="Ein To-Do-Ticket starten: Die Zeit wird auf das Projekt des Tickets gebucht, der Buchungstext ist der Titel des Tickets." />
+                        </StackPanel>
+                    </Border>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Style="{StaticResource Text.Label}"
+                        Text="Starten" />
+                </DockPanel>
 
-                <ComboBox ItemsSource="{Binding SelectableProjects}" SelectedItem="{Binding PendingNewProject, Mode=TwoWay}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-                <Button
-                    Grid.Column="1"
-                    Margin="8,0,0,0"
-                    local:Ui.Glyph="&#xE768;"
-                    Command="{Binding StartNewSlotCommand}"
-                    Style="{StaticResource Button.Primary}"
-                    ToolTip="Start" />
-            </Grid>
+                    <ComboBox
+                        AutomationProperties.Name="Projekt starten"
+                        ItemsSource="{Binding SelectableProjects}"
+                        SelectedItem="{Binding PendingNewProject, Mode=TwoWay}"
+                        Visibility="{Binding IsProjectMode, Converter={StaticResource BoolToVis}}" />
+
+                    <ComboBox
+                        AutomationProperties.Name="Ticket starten"
+                        ItemsSource="{Binding Tickets}"
+                        SelectedItem="{Binding PendingNewTicket, Mode=TwoWay}"
+                        Visibility="{Binding IsTicketMode, Converter={StaticResource BoolToVis}}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock
+                                    Text="{Binding Label}"
+                                    TextTrimming="CharacterEllipsis"
+                                    ToolTip="{Binding Label}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <Button
+                        Grid.Column="1"
+                        Margin="8,0,0,0"
+                        local:Ui.Glyph="&#xE768;"
+                        Command="{Binding StartNewSlotCommand}"
+                        Style="{StaticResource Button.Primary}"
+                        ToolTip="Start" />
+                </Grid>
+
+                <TextBlock
+                    Margin="2,8,0,0"
+                    Style="{StaticResource Text.Muted}"
+                    Text="Keine Tickets im Quick Switch. In „To-Do“ legst du je Spalte fest, welche Tickets hier erscheinen."
+                    TextWrapping="Wrap"
+                    Visibility="{Binding NoTicketsAvailable, Converter={StaticResource BoolToVis}}" />
+
+                <TextBlock
+                    Margin="2,8,0,0"
+                    Style="{StaticResource Text.Muted}"
+                    Text="{Binding StartBlockedText}"
+                    TextWrapping="Wrap"
+                    Visibility="{Binding HasStartBlockedText, Converter={StaticResource BoolToVis}}" />
+            </StackPanel>
 
             <TextBlock
                 Margin="2,8,0,0"
                 Style="{StaticResource Text.Label}"
-                Text="Maximal 4 Projekte gleichzeitig aktiv"
+                Text="Maximal 4 Buchungen gleichzeitig aktiv"
                 Visibility="{Binding MaxSlotsReached, Converter={StaticResource BoolToVis}}" />
         </StackPanel>
 

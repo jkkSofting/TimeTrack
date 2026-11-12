@@ -73,6 +73,18 @@ namespace Zeitmanagement.Properties {
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool QuickSwitchTicketMode {
+            get {
+                return ((bool)(this["QuickSwitchTicketMode"]));
+            }
+            set {
+                this["QuickSwitchTicketMode"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool ReminderNudgeEnabled {
             get {
