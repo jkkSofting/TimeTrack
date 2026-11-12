@@ -142,6 +142,7 @@
     <Compile Include="ViewModel\SapBookingViewModel.cs" />
     <Compile Include="ViewModel\QuickSelectViewModel.cs" />
     <Compile Include="ViewModel\SettingsViewModel.cs" />
+    <Compile Include="ViewModel\ListSync.cs" />
     <Compile Include="ViewModel\NotesViewModel.cs" />
     <Compile Include="ViewModel\TodoViewModel.cs" />
     <Compile Include="Views\CountUpTextblock.cs" />

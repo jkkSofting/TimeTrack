@@ -264,22 +264,22 @@ namespace Zeitmanagement.ViewModel
         {
             var names = Db.GetProjects().Select(p => p.Projektname).OrderBy(n => n, StringComparer.CurrentCultureIgnoreCase).ToList();
 
-            var filter = SelectedFilter;
-            FilterOptions.Clear();
-            FilterOptions.Add(AllProjectsLabel);
-            FilterOptions.Add(WithoutProjectLabel);
-            foreach (var n in names) FilterOptions.Add(n);
-            _selectedFilter = FilterOptions.Contains(filter) ? filter : AllProjectsLabel;
-            RaisePropertyChanged(nameof(SelectedFilter));
+            // Die Listen werden angeglichen, nicht neu aufgebaut: Das ComboBox behält so seine Auswahl.
+            ListSync.Sync(FilterOptions, new[] { AllProjectsLabel, WithoutProjectLabel }.Concat(names).ToList());
+            if (!FilterOptions.Contains(SelectedFilter))
+            {
+                _selectedFilter = AllProjectsLabel;
+                RaisePropertyChanged(nameof(SelectedFilter));
+            }
 
-            var project = EditProject;
-            _loadingEditor = true;
-            ProjectOptions.Clear();
-            ProjectOptions.Add(NoProjectLabel);
-            foreach (var n in names) ProjectOptions.Add(n);
-            _editProject = ProjectOptions.Contains(project) ? project : NoProjectLabel;
-            RaisePropertyChanged(nameof(EditProject));
-            _loadingEditor = false;
+            ListSync.Sync(ProjectOptions, new[] { NoProjectLabel }.Concat(names).ToList());
+            if (!ProjectOptions.Contains(EditProject))
+            {
+                _loadingEditor = true;
+                _editProject = NoProjectLabel;
+                RaisePropertyChanged(nameof(EditProject));
+                _loadingEditor = false;
+            }
         }
 
         // ---------- Auswahl und Editor ----------

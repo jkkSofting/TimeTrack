@@ -202,16 +202,18 @@ namespace Zeitmanagement.ViewModel
 
         private void SyncProjectOptions()
         {
-            var names = Db.GetProjects().Select(p => p.Projektname).OrderBy(n => n, StringComparer.CurrentCultureIgnoreCase).ToList();
-            var selected = SelectedProject;
+            var wanted = new List<string> { GeneralBoardLabel };
+            wanted.AddRange(Db.GetProjects().Select(p => p.Projektname).OrderBy(n => n, StringComparer.CurrentCultureIgnoreCase));
 
-            ProjectOptions.Clear();
-            ProjectOptions.Add(GeneralBoardLabel);
-            foreach (var n in names) ProjectOptions.Add(n);
+            // Die Liste wird angeglichen, nicht neu aufgebaut: Das ComboBox behält so seine Auswahl.
+            ListSync.Sync(ProjectOptions, wanted);
 
             // Wurde das gewählte Projekt gelöscht, zeigt das Board wieder „Ohne Projekt“.
-            _selectedProject = ProjectOptions.Contains(selected) ? selected : GeneralBoardLabel;
-            RaisePropertyChanged(nameof(SelectedProject));
+            if (!ProjectOptions.Contains(SelectedProject))
+            {
+                _selectedProject = GeneralBoardLabel;
+                RaisePropertyChanged(nameof(SelectedProject));
+            }
         }
 
         // ---------- Laden ----------
@@ -406,7 +408,7 @@ namespace Zeitmanagement.ViewModel
                 }
 
                 IsTicketEditorOpen = false;
-                Refresh();
+                LoadBoard();
             }
             catch (Exception ex)
             {
@@ -429,7 +431,7 @@ namespace Zeitmanagement.ViewModel
             {
                 Db.DeleteTodoTicket(_editingTicketId.Value);
                 IsTicketEditorOpen = false;
-                Refresh();
+                LoadBoard();
             }
             catch (Exception ex)
             {
@@ -464,7 +466,7 @@ namespace Zeitmanagement.ViewModel
                 ShowError("Das Ticket konnte nicht verschoben werden", ex);
             }
 
-            Refresh();
+            LoadBoard();
         }
 
         // ---------- Spalte bearbeiten ----------
@@ -546,7 +548,7 @@ namespace Zeitmanagement.ViewModel
                     Db.AddTodoColumn(CurrentProject, ColumnName);
 
                 IsColumnEditorOpen = false;
-                Refresh();
+                LoadBoard();
             }
             catch (Exception ex)
             {
@@ -572,7 +574,7 @@ namespace Zeitmanagement.ViewModel
                 Db.DeleteTodoColumn(column.Id, withTickets: true);
 
                 if (_editingColumnId == column.Id) IsColumnEditorOpen = false;
-                Refresh();
+                LoadBoard();
             }
             catch (Exception ex)
             {
@@ -604,7 +606,7 @@ namespace Zeitmanagement.ViewModel
             try
             {
                 Db.MoveTodoColumn(_editingColumnId.Value, index + direction);
-                Refresh();
+                LoadBoard();
                 RaiseColumnCommands();
             }
             catch (Exception ex)
