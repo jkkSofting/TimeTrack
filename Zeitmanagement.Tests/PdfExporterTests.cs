@@ -286,6 +286,27 @@ namespace Zeitmanagement.Tests
         }
 
         [Fact]
+        public void The_summary_block_is_optional_and_on_by_default()
+        {
+            var options = Options();
+            Assert.True(options.ShowSummary);
+            var withSummary = BodyText(PdfReportLayout.Build(Report(options, SomeEntries()), Meta()));
+            Assert.Contains("Zusammenfassung", withSummary);
+            Assert.Contains("ARBEITSTAGE", withSummary);
+
+            options.ShowSummary = false;
+            var document = PdfReportLayout.Build(Report(options, SomeEntries()), Meta());
+            var without = BodyText(document);
+            Assert.DoesNotContain("Zusammenfassung", without);
+            Assert.DoesNotContain("ARBEITSTAGE", without);
+
+            // Der Einzelnachweis mit Tagessumme und Gesamtsumme bleibt vollständig.
+            var rows = RowTexts(Details(document));
+            Assert.Contains(rows, r => r.StartsWith("Tagessumme | 2,50"));
+            Assert.StartsWith("Gesamt | 4,75", rows.Last());
+        }
+
+        [Fact]
         public void Without_the_times_column_the_subtotal_label_is_short_enough_for_the_date_column()
         {
             var options = Options();

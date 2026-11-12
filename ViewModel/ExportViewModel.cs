@@ -81,6 +81,7 @@ namespace Zeitmanagement.ViewModel
             _alwaysShowProjectColumn = prefs.AlwaysShowProjectColumn;
             _showCarrierColumn = prefs.ShowCarrierColumn;
             _showDaySubtotals = prefs.GetShowDaySubtotals();
+            _showSummary = prefs.GetShowSummary();
             _showClient = prefs.ShowClient;
             if (!string.IsNullOrWhiteSpace(prefs.Title)) _title = prefs.Title;
             _landscape = prefs.Landscape;
@@ -135,6 +136,7 @@ namespace Zeitmanagement.ViewModel
                 AlwaysShowProjectColumn = _alwaysShowProjectColumn,
                 ShowCarrierColumn = _showCarrierColumn,
                 ShowDaySubtotals = _showDaySubtotals,
+                ShowSummary = _showSummary,
                 ShowClient = _showClient,
                 Title = _title,
                 Landscape = _landscape,
@@ -430,6 +432,9 @@ namespace Zeitmanagement.ViewModel
 
         private bool _showDaySubtotals = true;
         public bool ShowDaySubtotals { get => _showDaySubtotals; set { if (SetProperty(ref _showDaySubtotals, value)) Rebuild(); } }
+
+        private bool _showSummary = true;
+        public bool ShowSummary { get => _showSummary; set { if (SetProperty(ref _showSummary, value)) Rebuild(); } }
 
         public IReadOnlyList<ExportRoundingItem> RoundingChoices { get; }
         private ExportRoundingItem _selectedRounding;
@@ -814,7 +819,8 @@ namespace Zeitmanagement.ViewModel
                 ShowTimes = _showTimes,
                 ShowProjectColumn = _alwaysShowProjectColumn ? true : (bool?)null,
                 ShowCarrierColumn = _showCarrierColumn,
-                ShowDaySubtotals = _showDaySubtotals
+                ShowDaySubtotals = _showDaySubtotals,
+                ShowSummary = _showSummary
             };
         }
 

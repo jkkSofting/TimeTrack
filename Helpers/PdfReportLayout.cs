@@ -112,7 +112,7 @@ namespace Zeitmanagement.Helpers
             AddTitle(section, report, meta, width);
             AddParties(section, meta, width);
             AddFacts(section, report, meta, width);
-            AddSummary(section, report, options, width);
+            if (options.ShowSummary) AddSummary(section, report, options, width);
             if (report.Projects.Count > 1) AddProjectTable(section, report, options, width);
             AddDetails(section, report, options, width);
             AddNotes(section, report);
