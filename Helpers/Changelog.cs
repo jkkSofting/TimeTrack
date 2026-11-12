@@ -53,12 +53,12 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
-            new ChangelogRelease("2026.48.0", new DateTime(2026, 11, 12), "To-Do und Notizen",
-                Neu("„To-Do“ in der Seitenleiste (Gruppe „Organisation“): ein Board wie bei Trello oder Jira. Du legst Tickets mit Titel und Beschreibung an und ordnest sie in Spalten. Anfangs gibt es „To Do“, „In Arbeit“ und „Erledigt“, weitere Spalten legst du mit „Neue Spalte“ an."),
+            new ChangelogRelease("2026.47.1", new DateTime(2026, 11, 12), "To-Do und Notizen",
+                Neu("„To-Do“ in der Seitenleiste (Gruppe „Organisation“): ein Board wie bei Trello oder Jira, und zwar je Projekt ein eigenes. Oben wählst du unter „Board von“ das Projekt; „Ohne Projekt“ ist für alles, was zu keinem Projekt gehört. Du legst Tickets mit Titel und Beschreibung an und ordnest sie in Spalten."),
+                Neu("Jedes Board startet mit den Spalten „To Do“, „In Arbeit“ und „Erledigt“. Spalten legst du mit „Neue Spalte“ oder „Spalte hinzufügen“ am Ende des Boards an, benennst sie um, schiebst sie nach links oder rechts und löschst sie mit dem Papierkorb im Spaltenkopf. Hat die Spalte Tickets, fragt TimeTrack vorher nach, denn die Tickets gehen mit."),
                 Neu("Tickets verschiebst du mit der Maus per Ziehen, in eine andere Spalte oder an eine andere Stelle derselben Spalte; ein farbiger Strich zeigt, wo das Ticket landet. Ein Klick auf ein Ticket öffnet es zum Bearbeiten, dort kannst du es auch einer anderen Spalte zuordnen oder löschen."),
-                Neu("Spalten lassen sich umbenennen, nach links oder rechts schieben und löschen. Eine Spalte mit Tickets wird nie gelöscht, damit nichts verloren geht."),
                 Neu("„Notizen“ in der Seitenleiste: Notizen mit Titel, Text und auf Wunsch einem Projekt. Die Liste ist durchsuchbar und nach Projekt filterbar; wählst du ein Projekt als Filter, gehört eine neue Notiz gleich dazu. TimeTrack speichert Änderungen kurz nach dem Tippen von selbst."),
-                Neu("Board und Notizen liegen in der TimeTrack-Datenbank und sind in jeder Datensicherung enthalten. Löschst du ein Projekt, bleiben seine Notizen erhalten, nur ohne Projekt.")),
+                Neu("Boards und Notizen liegen in der TimeTrack-Datenbank und sind in jeder Datensicherung enthalten. Löschst du ein Projekt, verschwindet sein Board mit; seine Notizen bleiben erhalten, nur ohne Projekt.")),
 
             new ChangelogRelease("2026.47.0", new DateTime(2026, 11, 12), "Plugins",
                 Neu("TimeTrack lässt sich mit Plugins erweitern. Ein Plugin bringt eigene Seiten mit, die in der Seitenleiste unter „Plugins“ erscheinen, und kann Einstellungen ergänzen. Ohne Plugin ändert sich nichts."),

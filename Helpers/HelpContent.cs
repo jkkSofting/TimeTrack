@@ -102,13 +102,14 @@ namespace Zeitmanagement.Helpers
                 "Nach dem Speichern öffnest du die Datei oder ihren Ordner direkt aus der Seite. Ist die Datei noch in einem PDF-Programm oder Excel geöffnet, meldet TimeTrack das und schreibt nichts Halbes."),
 
             new HelpTopic("\uE7C4", "To-Do", "Todo",
-                "Ein Board wie bei Trello oder Jira für deine Aufgaben.",
-                "Das Board hat Spalten, anfangs „To Do“, „In Arbeit“ und „Erledigt“. „Neue Spalte“ legt eine weitere an.",
+                "Ein Board wie bei Trello oder Jira für deine Aufgaben, je Projekt eins.",
+                "Oben wählst du unter „Board von“ das Projekt, dessen Board du siehst. „Ohne Projekt“ ist für alles, was zu keinem Projekt gehört. Jedes Board ist unabhängig von den anderen.",
+                "Ein neues Board hat die Spalten „To Do“, „In Arbeit“ und „Erledigt“. Weitere legst du mit „Neue Spalte“ oder mit „Spalte hinzufügen“ rechts neben der letzten Spalte an.",
+                "Das Stift-Symbol im Kopf einer Spalte benennt sie um oder schiebt sie nach links oder rechts. Der Papierkorb löscht sie; hat sie Tickets, fragt TimeTrack vorher nach, denn die Tickets werden mit gelöscht.",
                 "„Ticket hinzufügen“ unten in einer Spalte öffnet das Formular. Ein Ticket hat nur einen Titel und eine Beschreibung. „Speichern“ oder Strg+Enter legt es an.",
                 "Verschieben: Ziehe ein Ticket mit der Maus in eine andere Spalte oder an eine andere Stelle derselben Spalte. Ein Strich zeigt, wo es landet; über einer Spalte abgelegt, kommt es ans Ende.",
                 "Ein Klick auf ein Ticket öffnet es zum Bearbeiten. Dort wählst du auch die Spalte, wenn du lieber nicht ziehen willst, oder löschst das Ticket.",
-                "Das Stift-Symbol im Kopf einer Spalte benennt sie um, schiebt sie nach links oder rechts oder löscht sie. Gelöscht werden nur leere Spalten, damit kein Ticket verloren geht.",
-                "Alles wird sofort gespeichert und ist in jeder Datensicherung enthalten."),
+                "Alles wird sofort gespeichert und ist in jeder Datensicherung enthalten. Löschst du ein Projekt, wird auch sein Board gelöscht."),
 
             new HelpTopic("\uE70B", "Notizen", "Notes",
                 "Ein Platz für Notizen zu deiner Arbeit und deinen Projekten.",
