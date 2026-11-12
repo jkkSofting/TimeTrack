@@ -101,6 +101,23 @@ namespace Zeitmanagement.Helpers
                 "„CSV speichern“ schreibt eine Zeile je Buchung (Datum, Wochentag, Von, Bis, Dauer, Projekt, Kunde, Kostenträger, extern/intern, Beschreibung) als UTF-8-Datei. Standard sind Semikolon und Dezimalkomma, wie das deutsche Excel sie erwartet; „International“ nimmt Komma und Dezimalpunkt. Beginnt ein Text mit = + - oder @, setzt TimeTrack ein Hochkomma davor, damit Excel ihn nicht als Formel ausführt.",
                 "Nach dem Speichern öffnest du die Datei oder ihren Ordner direkt aus der Seite. Ist die Datei noch in einem PDF-Programm oder Excel geöffnet, meldet TimeTrack das und schreibt nichts Halbes."),
 
+            new HelpTopic("\uE7C4", "To-Do", "Todo",
+                "Ein Board wie bei Trello oder Jira für deine Aufgaben.",
+                "Das Board hat Spalten, anfangs „To Do“, „In Arbeit“ und „Erledigt“. „Neue Spalte“ legt eine weitere an.",
+                "„Ticket hinzufügen“ unten in einer Spalte öffnet das Formular. Ein Ticket hat nur einen Titel und eine Beschreibung. „Speichern“ oder Strg+Enter legt es an.",
+                "Verschieben: Ziehe ein Ticket mit der Maus in eine andere Spalte oder an eine andere Stelle derselben Spalte. Ein Strich zeigt, wo es landet; über einer Spalte abgelegt, kommt es ans Ende.",
+                "Ein Klick auf ein Ticket öffnet es zum Bearbeiten. Dort wählst du auch die Spalte, wenn du lieber nicht ziehen willst, oder löschst das Ticket.",
+                "Das Stift-Symbol im Kopf einer Spalte benennt sie um, schiebt sie nach links oder rechts oder löscht sie. Gelöscht werden nur leere Spalten, damit kein Ticket verloren geht.",
+                "Alles wird sofort gespeichert und ist in jeder Datensicherung enthalten."),
+
+            new HelpTopic("\uE70B", "Notizen", "Notes",
+                "Ein Platz für Notizen zu deiner Arbeit und deinen Projekten.",
+                "„Neue Notiz“ legt eine Notiz an und setzt den Cursor in den Titel. Der Titel ist optional; ohne ihn zeigt die Liste die erste Zeile des Textes.",
+                "Auf Wunsch ordnest du die Notiz einem Projekt zu. Der Filter über der Liste zeigt alle Notizen, nur die ohne Projekt oder nur die eines Projekts; ist ein Projekt gewählt, gehört eine neue Notiz gleich dazu.",
+                "Die Suche durchsucht Titel, Text und Projekt.",
+                "TimeTrack speichert Änderungen kurz nach dem Tippen von selbst; unter dem Text steht, wann zuletzt gespeichert wurde. Eine angelegte, aber nie beschriebene Notiz verschwindet wieder, sobald du eine andere wählst.",
+                "„Löschen“ entfernt die Notiz nach einer Rückfrage. Löschst du ein Projekt, bleiben seine Notizen erhalten, nur ohne Projekt."),
+
             new HelpTopic("", "Projekte", "Projects",
                 "Projekte anlegen, bearbeiten und auswerten.",
                 "„Neues Projekt“ öffnet das Formular: Projektname, Kunde, Kostenträger und ob das Projekt extern ist.",

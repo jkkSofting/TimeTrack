@@ -53,6 +53,13 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.48.0", new DateTime(2026, 11, 12), "To-Do und Notizen",
+                Neu("„To-Do“ in der Seitenleiste (Gruppe „Organisation“): ein Board wie bei Trello oder Jira. Du legst Tickets mit Titel und Beschreibung an und ordnest sie in Spalten. Anfangs gibt es „To Do“, „In Arbeit“ und „Erledigt“, weitere Spalten legst du mit „Neue Spalte“ an."),
+                Neu("Tickets verschiebst du mit der Maus per Ziehen, in eine andere Spalte oder an eine andere Stelle derselben Spalte; ein farbiger Strich zeigt, wo das Ticket landet. Ein Klick auf ein Ticket öffnet es zum Bearbeiten, dort kannst du es auch einer anderen Spalte zuordnen oder löschen."),
+                Neu("Spalten lassen sich umbenennen, nach links oder rechts schieben und löschen. Eine Spalte mit Tickets wird nie gelöscht, damit nichts verloren geht."),
+                Neu("„Notizen“ in der Seitenleiste: Notizen mit Titel, Text und auf Wunsch einem Projekt. Die Liste ist durchsuchbar und nach Projekt filterbar; wählst du ein Projekt als Filter, gehört eine neue Notiz gleich dazu. TimeTrack speichert Änderungen kurz nach dem Tippen von selbst."),
+                Neu("Board und Notizen liegen in der TimeTrack-Datenbank und sind in jeder Datensicherung enthalten. Löschst du ein Projekt, bleiben seine Notizen erhalten, nur ohne Projekt.")),
+
             new ChangelogRelease("2026.47.0", new DateTime(2026, 11, 12), "Plugins",
                 Neu("TimeTrack lässt sich mit Plugins erweitern. Ein Plugin bringt eigene Seiten mit, die in der Seitenleiste unter „Plugins“ erscheinen, und kann Einstellungen ergänzen. Ohne Plugin ändert sich nichts."),
                 Neu("Einstellungen → Plugins zeigt alle gefundenen Plugins mit Version und Status. Ein neu gefundenes Plugin ist zunächst aus und wird erst geladen, wenn du es einschaltest und TimeTrack neu startest. „Plugin-Ordner öffnen“ führt direkt zum Ordner, „Nach Plugins suchen“ findet neu abgelegte Plugins ohne Neustart (das passiert auch bei jedem Öffnen der Einstellungen) und erkennt ausgetauschte Dateien laufender Plugins."),
