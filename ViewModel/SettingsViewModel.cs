@@ -10,6 +10,7 @@ using System.Windows;
 using System.Windows.Media;
 using Microsoft.Win32;
 using Zeitmanagement.Helpers;
+using Zeitmanagement.Helpers.Plugins;
 using Zeitmanagement.MVVM;
 
 namespace Zeitmanagement.ViewModel
@@ -273,8 +274,12 @@ namespace Zeitmanagement.ViewModel
         public DelegateCommand CheckForUpdateCommand { get; }
         public DelegateCommand InstallUpdateCommand { get; }
 
-        public SettingsViewModel()
+        /// <summary>Der Abschnitt „Plugins“. Schalter und Einstellungsbereiche der Plugins speichern sofort.</summary>
+        public PluginSettingsViewModel Plugins { get; }
+
+        public SettingsViewModel(PluginManager plugins = null)
         {
+            Plugins = new PluginSettingsViewModel(plugins);
             SaveCommand = new DelegateCommand(_ => Save());
             CancelCommand = new DelegateCommand(_ => Refresh());
             CreateBackupCommand = new DelegateCommand(_ => CreateBackup());
@@ -310,6 +315,9 @@ namespace Zeitmanagement.ViewModel
             {
                 AvailableBackups.Add(backup);
             }
+
+            // Bei jedem Öffnen der Einstellungen: neu in den Plugin-Ordner gelegte oder ausgetauschte Plugins erkennen.
+            Plugins?.Rescan(showResult: false);
         }
 
         /// <summary>

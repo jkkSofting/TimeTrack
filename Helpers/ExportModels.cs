@@ -76,8 +76,10 @@ namespace Zeitmanagement.Helpers
         /// <summary>Projekt-Spalte zeigen; <c>null</c> = automatisch, wenn mehr als ein Projekt im Nachweis steht.</summary>
         public bool? ShowProjectColumn { get; set; }
         public bool ShowCarrierColumn { get; set; }
-        /// <summary>Bei "Nach Tag": unter Tagen mit mehreren Buchungen eine Tagessumme zeigen. Bei den anderen Gliederungen ohne Wirkung.</summary>
+        /// <summary>Bei "Nach Tag": unter jedem Tag eine Tagessumme zeigen. Bei den anderen Gliederungen ohne Wirkung.</summary>
         public bool ShowDaySubtotals { get; set; }
+        /// <summary>Im PDF den Abschnitt "Zusammenfassung" (Gesamtzeit, Buchungen, Arbeitstage, Durchschnitt) zeigen.</summary>
+        public bool ShowSummary { get; set; }
 
         public ExportOptions()
         {
@@ -85,6 +87,7 @@ namespace Zeitmanagement.Helpers
             DurationFormat = ExportDurationFormat.Decimal;
             ShowTimes = true;
             ShowDaySubtotals = true;
+            ShowSummary = true;
         }
     }
 

@@ -11,6 +11,7 @@
     d:DesignWidth="1200"
     mc:Ignorable="d">
     <UserControl.Resources>
+        <local:NullToVisibilityConverter x:Key="NullToCollapsed" />
         <!--  Karte einer Einstellungsgruppe mit Icon und Titel  -->
         <Style
             x:Key="SettingsCard"
@@ -218,7 +219,7 @@
         <DockPanel Style="{StaticResource PageHeader}">
             <StackPanel VerticalAlignment="Center">
                 <TextBlock Style="{StaticResource Text.PageTitle}" Text="Einstellungen" />
-                <TextBlock Style="{StaticResource Text.Subtitle}" Text="Das Design wird sofort übernommen, alles andere mit „Speichern“ unten." />
+                <TextBlock Style="{StaticResource Text.Subtitle}" Text="Design und Plugins werden sofort übernommen, alles andere mit „Speichern“ unten." />
             </StackPanel>
         </DockPanel>
 
@@ -233,6 +234,7 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
@@ -624,6 +626,154 @@
                         </StackPanel>
                     </Border>
                 </StackPanel>
+
+                <!--  ===== Plugins (volle Breite) =====  -->
+                <Border
+                    Grid.Row="2"
+                    Grid.ColumnSpan="3"
+                    DataContext="{Binding Plugins}"
+                    Style="{StaticResource SettingsCard}">
+                    <StackPanel>
+                        <StackPanel Style="{StaticResource CardHeader}">
+                            <TextBlock Style="{StaticResource CardIcon}" Text="&#xEA86;" />
+                            <TextBlock Style="{StaticResource Text.Section}" Text="Plugins" />
+                        </StackPanel>
+
+                        <TextBlock
+                            Margin="0,0,0,12"
+                            Style="{StaticResource Hint}"
+                            Text="Plugins erweitern TimeTrack um eigene Seiten. Ein Plugin läuft mit allen Rechten von TimeTrack – aktiviere nur Plugins aus einer Quelle, der du vertraust. Neu gefundene Plugins sind zunächst deaktiviert. Aktivieren und Deaktivieren wirkt nach einem Neustart." />
+
+                        <Border BorderThickness="0" Style="{StaticResource SettingRow}">
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                    <Button
+                                        local:Ui.Glyph="&#xE72C;"
+                                        Command="{Binding RescanCommand}"
+                                        Content="Nach Plugins suchen"
+                                        ToolTip="Den Plugin-Ordner erneut durchsuchen: neue Plugins erscheinen sofort, ausgetauschte Dateien werden erkannt. Geladen wird erst nach einem Neustart." />
+                                    <Button
+                                        Margin="8,0,0,0"
+                                        local:Ui.Glyph="&#xE838;"
+                                        Command="{Binding OpenFolderCommand}"
+                                        Content="Plugin-Ordner öffnen" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                                    <TextBlock Style="{StaticResource Text.Body}" Text="Plugin-Ordner" />
+                                    <TextBlock
+                                        Style="{StaticResource Hint}"
+                                        Text="{Binding FolderPath}"
+                                        TextTrimming="CharacterEllipsis"
+                                        ToolTip="{Binding FolderPath}" />
+                                    <TextBlock
+                                        Style="{StaticResource Hint}"
+                                        Text="{Binding RescanText}"
+                                        Visibility="{Binding RescanText, Converter={StaticResource NullToCollapsed}}" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+
+                        <!--  Hinweis, solange eine geänderte Wahl erst nach einem Neustart wirkt  -->
+                        <Border
+                            Margin="0,4,0,8"
+                            Padding="12,10"
+                            Background="{DynamicResource Theme.WarningSoft}"
+                            CornerRadius="{StaticResource CardRadius}"
+                            Visibility="{Binding RestartRequired, Converter={StaticResource BoolToVis}}">
+                            <DockPanel>
+                                <Button
+                                    local:Ui.Glyph="&#xE72C;"
+                                    Command="{Binding RestartCommand}"
+                                    Content="Jetzt neu starten"
+                                    DockPanel.Dock="Right"
+                                    Style="{StaticResource Button.Primary}" />
+                                <TextBlock
+                                    Margin="0,0,16,0"
+                                    VerticalAlignment="Center"
+                                    Style="{StaticResource Text.Body}"
+                                    Text="Die Änderung wirkt nach einem Neustart von TimeTrack."
+                                    TextWrapping="Wrap" />
+                            </DockPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource SettingRow}" Visibility="{Binding HasNoPlugins, Converter={StaticResource BoolToVis}}">
+                            <TextBlock
+                                Style="{StaticResource Text.Muted}"
+                                Text="Kein Plugin gefunden. Lege ein Plugin als eigenen Unterordner in den Plugin-Ordner und starte TimeTrack neu."
+                                TextWrapping="Wrap" />
+                        </Border>
+
+                        <ItemsControl Focusable="False" ItemsSource="{Binding Items}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type viewmodel:PluginItemViewModel}">
+                                    <Border Style="{StaticResource SettingRow}">
+                                        <StackPanel>
+                                            <DockPanel>
+                                                <CheckBox
+                                                    VerticalAlignment="Center"
+                                                    DockPanel.Dock="Right"
+                                                    IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                                                    Style="{StaticResource Switch}"
+                                                    ToolTip="Plugin beim Start laden" />
+                                                <StackPanel Margin="0,0,16,0">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock
+                                                            FontWeight="SemiBold"
+                                                            Style="{StaticResource Text.Body}"
+                                                            Text="{Binding Name}" />
+                                                        <TextBlock
+                                                            Margin="10,0,0,0"
+                                                            VerticalAlignment="Center"
+                                                            Style="{StaticResource Text.Muted}"
+                                                            Text="{Binding VersionText}" />
+                                                    </StackPanel>
+                                                    <TextBlock Style="{StaticResource Hint}" Text="{Binding StatusText}" />
+                                                    <TextBlock
+                                                        Style="{StaticResource Hint}"
+                                                        Text="{Binding Description}"
+                                                        Visibility="{Binding HasDescription, Converter={StaticResource BoolToVis}}" />
+                                                    <TextBlock
+                                                        Margin="0,6,0,0"
+                                                        Foreground="{DynamicResource Theme.Danger}"
+                                                        Text="{Binding Error}"
+                                                        TextWrapping="Wrap"
+                                                        Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}" />
+                                                </StackPanel>
+                                            </DockPanel>
+
+                                            <!--  Einstellungsbereiche des Plugins (nur, wenn es geladen ist)  -->
+                                            <ItemsControl
+                                                Margin="0,12,0,0"
+                                                Focusable="False"
+                                                ItemsSource="{Binding Sections}"
+                                                Visibility="{Binding HasSections, Converter={StaticResource BoolToVis}}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate DataType="{x:Type viewmodel:PluginSettingsSectionViewModel}">
+                                                        <Border
+                                                            Margin="0,0,0,8"
+                                                            Padding="14,12"
+                                                            Background="{DynamicResource Theme.Surface}"
+                                                            BorderBrush="{DynamicResource Theme.CardBorder}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="{StaticResource CardRadius}">
+                                                            <StackPanel>
+                                                                <TextBlock
+                                                                    Margin="0,0,0,8"
+                                                                    Style="{StaticResource Text.Label}"
+                                                                    Text="{Binding Title}" />
+                                                                <local:PluginViewHost View="{Binding View}" />
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
             </Grid>
         </ScrollViewer>
 

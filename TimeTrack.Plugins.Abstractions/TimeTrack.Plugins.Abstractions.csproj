@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Vertrag zwischen TimeTrack und seinen Plugins. Das ist die einzige Bibliothek, die ein Plugin referenziert.
+    Zur Laufzeit kommt sie immer aus dem Programmordner von TimeTrack, nie aus dem Plugin-Ordner: Plugins
+    referenzieren sie mit Private=false (nicht mitkopieren).
+
+    Kompatibilität: Neue Mitglieder kommen nur hinzu, bestehende werden nicht geändert oder entfernt. Was ein
+    Plugin mindestens braucht, nennt es über TimeTrackPlugin.MinimumHostApiVersion. Die Assembly-Version bleibt
+    bewusst fest, damit gegen eine ältere Fassung gebaute Plugins ohne Binding-Redirect laden.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <RootNamespace>TimeTrack.Plugins</RootNamespace>
+    <AssemblyName>TimeTrack.Plugins.Abstractions</AssemblyName>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Product>TimeTrack</Product>
+    <Description>Plugin-Schnittstelle von TimeTrack</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="System.Xaml" />
+  </ItemGroup>
+
+</Project>

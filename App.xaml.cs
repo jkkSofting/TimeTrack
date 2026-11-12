@@ -51,6 +51,17 @@ namespace Zeitmanagement
 
             _trayService = new TrayNotificationService(mainWindow);
             mainViewModel.QuickSelectViewModel.NotificationRequested += (title, message) => _trayService.ShowBalloon(title, message);
+            mainViewModel.Plugins.NotificationRequested += (title, message, onClick) => _trayService.ShowBalloon(
+                title,
+                message,
+                onClick: () =>
+                {
+                    mainWindow.Show();
+                    if (mainWindow.WindowState == WindowState.Minimized)
+                        mainWindow.WindowState = WindowState.Normal;
+                    mainWindow.Activate();
+                    onClick?.Invoke();
+                });
 
             UpdateService.UpdateAvailable += update => _trayService.ShowBalloon(
                 "Update verfügbar",
@@ -90,6 +101,7 @@ namespace Zeitmanagement
             _trayService?.Dispose();
             ThemeManager.Shutdown();
             (MainWindow?.DataContext as MainViewModel)?.QuickSelectViewModel?.Shutdown();
+            (MainWindow?.DataContext as MainViewModel)?.Plugins?.ShutdownAll();
 
             base.OnExit(e);
         }

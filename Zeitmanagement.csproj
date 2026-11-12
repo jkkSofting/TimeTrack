@@ -72,6 +72,7 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
@@ -89,6 +90,7 @@
     <Compile Include="TimeTracker.cs" />
     <Compile Include="TimeTracker.Controlling.cs" />
     <Compile Include="TimeTracker.Export.cs" />
+    <Compile Include="TimeTracker.Plugins.cs" />
     <Compile Include="Helpers\AutostartHelper.cs" />
     <Compile Include="Helpers\BackupHelper.cs" />
     <Compile Include="Helpers\CarrierMatching.cs" />
@@ -107,6 +109,11 @@
     <Compile Include="Helpers\HelpContent.cs" />
     <Compile Include="Helpers\PdfExporter.cs" />
     <Compile Include="Helpers\PdfReportLayout.cs" />
+    <Compile Include="Helpers\Plugins\PluginStorage.cs" />
+    <Compile Include="Helpers\Plugins\PluginInfo.cs" />
+    <Compile Include="Helpers\Plugins\PluginLoader.cs" />
+    <Compile Include="Helpers\Plugins\PluginHost.cs" />
+    <Compile Include="Helpers\Plugins\PluginManager.cs" />
     <Compile Include="Helpers\OverlayWindowHelper.cs" />
     <Compile Include="Helpers\PenguinEasterEgg.cs" />
     <Compile Include="Helpers\PresentationDetector.cs" />
@@ -126,6 +133,8 @@
     <Compile Include="ViewModel\FragmentationViewModel.cs" />
     <Compile Include="ViewModel\HelpViewModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
+    <Compile Include="ViewModel\PluginPageViewModel.cs" />
+    <Compile Include="ViewModel\PluginSettingsViewModel.cs" />
     <Compile Include="ViewModel\ProjectControllingViewModel.cs" />
     <Compile Include="ViewModel\ProjectsViewModel.cs" />
     <Compile Include="ViewModel\QuickSelectItemViewModel.cs" />
@@ -151,6 +160,7 @@
       <DependentUpon>HelpView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\NullToVisibilityConverter.cs" />
+    <Compile Include="Views\PluginViewHost.cs" />
     <Compile Include="Views\XyChart.cs" />
     <Compile Include="Views\NumberFormatterConverter.cs" />
     <Compile Include="Views\Ui.cs" />
@@ -338,6 +348,12 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="TimeTrack.Plugins.Abstractions\TimeTrack.Plugins.Abstractions.csproj">
+      <Project>{FF510957-4EBB-4303-8B53-CD12212FB129}</Project>
+      <Name>TimeTrack.Plugins.Abstractions</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

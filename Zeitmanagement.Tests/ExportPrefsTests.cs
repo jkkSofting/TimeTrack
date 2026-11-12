@@ -24,6 +24,7 @@ namespace Zeitmanagement.Tests
                 AlwaysShowProjectColumn = true,
                 ShowCarrierColumn = true,
                 ShowDaySubtotals = false,
+                ShowSummary = false,
                 ShowClient = true,
                 Title = "Stundennachweis – Oktober",
                 Landscape = true,
@@ -44,6 +45,7 @@ namespace Zeitmanagement.Tests
             Assert.True(back.AlwaysShowProjectColumn);
             Assert.True(back.ShowCarrierColumn);
             Assert.False(back.GetShowDaySubtotals());
+            Assert.False(back.GetShowSummary());
             Assert.True(back.ShowClient);
             Assert.Equal("Stundennachweis – Oktober", back.Title);
             Assert.True(back.Landscape);
@@ -70,6 +72,7 @@ namespace Zeitmanagement.Tests
             Assert.Equal(ExportDurationFormat.Decimal, prefs.GetDurationFormat());
             Assert.True(prefs.GetShowTimes());
             Assert.True(prefs.GetShowDaySubtotals());
+            Assert.True(prefs.GetShowSummary());
             Assert.False(prefs.ShowClient);   // Der Auftraggeber ist optional: ohne Wahl steht er nicht im Dokument
             Assert.True(prefs.GetShowBranding());
             Assert.False(prefs.Landscape);

@@ -203,6 +203,26 @@
                             IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=settings}"
                             Style="{StaticResource NavItem}" />
 
+                        <!--  Seiten der aktivierten Plugins (Gruppe nur sichtbar, wenn es welche gibt)  -->
+                        <TextBlock
+                            Style="{StaticResource NavGroup}"
+                            Text="PLUGINS"
+                            Visibility="{Binding HasPluginPages, Converter={StaticResource BoolToVis}}" />
+                        <ItemsControl Focusable="False" ItemsSource="{Binding PluginNavigationItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type viewmodel:PluginNavigationItem}">
+                                    <RadioButton
+                                        views:Ui.Glyph="{Binding Glyph}"
+                                        Command="{Binding DataContext.SelectViewCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        CommandParameter="{Binding Key}"
+                                        Content="{Binding Title}"
+                                        GroupName="Nav"
+                                        IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                        Style="{StaticResource NavItem}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
                         <TextBlock Style="{StaticResource NavGroup}" Text="INFO" />
                         <Grid>
                             <RadioButton

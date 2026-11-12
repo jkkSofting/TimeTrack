@@ -29,6 +29,7 @@ namespace Zeitmanagement.Helpers
         [DataMember(Name = "alwaysProject")] public bool AlwaysShowProjectColumn { get; set; }
         [DataMember(Name = "carrier")] public bool ShowCarrierColumn { get; set; }
         [DataMember(Name = "daySums")] public bool? ShowDaySubtotals { get; set; }
+        [DataMember(Name = "summary")] public bool? ShowSummary { get; set; }
         /// <summary>Der Auftraggeber steht nur im Dokument, wenn der Nutzer es will (Standard: nein).</summary>
         [DataMember(Name = "showClient")] public bool ShowClient { get; set; }
 
@@ -78,6 +79,7 @@ namespace Zeitmanagement.Helpers
 
         public bool GetShowTimes() { return ShowTimes ?? true; }
         public bool GetShowDaySubtotals() { return ShowDaySubtotals ?? true; }
+        public bool GetShowSummary() { return ShowSummary ?? true; }
         public bool GetShowBranding() { return ShowBranding ?? true; }
 
         /// <summary>Der Zeitraum, falls er fest gespeichert ist (Benutzerdefiniert); sonst <c>false</c>.</summary>

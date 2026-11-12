@@ -288,7 +288,7 @@
                                         GroupName="ExportGrouping"
                                         IsChecked="{Binding IsGroupByDay, Mode=TwoWay}"
                                         Style="{StaticResource Segment}"
-                                        ToolTip="Chronologisch, Tagessumme bei mehreren Buchungen am Tag" />
+                                        ToolTip="Chronologisch, mit Tagessumme" />
                                     <RadioButton
                                         Content="Nach Projekt"
                                         GroupName="ExportGrouping"
@@ -356,7 +356,7 @@
                                 IsChecked="{Binding ShowDaySubtotals}"
                                 IsEnabled="{Binding IsGroupByDay}"
                                 Style="{StaticResource OptionCheck}"
-                                ToolTip="Bei „Nach Tag“: unter Tagen mit mehreren Buchungen steht die Summe des Tages. Bei den anderen Gliederungen gibt es sie nicht." />
+                                ToolTip="Bei „Nach Tag“: unter jedem Tag steht die Summe des Tages. Bei den anderen Gliederungen gibt es sie nicht." />
                         </StackPanel>
                     </Border>
 
@@ -384,6 +384,11 @@
                                 Content="Querformat"
                                 IsChecked="{Binding Landscape}"
                                 Style="{StaticResource OptionCheck}" />
+                            <CheckBox
+                                Content="Zusammenfassung zeigen"
+                                IsChecked="{Binding ShowSummary}"
+                                Style="{StaticResource OptionCheck}"
+                                ToolTip="Der Kasten oben im PDF mit Gesamtzeit, Anzahl der Buchungen, Arbeitstagen und Durchschnitt je Arbeitstag. Aus: Das Dokument beginnt direkt mit den Eckdaten und dem Einzelnachweis." />
                             <CheckBox
                                 Content="„Erstellt mit TimeTrack“ in der Fußzeile"
                                 IsChecked="{Binding ShowBranding}"
