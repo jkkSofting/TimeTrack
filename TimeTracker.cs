@@ -152,6 +152,9 @@ public sealed partial class TimeTracker : IDisposable
             // Ablage der Plugins (Zuordnungen, Übertragungsstände, verschlüsselte Zugangsdaten): eine zusätzliche Tabelle.
             EnsurePluginSchema(cmd);
 
+            // To-Do-Board und Projektnotizen: zusätzliche Tabellen, die Zeiterfassung bleibt unberührt.
+            EnsureTodoSchema(cmd);
+
             tx.Commit();
         }
     }

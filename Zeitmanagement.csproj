@@ -91,6 +91,7 @@
     <Compile Include="TimeTracker.Controlling.cs" />
     <Compile Include="TimeTracker.Export.cs" />
     <Compile Include="TimeTracker.Plugins.cs" />
+    <Compile Include="TimeTracker.Todo.cs" />
     <Compile Include="Helpers\AutostartHelper.cs" />
     <Compile Include="Helpers\BackupHelper.cs" />
     <Compile Include="Helpers\CarrierMatching.cs" />

@@ -42,6 +42,7 @@
     <Compile Include="..\TimeTracker.Controlling.cs" Link="Linked\TimeTracker.Controlling.cs" />
     <Compile Include="..\TimeTracker.Export.cs" Link="Linked\TimeTracker.Export.cs" />
     <Compile Include="..\TimeTracker.Plugins.cs" Link="Linked\TimeTracker.Plugins.cs" />
+    <Compile Include="..\TimeTracker.Todo.cs" Link="Linked\TimeTracker.Todo.cs" />
     <Compile Include="..\Helpers\Plugins\PluginStorage.cs" Link="Linked\PluginStorage.cs" />
     <Compile Include="..\Helpers\Plugins\PluginInfo.cs" Link="Linked\PluginInfo.cs" />
     <Compile Include="..\Helpers\Plugins\PluginLoader.cs" Link="Linked\PluginLoader.cs" />
