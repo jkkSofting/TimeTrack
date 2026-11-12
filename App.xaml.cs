@@ -100,6 +100,7 @@ namespace Zeitmanagement
             _penguin?.Dispose();
             _trayService?.Dispose();
             ThemeManager.Shutdown();
+            (MainWindow?.DataContext as MainViewModel)?.FlushPending();
             (MainWindow?.DataContext as MainViewModel)?.QuickSelectViewModel?.Shutdown();
             (MainWindow?.DataContext as MainViewModel)?.Plugins?.ShutdownAll();
 

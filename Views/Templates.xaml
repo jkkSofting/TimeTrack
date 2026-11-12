@@ -32,6 +32,14 @@
         <views:ExportView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type vm:TodoViewModel}">
+        <views:TodoView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:NotesViewModel}">
+        <views:NotesView />
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
         <views:SettingsView />
     </DataTemplate>

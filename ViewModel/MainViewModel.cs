@@ -24,6 +24,8 @@ namespace Zeitmanagement.ViewModel
         private readonly BaseViewModel _sapBookingView;
         private readonly ProjectControllingViewModel _controllingView;
         private readonly ExportViewModel _exportView;
+        private readonly TodoViewModel _todoView;
+        private readonly NotesViewModel _notesView;
         private readonly BaseViewModel _settingsView;
         private readonly HelpViewModel _helpView;
         private readonly PluginManager _plugins;
@@ -115,6 +117,8 @@ namespace Zeitmanagement.ViewModel
             _fragmentationView = new FragmentationViewModel();
             _sapBookingView = new SapBookingViewModel();
             _exportView = new ExportViewModel();
+            _todoView = new TodoViewModel();
+            _notesView = new NotesViewModel();
 
             // Plugins nach den festen Seiten laden: Ein fehlerhaftes Plugin darf den Start nicht verhindern.
             _plugins = new PluginManager(DbInstance) { NavigateHandler = SelectViewCommandExecute };
@@ -195,6 +199,12 @@ namespace Zeitmanagement.ViewModel
                 case "export":
                     RightSide = _exportView;
                     break;
+                case "todo":
+                    RightSide = _todoView;
+                    break;
+                case "notes":
+                    RightSide = _notesView;
+                    break;
                 case "settings":
                     RightSide = _settingsView;
                     break;
@@ -211,6 +221,12 @@ namespace Zeitmanagement.ViewModel
                 item.IsSelected = item.Key == mode;
 
             ((BaseViewModel)RightSide).Refresh();
+        }
+
+        /// <summary>Speichert noch ausstehende Eingaben (die Notizen speichern kurz nach dem Tippen); beim Beenden.</summary>
+        public void FlushPending()
+        {
+            _notesView.Flush();
         }
 
         /// <summary>Öffnet „Hilfe &amp; Neuigkeiten“ direkt bei den Neuigkeiten (aus dem Update-Hinweis heraus).</summary>

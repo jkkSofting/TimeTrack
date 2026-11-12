@@ -1,0 +1,270 @@
+<UserControl
+    x:Class="Zeitmanagement.Views.NotesView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Zeitmanagement.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodel="clr-namespace:Zeitmanagement.ViewModel"
+    d:DataContext="{d:DesignInstance Type=viewmodel:NotesViewModel}"
+    d:DesignHeight="720"
+    d:DesignWidth="1200"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <!--  Zeile der Notizliste: Hintergrund bei Maus und Auswahl, sonst keine Standard-Optik  -->
+        <Style x:Key="NoteItem" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="12,9" />
+            <Setter Property="Margin" Value="0,0,0,2" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border
+                            x:Name="bd"
+                            Padding="{TemplateBinding Padding}"
+                            Background="Transparent"
+                            CornerRadius="{StaticResource CardRadius}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Theme.Hover}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Theme.Selection}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="NoteTemplate" DataType="{x:Type viewmodel:NoteItemViewModel}">
+            <StackPanel>
+                <TextBlock
+                    FontWeight="SemiBold"
+                    Style="{StaticResource Text.Body}"
+                    Text="{Binding DisplayTitle}"
+                    TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    Margin="0,2,0,0"
+                    FontSize="12"
+                    Foreground="{DynamicResource Theme.TextMuted}"
+                    Text="{Binding Preview}"
+                    TextTrimming="CharacterEllipsis"
+                    Visibility="{Binding HasPreview, Converter={StaticResource BoolToVis}}" />
+                <DockPanel Margin="0,6,0,0" LastChildFill="False">
+                    <Border
+                        Padding="7,1"
+                        Background="{DynamicResource Theme.AccentSoft}"
+                        CornerRadius="9"
+                        DockPanel.Dock="Left"
+                        Visibility="{Binding HasProject, Converter={StaticResource BoolToVis}}">
+                        <TextBlock
+                            MaxWidth="170"
+                            FontSize="11"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource Theme.AccentSoftText}"
+                            Text="{Binding ProjectName}"
+                            TextTrimming="CharacterEllipsis" />
+                    </Border>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        DockPanel.Dock="Right"
+                        FontSize="11"
+                        Foreground="{DynamicResource Theme.TextSubtle}"
+                        Text="{Binding UpdatedText}" />
+                </DockPanel>
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Style="{StaticResource Page}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Style="{StaticResource PageHeader}">
+            <StackPanel
+                VerticalAlignment="Center"
+                DockPanel.Dock="Right"
+                Orientation="Horizontal">
+                <Button
+                    local:Ui.Glyph="&#xE72C;"
+                    Command="{Binding RefreshCommand}"
+                    Style="{StaticResource Button.Icon}"
+                    ToolTip="Aktualisieren" />
+                <Button
+                    Margin="8,0,0,0"
+                    local:Ui.Glyph="&#xE710;"
+                    Command="{Binding NewNoteCommand}"
+                    Content="Neue Notiz"
+                    Style="{StaticResource Button.Primary}" />
+            </StackPanel>
+
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource Text.PageTitle}" Text="Notizen" />
+                <TextBlock Style="{StaticResource Text.Subtitle}" Text="{Binding HeaderSubtitle}" />
+            </StackPanel>
+        </DockPanel>
+
+        <Grid Grid.Row="1" Margin="28,0,28,24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="360" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ===== Liste =====  -->
+            <Border Style="{StaticResource Card.Flat}" Padding="14">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid>
+                        <TextBox
+                            Padding="32,7,30,7"
+                            local:Ui.Placeholder="Notizen durchsuchen"
+                            Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock
+                            Margin="11,0,0,0"
+                            HorizontalAlignment="Left"
+                            FontSize="13"
+                            Foreground="{DynamicResource Theme.TextSubtle}"
+                            IsHitTestVisible="False"
+                            Style="{StaticResource Text.Icon}"
+                            Text="&#xE721;" />
+                        <Button
+                            Width="26"
+                            Height="26"
+                            Margin="0,0,4,0"
+                            HorizontalAlignment="Right"
+                            local:Ui.Glyph="&#xE711;"
+                            Command="{Binding ClearSearchCommand}"
+                            ToolTip="Suche leeren">
+                            <Button.Style>
+                                <Style BasedOn="{StaticResource Button.IconGhost}" TargetType="Button">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SearchText}" Value="">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
+
+                    <ComboBox
+                        Grid.Row="1"
+                        Margin="0,8,0,10"
+                        AutomationProperties.Name="Nach Projekt filtern"
+                        ItemsSource="{Binding FilterOptions}"
+                        SelectedItem="{Binding SelectedFilter, Mode=TwoWay}" />
+
+                    <ListBox
+                        Grid.Row="2"
+                        HorizontalContentAlignment="Stretch"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        ItemContainerStyle="{StaticResource NoteItem}"
+                        ItemTemplate="{StaticResource NoteTemplate}"
+                        ItemsSource="{Binding Notes}"
+                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                        SelectedItem="{Binding SelectedNote, Mode=TwoWay}" />
+
+                    <TextBlock
+                        Grid.Row="2"
+                        Margin="8,16,8,0"
+                        VerticalAlignment="Top"
+                        Style="{StaticResource Text.Muted}"
+                        Text="{Binding EmptyListText}"
+                        TextWrapping="Wrap"
+                        Visibility="{Binding HasNoNotes, Converter={StaticResource BoolToVis}}" />
+                </Grid>
+            </Border>
+
+            <!--  ===== Editor =====  -->
+            <Border Grid.Column="2" Style="{StaticResource Card.Flat}">
+                <Grid>
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource Text.Muted}"
+                        Text="Wähle links eine Notiz oder lege mit „Neue Notiz“ eine an."
+                        Visibility="{Binding HasNoSelection, Converter={StaticResource BoolToVis}}" />
+
+                    <Grid Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBox
+                            x:Name="TitleBox"
+                            Padding="10,8"
+                            FontSize="20"
+                            FontWeight="SemiBold"
+                            MaxLength="200"
+                            local:Ui.Placeholder="Titel"
+                            Text="{Binding EditTitle, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <DockPanel Grid.Row="1" Margin="0,10,0,10">
+                            <Button
+                                Margin="8,0,0,0"
+                                local:Ui.Glyph="&#xE74D;"
+                                Command="{Binding DeleteNoteCommand}"
+                                Content="Löschen"
+                                DockPanel.Dock="Right"
+                                Style="{StaticResource Button.Danger}" />
+                            <TextBlock
+                                Margin="0,0,10,0"
+                                VerticalAlignment="Center"
+                                DockPanel.Dock="Left"
+                                Style="{StaticResource Text.Muted}"
+                                Text="Projekt" />
+                            <ComboBox
+                                MaxWidth="320"
+                                HorizontalAlignment="Left"
+                                AutomationProperties.Name="Projekt der Notiz"
+                                ItemsSource="{Binding ProjectOptions}"
+                                SelectedItem="{Binding EditProject, Mode=TwoWay}" />
+                        </DockPanel>
+
+                        <TextBox
+                            Grid.Row="2"
+                            Padding="10,10"
+                            VerticalAlignment="Stretch"
+                            AcceptsReturn="True"
+                            AcceptsTab="True"
+                            FontSize="14"
+                            local:Ui.Placeholder="Notiz schreiben …"
+                            Text="{Binding EditText, UpdateSourceTrigger=PropertyChanged}"
+                            TextWrapping="Wrap"
+                            VerticalContentAlignment="Top" />
+
+                        <DockPanel Grid.Row="3" Margin="0,8,0,0">
+                            <TextBlock
+                                DockPanel.Dock="Right"
+                                FontSize="12"
+                                Foreground="{DynamicResource Theme.TextSubtle}"
+                                Text="{Binding SelectedNote.UpdatedText, StringFormat='Zuletzt geändert: {0}'}" />
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="{DynamicResource Theme.TextSubtle}"
+                                Text="{Binding SaveStatus}"
+                                TextTrimming="CharacterEllipsis" />
+                        </DockPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
