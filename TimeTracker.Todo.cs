@@ -16,6 +16,9 @@ public sealed partial class TimeTracker
     /// <summary>Spalten, die ein frisch angelegtes Board bekommt.</summary>
     private static readonly string[] DefaultTodoColumns = { "To Do", "In Arbeit", "Erledigt" };
 
+    /// <summary>Die Standardspalte, deren Tickets von Anfang an im Quick Switch wählbar sind.</summary>
+    private const string QuickSwitchDefaultColumn = "To Do";
+
     /// <summary>
     /// Legt die Tabellen für Boards und Notizen an (idempotent, nur additiv). Läuft innerhalb der Transaktion von
     /// <see cref="EnsureSchema"/>. Die Standardspalten eines Boards entstehen erst beim ersten Öffnen
@@ -28,7 +31,8 @@ public sealed partial class TimeTracker
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
             name       TEXT    NOT NULL,
             position   INTEGER NOT NULL,
-            projekt_id INTEGER NULL REFERENCES projects(id) ON DELETE CASCADE  -- leer = allgemeines Board
+            projekt_id INTEGER NULL REFERENCES projects(id) ON DELETE CASCADE,  -- leer = allgemeines Board
+            quickswitch INTEGER NOT NULL DEFAULT 0  -- 1 = Tickets dieser Spalte sind im Quick Switch wählbar
         );
 
         CREATE TABLE IF NOT EXISTS todo_tickets(
@@ -69,6 +73,19 @@ public sealed partial class TimeTracker
 
         cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_todo_columns_board ON todo_columns(projekt_id, position);";
         cmd.ExecuteNonQuery();
+
+        // Migration: Boards vor dem Quick Switch für Tickets haben noch keine Spalte quickswitch. Bestehende Spalten
+        // namens „To Do“ gelten als angeboten (wie bei einem neuen Board), alle anderen nicht.
+        cmd.CommandText = "SELECT COUNT(*) FROM pragma_table_info('todo_columns') WHERE name = 'quickswitch';";
+        if (Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) == 0)
+        {
+            cmd.CommandText = "ALTER TABLE todo_columns ADD COLUMN quickswitch INTEGER NOT NULL DEFAULT 0;";
+            cmd.ExecuteNonQuery();
+            cmd.CommandText = "UPDATE todo_columns SET quickswitch = 1 WHERE name = @n COLLATE NOCASE;";
+            cmd.Parameters.AddWithValue("@n", QuickSwitchDefaultColumn);
+            cmd.ExecuteNonQuery();
+            cmd.Parameters.Clear();
+        }
 
         // Das allgemeine Board gilt als eingerichtet, sobald es Spalten hat (Daten der ersten Fassung).
         cmd.CommandText = @"
@@ -168,13 +185,14 @@ public sealed partial class TimeTracker
                 cmd.Parameters.AddWithValue("@b", board);
                 if (Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) == 0)
                 {
-                    cmd.CommandText = "INSERT INTO todo_columns (name, position, projekt_id) VALUES (@n, @pos, @b);";
+                    cmd.CommandText = "INSERT INTO todo_columns (name, position, projekt_id, quickswitch) VALUES (@n, @pos, @b, @qs);";
                     for (var i = 0; i < DefaultTodoColumns.Length; i++)
                     {
                         cmd.Parameters.Clear();
                         cmd.Parameters.AddWithValue("@n", DefaultTodoColumns[i]);
                         cmd.Parameters.AddWithValue("@pos", i);
                         cmd.Parameters.AddWithValue("@b", board);
+                        cmd.Parameters.AddWithValue("@qs", DefaultTodoColumns[i] == QuickSwitchDefaultColumn ? 1 : 0);
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -191,12 +209,12 @@ public sealed partial class TimeTracker
         var result = new List<TodoColumnRow>();
         using (var cmd = _conn.CreateCommand())
         {
-            cmd.CommandText = "SELECT id, name, position FROM todo_columns WHERE projekt_id IS @b ORDER BY position, id;";
+            cmd.CommandText = "SELECT id, name, position, quickswitch FROM todo_columns WHERE projekt_id IS @b ORDER BY position, id;";
             cmd.Parameters.AddWithValue("@b", board);
             using (var r = cmd.ExecuteReader())
             {
                 while (r.Read())
-                    result.Add(new TodoColumnRow { Id = r.GetInt32(0), Name = r.GetString(1), Position = r.GetInt32(2) });
+                    result.Add(new TodoColumnRow { Id = r.GetInt32(0), Name = r.GetString(1), Position = r.GetInt32(2), QuickSwitch = r.GetInt32(3) != 0 });
             }
         }
         return result;
@@ -228,6 +246,18 @@ public sealed partial class TimeTracker
         {
             cmd.CommandText = "UPDATE todo_columns SET name = @n WHERE id = @id;";
             cmd.Parameters.AddWithValue("@n", name.Trim());
+            cmd.Parameters.AddWithValue("@id", columnId);
+            cmd.ExecuteNonQuery();
+        }
+    }
+
+    /// <summary>Legt fest, ob die Tickets der Spalte im Quick Switch wählbar sind.</summary>
+    public void SetTodoColumnQuickSwitch(int columnId, bool aktiv)
+    {
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = "UPDATE todo_columns SET quickswitch = @a WHERE id = @id;";
+            cmd.Parameters.AddWithValue("@a", aktiv ? 1 : 0);
             cmd.Parameters.AddWithValue("@id", columnId);
             cmd.ExecuteNonQuery();
         }
@@ -457,6 +487,32 @@ public sealed partial class TimeTracker
         }
     }
 
+    /// <summary>
+    /// Die Tickets, die der Quick Switch anbietet: alle Tickets in Spalten mit eingeschaltetem Quick Switch auf dem
+    /// Board eines Projekts, nach Projekt und Titel sortiert. Das allgemeine Board fehlt, denn auf ein Ticket ohne
+    /// Projekt lässt sich nichts buchen.
+    /// </summary>
+    public List<QuickSwitchTicketRow> GetQuickSwitchTickets()
+    {
+        var result = new List<QuickSwitchTicketRow>();
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = @"
+            SELECT t.id, t.titel, p.projektname
+              FROM todo_tickets t
+              JOIN todo_columns c ON c.id = t.column_id
+              JOIN projects p ON p.id = c.projekt_id
+             WHERE c.quickswitch = 1
+             ORDER BY p.projektname COLLATE NOCASE, t.titel COLLATE NOCASE, t.id;";
+            using (var r = cmd.ExecuteReader())
+            {
+                while (r.Read())
+                    result.Add(new QuickSwitchTicketRow { Id = r.GetInt32(0), Titel = r.GetString(1), Projektname = r.GetString(2) });
+            }
+        }
+        return result;
+    }
+
     // ---------- Notizen ----------
 
     /// <summary>Alle Notizen, die zuletzt geänderte zuerst.</summary>
@@ -542,6 +598,16 @@ public sealed partial class TimeTracker
         public int Id { get; set; }
         public string Name { get; set; }
         public int Position { get; set; }
+        /// <summary>Ob die Tickets dieser Spalte im Quick Switch wählbar sind.</summary>
+        public bool QuickSwitch { get; set; }
+    }
+
+    public class QuickSwitchTicketRow
+    {
+        public int Id { get; set; }
+        public string Titel { get; set; }
+        /// <summary>Das Projekt, dessen Board das Ticket enthält und auf das gebucht wird.</summary>
+        public string Projektname { get; set; }
     }
 
     public class TodoTicketRow
