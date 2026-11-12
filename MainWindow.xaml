@@ -185,6 +185,24 @@
                             IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=export}"
                             Style="{StaticResource NavItem}" />
 
+                        <TextBlock Style="{StaticResource NavGroup}" Text="ORGANISATION" />
+                        <RadioButton
+                            views:Ui.Glyph="&#xE7C4;"
+                            Command="{Binding SelectViewCommand}"
+                            CommandParameter="Todo"
+                            Content="To-Do"
+                            GroupName="Nav"
+                            IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=todo}"
+                            Style="{StaticResource NavItem}" />
+                        <RadioButton
+                            views:Ui.Glyph="&#xE70B;"
+                            Command="{Binding SelectViewCommand}"
+                            CommandParameter="Notes"
+                            Content="Notizen"
+                            GroupName="Nav"
+                            IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=notes}"
+                            Style="{StaticResource NavItem}" />
+
                         <TextBlock Style="{StaticResource NavGroup}" Text="VERWALTUNG" />
                         <RadioButton
                             views:Ui.Glyph="&#xE8B7;"
