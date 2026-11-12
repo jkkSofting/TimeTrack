@@ -15,7 +15,7 @@ param(
     # Nur Changelog-Eintraege bis einschliesslich dieser Version aufnehmen. Noch nicht veroeffentlichte
     # Versionen (die in Changelog.cs schon stehen) gehoeren nicht in die oeffentliche README.
     [Parameter(Mandatory = $true)]
-    [ValidatePattern('^\d+\.\d+\.\d+$')]
+    [ValidatePattern('^\d+\.\d+\.\d+(\.\d+)?$')]
     [string]$UpToVersion,
 
     # Schreibt die README nur in diese Datei, ohne das Release-Repo anzufassen

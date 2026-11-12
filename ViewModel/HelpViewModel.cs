@@ -29,7 +29,7 @@ namespace Zeitmanagement.ViewModel
             _installedVersion = Assembly.GetExecutingAssembly().GetName().Version;
             _seenAtStartup = ParseVersion(Properties.Settings.Default.LastSeenChangelogVersion);
 
-            InstalledVersionText = Normalize(_installedVersion).ToString(3);
+            InstalledVersionText = ShortText(Normalize(_installedVersion));
             HasUnseenNews = _seenAtStartup == null || _seenAtStartup < Normalize(_installedVersion);
 
             OpenPageCommand = new DelegateCommand(page => _openPage(page as string), page => page is string);
@@ -167,17 +167,18 @@ namespace Zeitmanagement.ViewModel
                 return null;
 
             var installed = Normalize(_installedVersion);
-            var isUnseen = release.Version <= installed &&
-                           (_seenAtStartup == null ? release.Version == installed : release.Version > _seenAtStartup);
+            var version = Normalize(release.Version);
+            var isUnseen = version <= installed &&
+                           (_seenAtStartup == null ? version == installed : version > _seenAtStartup);
 
             return new ReleaseItem(
                 release.VersionText,
                 release.Date.ToString("d. MMMM yyyy", German),
                 release.Title,
                 changes,
-                isInstalled: release.Version == installed,
+                isInstalled: version == installed,
                 isUnseen: isUnseen,
-                isUpcoming: release.Version > installed);
+                isUpcoming: version > installed);
         }
 
         /// <summary>Every search term must appear in at least one of the texts (ignoring case).</summary>
@@ -190,9 +191,16 @@ namespace Zeitmanagement.ViewModel
         private static Version ParseVersion(string text) =>
             Version.TryParse(text, out var version) ? Normalize(version) : null;
 
-        /// <summary>Drops the fourth version part, so "2026.43.0.0" from the assembly equals "2026.43.0" from the changelog.</summary>
+        /// <summary>
+        /// Fills missing parts with 0, so "2026.43.0.0" from the assembly equals "2026.43.0" from the changelog and
+        /// "2026.47.1.1" (a hotfix of 2026.47.1) stays different from "2026.47.1".
+        /// </summary>
         private static Version Normalize(Version version) =>
-            new Version(version.Major, version.Minor, Math.Max(version.Build, 0));
+            new Version(version.Major, version.Minor, Math.Max(version.Build, 0), Math.Max(version.Revision, 0));
+
+        /// <summary>"2026.47.1", or "2026.47.1.1" if there is a fourth part: the form used by git tags and the changelog.</summary>
+        private static string ShortText(Version version) =>
+            version.Revision > 0 ? version.ToString(4) : version.ToString(3);
     }
 
     internal sealed class ReleaseItem

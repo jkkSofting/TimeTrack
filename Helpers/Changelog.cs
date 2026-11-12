@@ -53,6 +53,9 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.47.1.1", new DateTime(2026, 11, 12), "",
+                Behoben("To-Do und Notizen: Nach dem Speichern eines Tickets sprang die Auswahl bei „Board von“ auf leer. Das Projekt bleibt jetzt gewählt; dasselbe gilt für die Projektwahl und den Filter bei den Notizen.")),
+
             new ChangelogRelease("2026.47.1", new DateTime(2026, 11, 12), "To-Do und Notizen",
                 Neu("„To-Do“ in der Seitenleiste (Gruppe „Organisation“): ein Board wie bei Trello oder Jira, und zwar je Projekt ein eigenes. Oben wählst du unter „Board von“ das Projekt; „Ohne Projekt“ ist für alles, was zu keinem Projekt gehört. Du legst Tickets mit Titel und Beschreibung an und ordnest sie in Spalten."),
                 Neu("Jedes Board startet mit den Spalten „To Do“, „In Arbeit“ und „Erledigt“. Spalten legst du mit „Neue Spalte“ oder „Spalte hinzufügen“ am Ende des Boards an, benennst sie um, schiebst sie nach links oder rechts und löschst sie mit dem Papierkorb im Spaltenkopf. Hat die Spalte Tickets, fragt TimeTrack vorher nach, denn die Tickets gehen mit."),

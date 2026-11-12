@@ -85,7 +85,8 @@ Neuigkeiten geöffnet wurden.
 ## 1. Version an beiden Stellen erhöhen
 
 Beide Dateien müssen exakt dieselbe Versionsnummer bekommen (Format `Jahr.Minor.Patch`, z. B.
-`2026.39.2`):
+`2026.39.2`; für einen Hotfix einer schon veröffentlichten Version geht auch eine vierte Stelle,
+z. B. `2026.47.1.1`):
 
 - `Properties/AssemblyInfo.cs` — `AssemblyVersion` **und** `AssemblyFileVersion`
 - `Installer/installer.iss` — `#define MyAppVersion "..."`
