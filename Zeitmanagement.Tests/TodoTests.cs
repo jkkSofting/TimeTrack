@@ -9,12 +9,12 @@ namespace Zeitmanagement.Tests
     {
         private static string[] Titles(TimeTracker db, int columnId)
         {
-            return db.GetTodoTickets().Where(t => t.ColumnId == columnId).OrderBy(t => t.Position).Select(t => t.Titel).ToArray();
+            return db.GetTodoTickets(null).Where(t => t.ColumnId == columnId).OrderBy(t => t.Position).Select(t => t.Titel).ToArray();
         }
 
         private static int[] Positions(TimeTracker db, int columnId)
         {
-            return db.GetTodoTickets().Where(t => t.ColumnId == columnId).OrderBy(t => t.Position).Select(t => t.Position).ToArray();
+            return db.GetTodoTickets(null).Where(t => t.ColumnId == columnId).OrderBy(t => t.Position).Select(t => t.Position).ToArray();
         }
 
         [Fact]
@@ -22,7 +22,9 @@ namespace Zeitmanagement.Tests
         {
             using (var t = new TestDb())
             {
-                Assert.Equal(new[] { "To Do", "In Arbeit", "Erledigt" }, t.Db.GetTodoColumns().Select(c => c.Name).ToArray());
+                Assert.Empty(t.Db.GetTodoColumns(null)); // erst das Öffnen richtet das Board ein
+                t.Db.EnsureTodoBoard(null);
+                Assert.Equal(new[] { "To Do", "In Arbeit", "Erledigt" }, t.Db.GetTodoColumns(null).Select(c => c.Name).ToArray());
             }
         }
 
@@ -31,11 +33,13 @@ namespace Zeitmanagement.Tests
         {
             using (var t = new TestDb())
             {
-                foreach (var c in t.Db.GetTodoColumns()) Assert.True(t.Db.DeleteTodoColumn(c.Id));
+                t.Db.EnsureTodoBoard(null);
+                foreach (var c in t.Db.GetTodoColumns(null)) Assert.True(t.Db.DeleteTodoColumn(c.Id));
 
                 t.Restart();
+                t.Db.EnsureTodoBoard(null);
 
-                Assert.Empty(t.Db.GetTodoColumns());
+                Assert.Empty(t.Db.GetTodoColumns(null));
             }
         }
 
@@ -44,14 +48,15 @@ namespace Zeitmanagement.Tests
         {
             using (var t = new TestDb())
             {
-                var col = t.Db.GetTodoColumns()[0].Id;
+                t.Db.EnsureTodoBoard(null);
+                var col = t.Db.GetTodoColumns(null)[0].Id;
                 t.Db.AddTodoTicket(col, "Eins", "Beschreibung\nmit Zeilen");
                 t.Db.AddNote("Notiz", "Text", null);
 
                 t.Restart();
                 t.Restart();
 
-                var ticket = Assert.Single(t.Db.GetTodoTickets());
+                var ticket = Assert.Single(t.Db.GetTodoTickets(null));
                 Assert.Equal("Eins", ticket.Titel);
                 Assert.Equal("Beschreibung\nmit Zeilen", ticket.Beschreibung);
                 Assert.Equal("Notiz", Assert.Single(t.Db.GetNotes()).Titel);
@@ -63,14 +68,15 @@ namespace Zeitmanagement.Tests
         {
             using (var t = new TestDb())
             {
-                var col = t.Db.GetTodoColumns()[0].Id;
+                t.Db.EnsureTodoBoard(null);
+                var col = t.Db.GetTodoColumns(null)[0].Id;
                 t.Db.AddTodoTicket(col, "A", "");
                 t.Db.AddTodoTicket(col, "B", null);
                 t.Db.AddTodoTicket(col, "C", "");
 
                 Assert.Equal(new[] { "A", "B", "C" }, Titles(t.Db, col));
                 Assert.Equal(new[] { 0, 1, 2 }, Positions(t.Db, col));
-                Assert.Equal(string.Empty, t.Db.GetTodoTickets().First(x => x.Titel == "B").Beschreibung);
+                Assert.Equal(string.Empty, t.Db.GetTodoTickets(null).First(x => x.Titel == "B").Beschreibung);
             }
         }
 
@@ -79,7 +85,8 @@ namespace Zeitmanagement.Tests
         {
             using (var t = new TestDb())
             {
-                var col = t.Db.GetTodoColumns()[0].Id;
+                t.Db.EnsureTodoBoard(null);
+                var col = t.Db.GetTodoColumns(null)[0].Id;
                 Assert.Throws<ArgumentException>(() => t.Db.AddTodoTicket(col, "  ", "x"));
 
                 var id = t.Db.AddTodoTicket(col, "A", "");
@@ -92,12 +99,13 @@ namespace Zeitmanagement.Tests
         {
             using (var t = new TestDb())
             {
-                var col = t.Db.GetTodoColumns()[0].Id;
+                t.Db.EnsureTodoBoard(null);
+                var col = t.Db.GetTodoColumns(null)[0].Id;
                 var id = t.Db.AddTodoTicket(col, "Alt", "alt");
 
                 t.Db.UpdateTodoTicket(id, "  Neu ", "neu");
 
-                var ticket = Assert.Single(t.Db.GetTodoTickets());
+                var ticket = Assert.Single(t.Db.GetTodoTickets(null));
                 Assert.Equal("Neu", ticket.Titel);
                 Assert.Equal("neu", ticket.Beschreibung);
             }
@@ -113,7 +121,8 @@ namespace Zeitmanagement.Tests
         {
             using (var t = new TestDb())
             {
-                var cols = t.Db.GetTodoColumns();
+                t.Db.EnsureTodoBoard(null);
+                var cols = t.Db.GetTodoColumns(null);
                 foreach (var title in new[] { "A", "B", "C" }) t.Db.AddTodoTicket(cols[0].Id, title, "");
                 var d = t.Db.AddTodoTicket(cols[1].Id, "D", "");
 
@@ -130,7 +139,8 @@ namespace Zeitmanagement.Tests
         {
             using (var t = new TestDb())
             {
-                var cols = t.Db.GetTodoColumns();
+                t.Db.EnsureTodoBoard(null);
+                var cols = t.Db.GetTodoColumns(null);
                 t.Db.AddTodoTicket(cols[0].Id, "A", "");
                 var b = t.Db.AddTodoTicket(cols[0].Id, "B", "");
                 t.Db.AddTodoTicket(cols[0].Id, "C", "");
@@ -152,9 +162,10 @@ namespace Zeitmanagement.Tests
         {
             using (var t = new TestDb())
             {
-                var col = t.Db.GetTodoColumns()[0].Id;
+                t.Db.EnsureTodoBoard(null);
+                var col = t.Db.GetTodoColumns(null)[0].Id;
                 foreach (var s in new[] { "A", "B", "C" }) t.Db.AddTodoTicket(col, s, "");
-                var id = t.Db.GetTodoTickets().First(x => x.Titel == title).Id;
+                var id = t.Db.GetTodoTickets(null).First(x => x.Titel == title).Id;
 
                 t.Db.MoveTodoTicket(id, col, index);
 
@@ -168,7 +179,8 @@ namespace Zeitmanagement.Tests
         {
             using (var t = new TestDb())
             {
-                var cols = t.Db.GetTodoColumns();
+                t.Db.EnsureTodoBoard(null);
+                var cols = t.Db.GetTodoColumns(null);
                 var a = t.Db.AddTodoTicket(cols[0].Id, "A", "");
 
                 Assert.Throws<InvalidOperationException>(() => t.Db.MoveTodoTicket(9999, cols[0].Id, 0));
@@ -183,7 +195,8 @@ namespace Zeitmanagement.Tests
         {
             using (var t = new TestDb())
             {
-                var col = t.Db.GetTodoColumns()[0].Id;
+                t.Db.EnsureTodoBoard(null);
+                var col = t.Db.GetTodoColumns(null)[0].Id;
                 t.Db.AddTodoTicket(col, "A", "");
                 var b = t.Db.AddTodoTicket(col, "B", "");
                 t.Db.AddTodoTicket(col, "C", "");
@@ -197,19 +210,39 @@ namespace Zeitmanagement.Tests
         }
 
         [Fact]
-        public void Column_with_tickets_is_not_deleted_but_an_empty_one_is()
+        public void Column_with_tickets_is_only_deleted_on_request_together_with_its_tickets()
         {
             using (var t = new TestDb())
             {
-                var cols = t.Db.GetTodoColumns();
+                t.Db.EnsureTodoBoard(null);
+                var cols = t.Db.GetTodoColumns(null);
                 t.Db.AddTodoTicket(cols[0].Id, "A", "");
+                t.Db.AddTodoTicket(cols[0].Id, "B", "");
+                t.Db.AddTodoTicket(cols[2].Id, "Bleibt", "");
 
                 Assert.False(t.Db.DeleteTodoColumn(cols[0].Id));
-                Assert.Single(t.Db.GetTodoTickets());
+                Assert.Equal(3, t.Db.GetTodoTickets(null).Count);
+
+                Assert.True(t.Db.DeleteTodoColumn(cols[0].Id, withTickets: true));
+                Assert.Equal(new[] { "Bleibt" }, t.Db.GetTodoTickets(null).Select(x => x.Titel).ToArray());
+                Assert.Equal(new[] { "In Arbeit", "Erledigt" }, t.Db.GetTodoColumns(null).Select(c => c.Name).ToArray());
+                Assert.Equal(new[] { 0, 1 }, t.Db.GetTodoColumns(null).Select(c => c.Position).ToArray());
+            }
+        }
+
+        [Fact]
+        public void Empty_column_is_deleted_and_the_gap_closes()
+        {
+            using (var t = new TestDb())
+            {
+                t.Db.EnsureTodoBoard(null);
+                var cols = t.Db.GetTodoColumns(null);
 
                 Assert.True(t.Db.DeleteTodoColumn(cols[1].Id));
-                Assert.Equal(new[] { "To Do", "Erledigt" }, t.Db.GetTodoColumns().Select(c => c.Name).ToArray());
-                Assert.Equal(new[] { 0, 1 }, t.Db.GetTodoColumns().Select(c => c.Position).ToArray());
+
+                Assert.Equal(new[] { "To Do", "Erledigt" }, t.Db.GetTodoColumns(null).Select(c => c.Name).ToArray());
+                Assert.Equal(new[] { 0, 1 }, t.Db.GetTodoColumns(null).Select(c => c.Position).ToArray());
+                Assert.True(t.Db.DeleteTodoColumn(9999)); // unbekannt: nichts zu tun
             }
         }
 
@@ -218,21 +251,160 @@ namespace Zeitmanagement.Tests
         {
             using (var t = new TestDb())
             {
-                var review = t.Db.AddTodoColumn("  Review ");
-                var cols = t.Db.GetTodoColumns();
+                t.Db.EnsureTodoBoard(null);
+                var review = t.Db.AddTodoColumn(null, "  Review ");
+                var cols = t.Db.GetTodoColumns(null);
                 Assert.Equal("Review", cols.Last().Name);
 
                 t.Db.RenameTodoColumn(review, "Abnahme");
                 t.Db.MoveTodoColumn(review, 1);
 
-                Assert.Equal(new[] { "To Do", "Abnahme", "In Arbeit", "Erledigt" }, t.Db.GetTodoColumns().Select(c => c.Name).ToArray());
+                Assert.Equal(new[] { "To Do", "Abnahme", "In Arbeit", "Erledigt" }, t.Db.GetTodoColumns(null).Select(c => c.Name).ToArray());
 
                 t.Db.MoveTodoColumn(review, 99);
-                Assert.Equal("Abnahme", t.Db.GetTodoColumns().Last().Name);
+                Assert.Equal("Abnahme", t.Db.GetTodoColumns(null).Last().Name);
 
-                Assert.Throws<ArgumentException>(() => t.Db.AddTodoColumn(" "));
+                Assert.Throws<ArgumentException>(() => t.Db.AddTodoColumn(null, " "));
                 Assert.Throws<ArgumentException>(() => t.Db.RenameTodoColumn(review, ""));
                 Assert.Throws<InvalidOperationException>(() => t.Db.MoveTodoColumn(9999, 0));
+            }
+        }
+
+        [Fact]
+        public void Every_project_has_its_own_board_with_default_columns()
+        {
+            using (var t = new TestDb())
+            {
+                t.Db.AddOrEnsureProject("Alpha", "Kunde", "KT-1");
+                t.Db.AddOrEnsureProject("Beta", "Kunde", "KT-2");
+                t.Db.EnsureTodoBoard("Alpha");
+                t.Db.EnsureTodoBoard("Beta");
+                t.Db.EnsureTodoBoard(null);
+
+                var alpha = t.Db.GetTodoColumns("Alpha");
+                var beta = t.Db.GetTodoColumns("Beta");
+                Assert.Equal(new[] { "To Do", "In Arbeit", "Erledigt" }, alpha.Select(c => c.Name).ToArray());
+                Assert.Equal(new[] { "To Do", "In Arbeit", "Erledigt" }, beta.Select(c => c.Name).ToArray());
+                Assert.Empty(alpha.Select(c => c.Id).Intersect(beta.Select(c => c.Id)));
+
+                t.Db.AddTodoTicket(alpha[0].Id, "Nur Alpha", "");
+                t.Db.AddTodoColumn("Beta", "Nur Beta");
+
+                Assert.Equal(new[] { "Nur Alpha" }, t.Db.GetTodoTickets("Alpha").Select(x => x.Titel).ToArray());
+                Assert.Empty(t.Db.GetTodoTickets("Beta"));
+                Assert.Empty(t.Db.GetTodoTickets(null));
+                Assert.Equal(4, t.Db.GetTodoColumns("Beta").Count);
+                Assert.Equal(3, t.Db.GetTodoColumns("Alpha").Count);
+                Assert.Equal(3, t.Db.GetTodoColumns(null).Count);
+            }
+        }
+
+        [Fact]
+        public void Board_setup_happens_once_and_unknown_projects_are_rejected()
+        {
+            using (var t = new TestDb())
+            {
+                t.Db.AddOrEnsureProject("Alpha", "Kunde", "KT-1");
+                t.Db.EnsureTodoBoard("Alpha");
+                t.Db.EnsureTodoBoard("Alpha");
+                Assert.Equal(3, t.Db.GetTodoColumns("Alpha").Count);
+
+                Assert.Throws<InvalidOperationException>(() => t.Db.EnsureTodoBoard("Gibt es nicht"));
+                Assert.Throws<InvalidOperationException>(() => t.Db.GetTodoColumns("Gibt es nicht"));
+                Assert.Throws<InvalidOperationException>(() => t.Db.AddTodoColumn("Gibt es nicht", "X"));
+            }
+        }
+
+        [Fact]
+        public void Columns_move_only_within_their_own_board()
+        {
+            using (var t = new TestDb())
+            {
+                t.Db.AddOrEnsureProject("Alpha", "Kunde", "KT-1");
+                t.Db.EnsureTodoBoard("Alpha");
+                t.Db.EnsureTodoBoard(null);
+                var alpha = t.Db.GetTodoColumns("Alpha");
+
+                t.Db.MoveTodoColumn(alpha[0].Id, 99);
+
+                Assert.Equal(new[] { "In Arbeit", "Erledigt", "To Do" }, t.Db.GetTodoColumns("Alpha").Select(c => c.Name).ToArray());
+                Assert.Equal(new[] { "To Do", "In Arbeit", "Erledigt" }, t.Db.GetTodoColumns(null).Select(c => c.Name).ToArray());
+            }
+        }
+
+        [Fact]
+        public void Ticket_cannot_be_moved_to_a_column_of_another_board()
+        {
+            using (var t = new TestDb())
+            {
+                t.Db.AddOrEnsureProject("Alpha", "Kunde", "KT-1");
+                t.Db.EnsureTodoBoard("Alpha");
+                t.Db.EnsureTodoBoard(null);
+                var alpha = t.Db.GetTodoColumns("Alpha");
+                var general = t.Db.GetTodoColumns(null);
+                var id = t.Db.AddTodoTicket(alpha[0].Id, "A", "");
+
+                Assert.Throws<InvalidOperationException>(() => t.Db.MoveTodoTicket(id, general[0].Id, 0));
+
+                Assert.Equal(new[] { "A" }, t.Db.GetTodoTickets("Alpha").Select(x => x.Titel).ToArray());
+                Assert.Empty(t.Db.GetTodoTickets(null));
+            }
+        }
+
+        [Fact]
+        public void Deleting_a_project_removes_its_board_but_not_the_others()
+        {
+            using (var t = new TestDb())
+            {
+                t.Db.AddOrEnsureProject("Alpha", "Kunde", "KT-1");
+                t.Db.EnsureTodoBoard("Alpha");
+                t.Db.EnsureTodoBoard(null);
+                t.Db.AddTodoTicket(t.Db.GetTodoColumns("Alpha")[0].Id, "A", "");
+                t.Db.AddTodoTicket(t.Db.GetTodoColumns(null)[0].Id, "Allgemein", "");
+
+                t.Db.DeleteProject("Alpha");
+
+                Assert.Equal(0, t.Scalar("SELECT COUNT(*) FROM todo_columns WHERE projekt_id IS NOT NULL"));
+                Assert.Equal(new[] { "Allgemein" }, t.Db.GetTodoTickets(null).Select(x => x.Titel).ToArray());
+                Assert.Equal(3, t.Db.GetTodoColumns(null).Count);
+            }
+        }
+
+        [Fact]
+        public void Board_of_the_first_version_survives_as_the_general_board()
+        {
+            using (var t = new TestDb())
+            {
+                // Zustand der ersten Fassung nachbauen: ein Board ohne Spalte projekt_id, ohne Tabelle todo_boards
+                t.Db.Dispose();
+                System.Data.SQLite.SQLiteConnection.ClearAllPools();
+                using (var conn = new System.Data.SQLite.SQLiteConnection("Data Source=" + t.Path))
+                {
+                    conn.Open();
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = @"
+                        DROP TABLE todo_tickets; DROP TABLE todo_columns; DROP TABLE todo_boards;
+                        CREATE TABLE todo_columns(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, position INTEGER NOT NULL);
+                        CREATE TABLE todo_tickets(
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            column_id INTEGER NOT NULL REFERENCES todo_columns(id) ON DELETE CASCADE,
+                            titel TEXT NOT NULL, beschreibung TEXT NOT NULL DEFAULT '', position INTEGER NOT NULL,
+                            created_utc TEXT NOT NULL, updated_utc TEXT NOT NULL);
+                        INSERT INTO todo_columns (name, position) VALUES ('Alt A', 0), ('Alt B', 1);
+                        INSERT INTO todo_tickets (column_id, titel, position, created_utc, updated_utc)
+                             VALUES (1, 'Altes Ticket', 0, '2026-11-12T10:00:00Z', '2026-11-12T10:00:00Z');";
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                System.Data.SQLite.SQLiteConnection.ClearAllPools();
+
+                t.Restart();
+                t.Restart();
+                t.Db.EnsureTodoBoard(null); // darf keine Standardspalten dazulegen
+
+                Assert.Equal(new[] { "Alt A", "Alt B" }, t.Db.GetTodoColumns(null).Select(c => c.Name).ToArray());
+                Assert.Equal("Altes Ticket", Assert.Single(t.Db.GetTodoTickets(null)).Titel);
             }
         }
 
@@ -241,6 +413,7 @@ namespace Zeitmanagement.Tests
         {
             using (var t = new TestDb())
             {
+                t.Db.EnsureTodoBoard(null);
                 var first = t.Db.AddNote("Erste", "a", null);
                 System.Threading.Thread.Sleep(1100); // Zeitstempel haben Sekundenauflösung
                 var second = t.Db.AddNote("Zweite", "b", null);
@@ -265,6 +438,7 @@ namespace Zeitmanagement.Tests
         {
             using (var t = new TestDb())
             {
+                t.Db.EnsureTodoBoard(null);
                 t.Db.AddOrEnsureProject("Alpha", "Kunde", "KT-1");
 
                 var a = t.Db.AddNote("Mit", "", "Alpha");
@@ -288,6 +462,7 @@ namespace Zeitmanagement.Tests
         {
             using (var t = new TestDb())
             {
+                t.Db.EnsureTodoBoard(null);
                 t.Db.AddOrEnsureProject("Alpha", "Kunde", "KT-1");
                 t.Db.AddNote("N", "text", "Alpha");
 

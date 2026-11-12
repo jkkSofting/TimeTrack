@@ -119,12 +119,21 @@
                         <Button
                             Width="28"
                             Height="28"
+                            local:Ui.Glyph="&#xE74D;"
+                            Command="{Binding DeleteCommand}"
+                            CommandParameter="{Binding}"
+                            DockPanel.Dock="Right"
+                            Style="{StaticResource Button.IconGhost}"
+                            ToolTip="Spalte löschen" />
+                        <Button
+                            Width="28"
+                            Height="28"
                             local:Ui.Glyph="&#xE70F;"
                             Command="{Binding EditCommand}"
                             CommandParameter="{Binding}"
                             DockPanel.Dock="Right"
                             Style="{StaticResource Button.IconGhost}"
-                            ToolTip="Spalte umbenennen, verschieben oder löschen" />
+                            ToolTip="Spalte umbenennen oder verschieben" />
                         <Border
                             Margin="0,0,6,0"
                             Padding="8,1"
@@ -191,6 +200,18 @@
                 VerticalAlignment="Center"
                 DockPanel.Dock="Right"
                 Orientation="Horizontal">
+                <TextBlock
+                    Margin="0,0,8,0"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource Text.Muted}"
+                    Text="Board von" />
+                <ComboBox
+                    Width="260"
+                    Margin="0,0,8,0"
+                    AutomationProperties.Name="Projekt, dessen Board angezeigt wird"
+                    ItemsSource="{Binding ProjectOptions}"
+                    SelectedItem="{Binding SelectedProject, Mode=TwoWay}"
+                    ToolTip="Jedes Projekt hat sein eigenes Board. „Ohne Projekt“ ist für alles, was zu keinem Projekt gehört." />
                 <Button
                     local:Ui.Glyph="&#xE72C;"
                     Command="{Binding RefreshCommand}"
@@ -216,16 +237,29 @@
             Margin="28,0,14,24"
             HorizontalScrollBarVisibility="Auto"
             VerticalScrollBarVisibility="Disabled">
-            <ItemsControl
-                Focusable="False"
-                ItemTemplate="{StaticResource ColumnTemplate}"
-                ItemsSource="{Binding Columns}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-            </ItemsControl>
+            <StackPanel Orientation="Horizontal">
+                <ItemsControl
+                    Focusable="False"
+                    ItemTemplate="{StaticResource ColumnTemplate}"
+                    ItemsSource="{Binding Columns}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+
+                <!--  Spalte am Ende des Boards anlegen  -->
+                <Button
+                    Width="300"
+                    Margin="0,0,14,0"
+                    VerticalAlignment="Top"
+                    HorizontalContentAlignment="Left"
+                    local:Ui.Glyph="&#xE710;"
+                    Command="{Binding AddColumnCommand}"
+                    Content="Spalte hinzufügen"
+                    Style="{StaticResource Button.Secondary}" />
+            </StackPanel>
         </ScrollViewer>
 
         <!--  Hinweis, solange das Board keine Spalte hat  -->
@@ -290,7 +324,6 @@
                     <TextBlock Style="{StaticResource FieldLabel}" Text="Spalte" />
                     <ComboBox
                         AutomationProperties.Name="Spalte des Tickets"
-                        DisplayMemberPath="Name"
                         ItemsSource="{Binding Columns}"
                         SelectedItem="{Binding SelectedTicketColumn, Mode=TwoWay}" />
 
@@ -371,7 +404,7 @@
                             Content="Löschen"
                             DockPanel.Dock="Left"
                             Style="{StaticResource Button.Danger}"
-                            ToolTip="Nur leere Spalten lassen sich löschen"
+                            ToolTip="Spalte samt ihren Tickets löschen (mit Rückfrage)"
                             Visibility="{Binding IsEditingColumn, Converter={StaticResource BoolToVis}}" />
                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
                             <Button

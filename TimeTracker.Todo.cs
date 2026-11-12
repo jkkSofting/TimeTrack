@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Globalization;
 
-// To-Do-Board (Spalten und Tickets) und Projektnotizen. Alles liegt in derselben Datenbank wie die Zeiterfassung, damit
-// Sicherungen es mitnehmen. Die Tabellen der Zeiterfassung und ihre Trigger bleiben unberührt; Notizen verweisen
-// höchstens über die Projekt-ID auf ein Projekt (und überleben dessen Löschen ohne Zuordnung).
+// To-Do-Boards (Spalten und Tickets) und Projektnotizen. Alles liegt in derselben Datenbank wie die Zeiterfassung, damit
+// Sicherungen es mitnehmen. Die Tabellen der Zeiterfassung und ihre Trigger bleiben unberührt.
+// Jedes Projekt hat sein eigenes Board (Spalten verweisen über die Projekt-ID auf das Projekt und verschwinden mit ihm).
+// Zusätzlich gibt es ein allgemeines Board ohne Projekt (Projekt-ID leer). Notizen verweisen höchstens auf ein Projekt
+// und überleben dessen Löschen ohne Zuordnung.
 public sealed partial class TimeTracker
 {
     private const string UtcFormat = "yyyy-MM-ddTHH:mm:ssZ";
@@ -15,20 +17,18 @@ public sealed partial class TimeTracker
     private static readonly string[] DefaultTodoColumns = { "To Do", "In Arbeit", "Erledigt" };
 
     /// <summary>
-    /// Legt die Tabellen für Board und Notizen an (idempotent, nur additiv). Läuft innerhalb der Transaktion von
-    /// <see cref="EnsureSchema"/>. Die Standardspalten gibt es nur, wenn die Tabelle neu entsteht: Wer alle Spalten
-    /// löscht, soll sie beim nächsten Start nicht wieder auftauchen sehen.
+    /// Legt die Tabellen für Boards und Notizen an (idempotent, nur additiv). Läuft innerhalb der Transaktion von
+    /// <see cref="EnsureSchema"/>. Die Standardspalten eines Boards entstehen erst beim ersten Öffnen
+    /// (<see cref="EnsureTodoBoard"/>) und nur einmal: Wer alle Spalten löscht, soll sie nicht wieder auftauchen sehen.
     /// </summary>
     private static void EnsureTodoSchema(SQLiteCommand cmd)
     {
-        cmd.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'todo_columns';";
-        var isNew = Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) == 0;
-
         cmd.CommandText = @"
         CREATE TABLE IF NOT EXISTS todo_columns(
-            id       INTEGER PRIMARY KEY AUTOINCREMENT,
-            name     TEXT    NOT NULL,
-            position INTEGER NOT NULL
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            name       TEXT    NOT NULL,
+            position   INTEGER NOT NULL,
+            projekt_id INTEGER NULL REFERENCES projects(id) ON DELETE CASCADE  -- leer = allgemeines Board
         );
 
         CREATE TABLE IF NOT EXISTS todo_tickets(
@@ -42,6 +42,11 @@ public sealed partial class TimeTracker
         );
         CREATE INDEX IF NOT EXISTS idx_todo_tickets_col ON todo_tickets(column_id, position);
 
+        -- Boards, die ihre Standardspalten schon bekommen haben ('general' oder 'p:<Projekt-ID>')
+        CREATE TABLE IF NOT EXISTS todo_boards(
+            scope TEXT PRIMARY KEY
+        );
+
         CREATE TABLE IF NOT EXISTS notes(
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             titel       TEXT    NOT NULL DEFAULT '',
@@ -53,17 +58,23 @@ public sealed partial class TimeTracker
         CREATE INDEX IF NOT EXISTS idx_notes_updated ON notes(updated_utc);";
         cmd.ExecuteNonQuery();
 
-        if (!isNew) return;
-
-        cmd.CommandText = "INSERT INTO todo_columns (name, position) VALUES (@n, @p);";
-        for (var i = 0; i < DefaultTodoColumns.Length; i++)
+        // Migration: Die erste Fassung hatte ein einziges Board ohne Projektbezug. Dessen Spalten und Tickets
+        // bleiben als allgemeines Board (Projekt-ID leer) erhalten.
+        cmd.CommandText = "SELECT COUNT(*) FROM pragma_table_info('todo_columns') WHERE name = 'projekt_id';";
+        if (Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) == 0)
         {
-            cmd.Parameters.Clear();
-            cmd.Parameters.AddWithValue("@n", DefaultTodoColumns[i]);
-            cmd.Parameters.AddWithValue("@p", i);
+            cmd.CommandText = "ALTER TABLE todo_columns ADD COLUMN projekt_id INTEGER NULL REFERENCES projects(id) ON DELETE CASCADE;";
             cmd.ExecuteNonQuery();
         }
-        cmd.Parameters.Clear();
+
+        cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_todo_columns_board ON todo_columns(projekt_id, position);";
+        cmd.ExecuteNonQuery();
+
+        // Das allgemeine Board gilt als eingerichtet, sobald es Spalten hat (Daten der ersten Fassung).
+        cmd.CommandText = @"
+        INSERT OR IGNORE INTO todo_boards (scope)
+        SELECT 'general' WHERE EXISTS (SELECT 1 FROM todo_columns WHERE projekt_id IS NULL);";
+        cmd.ExecuteNonQuery();
     }
 
     private static string UtcNow() => DateTime.UtcNow.ToString(UtcFormat, CultureInfo.InvariantCulture);
@@ -107,12 +118,81 @@ public sealed partial class TimeTracker
 
     // ---------- Board: Spalten ----------
 
-    public List<TodoColumnRow> GetTodoColumns()
+    /// <summary>
+    /// Die Projekt-ID des Boards: <see cref="DBNull"/> fürs allgemeine Board (leerer Name), sonst die Id des Projekts.
+    /// Ein unbekanntes Projekt ist ein Fehler und kein stilles Allgemein-Board.
+    /// </summary>
+    private object ResolveBoard(string projektname)
     {
+        if (string.IsNullOrWhiteSpace(projektname)) return DBNull.Value;
+
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = "SELECT id FROM projects WHERE projektname = @p;";
+            cmd.Parameters.AddWithValue("@p", projektname);
+            var o = cmd.ExecuteScalar();
+            if (o == null || o == DBNull.Value)
+                throw new InvalidOperationException($"Projekt '{projektname}' existiert nicht.");
+            return Convert.ToInt32(o, CultureInfo.InvariantCulture);
+        }
+    }
+
+    // Alle Spalten desselben Boards wie die Spalte @col, in ihrer Reihenfolge.
+    private const string ColumnIdsOfSameBoard = @"
+        SELECT id FROM todo_columns
+         WHERE projekt_id IS (SELECT projekt_id FROM todo_columns WHERE id = @col)
+         ORDER BY position, id;";
+
+    /// <summary>
+    /// Richtet das Board eines Projekts (leerer Name: das allgemeine Board) beim ersten Öffnen mit den
+    /// Standardspalten ein. Danach tut der Aufruf nichts mehr, auch nicht, wenn alle Spalten gelöscht wurden.
+    /// </summary>
+    public void EnsureTodoBoard(string projektname)
+    {
+        var board = ResolveBoard(projektname);
+        var scope = board is DBNull ? "general" : "p:" + Convert.ToString(board, CultureInfo.InvariantCulture);
+
+        using (var tx = _conn.BeginTransaction())
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.Transaction = tx;
+
+            cmd.CommandText = "INSERT OR IGNORE INTO todo_boards (scope) VALUES (@s);";
+            cmd.Parameters.AddWithValue("@s", scope);
+            var firstTime = cmd.ExecuteNonQuery() == 1;
+
+            if (firstTime)
+            {
+                cmd.Parameters.Clear();
+                cmd.CommandText = "SELECT COUNT(*) FROM todo_columns WHERE projekt_id IS @b;";
+                cmd.Parameters.AddWithValue("@b", board);
+                if (Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) == 0)
+                {
+                    cmd.CommandText = "INSERT INTO todo_columns (name, position, projekt_id) VALUES (@n, @pos, @b);";
+                    for (var i = 0; i < DefaultTodoColumns.Length; i++)
+                    {
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.AddWithValue("@n", DefaultTodoColumns[i]);
+                        cmd.Parameters.AddWithValue("@pos", i);
+                        cmd.Parameters.AddWithValue("@b", board);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+
+            tx.Commit();
+        }
+    }
+
+    /// <summary>Die Spalten des Boards eines Projekts (leerer Name: allgemeines Board) von links nach rechts.</summary>
+    public List<TodoColumnRow> GetTodoColumns(string projektname)
+    {
+        var board = ResolveBoard(projektname);
         var result = new List<TodoColumnRow>();
         using (var cmd = _conn.CreateCommand())
         {
-            cmd.CommandText = "SELECT id, name, position FROM todo_columns ORDER BY position, id;";
+            cmd.CommandText = "SELECT id, name, position FROM todo_columns WHERE projekt_id IS @b ORDER BY position, id;";
+            cmd.Parameters.AddWithValue("@b", board);
             using (var r = cmd.ExecuteReader())
             {
                 while (r.Read())
@@ -122,18 +202,20 @@ public sealed partial class TimeTracker
         return result;
     }
 
-    /// <summary>Hängt eine Spalte hinten an und liefert ihre Id.</summary>
-    public int AddTodoColumn(string name)
+    /// <summary>Hängt eine Spalte hinten an das Board an und liefert ihre Id.</summary>
+    public int AddTodoColumn(string projektname, string name)
     {
         if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Der Name der Spalte darf nicht leer sein.", nameof(name));
 
+        var board = ResolveBoard(projektname);
         using (var cmd = _conn.CreateCommand())
         {
             cmd.CommandText = @"
-            INSERT INTO todo_columns (name, position)
-                 VALUES (@n, (SELECT IFNULL(MAX(position), -1) + 1 FROM todo_columns));
+            INSERT INTO todo_columns (name, position, projekt_id)
+                 VALUES (@n, (SELECT IFNULL(MAX(position), -1) + 1 FROM todo_columns WHERE projekt_id IS @b), @b);
             SELECT last_insert_rowid();";
             cmd.Parameters.AddWithValue("@n", name.Trim());
+            cmd.Parameters.AddWithValue("@b", board);
             return Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture);
         }
     }
@@ -151,7 +233,10 @@ public sealed partial class TimeTracker
         }
     }
 
-    /// <summary>Setzt die Spalte an die Stelle <paramref name="newIndex"/> (0 = ganz links); ein zu großer Wert heißt: ganz rechts.</summary>
+    /// <summary>
+    /// Setzt die Spalte innerhalb ihres Boards an die Stelle <paramref name="newIndex"/> (0 = ganz links);
+    /// ein zu großer Wert heißt: ganz rechts.
+    /// </summary>
     public void MoveTodoColumn(int columnId, int newIndex)
     {
         using (var tx = _conn.BeginTransaction())
@@ -159,7 +244,7 @@ public sealed partial class TimeTracker
         {
             cmd.Transaction = tx;
 
-            var ids = ReadIds(cmd, "SELECT id FROM todo_columns ORDER BY position, id;");
+            var ids = ReadIds(cmd, ColumnIdsOfSameBoard, new SQLiteParameter("@col", columnId));
             if (!ids.Remove(columnId))
             {
                 tx.Rollback();
@@ -173,28 +258,39 @@ public sealed partial class TimeTracker
     }
 
     /// <summary>
-    /// Löscht eine Spalte. Eine Spalte mit Tickets wird nie gelöscht (<c>false</c>), damit keine Tickets verloren gehen.
+    /// Löscht eine Spalte. Mit <paramref name="withTickets"/> gehen ihre Tickets mit; ohne bleibt eine Spalte mit
+    /// Tickets unangetastet (<c>false</c>). Eine unbekannte Spalte ist kein Fehler.
     /// </summary>
-    public bool DeleteTodoColumn(int columnId)
+    public bool DeleteTodoColumn(int columnId, bool withTickets = false)
     {
         using (var tx = _conn.BeginTransaction())
         using (var cmd = _conn.CreateCommand())
         {
             cmd.Transaction = tx;
 
+            var ids = ReadIds(cmd, ColumnIdsOfSameBoard, new SQLiteParameter("@col", columnId));
+            if (!ids.Remove(columnId))
+            {
+                tx.Rollback();
+                return true;
+            }
+
             cmd.CommandText = "SELECT COUNT(*) FROM todo_tickets WHERE column_id = @id;";
             cmd.Parameters.AddWithValue("@id", columnId);
-            if (Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) > 0)
+            if (Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) > 0 && !withTickets)
             {
                 tx.Rollback();
                 return false;
             }
 
+            cmd.CommandText = "DELETE FROM todo_tickets WHERE column_id = @id;";
+            cmd.ExecuteNonQuery();
             cmd.CommandText = "DELETE FROM todo_columns WHERE id = @id;";
             cmd.ExecuteNonQuery();
 
             // Lücke in den Positionen schließen
-            WritePositions(cmd, "todo_columns", ReadIds(cmd, "SELECT id FROM todo_columns ORDER BY position, id;"));
+            cmd.Parameters.Clear();
+            WritePositions(cmd, "todo_columns", ids);
             tx.Commit();
             return true;
         }
@@ -202,16 +298,20 @@ public sealed partial class TimeTracker
 
     // ---------- Board: Tickets ----------
 
-    /// <summary>Alle Tickets, je Spalte nach ihrer Reihenfolge.</summary>
-    public List<TodoTicketRow> GetTodoTickets()
+    /// <summary>Alle Tickets des Boards eines Projekts (leerer Name: allgemeines Board), je Spalte nach ihrer Reihenfolge.</summary>
+    public List<TodoTicketRow> GetTodoTickets(string projektname)
     {
+        var board = ResolveBoard(projektname);
         var result = new List<TodoTicketRow>();
         using (var cmd = _conn.CreateCommand())
         {
             cmd.CommandText = @"
-            SELECT id, column_id, titel, beschreibung, position, created_utc, updated_utc
-              FROM todo_tickets
-             ORDER BY column_id, position, id;";
+            SELECT t.id, t.column_id, t.titel, t.beschreibung, t.position, t.created_utc, t.updated_utc
+              FROM todo_tickets t
+              JOIN todo_columns c ON c.id = t.column_id
+             WHERE c.projekt_id IS @b
+             ORDER BY t.column_id, t.position, t.id;";
+            cmd.Parameters.AddWithValue("@b", board);
             using (var r = cmd.ExecuteReader())
             {
                 while (r.Read())
@@ -299,7 +399,7 @@ public sealed partial class TimeTracker
     }
 
     /// <summary>
-    /// Verschiebt ein Ticket in die Spalte <paramref name="targetColumnId"/> (auch dieselbe) an die Stelle
+    /// Verschiebt ein Ticket in die Spalte <paramref name="targetColumnId"/> desselben Boards (auch dieselbe) an die Stelle
     /// <paramref name="targetIndex"/>. Der Index zählt in der Zielspalte ohne das Ticket selbst; ein zu großer Wert
     /// heißt: ans Ende.
     /// </summary>
@@ -320,13 +420,17 @@ public sealed partial class TimeTracker
             }
             var sourceColumnId = Convert.ToInt32(source, CultureInfo.InvariantCulture);
 
-            cmd.CommandText = "SELECT COUNT(*) FROM todo_columns WHERE id = @c;";
+            // Die Zielspalte muss es geben und zum selben Board gehören wie die Quellspalte.
+            cmd.CommandText = @"
+            SELECT COUNT(*) FROM todo_columns t, todo_columns s
+             WHERE t.id = @c AND s.id = @src AND t.projekt_id IS s.projekt_id;";
             cmd.Parameters.Clear();
             cmd.Parameters.AddWithValue("@c", targetColumnId);
+            cmd.Parameters.AddWithValue("@src", sourceColumnId);
             if (Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) == 0)
             {
                 tx.Rollback();
-                throw new InvalidOperationException("Die Zielspalte existiert nicht.");
+                throw new InvalidOperationException("Die Zielspalte existiert nicht oder gehört zu einem anderen Board.");
             }
 
             var ids = ReadIds(cmd,

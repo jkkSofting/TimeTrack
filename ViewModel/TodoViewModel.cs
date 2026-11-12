@@ -72,12 +72,13 @@ namespace Zeitmanagement.ViewModel
     /// <summary>Eine Spalte des Boards mit ihren Tickets.</summary>
     internal sealed class TodoColumnViewModel : BindableBase
     {
-        public TodoColumnViewModel(TimeTracker.TodoColumnRow row, DelegateCommand addTicketCommand, DelegateCommand editCommand)
+        public TodoColumnViewModel(TimeTracker.TodoColumnRow row, DelegateCommand addTicketCommand, DelegateCommand editCommand, DelegateCommand deleteCommand)
         {
             Id = row.Id;
             Name = row.Name;
             AddTicketCommand = addTicketCommand;
             EditCommand = editCommand;
+            DeleteCommand = deleteCommand;
             Tickets.CollectionChanged += (s, e) => RaisePropertyChanged(nameof(TicketCountText));
         }
 
@@ -107,21 +108,33 @@ namespace Zeitmanagement.ViewModel
 
         /// <summary>Spalte umbenennen, verschieben oder löschen (Parameter ist die Spalte).</summary>
         public DelegateCommand EditCommand { get; }
+
+        /// <summary>Spalte nach Rückfrage löschen (Parameter ist die Spalte).</summary>
+        public DelegateCommand DeleteCommand { get; }
+
+        // Auswahllisten (ComboBox) zeigen ein Element über ToString; ohne das stünde dort der Typname.
+        public override string ToString() => Name;
     }
 
     /// <summary>
-    /// Die Seite „To-Do“: ein Board mit frei benennbaren Spalten (anfangs To Do, In Arbeit, Erledigt), in denen
-    /// Tickets liegen. Ein Ticket hat nur Titel und Beschreibung und wird per Ziehen oder über die Spaltenwahl im
-    /// Ticket verschoben.
+    /// Die Seite „To-Do“: je Projekt ein Board (dazu ein allgemeines „Ohne Projekt“) mit frei benennbaren Spalten
+    /// (anfangs To Do, In Arbeit, Erledigt), in denen Tickets liegen. Ein Ticket hat nur Titel und Beschreibung und
+    /// wird per Ziehen oder über die Spaltenwahl im Ticket verschoben.
     /// </summary>
     internal sealed class TodoViewModel : BaseViewModel
     {
         private static TimeTracker Db => MainViewModel.DbInstance;
 
+        /// <summary>Eintrag der Projektwahl für das allgemeine Board.</summary>
+        public const string GeneralBoardLabel = "Ohne Projekt";
+
         public TodoViewModel()
         {
             _addTicketCommand = new DelegateCommand(c => OpenNewTicket((TodoColumnViewModel)c));
             _editColumnCommand = new DelegateCommand(c => OpenColumn((TodoColumnViewModel)c));
+            _deleteColumnCommand = new DelegateCommand(c => DeleteColumn((TodoColumnViewModel)c));
+            ProjectOptions.Add(GeneralBoardLabel);
+            _selectedProject = GeneralBoardLabel;
 
             AddColumnCommand = new DelegateCommand(_ => OpenNewColumn());
             RefreshCommand = new DelegateCommand(_ => Refresh());
@@ -132,7 +145,7 @@ namespace Zeitmanagement.ViewModel
 
             SaveColumnCommand = new DelegateCommand(_ => SaveColumn(), _ => IsColumnEditorOpen && !string.IsNullOrWhiteSpace(ColumnName));
             CancelColumnCommand = new DelegateCommand(_ => IsColumnEditorOpen = false);
-            DeleteColumnCommand = new DelegateCommand(_ => DeleteColumn(), _ => IsEditingColumn);
+            DeleteColumnCommand = new DelegateCommand(_ => DeleteColumn(Columns.FirstOrDefault(c => c.Id == _editingColumnId)), _ => IsEditingColumn);
             MoveColumnLeftCommand = new DelegateCommand(_ => MoveColumn(-1), _ => CanMoveColumn(-1));
             MoveColumnRightCommand = new DelegateCommand(_ => MoveColumn(1), _ => CanMoveColumn(1));
 
@@ -145,6 +158,7 @@ namespace Zeitmanagement.ViewModel
 
         private readonly DelegateCommand _addTicketCommand;
         private readonly DelegateCommand _editColumnCommand;
+        private readonly DelegateCommand _deleteColumnCommand;
 
         public ObservableCollection<TodoColumnViewModel> Columns { get; } = new ObservableCollection<TodoColumnViewModel>();
 
@@ -162,14 +176,68 @@ namespace Zeitmanagement.ViewModel
         public DelegateCommand AddColumnCommand { get; }
         public DelegateCommand RefreshCommand { get; }
 
+        // ---------- Board (Projekt) wählen ----------
+
+        /// <summary>Einträge der Projektwahl: „Ohne Projekt“, dann die Projekte. Jedes hat sein eigenes Board.</summary>
+        public ObservableCollection<string> ProjectOptions { get; } = new ObservableCollection<string>();
+
+        private string _selectedProject;
+        public string SelectedProject
+        {
+            get => _selectedProject;
+            set
+            {
+                // Beim Neuaufbau der Auswahlliste meldet das ComboBox kurz null.
+                if (value == null) return;
+                if (!SetProperty(ref _selectedProject, value)) return;
+
+                IsTicketEditorOpen = false;
+                IsColumnEditorOpen = false;
+                LoadBoard(); // die Projektliste bleibt unberührt, solange die Auswahl noch läuft
+            }
+        }
+
+        /// <summary>Das Projekt des angezeigten Boards, <c>null</c> für das allgemeine Board.</summary>
+        private string CurrentProject => SelectedProject == GeneralBoardLabel ? null : SelectedProject;
+
+        private void SyncProjectOptions()
+        {
+            var names = Db.GetProjects().Select(p => p.Projektname).OrderBy(n => n, StringComparer.CurrentCultureIgnoreCase).ToList();
+            var selected = SelectedProject;
+
+            ProjectOptions.Clear();
+            ProjectOptions.Add(GeneralBoardLabel);
+            foreach (var n in names) ProjectOptions.Add(n);
+
+            // Wurde das gewählte Projekt gelöscht, zeigt das Board wieder „Ohne Projekt“.
+            _selectedProject = ProjectOptions.Contains(selected) ? selected : GeneralBoardLabel;
+            RaisePropertyChanged(nameof(SelectedProject));
+        }
+
         // ---------- Laden ----------
 
         public override void Refresh()
         {
             try
             {
-                var columnRows = Db.GetTodoColumns();
-                var ticketRows = Db.GetTodoTickets().ToLookup(t => t.ColumnId);
+                SyncProjectOptions();
+            }
+            catch (Exception ex)
+            {
+                ShowError("Die Projekte konnten nicht geladen werden", ex);
+            }
+
+            LoadBoard();
+        }
+
+        private void LoadBoard()
+        {
+            try
+            {
+                // Das Board richtet sich beim ersten Öffnen mit den Standardspalten ein.
+                Db.EnsureTodoBoard(CurrentProject);
+                var columnRows = Db.GetTodoColumns(CurrentProject);
+                var ticketRows = Db.GetTodoTickets(CurrentProject).ToLookup(t => t.ColumnId);
 
                 SyncColumns(columnRows);
                 foreach (var column in Columns)
@@ -197,7 +265,7 @@ namespace Zeitmanagement.ViewModel
 
                 if (at < 0)
                 {
-                    Columns.Insert(i, new TodoColumnViewModel(row, _addTicketCommand, _editColumnCommand));
+                    Columns.Insert(i, new TodoColumnViewModel(row, _addTicketCommand, _editColumnCommand, _deleteColumnCommand));
                     continue;
                 }
 
@@ -475,7 +543,7 @@ namespace Zeitmanagement.ViewModel
                 if (_editingColumnId.HasValue)
                     Db.RenameTodoColumn(_editingColumnId.Value, ColumnName);
                 else
-                    Db.AddTodoColumn(ColumnName);
+                    Db.AddTodoColumn(CurrentProject, ColumnName);
 
                 IsColumnEditorOpen = false;
                 Refresh();
@@ -486,39 +554,24 @@ namespace Zeitmanagement.ViewModel
             }
         }
 
-        private void DeleteColumn()
+        private void DeleteColumn(TodoColumnViewModel column)
         {
-            if (!_editingColumnId.HasValue) return;
+            if (column == null) return;
 
-            var column = Columns.FirstOrDefault(c => c.Id == _editingColumnId.Value);
-            if (column != null && column.Tickets.Count > 0)
-            {
-                MessageBox.Show(
-                    $"Die Spalte „{column.Name}“ enthält noch {column.Tickets.Count} {(column.Tickets.Count == 1 ? "Ticket" : "Tickets")}. " +
-                    "Verschiebe oder lösche sie zuerst, dann lässt sich die Spalte entfernen.",
-                    "Spalte löschen",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-                return;
-            }
+            var count = column.Tickets.Count;
+            var question = count == 0
+                ? $"Spalte „{column.Name}“ löschen?"
+                : $"Spalte „{column.Name}“ löschen?\n\nSie enthält {count} {(count == 1 ? "Ticket" : "Tickets")}, " +
+                  (count == 1 ? "das" : "die") + " dabei endgültig gelöscht " + (count == 1 ? "wird" : "werden") + ".";
 
-            var answer = MessageBox.Show(
-                $"Spalte „{ColumnName}“ löschen?",
-                "Spalte löschen",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
+            var answer = MessageBox.Show(question, "Spalte löschen", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (answer != MessageBoxResult.Yes) return;
 
             try
             {
-                if (!Db.DeleteTodoColumn(_editingColumnId.Value))
-                {
-                    MessageBox.Show("Die Spalte enthält inzwischen Tickets und wurde nicht gelöscht.", "Spalte löschen", MessageBoxButton.OK, MessageBoxImage.Information);
-                    Refresh();
-                    return;
-                }
+                Db.DeleteTodoColumn(column.Id, withTickets: true);
 
-                IsColumnEditorOpen = false;
+                if (_editingColumnId == column.Id) IsColumnEditorOpen = false;
                 Refresh();
             }
             catch (Exception ex)
