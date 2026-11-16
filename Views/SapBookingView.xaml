@@ -236,6 +236,10 @@
                                                 Style="{StaticResource Button.CopyText}"
                                                 Tag="{Binding NameCopied}"
                                                 ToolTip="{Binding NameToolTip}">
+                                                <Button.InputBindings>
+                                                    <MouseBinding Command="{Binding CopyCommand}" CommandParameter="nameAll" MouseAction="RightClick" />
+                                                    <MouseBinding Command="{Binding CopyCommand}" CommandParameter="id" MouseAction="MiddleClick" />
+                                                </Button.InputBindings>
                                                 <TextBlock
                                                     Style="{StaticResource Text.Body}"
                                                     Text="{Binding Name}"
@@ -264,6 +268,9 @@
                                                 Style="{StaticResource Button.CopyText}"
                                                 Tag="{Binding HoursCopied}"
                                                 ToolTip="{Binding HoursToolTip}">
+                                                <Button.InputBindings>
+                                                    <MouseBinding Command="{Binding CopyCommand}" CommandParameter="hoursAll" MouseAction="RightClick" />
+                                                </Button.InputBindings>
                                                 <TextBlock
                                                     FontWeight="SemiBold"
                                                     Style="{StaticResource Text.Body}"
@@ -439,6 +446,10 @@
                                                                         Style="{StaticResource Button.CopyText}"
                                                                         Tag="{Binding NameCopied}"
                                                                         ToolTip="{Binding NameToolTip}">
+                                                                        <Button.InputBindings>
+                                                                            <MouseBinding Command="{Binding CopyCommand}" CommandParameter="nameAll" MouseAction="RightClick" />
+                                                                            <MouseBinding Command="{Binding CopyCommand}" CommandParameter="id" MouseAction="MiddleClick" />
+                                                                        </Button.InputBindings>
                                                                         <TextBlock
                                                                             FontSize="12"
                                                                             Foreground="{DynamicResource Theme.Text}"
@@ -461,6 +472,9 @@
                                                                 Style="{StaticResource Button.CopyText}"
                                                                 Tag="{Binding HoursCopied}"
                                                                 ToolTip="{Binding HoursToolTip}">
+                                                                <Button.InputBindings>
+                                                                    <MouseBinding Command="{Binding CopyCommand}" CommandParameter="hoursAll" MouseAction="RightClick" />
+                                                                </Button.InputBindings>
                                                                 <TextBlock
                                                                     FontSize="13"
                                                                     FontWeight="SemiBold"

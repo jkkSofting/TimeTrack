@@ -74,7 +74,9 @@ namespace Zeitmanagement.Helpers
                 "Laufen mehrere externe Projekte parallel, entsteht Überschuss. Er wird bis zum Monatsende mit späterer freier interner Zeit verrechnet.",
                 "Laufen ohne externes Projekt mehrere interne parallel, zählt nur das Projekt mit weniger Stunden an diesem Tag.",
                 "Die Tabelle zeigt pro Kostenträger, was im SAP zu buchen ist. Mit den Pfeilen wechselst du den Monat.",
-                "Zum Buchen im SAP klickst du auf einen Kostenträger oder auf seine Stunden: Das kopiert den Wert in die Zwischenablage. Beim Kostenträger „Bezeichnung (KTR-ID)“ kopiert TimeTrack nur die Bezeichnung, die Stunden als „h:mm“. Das gilt für die Tabelle und für „Im SAP buchen“ in den Tageskarten.",
+                "Zum Buchen im SAP klickst du auf einen Kostenträger oder auf seine Stunden: Das kopiert den Wert in die Zwischenablage. Das gilt für die Tabelle und für „Im SAP buchen“ in den Tageskarten; die Fläche färbt sich kurz ein, wenn kopiert wurde.",
+                "Kostenträger: Linksklick kopiert nur die Bezeichnung, aus „Bezeichnung (KTR-ID)“ wird also „Bezeichnung“. Rechtsklick kopiert den ganzen Text samt ID, Mausradklick nur die ID (nur wenn der Kostenträger eine ID in Klammern hat).",
+                "Stunden: Linksklick kopiert „h:mm“ (zum Beispiel 0:49), Rechtsklick mit Einheit („0:49 h“). Der Tooltip beim Überfahren zeigt, was welcher Klick kopiert.",
                 "Ob ein Projekt extern ist, legst du unter „Projekte“ fest."),
 
             new HelpTopic("", "Projektcontrolling", "Controlling",

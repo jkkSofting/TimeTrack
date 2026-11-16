@@ -347,7 +347,7 @@ namespace Zeitmanagement.ViewModel
 
         public SapProjectRowVM()
         {
-            CopyCommand = new DelegateCommand(Copy);
+            CopyCommand = new DelegateCommand(Copy, which => TextFor(which).Length > 0);
         }
 
         public string Name { get; set; }
@@ -357,14 +357,23 @@ namespace Zeitmanagement.ViewModel
         public string BookedText { get; set; }
         public string NoteText { get; set; }
 
-        /// <summary>Was ein Klick auf den Kostenträger kopiert: die Bezeichnung ohne "(KTR-ID)".</summary>
+        /// <summary>Linksklick auf den Kostenträger: die Bezeichnung ohne "(KTR-ID)".</summary>
         public string CopyNameText => CarrierLabel.StripId(Name);
 
-        /// <summary>Was ein Klick auf die Stunden kopiert: "h:mm" ohne Einheit, passend für das SAP-Feld.</summary>
+        /// <summary>Mausradklick auf den Kostenträger: nur die KTR-ID, leer wenn es keine gibt.</summary>
+        public string CopyIdText => CarrierLabel.ExtractId(Name);
+
+        /// <summary>Linksklick auf die Stunden: "h:mm" ohne Einheit, passend für das SAP-Feld.</summary>
         public string CopyHoursText => (BookedText ?? string.Empty).Replace(" h", string.Empty).Trim();
 
-        public string NameToolTip => "Klicken, um „" + CopyNameText + "“ zu kopieren";
-        public string HoursToolTip => "Klicken, um " + CopyHoursText + " zu kopieren";
+        public string NameToolTip =>
+            "Linksklick: „" + CopyNameText + "“ kopieren" + Environment.NewLine +
+            "Rechtsklick: alles kopieren" +
+            (CopyIdText.Length > 0 ? Environment.NewLine + "Mausradklick: ID „" + CopyIdText + "“ kopieren" : string.Empty);
+
+        public string HoursToolTip =>
+            "Linksklick: " + CopyHoursText + " kopieren" + Environment.NewLine +
+            "Rechtsklick: " + (BookedText ?? string.Empty) + " kopieren (mit Einheit)";
 
         private bool _nameCopied;
         /// <summary>Kurz true nach dem Kopieren, damit die View eine Rückmeldung zeigen kann.</summary>
@@ -373,16 +382,29 @@ namespace Zeitmanagement.ViewModel
         private bool _hoursCopied;
         public bool HoursCopied { get => _hoursCopied; private set => SetProperty(ref _hoursCopied, value); }
 
-        /// <summary>Parameter: "name" oder "hours".</summary>
+        /// <summary>Parameter: "name", "nameAll", "id", "hours" oder "hoursAll".</summary>
         public DelegateCommand CopyCommand { get; }
+
+        private string TextFor(object which)
+        {
+            switch (which as string)
+            {
+                case "name": return CopyNameText;
+                case "nameAll": return (Name ?? string.Empty).Trim();
+                case "id": return CopyIdText;
+                case "hours": return CopyHoursText;
+                case "hoursAll": return (BookedText ?? string.Empty).Trim();
+                default: return string.Empty;
+            }
+        }
 
         private DispatcherTimer _flashTimer;
 
         private void Copy(object which)
         {
-            bool name = string.Equals(which as string, "name", StringComparison.Ordinal);
-            string text = name ? CopyNameText : CopyHoursText;
-            if (string.IsNullOrEmpty(text)) return;
+            string text = TextFor(which);
+            if (text.Length == 0) return;
+            bool name = !(which as string ?? string.Empty).StartsWith("hours", StringComparison.Ordinal);
 
             try
             {
