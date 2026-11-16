@@ -53,6 +53,10 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.47.3", new DateTime(2026, 11, 16), "SAP-Verrechnung zum Kopieren",
+                Neu("SAP-Verrechnung: Ein Klick auf einen Kostenträger kopiert seine Bezeichnung in die Zwischenablage, ein Klick auf die Stunden kopiert sie als „h:mm“. Das geht in der Monatstabelle und in den Tageskarten unter „Im SAP buchen“. Die Fläche färbt sich kurz ein, damit du siehst, dass kopiert wurde."),
+                Verbessert("Beim Kopieren fällt die Kostenträger-ID weg: Aus „Bezeichnung (1500420C26FX001.01)“ wird „Bezeichnung“, denn die ID trägst du im SAP in ein eigenes Feld ein. Kostenträger ohne ID in Klammern kopiert TimeTrack unverändert.")),
+
             new ChangelogRelease("2026.47.2", new DateTime(2026, 11, 12), "Tickets im Quick Switch",
                 Neu("Quick Switch hat zwei Modi: „Projekte“ wie bisher und „Tickets“. Im Modus „Tickets“ wählst du ein To-Do-Ticket; die Buchung startet sofort und läuft auf das Projekt, zu dessen Board das Ticket gehört. Als Buchungstext steht der Titel des Tickets statt „Quick Select“. TimeTrack merkt sich den Modus."),
                 Neu("Welche Tickets der Quick Switch anbietet, legst du unter „To-Do“ fest: Im Editor einer Spalte (Stift-Symbol) schaltest du „Tickets im Quick Switch anbieten“ ein. Ein Blitz im Spaltenkopf zeigt, welche Spalten es sind. Neue Boards und bestehende Spalten „To Do“ eines Projekts bieten ihre Tickets von Anfang an an."),
