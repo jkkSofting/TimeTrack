@@ -229,10 +229,18 @@
                                                 <ColumnDefinition Width="120" />
                                                 <ColumnDefinition Width="3*" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock
-                                                Style="{StaticResource Text.Body}"
-                                                Text="{Binding Name}"
-                                                TextTrimming="CharacterEllipsis" />
+                                            <Button
+                                                HorizontalAlignment="Left"
+                                                Command="{Binding CopyCommand}"
+                                                CommandParameter="name"
+                                                Style="{StaticResource Button.CopyText}"
+                                                Tag="{Binding NameCopied}"
+                                                ToolTip="{Binding NameToolTip}">
+                                                <TextBlock
+                                                    Style="{StaticResource Text.Body}"
+                                                    Text="{Binding Name}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                            </Button>
                                             <!--  Farbe als Markierung neben dem Text, der Text selbst bleibt in Textfarbe  -->
                                             <StackPanel Grid.Column="1" Orientation="Horizontal">
                                                 <Border
@@ -248,11 +256,19 @@
                                                 Grid.Column="2"
                                                 Style="{StaticResource Text.Muted}"
                                                 Text="{Binding GrossText}" />
-                                            <TextBlock
+                                            <Button
                                                 Grid.Column="3"
-                                                FontWeight="SemiBold"
-                                                Style="{StaticResource Text.Body}"
-                                                Text="{Binding BookedText}" />
+                                                HorizontalAlignment="Left"
+                                                Command="{Binding CopyCommand}"
+                                                CommandParameter="hours"
+                                                Style="{StaticResource Button.CopyText}"
+                                                Tag="{Binding HoursCopied}"
+                                                ToolTip="{Binding HoursToolTip}">
+                                                <TextBlock
+                                                    FontWeight="SemiBold"
+                                                    Style="{StaticResource Text.Body}"
+                                                    Text="{Binding BookedText}" />
+                                            </Button>
                                             <TextBlock
                                                 Grid.Column="4"
                                                 Style="{StaticResource Muted}"
@@ -417,11 +433,18 @@
                                                                         VerticalAlignment="Center"
                                                                         Background="{Binding TypeBrush}"
                                                                         CornerRadius="4" />
-                                                                    <TextBlock
-                                                                        FontSize="12"
-                                                                        Foreground="{DynamicResource Theme.Text}"
-                                                                        Text="{Binding Name}"
-                                                                        TextTrimming="CharacterEllipsis" />
+                                                                    <Button
+                                                                        Command="{Binding CopyCommand}"
+                                                                        CommandParameter="name"
+                                                                        Style="{StaticResource Button.CopyText}"
+                                                                        Tag="{Binding NameCopied}"
+                                                                        ToolTip="{Binding NameToolTip}">
+                                                                        <TextBlock
+                                                                            FontSize="12"
+                                                                            Foreground="{DynamicResource Theme.Text}"
+                                                                            Text="{Binding Name}"
+                                                                            TextTrimming="CharacterEllipsis" />
+                                                                    </Button>
                                                                 </StackPanel>
                                                                 <TextBlock
                                                                     Margin="14,0,0,0"
@@ -430,13 +453,20 @@
                                                                     <Run Text="{Binding TypeText, Mode=OneWay}" /><Run Text=" · gebucht " /><Run Text="{Binding GrossText, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding NoteText, Mode=OneWay}" />
                                                                 </TextBlock>
                                                             </StackPanel>
-                                                            <TextBlock
+                                                            <Button
                                                                 Grid.Column="1"
                                                                 VerticalAlignment="Center"
-                                                                FontSize="13"
-                                                                FontWeight="SemiBold"
-                                                                Foreground="{DynamicResource Theme.Text}"
-                                                                Text="{Binding BookedText}" />
+                                                                Command="{Binding CopyCommand}"
+                                                                CommandParameter="hours"
+                                                                Style="{StaticResource Button.CopyText}"
+                                                                Tag="{Binding HoursCopied}"
+                                                                ToolTip="{Binding HoursToolTip}">
+                                                                <TextBlock
+                                                                    FontSize="13"
+                                                                    FontWeight="SemiBold"
+                                                                    Foreground="{DynamicResource Theme.Text}"
+                                                                    Text="{Binding BookedText}" />
+                                                            </Button>
                                                         </Grid>
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>
