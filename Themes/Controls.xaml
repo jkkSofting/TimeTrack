@@ -255,6 +255,53 @@
         <Setter Property="Foreground" Value="{DynamicResource Theme.TextMuted}" />
     </Style>
 
+    <!--
+        Text, der sich per Klick kopieren lässt: sieht aus wie normaler Text, zeigt aber beim
+        Überfahren eine Hover-Fläche. Tag="True" färbt die Fläche kurz mit der Akzentfarbe ein
+        (Rückmeldung "kopiert").
+    -->
+    <Style x:Key="Button.CopyText" TargetType="ButtonBase">
+        <Setter Property="Foreground" Value="{DynamicResource Theme.Text}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Padding" Value="3,1" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ButtonBase">
+                    <Grid SnapsToDevicePixels="True">
+                        <Border
+                            x:Name="bd"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="{StaticResource ControlRadius}" />
+                        <Border
+                            x:Name="overlay"
+                            Background="{TemplateBinding Foreground}"
+                            CornerRadius="{StaticResource ControlRadius}"
+                            Opacity="0" />
+                        <ContentPresenter
+                            Margin="{TemplateBinding Padding}"
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="overlay" Property="Opacity" Value="0.08" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="overlay" Property="Opacity" Value="0.16" />
+                        </Trigger>
+                        <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource Theme.AccentSoft}" />
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!--  Umschalter, der im gedrückten Zustand die Akzentfarbe zeigt  -->
     <Style
         x:Key="Toggle.Accent"

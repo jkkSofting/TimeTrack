@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.Windows;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Zeitmanagement.Helpers;
 using Zeitmanagement.MVVM;
 
@@ -339,14 +341,97 @@ namespace Zeitmanagement.ViewModel
         public Brush Brush { get; }
     }
 
-    internal sealed class SapProjectRowVM
+    internal sealed class SapProjectRowVM : BindableBase
     {
+        private static readonly TimeSpan CopiedFlash = TimeSpan.FromMilliseconds(1200);
+
+        public SapProjectRowVM()
+        {
+            CopyCommand = new DelegateCommand(Copy, which => TextFor(which).Length > 0);
+        }
+
         public string Name { get; set; }
         public string TypeText { get; set; }
         public Brush TypeBrush { get; set; }
         public string GrossText { get; set; }
         public string BookedText { get; set; }
         public string NoteText { get; set; }
+
+        /// <summary>Linksklick auf den Kostenträger: die Bezeichnung ohne "(KTR-ID)".</summary>
+        public string CopyNameText => CarrierLabel.StripId(Name);
+
+        /// <summary>Mausradklick auf den Kostenträger: nur die KTR-ID, leer wenn es keine gibt.</summary>
+        public string CopyIdText => CarrierLabel.ExtractId(Name);
+
+        /// <summary>Linksklick auf die Stunden: "h:mm" ohne Einheit, passend für das SAP-Feld.</summary>
+        public string CopyHoursText => (BookedText ?? string.Empty).Replace(" h", string.Empty).Trim();
+
+        public string NameToolTip =>
+            "Linksklick: „" + CopyNameText + "“ kopieren" + Environment.NewLine +
+            "Rechtsklick: alles kopieren" +
+            (CopyIdText.Length > 0 ? Environment.NewLine + "Mausradklick: ID „" + CopyIdText + "“ kopieren" : string.Empty);
+
+        public string HoursToolTip =>
+            "Linksklick: " + CopyHoursText + " kopieren" + Environment.NewLine +
+            "Rechtsklick: " + (BookedText ?? string.Empty) + " kopieren (mit Einheit)";
+
+        private bool _nameCopied;
+        /// <summary>Kurz true nach dem Kopieren, damit die View eine Rückmeldung zeigen kann.</summary>
+        public bool NameCopied { get => _nameCopied; private set => SetProperty(ref _nameCopied, value); }
+
+        private bool _hoursCopied;
+        public bool HoursCopied { get => _hoursCopied; private set => SetProperty(ref _hoursCopied, value); }
+
+        /// <summary>Parameter: "name", "nameAll", "id", "hours" oder "hoursAll".</summary>
+        public DelegateCommand CopyCommand { get; }
+
+        private string TextFor(object which)
+        {
+            switch (which as string)
+            {
+                case "name": return CopyNameText;
+                case "nameAll": return (Name ?? string.Empty).Trim();
+                case "id": return CopyIdText;
+                case "hours": return CopyHoursText;
+                case "hoursAll": return (BookedText ?? string.Empty).Trim();
+                default: return string.Empty;
+            }
+        }
+
+        private DispatcherTimer _flashTimer;
+
+        private void Copy(object which)
+        {
+            string text = TextFor(which);
+            if (text.Length == 0) return;
+            bool name = !(which as string ?? string.Empty).StartsWith("hours", StringComparison.Ordinal);
+
+            try
+            {
+                Clipboard.SetText(text);
+            }
+            catch (Exception)
+            {
+                // Zwischenablage gerade von einem anderen Programm belegt: keine Rückmeldung zeigen.
+                return;
+            }
+
+            NameCopied = name;
+            HoursCopied = !name;
+
+            if (_flashTimer == null)
+            {
+                _flashTimer = new DispatcherTimer { Interval = CopiedFlash };
+                _flashTimer.Tick += (s, e) =>
+                {
+                    _flashTimer.Stop();
+                    NameCopied = false;
+                    HoursCopied = false;
+                };
+            }
+            _flashTimer.Stop();
+            _flashTimer.Start();
+        }
     }
 
     internal sealed class SapDayVM

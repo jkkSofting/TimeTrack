@@ -94,6 +94,7 @@
     <Compile Include="TimeTracker.Todo.cs" />
     <Compile Include="Helpers\AutostartHelper.cs" />
     <Compile Include="Helpers\BackupHelper.cs" />
+    <Compile Include="Helpers\CarrierLabel.cs" />
     <Compile Include="Helpers\CarrierMatching.cs" />
     <Compile Include="Helpers\Changelog.cs" />
     <Compile Include="Helpers\ControllingChart.cs" />
