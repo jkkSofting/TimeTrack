@@ -40,5 +40,27 @@ namespace Zeitmanagement.Tests
         {
             Assert.Equal("Projekt (Phase 2)", CarrierLabel.StripId("Projekt (Phase 2) (1500420C26)"));
         }
+
+        [Theory]
+        [InlineData("BUDS Trinity Development (1500420C26FX001.01.01)", "1500420C26FX001.01.01")]
+        [InlineData("Bezeichnung   ( 15004 )  ", "15004")]
+        [InlineData("Projekt (Phase 2) (1500420C26)", "1500420C26")]
+        public void Extracts_trailing_id(string input, string expected)
+        {
+            Assert.Equal(expected, CarrierLabel.ExtractId(input));
+        }
+
+        [Theory]
+        [InlineData("Allgemein")]
+        [InlineData("Multiflasher VIII (?)")]
+        [InlineData("Server (alt)")]
+        [InlineData("(1500420C26FX001.01)")]
+        [InlineData("—")]
+        [InlineData("  ")]
+        [InlineData(null)]
+        public void No_id_gives_empty_text(string input)
+        {
+            Assert.Equal("", CarrierLabel.ExtractId(input));
+        }
     }
 }
