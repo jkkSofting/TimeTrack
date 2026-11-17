@@ -11,15 +11,15 @@ using Zeitmanagement.Helpers;
 namespace Zeitmanagement.Views
 {
     /// <summary>
-    /// Easter egg companion of <see cref="PenguinWindow"/>: the fish the penguin throws at the
-    /// user. The penguin sits "behind" the screen, so the fish flies towards the viewer, splats
+    /// Easter egg companion of <see cref="PenguinWindow"/>: the object the penguin throws at the
+    /// user. The object changes per theme ("Theme.ThrowItem", default: a fish). The penguin sits "behind" the screen, so the object flies towards the viewer, splats
     /// against the glass, and slides down towards the taskbar, leaving a wet trail that fades
     /// out shortly after. Closes itself when done.
-    /// The fish can be caught with a click as soon as it sticks to the glass (not while it is
+    /// The object can be caught with a click as soon as it sticks to the glass (not while it is
     /// still flying) and before it is gone. It stays stuck for about a second, then slides
     /// down slowly for about three seconds, wriggling a little from side to side. The hit area
-    /// is generous (an invisible rectangle around the fish), so a click slightly off still
-    /// catches it. Catches are counted in the settings. Only the fish (with its hit area) takes
+    /// is generous (an invisible rectangle around the object), so a click slightly off still
+    /// catches it. Catches are counted in the settings ("Fisch gefangen"). Only the object (with its hit area) takes
     /// clicks; everything else falls through to whatever is underneath.
     /// </summary>
     public partial class FishWindow : Window

@@ -54,6 +54,8 @@ namespace Zeitmanagement.Helpers
     /// light/dark app mode and updates when it changes.
     /// The penguin mascot wears a matching accessory ("Theme.MascotAccessory", drawn in
     /// Views/Mascot.xaml), e.g. a witch hat for Halloween or a scarf for the football themes.
+    /// When the penguin throws something, it throws a different object per theme ("Theme.ThrowItem",
+    /// drawn in Views/ThrowItems.xaml): a fish by default, a mushroom in the forest, a pumpkin at Halloween, etc.
     /// </summary>
     internal static class ThemeManager
     {
@@ -314,6 +316,8 @@ namespace Zeitmanagement.Helpers
             // Some motifs draw a different accessory in dark mode (e.g. the red lightsaber of Star Wars): MascotAccessory.[Motif].Dark.
             resources["Theme.MascotAccessory"] = (dark ? resources["MascotAccessory." + theme + ".Dark"] : null)
                 ?? resources["MascotAccessory." + theme] ?? resources["MascotAccessory.None"];
+            // The object the penguin throws (fish, mushroom, pumpkin, ...), one per motif: ThrowItem.[Motif] from Views/ThrowItems.xaml.
+            resources["Theme.ThrowItem"] = resources["ThrowItem." + theme] ?? resources["ThrowItem.Standard"];
         }
 
         private static bool IsPalette(ResourceDictionary dictionary) =>

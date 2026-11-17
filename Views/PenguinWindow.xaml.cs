@@ -15,8 +15,8 @@ namespace Zeitmanagement.Views
     /// penguin at its bottom border, which is what makes it look like it is hiding behind the
     /// taskbar. Only the penguin itself catches mouse clicks (the transparent rest of the window
     /// lets them through) and the window never takes focus. If the penguin is clicked in time it
-    /// throws a fish at the user (see <see cref="FishWindow"/>) and waits for it to slide down
-    /// (or be caught) before it disappears. Catches are counted in the settings. The window closes itself when it is done.
+    /// throws an object at the user (see <see cref="FishWindow"/>; it changes per theme, default: a fish,
+    /// "Theme.ThrowItem") and waits for it to slide down (or be caught) before it disappears. Catches are counted in the settings. The window closes itself when it is done.
     /// </summary>
     public partial class PenguinWindow : Window
     {

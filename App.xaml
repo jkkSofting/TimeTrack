@@ -11,6 +11,7 @@
                 <ResourceDictionary Source="Themes/Controls.xaml" />
                 <ResourceDictionary Source="Views/Templates.xaml" />
                 <ResourceDictionary Source="Views/Mascot.xaml" />
+                <ResourceDictionary Source="Views/ThrowItems.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
