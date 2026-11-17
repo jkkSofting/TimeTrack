@@ -535,7 +535,7 @@
                             <Border Style="{StaticResource SettingRow}">
                                 <StackPanel>
                                     <TextBlock Style="{StaticResource Text.Body}" Text="Deine Fangstatistik" />
-                                    <TextBlock Style="{StaticResource Hint}" Text="Klick den Pinguin rechtzeitig an, dann wirft er dir einen Fisch zu. Den musst du dann noch erwischen, bevor er runterrutscht." />
+                                    <TextBlock Style="{StaticResource Hint}" Text="Klick den Pinguin an, solange er oben ist, dann wirft er dir einen Fisch zu. Den Fisch fängst du mit einem Klick, sobald er an der Scheibe klebt: Er bleibt etwa eine Sekunde hängen und rutscht dann gut drei Sekunden lang langsam nach unten. Ein Klick knapp daneben reicht auch." />
                                     <Grid Margin="0,12,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
@@ -571,6 +571,12 @@
                                             </StackPanel>
                                         </Border>
                                     </Grid>
+                                    <Button
+                                        Margin="0,12,0,0"
+                                        local:Ui.Glyph="&#xE72C;"
+                                        HorizontalAlignment="Left"
+                                        Command="{Binding ResetCatchStatsCommand}"
+                                        Content="Statistik zurücksetzen" />
                                 </StackPanel>
                             </Border>
                         </StackPanel>
