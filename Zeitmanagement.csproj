@@ -116,6 +116,7 @@
     <Compile Include="Helpers\Plugins\PluginLoader.cs" />
     <Compile Include="Helpers\Plugins\PluginHost.cs" />
     <Compile Include="Helpers\Plugins\PluginManager.cs" />
+    <Compile Include="Helpers\DaubnerSchedule.cs" />
     <Compile Include="Helpers\OverlayWindowHelper.cs" />
     <Compile Include="Helpers\PenguinEasterEgg.cs" />
     <Compile Include="Helpers\PresentationDetector.cs" />
