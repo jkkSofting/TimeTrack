@@ -82,7 +82,10 @@ namespace Zeitmanagement.Views
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
-            OverlayWindowHelper.Apply(this, clickThrough: true);
+            // Not click-through: that would let every click fall through the whole window, so the
+            // fish could never be caught. Like the penguin window, only the visible pixels (alpha > 0)
+            // take clicks, the rest of this transparent window still lets them through.
+            OverlayWindowHelper.Apply(this, clickThrough: false);
         }
 
         protected override void OnContentRendered(EventArgs e)

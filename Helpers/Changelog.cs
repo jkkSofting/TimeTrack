@@ -54,7 +54,8 @@ namespace Zeitmanagement.Helpers
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
             new ChangelogRelease("2026.47.5", new DateTime(2026, 11, 17), "Pinguin-Fisch leichter zu fangen",
-                Verbessert("Der Fisch des Pinguins ist leichter zu fangen: Er lässt sich schon fangen, sobald er an der Scheibe klebt, bleibt dort etwa eine Sekunde hängen, rutscht dann gut drei Sekunden lang langsam nach unten und zappelt dabei weniger. Auch ein Klick knapp neben den Fisch trifft."),
+                Verbessert("Der Fisch des Pinguins ist leichter zu fangen: Er lässt sich schon fangen, sobald er an der Scheibe klebt, bleibt dort etwa eine Sekunde hängen, rutscht dann gut drei Sekunden lang langsam nach unten und zappelt dabei weniger. Auch ein Klick knapp neben den Fisch trifft: Um das Wurfobjekt liegt eine unsichtbare Fangfläche, die etwa 30 Pixel über seinen Rand hinausreicht. So klickst du nicht versehentlich etwas dahinter an."),
+                Behoben("Der Fisch ließ sich gar nicht anklicken, weil sein Fenster alle Mausklicks durchgelassen hat. Jetzt fängst du ihn mit einem Klick."),
                 Neu("Der Pinguin wirft je nach Design etwas anderes: im Standard den Fisch, im „Wald“ einen Fliegenpilz, im „Ozean“ einen Seestern, an Halloween einen Kürbis, an Weihnachten eine Christbaumkugel, an Ostern ein Osterei, bei „GTA VI“ ein Geldbündel, bei „Star Wars“ den Todesstern und bei den Vereinsdesigns einen Fußball in Vereinsfarben. Gefangen wird es wie der Fisch, und es zählt auch in der Statistik „Fisch gefangen“."),
                 Neu("In den Einstellungen unter „Pinguin“ steht jetzt, wie du den Fisch fängst, ebenso in der Hilfe unter „Der Pinguin“."),
                 Neu("Die Fangstatistik (Pinguin gefangen, Fisch gefangen) lässt sich in den Einstellungen mit „Statistik zurücksetzen“ wieder auf 0 setzen, nach einer Rückfrage."),

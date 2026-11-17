@@ -70,13 +70,17 @@
                 </TransformGroup>
             </Canvas.RenderTransform>
 
-            <!--  Unsichtbare, großzügige Trefferfläche (Canvas clippt Kinder nicht, negative Offsets sind ok)  -->
+            <!--
+                Unsichtbare, großzügige Trefferfläche (Canvas clippt Kinder nicht, negative Offsets sind ok).
+                Nicht ganz transparent (Alpha 1): Das Fenster ist ein Layered Window, Pixel mit Alpha 0
+                nimmt Windows nicht als Klickziel, sie würden den Klick durchlassen.
+            -->
             <Rectangle
-                Canvas.Left="-12"
-                Canvas.Top="-12"
-                Width="104"
-                Height="68"
-                Fill="Transparent" />
+                Canvas.Left="-30"
+                Canvas.Top="-30"
+                Width="140"
+                Height="104"
+                Fill="#01000000" />
 
             <!--  Das Wurfobjekt selbst, je Theme aus den ThrowItem-Ressourcen (Views/ThrowItems.xaml)  -->
             <Image
