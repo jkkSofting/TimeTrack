@@ -53,6 +53,10 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.47.5", new DateTime(2026, 11, 17), "GTA VI Design",
+                Neu("Neues Design „GTA VI“ im Vice-City-Look: tiefe Dämmerungs-Violetttöne, warme Pastellflächen und flamingopinke sowie sonnenuntergangsfarbene Akzente. Es gibt es in Hell und Dunkel, gewählt wird es unter „Einstellungen“ bei „Design“."),
+                Neu("Das Design „GTA VI“ erscheint jedes Jahr vom 19.11. bis 30.11. automatisch, wie die anderen saisonalen Designs, sofern du saisonale Designs nicht abschaltest. Danach bleibt es in den Einstellungen wählbar. Der Pinguin trägt dazu eine Sonnenbrille und eine Hibiskusblüte.")),
+
             new ChangelogRelease("2026.47.4", new DateTime(2026, 11, 17), "Rundung pro Projekt",
                 Neu("Unter „Projekte“ lässt sich pro Projekt „Aufrunden pro Buchung“ einstellen: Aus, 5, 10, 15 oder 60 Minuten. Die Auswahl gibt es beim Anlegen und beim Bearbeiten, die Tabelle hat dafür eine Spalte „Rundung“."),
                 Neu("SAP-Verrechnung: Jede Buchung eines Projekts mit Rundung wird auf die nächste angefangene Zeiteinheit aufgerundet. Bei 15 Minuten werden aus 2 Minuten 15 und aus 17 Minuten 30. Die aufgerundete Zeit zählt im SAP wie echte Zeit und kann so zum Beispiel parallele interne Zeit abdecken."),
