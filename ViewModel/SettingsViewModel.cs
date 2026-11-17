@@ -277,6 +277,7 @@ namespace Zeitmanagement.ViewModel
         public DelegateCommand CheckForUpdateCommand { get; }
         public DelegateCommand InstallUpdateCommand { get; }
         public DelegateCommand ResetCatchStatsCommand { get; }
+        public DelegateCommand CallPenguinCommand { get; }
 
         /// <summary>Der Abschnitt „Plugins“. Schalter und Einstellungsbereiche der Plugins speichern sofort.</summary>
         public PluginSettingsViewModel Plugins { get; }
@@ -293,6 +294,7 @@ namespace Zeitmanagement.ViewModel
             InstallUpdateCommand = new DelegateCommand(async _ => await InstallUpdate());
             ResetCatchStatsCommand = new DelegateCommand(_ => ResetCatchStats(),
                 _ => PenguinCaughtCount > 0 || FishCaughtCount > 0);
+            CallPenguinCommand = new DelegateCommand(_ => PenguinEasterEgg.Current?.CallForPractice());
 
             UpdateService.UpdateAvailable += _ => ShowUpdate(UpdateService.LatestUpdate);
             ThemeManager.ThemeChanged += (s, e) => RaisePropertyChanged(nameof(ThemeStatusText));

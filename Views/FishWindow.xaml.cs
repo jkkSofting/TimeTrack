@@ -52,6 +52,7 @@ namespace Zeitmanagement.Views
         private static readonly Random Random = new Random();
 
         private readonly double _releaseDelay;
+        private readonly bool _countsInStats;
         private readonly Stopwatch _clock = new Stopwatch();
         private double _splatX;
         private double _splatY;
@@ -66,9 +67,11 @@ namespace Zeitmanagement.Views
         /// <param name="bottomY">Taskbar edge (bottom of the penguin window) in DIPs.</param>
         /// <param name="availableHeight">Height of the screen's work area in DIPs; limits the window height.</param>
         /// <param name="releaseDelaySeconds">Time until the penguin lets go of the fish.</param>
-        public FishWindow(double penguinCenterX, double bottomY, double availableHeight, double releaseDelaySeconds)
+        /// <param name="countsInStats">False for a fish from a penguin called up for practice: catching it is not counted.</param>
+        public FishWindow(double penguinCenterX, double bottomY, double availableHeight, double releaseDelaySeconds, bool countsInStats = true)
         {
             _releaseDelay = releaseDelaySeconds;
+            _countsInStats = countsInStats;
             InitializeComponent();
 
             Height = Math.Min(MaxAreaHeight, availableHeight);
@@ -204,7 +207,8 @@ namespace Zeitmanagement.Views
 
             try
             {
-                CountCatch();
+                if (_countsInStats)
+                    CountCatch();
                 ShowCatch();
             }
             catch (Exception ex)

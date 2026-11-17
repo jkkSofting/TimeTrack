@@ -47,6 +47,7 @@ namespace Zeitmanagement.Views
 
         private readonly Drawing.Rectangle _workAreaPixels;
         private readonly double _relativeX;
+        private readonly bool _countsInStats;
         private double _availableHeight;
         private bool _hasThrown;
         private bool _isSinkingAfterThrow;
@@ -54,10 +55,12 @@ namespace Zeitmanagement.Views
 
         /// <param name="workAreaPixels">Work area (screen minus taskbar) of the target monitor in device pixels.</param>
         /// <param name="relativeX">Horizontal position within that work area, 0 = left edge, 1 = right edge.</param>
-        public PenguinWindow(Drawing.Rectangle workAreaPixels, double relativeX)
+        /// <param name="countsInStats">False for a penguin called up for practice: a catch (of the penguin or its fish) is not counted.</param>
+        public PenguinWindow(Drawing.Rectangle workAreaPixels, double relativeX, bool countsInStats = true)
         {
             _workAreaPixels = workAreaPixels;
             _relativeX = relativeX;
+            _countsInStats = countsInStats;
             InitializeComponent();
         }
 
@@ -133,7 +136,8 @@ namespace Zeitmanagement.Views
 
             try
             {
-                CountCatch();
+                if (_countsInStats)
+                    CountCatch();
                 ThrowFish();
             }
             catch (Exception ex)
@@ -175,7 +179,7 @@ namespace Zeitmanagement.Views
             throwArm.KeyFrames.Add(new EasingDoubleKeyFrame(FlipperRestAngle, At(ThrowRelease + 0.4), new QuadraticEase { EasingMode = EasingMode.EaseInOut }));
             Flipper.BeginAnimation(RotateTransform.AngleProperty, throwArm);
 
-            var fish = new FishWindow(Left + Width / 2, Top + Height, _availableHeight, ThrowRelease);
+            var fish = new FishWindow(Left + Width / 2, Top + Height, _availableHeight, ThrowRelease, _countsInStats);
             fish.SlideFinished += (s, e) => SinkAfterThrow();
             fish.Closed += (s, e) => SinkAfterThrow(); // fallback, e.g. if the fish never got to slide
             fish.Show();

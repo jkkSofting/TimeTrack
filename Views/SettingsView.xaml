@@ -571,12 +571,21 @@
                                             </StackPanel>
                                         </Border>
                                     </Grid>
-                                    <Button
+                                    <StackPanel
                                         Margin="0,12,0,0"
-                                        local:Ui.Glyph="&#xE72C;"
                                         HorizontalAlignment="Left"
-                                        Command="{Binding ResetCatchStatsCommand}"
-                                        Content="Statistik zurücksetzen" />
+                                        Orientation="Horizontal">
+                                        <Button
+                                            local:Ui.Glyph="&#xE72C;"
+                                            Command="{Binding ResetCatchStatsCommand}"
+                                            Content="Statistik zurücksetzen" />
+                                        <Button
+                                            Margin="8,0,0,0"
+                                            local:Ui.Glyph="&#xE768;"
+                                            Command="{Binding CallPenguinCommand}"
+                                            Content="Pinguin zum Üben rufen"
+                                            ToolTip="Der Pinguin kommt sofort, zum Üben. Gefangene Pinguine und Fische zählen dabei nicht in die Statistik." />
+                                    </StackPanel>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
