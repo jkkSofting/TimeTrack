@@ -25,6 +25,7 @@ namespace Zeitmanagement.Helpers
         Christmas,
         Easter,
         GtaVi,
+        StarWars,
         VfbStuttgart,
         WerderBremen
     }
@@ -46,7 +47,8 @@ namespace Zeitmanagement.Helpers
     /// recolours the whole app on the fly.
     /// The motif is the one chosen in the settings, except during a holiday season (Halloween,
     /// Christmas, Easter: <see cref="SeasonDaysBefore"/> days before until
-    /// <see cref="SeasonDaysAfter"/> days after; GTA VI: once from 19 to 30 November 2026)
+    /// <see cref="SeasonDaysAfter"/> days after; GTA VI: once from 19 to 30 November 2026;
+    /// Star Wars: only on 4 May each year)
     /// if seasonal themes are enabled; light or dark
     /// always follows the chosen mode. <see cref="ThemeMode.System"/> follows the Windows
     /// light/dark app mode and updates when it changes.
@@ -62,6 +64,10 @@ namespace Zeitmanagement.Helpers
         public const int GtaViYear = 2026;
         private static readonly DateTime GtaViAvailableFrom = new DateTime(GtaViYear, 11, 19);
         private static readonly DateTime GtaViAvailableTo = new DateTime(GtaViYear, 11, 30);
+
+        /// <summary>Star Wars appears automatically only on "May the 4th" (4 May) each year, a single day.</summary>
+        public const int StarWarsMonth = 5;
+        public const int StarWarsDay = 4;
 
         private const int DWMWA_USE_IMMERSIVE_DARK_MODE_OLD = 19;
         private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
@@ -107,7 +113,7 @@ namespace Zeitmanagement.Helpers
         public static IReadOnlyList<AppTheme> AllThemes { get; } = (AppTheme[])Enum.GetValues(typeof(AppTheme));
 
         public static bool IsSeasonal(AppTheme theme) =>
-            theme == AppTheme.Halloween || theme == AppTheme.Christmas || theme == AppTheme.Easter || theme == AppTheme.GtaVi;
+            theme == AppTheme.Halloween || theme == AppTheme.Christmas || theme == AppTheme.Easter || theme == AppTheme.GtaVi || theme == AppTheme.StarWars;
 
         public static string DisplayName(AppTheme theme)
         {
@@ -120,6 +126,7 @@ namespace Zeitmanagement.Helpers
                 case AppTheme.Christmas: return "Weihnachten";
                 case AppTheme.Easter: return "Ostern";
                 case AppTheme.GtaVi: return "GTA VI";
+                case AppTheme.StarWars: return "Star Wars";
                 case AppTheme.VfbStuttgart: return "VfB Stuttgart";
                 case AppTheme.WerderBremen: return "Werder Bremen";
                 default: return theme.ToString();
@@ -202,7 +209,7 @@ namespace Zeitmanagement.Helpers
         /// <summary>The holiday theme whose season includes <paramref name="date"/>, if any.</summary>
         public static AppTheme? SeasonOn(DateTime date)
         {
-            foreach (var theme in new[] { AppTheme.Halloween, AppTheme.GtaVi, AppTheme.Christmas, AppTheme.Easter })
+            foreach (var theme in new[] { AppTheme.Halloween, AppTheme.GtaVi, AppTheme.StarWars, AppTheme.Christmas, AppTheme.Easter })
             {
                 if (theme == AppTheme.GtaVi && date.Year != GtaViYear)
                     continue;
@@ -217,7 +224,9 @@ namespace Zeitmanagement.Helpers
 
         /// <summary>
         /// First and last day (inclusive) on which a holiday theme is shown automatically in the given
-        /// year: around the festival for Halloween, Christmas and Easter, a one-time range for GTA VI in 2026.
+        /// year: around the festival for Halloween, Christmas and Easter, a one-time range for GTA VI in 2026,
+        /// and the single day of 4 May for Star Wars (From == To).
+        /// The ranges of the holiday themes never overlap (the latest Easter season ends on 2 May).
         /// </summary>
         public static (DateTime From, DateTime To) SeasonRange(AppTheme theme, int year)
         {
@@ -227,6 +236,12 @@ namespace Zeitmanagement.Helpers
                     throw new ArgumentOutOfRangeException(nameof(year), year, "The GTA VI theme is only available in 2026.");
 
                 return (GtaViAvailableFrom, GtaViAvailableTo);
+            }
+
+            if (theme == AppTheme.StarWars)
+            {
+                var starWarsDay = new DateTime(year, StarWarsMonth, StarWarsDay);
+                return (starWarsDay, starWarsDay);
             }
 
             DateTime day;

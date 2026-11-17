@@ -131,7 +131,7 @@ namespace Zeitmanagement.ViewModel
         }
 
         public string SeasonalThemesHint { get; } =
-            $"Halloween, Weihnachten und Ostern erscheinen automatisch {ThemeManager.SeasonDaysBefore} Tage vor bis {ThemeManager.SeasonDaysAfter} Tage nach dem Fest; GTA VI ist jederzeit auswählbar und erscheint automatisch nur vom 19.11. bis 30.11.{ThemeManager.GtaViYear}.";
+            $"Halloween, Weihnachten und Ostern erscheinen automatisch {ThemeManager.SeasonDaysBefore} Tage vor bis {ThemeManager.SeasonDaysAfter} Tage nach dem Fest; GTA VI und Star Wars sind jederzeit auswählbar; GTA VI erscheint automatisch nur vom 19.11. bis 30.11.{ThemeManager.GtaViYear}, Star Wars nur am 4. Mai.";
 
         /// <summary>Which theme and variant is shown right now, and why if it isn't simply the chosen one.</summary>
         public string ThemeStatusText
@@ -145,7 +145,10 @@ namespace Zeitmanagement.ViewModel
                 var text = $"Gerade aktiv: {ThemeManager.DisplayName(ThemeManager.Effective)}, {variant}";
                 var season = ThemeManager.ActiveSeason;
                 if (season != null && season != ThemeManager.Selected)
-                    text += $" – automatisch bis {ThemeManager.SeasonRange(season.Value, DateTime.Today.Year).To:dd.MM.}";
+                {
+                    var range = ThemeManager.SeasonRange(season.Value, DateTime.Today.Year);
+                    text += range.From == range.To ? $" – automatisch am {range.To:dd.MM.}" : $" – automatisch bis {range.To:dd.MM.}";
+                }
 
                 return text;
             }
