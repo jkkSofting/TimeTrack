@@ -53,6 +53,12 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.47.4", new DateTime(2026, 11, 17), "Rundung pro Projekt",
+                Neu("Unter „Projekte“ lässt sich pro Projekt „Aufrunden pro Buchung“ einstellen: Aus, 5, 10, 15 oder 60 Minuten. Die Auswahl gibt es beim Anlegen und beim Bearbeiten, die Tabelle hat dafür eine Spalte „Rundung“."),
+                Neu("SAP-Verrechnung: Jede Buchung eines Projekts mit Rundung wird auf die nächste angefangene Zeiteinheit aufgerundet. Bei 15 Minuten werden aus 2 Minuten 15 und aus 17 Minuten 30. Die aufgerundete Zeit zählt im SAP wie echte Zeit und kann so zum Beispiel parallele interne Zeit abdecken."),
+                Neu("Auf der Seite „SAP-Verrechnung“ steht die aufgerundete Zeit in einer eigenen Farbe am Ende der Buchung (bei 2 Minuten also die 13 aufgerundeten Minuten). Die Kennzahl „Aufgerundet“ zeigt die Summe, und Hinweise je Tag und Kostenträger nennen, was dazugekommen ist."),
+                Neu("Die Arbeitszeit (erste bis letzte Buchung) bleibt unverändert. Buchungen, Auswertungen und Exporte werden nicht gerundet, nur die SAP-Verrechnung.")),
+
             new ChangelogRelease("2026.47.3", new DateTime(2026, 11, 16), "SAP-Verrechnung zum Kopieren",
                 Neu("SAP-Verrechnung: Ein Klick auf einen Kostenträger kopiert seine Bezeichnung in die Zwischenablage, ein Klick auf die Stunden kopiert sie als „h:mm“. Das geht in der Monatstabelle und in den Tageskarten unter „Im SAP buchen“. Die Fläche färbt sich kurz ein, damit du siehst, dass kopiert wurde."),
                 Neu("Zusätzlich gilt beim Kostenträger: Rechtsklick kopiert den ganzen Text samt „(KTR-ID)“, Mausradklick nur die ID (nur wenn der Kostenträger eine ID in Klammern hat). Bei den Stunden kopiert der Rechtsklick sie mit Einheit, zum Beispiel „0:49 h“. Der Tooltip beim Überfahren nennt, was welcher Klick kopiert."),
