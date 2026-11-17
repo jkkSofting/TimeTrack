@@ -31,6 +31,7 @@ namespace Zeitmanagement.ViewModel
         private static Brush CoveredSurplusBrush => ThemeManager.GetBrush("Theme.Data3");
         private static Brush SurplusBrush => ThemeManager.GetBrush("Theme.Data4");
         private static Brush DiscardedBrush => ThemeManager.GetBrush("Theme.DataNeutral");
+        private static Brush RoundedBrush => ThemeManager.GetBrush("Theme.Data5");
 
         // Neutrale Markierung (Gesamtwerte) in der Textfarbe des aktuellen Themes.
         private static Brush TextBrush => ThemeManager.GetBrush("Theme.Text");
@@ -94,6 +95,7 @@ namespace Zeitmanagement.ViewModel
             RangeLabel = first.ToString("MMMM yyyy", CultureInfo.CurrentCulture);
 
             var inputs = new List<SapBookingInput>();
+            _projectRounding.Clear();
             foreach (var e in db.GetTimeEntriesBetween(first, last))
             {
                 if (!TryParseMinutes(e.Startzeit, out var s) || !TryParseMinutes(e.Endzeit, out var en) || en <= s)
@@ -104,8 +106,11 @@ namespace Zeitmanagement.ViewModel
                     StartMin = s,
                     EndMin = en,
                     Project = e.Projektname,
-                    IsExternal = e.IstExtern
+                    IsExternal = e.IstExtern,
+                    RoundingMinutes = e.RundungMinuten
                 });
+                if (e.RundungMinuten > 0 && e.Projektname != null)
+                    _projectRounding[e.Projektname] = e.RundungMinuten;
             }
 
             var result = SapBookingCalculator.Calculate(inputs);
@@ -130,6 +135,8 @@ namespace Zeitmanagement.ViewModel
             bool monthOpen = DateTime.Today <= lastDayOfMonth;
             Kpis.Clear();
             Kpis.Add(new SapKpiVM("Arbeitszeit", Fmt(r.SpanMin), "erste bis letzte Buchung, je Tag", TextBrush));
+            if (r.RoundedUpMin > 0.5)
+                Kpis.Add(new SapKpiVM("Aufgerundet", Fmt(r.RoundedUpMin), "durch die Rundung der Projekte dazugekommen", RoundedBrush));
             Kpis.Add(new SapKpiVM("Extern", Fmt(r.ExternalMin), "vom Kunden bezahlt, wird voll gebucht", ExternalBrush));
             Kpis.Add(new SapKpiVM("Intern (Buchungen)", Fmt(r.InternalGrossMin), "alle internen Buchungen brutto", InternalBookedBrush));
             Kpis.Add(new SapKpiVM("Gedeckt durch Extern", Fmt(r.CoveredByExternalMin), "intern, parallel zu extern: entfällt", CoveredExternalBrush));
@@ -151,6 +158,9 @@ namespace Zeitmanagement.ViewModel
             else
                 StatusNote = $"{Fmt(r.LeftoverMin)} Überschuss ließen sich bis zum Monatsende nicht mehr mit internen Zeiten verrechnen " +
                              "und sind tatsächliche Überstunden.";
+
+            if (r.RoundedUpMin > 0.5)
+                StatusNote += " Die SAP-Werte enthalten aufgerundete Zeit (Rundung pro Projekt).";
         }
 
         private void BuildDays(SapMonthResult r)
@@ -161,7 +171,8 @@ namespace Zeitmanagement.ViewModel
             foreach (var d in r.Days)
             {
                 double origin = d.FirstStartMin;
-                double span = Math.Max(1, d.SpanMin);
+                // Skalierung bis zum aufgerundeten Ende, damit die Aufrundung noch auf die Zeitleiste passt
+                double span = Math.Max(1, d.DisplayEndMin - d.FirstStartMin);
                 double X(double min) => (min - origin) / span * TimelineWidth;
 
                 var vm = new SapDayVM
@@ -170,7 +181,8 @@ namespace Zeitmanagement.ViewModel
                     SpanText = Fmt(d.SpanMin),
                     RangeText = $"{FmtClock(d.FirstStartMin)} – {FmtClock(d.LastEndMin)}",
                     StartLabel = FmtClock(d.FirstStartMin),
-                    EndLabel = FmtClock(d.LastEndMin),
+                    // rechter Rand der Zeitleiste = aufgerundetes Ende (ohne Rundung identisch mit dem realen Ende)
+                    EndLabel = FmtClock(d.DisplayEndMin),
                     TimelineHeight = d.LaneCount * LaneHeight + (d.SurplusSpans.Count > 0 ? SurplusTrackHeight + 2 : 0),
                     SapTotalText = Fmt(d.SapTotalMin),
                     PoolText = Fmt(d.PoolEndMin),
@@ -186,8 +198,12 @@ namespace Zeitmanagement.ViewModel
                         Top = seg.Lane * LaneHeight,
                         Width = Math.Max(2, X(seg.EndMin) - X(seg.StartMin)),
                         Height = LaneHeight - 2,
-                        Brush = BrushOf(seg.Kind),
-                        ToolTip = $"{seg.Project}\n{KindText(seg.Kind)}\n{Fmt(seg.EndMin - seg.StartMin)}"
+                        Brush = seg.IsRounding ? RoundedBrush : BrushOf(seg.Kind),
+                        ToolTip = seg.IsRounding
+                            ? $"{seg.Project}\naufgerundet: +{(int)Math.Round(seg.EndMin - seg.StartMin)} min" +
+                              (_projectRounding.TryGetValue(seg.Project ?? string.Empty, out var unit) ? $" (Rundung {unit} min)" : string.Empty) +
+                              $" – {KindText(seg.Kind)}"
+                            : $"{seg.Project}\n{KindText(seg.Kind)}\n{Fmt(seg.EndMin - seg.StartMin)}"
                     });
                 }
                 foreach (var sp in d.SurplusSpans)
@@ -219,12 +235,15 @@ namespace Zeitmanagement.ViewModel
                     vm.Lines.Add(new SapLineVM($"{Fmt(d.InternalBookedMin)} interne Zeit muss im SAP gebucht werden", InternalBookedBrush));
                 if (vm.Lines.Count == 0)
                     vm.Lines.Add(new SapLineVM("Keine Überschneidungen zwischen internen und externen Projekten.", TextBrush));
+                if (d.RoundedUpMin > 0.5)
+                    vm.Lines.Add(new SapLineVM($"+{Fmt(d.RoundedUpMin)} aufgerundet (Rundung pro Projekt)", RoundedBrush));
 
                 Days.Add(vm);
             }
         }
 
         private readonly Dictionary<string, string> _projectToKtr = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, int> _projectRounding = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>Fasst Projekte mit gleichem Kostenträger (und gleichem Typ) zu einer Zeile zusammen.</summary>
         private IEnumerable<SapProjectRowVM> ToKtrRows(IEnumerable<SapProjectResult> projects)
@@ -243,7 +262,8 @@ namespace Zeitmanagement.ViewModel
                     BookedMin = g.Sum(p => p.BookedMin),
                     CoveredByExternalMin = g.Sum(p => p.CoveredByExternalMin),
                     CoveredBySurplusMin = g.Sum(p => p.CoveredBySurplusMin),
-                    DiscardedMin = g.Sum(p => p.DiscardedMin)
+                    DiscardedMin = g.Sum(p => p.DiscardedMin),
+                    RoundedUpMin = g.Sum(p => p.RoundedUpMin)
                 }))
                 .OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase);
         }
@@ -254,6 +274,7 @@ namespace Zeitmanagement.ViewModel
             if (p.CoveredByExternalMin > 0.5) notes.Add($"−{Fmt(p.CoveredByExternalMin)} durch Extern");
             if (p.CoveredBySurplusMin > 0.5) notes.Add($"−{Fmt(p.CoveredBySurplusMin)} durch Speicher");
             if (p.DiscardedMin > 0.5) notes.Add($"−{Fmt(p.DiscardedMin)} verworfen");
+            if (p.RoundedUpMin > 0.5) notes.Add($"+{Fmt(p.RoundedUpMin)} aufgerundet");
             return new SapProjectRowVM
             {
                 Name = p.Project,
