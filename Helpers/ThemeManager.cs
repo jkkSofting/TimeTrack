@@ -46,7 +46,7 @@ namespace Zeitmanagement.Helpers
     /// recolours the whole app on the fly.
     /// The motif is the one chosen in the settings, except during a holiday season (Halloween,
     /// Christmas, Easter: <see cref="SeasonDaysBefore"/> days before until
-    /// <see cref="SeasonDaysAfter"/> days after; GTA VI: fixed from 19 to 30 November every year)
+    /// <see cref="SeasonDaysAfter"/> days after; GTA VI: once from 19 to 30 November 2026)
     /// if seasonal themes are enabled; light or dark
     /// always follows the chosen mode. <see cref="ThemeMode.System"/> follows the Windows
     /// light/dark app mode and updates when it changes.
@@ -58,8 +58,10 @@ namespace Zeitmanagement.Helpers
         public const int SeasonDaysBefore = 14;
         public const int SeasonDaysAfter = 7;
 
-        /// <summary>GTA VI has no festival date, its season is a fixed range: 19 to 30 November (inclusive).</summary>
-        private const int GtaViFromMonth = 11, GtaViFromDay = 19, GtaViToMonth = 11, GtaViToDay = 30;
+        /// <summary>GTA VI is a one-time seasonal theme, available only from 19 to 30 November 2026.</summary>
+        public const int GtaViYear = 2026;
+        private static readonly DateTime GtaViAvailableFrom = new DateTime(GtaViYear, 11, 19);
+        private static readonly DateTime GtaViAvailableTo = new DateTime(GtaViYear, 11, 30);
 
         private const int DWMWA_USE_IMMERSIVE_DARK_MODE_OLD = 19;
         private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
@@ -76,9 +78,11 @@ namespace Zeitmanagement.Helpers
         private static ResourceDictionary _palette;
         private static Color[] _dataPalette = new Color[0];
         private static bool _initialized;
+        private static DateTime _lastAvailabilityDate = DateTime.Today;
 
         /// <summary>Raised after a different palette has been applied.</summary>
         public static event EventHandler ThemeChanged;
+        public static event EventHandler ThemeAvailabilityChanged;
 
         /// <summary>The motif that is actually shown (the chosen one or the holiday one).</summary>
         public static AppTheme Effective { get; private set; } = AppTheme.Standard;
@@ -97,12 +101,25 @@ namespace Zeitmanagement.Helpers
         /// </summary>
         public static IReadOnlyList<Color> DataPalette => _dataPalette;
 
-        public static AppTheme Selected => Parse(Properties.Settings.Default.Theme);
+        public static AppTheme Selected
+        {
+            get
+            {
+                var selected = Parse(Properties.Settings.Default.Theme);
+                return IsAvailable(selected, DateTime.Today) ? selected : AppTheme.Standard;
+            }
+        }
 
         public static ThemeMode SelectedMode =>
             Enum.TryParse(Properties.Settings.Default.ThemeMode, out ThemeMode mode) ? mode : ThemeMode.System;
 
-        public static IReadOnlyList<AppTheme> AllThemes { get; } = (AppTheme[])Enum.GetValues(typeof(AppTheme));
+        public static IReadOnlyList<AppTheme> AllThemes =>
+            ((AppTheme[])Enum.GetValues(typeof(AppTheme)))
+                .Where(theme => IsAvailable(theme, DateTime.Today))
+                .ToArray();
+
+        public static bool IsAvailable(AppTheme theme, DateTime date) =>
+            theme != AppTheme.GtaVi || (date.Date >= GtaViAvailableFrom && date.Date <= GtaViAvailableTo);
 
         public static bool IsSeasonal(AppTheme theme) =>
             theme == AppTheme.Halloween || theme == AppTheme.Christmas || theme == AppTheme.Easter || theme == AppTheme.GtaVi;
@@ -147,7 +164,16 @@ namespace Zeitmanagement.Helpers
             _initialized = true;
             Properties.Settings.Default.PropertyChanged += OnSettingsChanged;
             SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
-            DateTimer.Tick += (s, e) => Refresh(); // a season may start or end while the app runs
+            DateTimer.Tick += (s, e) =>
+            {
+                Refresh();
+                var today = DateTime.Today;
+                if (today != _lastAvailabilityDate)
+                {
+                    _lastAvailabilityDate = today;
+                    ThemeAvailabilityChanged?.Invoke(null, EventArgs.Empty);
+                }
+            };
             DateTimer.Start();
 
             // Colour the native title bar of every window that opens from now on.
@@ -166,7 +192,14 @@ namespace Zeitmanagement.Helpers
         public static void Refresh(bool force = false)
         {
             var settings = Properties.Settings.Default;
-            var season = settings.SeasonalThemesEnabled ? SeasonOn(DateTime.Today) : null;
+            var today = DateTime.Today;
+            if (Parse(settings.Theme) == AppTheme.GtaVi && !IsAvailable(AppTheme.GtaVi, today))
+            {
+                settings.Theme = AppTheme.Standard.ToString();
+                settings.Save();
+            }
+
+            var season = settings.SeasonalThemesEnabled ? SeasonOn(today) : null;
             var theme = season ?? Selected;
             var dark = ResolveDark(SelectedMode);
 
@@ -201,6 +234,9 @@ namespace Zeitmanagement.Helpers
         {
             foreach (var theme in new[] { AppTheme.Halloween, AppTheme.GtaVi, AppTheme.Christmas, AppTheme.Easter })
             {
+                if (!IsAvailable(theme, date))
+                    continue;
+
                 var (from, to) = SeasonRange(theme, date.Year);
                 if (date.Date >= from && date.Date <= to)
                     return theme;
@@ -211,12 +247,17 @@ namespace Zeitmanagement.Helpers
 
         /// <summary>
         /// First and last day (inclusive) on which a holiday theme is shown automatically in the given
-        /// year: around the festival for Halloween, Christmas and Easter, a fixed range for GTA VI.
+        /// year: around the festival for Halloween, Christmas and Easter, a one-time range for GTA VI in 2026.
         /// </summary>
         public static (DateTime From, DateTime To) SeasonRange(AppTheme theme, int year)
         {
             if (theme == AppTheme.GtaVi)
-                return (new DateTime(year, GtaViFromMonth, GtaViFromDay), new DateTime(year, GtaViToMonth, GtaViToDay));
+            {
+                if (year != GtaViYear)
+                    throw new ArgumentOutOfRangeException(nameof(year), year, "The GTA VI theme is only available in 2026.");
+
+                return (GtaViAvailableFrom, GtaViAvailableTo);
+            }
 
             DateTime day;
             switch (theme)

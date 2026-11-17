@@ -139,7 +139,7 @@ namespace Zeitmanagement.Helpers
 
             new HelpTopic("", "Einstellungen", "Settings",
                 "TimeTrack an dich anpassen. Das Design gilt sofort, alles andere nach „Speichern“.",
-                "Design: Motiv und Helligkeit (wie Windows, hell, dunkel) wählen. Saisonale Designs erscheinen rund um Halloween, Weihnachten und Ostern von selbst, wenn du das nicht abschaltest. Das Design „GTA VI“ (Vice-City-Look, hell und dunkel) erscheint jedes Jahr vom 19.11. bis 30.11. auf dieselbe Weise; danach bleibt es in der Liste wählbar.",
+                "Design: Motiv und Helligkeit (wie Windows, hell, dunkel) wählen. Saisonale Designs erscheinen rund um Halloween, Weihnachten und Ostern von selbst, wenn du das nicht abschaltest. Das Design „GTA VI“ (Vice-City-Look, hell und dunkel) ist nur einmalig vom 19.11. bis 30.11.2026 verfügbar und wird danach aus der Liste entfernt.",
                 "Start & Fenster: mit Windows starten, normal oder minimiert starten, auf Wunsch gleich mit Quick Switch.",
                 "Automatisierung: Buchungen bei Sperrbildschirm oder Ruhemodus nach einer Wartezeit beenden und erinnern lassen, wenn kein Projekt läuft.",
                 "Updates: TimeTrack sucht regelmäßig nach neuen Versionen. „Installieren“ spielt ein Update ein, die App startet danach neu. Alle Versionen und eine Anleitung stehen auch auf github.com/jkkSofting/TimeTrack-Releases.",

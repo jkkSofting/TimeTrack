@@ -71,8 +71,8 @@ namespace Zeitmanagement.ViewModel
 
     internal class SettingsViewModel : BaseViewModel
     {
-        public IReadOnlyList<ThemeOption> ThemeOptions { get; } =
-            ThemeManager.AllThemes.Select(theme => new ThemeOption(theme)).ToList();
+        public ObservableCollection<ThemeOption> ThemeOptions { get; } =
+            new ObservableCollection<ThemeOption>(ThemeManager.AllThemes.Select(theme => new ThemeOption(theme)));
 
         /// <summary>The chosen colour scheme. Takes effect (and is stored) right away, without "Speichern".</summary>
         public ThemeOption SelectedTheme
@@ -131,7 +131,7 @@ namespace Zeitmanagement.ViewModel
         }
 
         public string SeasonalThemesHint { get; } =
-            $"Halloween, Weihnachten und Ostern erscheinen automatisch {ThemeManager.SeasonDaysBefore} Tage vor bis {ThemeManager.SeasonDaysAfter} Tage nach dem Fest, GTA VI jedes Jahr vom 19.11. bis 30.11.";
+            $"Halloween, Weihnachten und Ostern erscheinen automatisch {ThemeManager.SeasonDaysBefore} Tage vor bis {ThemeManager.SeasonDaysAfter} Tage nach dem Fest; GTA VI ist nur einmalig vom 19.11. bis 30.11.{ThemeManager.GtaViYear} verfügbar.";
 
         /// <summary>Which theme and variant is shown right now, and why if it isn't simply the chosen one.</summary>
         public string ThemeStatusText
@@ -280,6 +280,7 @@ namespace Zeitmanagement.ViewModel
         public SettingsViewModel(PluginManager plugins = null)
         {
             Plugins = new PluginSettingsViewModel(plugins);
+            ThemeManager.ThemeAvailabilityChanged += OnThemeAvailabilityChanged;
             SaveCommand = new DelegateCommand(_ => Save());
             CancelCommand = new DelegateCommand(_ => Refresh());
             CreateBackupCommand = new DelegateCommand(_ => CreateBackup());
@@ -293,6 +294,19 @@ namespace Zeitmanagement.ViewModel
             Properties.Settings.Default.PropertyChanged += OnSettingsChanged;
 
             Refresh();
+        }
+
+        private void OnThemeAvailabilityChanged(object sender, EventArgs e)
+        {
+            var availableThemes = ThemeManager.AllThemes;
+            if (ThemeOptions.Select(option => option.Theme).SequenceEqual(availableThemes))
+                return;
+
+            ThemeOptions.Clear();
+            foreach (var theme in availableThemes)
+                ThemeOptions.Add(new ThemeOption(theme));
+
+            RaisePropertyChanged(nameof(SelectedTheme));
         }
 
         public override void Refresh()
