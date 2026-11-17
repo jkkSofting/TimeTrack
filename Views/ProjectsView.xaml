@@ -160,11 +160,16 @@
                                 <ComboBox
                                     Width="110"
                                     AutomationProperties.Name="Aufrunden pro Buchung"
-                                    DisplayMemberPath="Label"
                                     ItemsSource="{Binding RoundingChoices}"
                                     SelectedValue="{Binding NewRundungMinuten}"
                                     SelectedValuePath="Minutes"
-                                    ToolTip="Jede Buchung dieses Projekts wird in der SAP-Verrechnung auf die nächste angefangene Einheit aufgerundet (bei 15 Minuten: 2 Min → 15 Min, 17 Min → 30 Min)." />
+                                    ToolTip="Jede Buchung dieses Projekts wird in der SAP-Verrechnung auf die nächste angefangene Einheit aufgerundet (bei 15 Minuten: 2 Min → 15 Min, 17 Min → 30 Min).">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Label}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
                             </StackPanel>
                             <CheckBox
                                 Grid.Column="4"
@@ -236,11 +241,16 @@
                                 <ComboBox
                                     Width="110"
                                     AutomationProperties.Name="Aufrunden pro Buchung"
-                                    DisplayMemberPath="Label"
                                     ItemsSource="{Binding RoundingChoices}"
                                     SelectedValue="{Binding EditRundungMinuten}"
                                     SelectedValuePath="Minutes"
-                                    ToolTip="Jede Buchung dieses Projekts wird in der SAP-Verrechnung auf die nächste angefangene Einheit aufgerundet (bei 15 Minuten: 2 Min → 15 Min, 17 Min → 30 Min)." />
+                                    ToolTip="Jede Buchung dieses Projekts wird in der SAP-Verrechnung auf die nächste angefangene Einheit aufgerundet (bei 15 Minuten: 2 Min → 15 Min, 17 Min → 30 Min).">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Label}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
                             </StackPanel>
                             <CheckBox
                                 Grid.Column="4"

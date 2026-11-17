@@ -402,5 +402,8 @@ namespace Zeitmanagement.ViewModel
 
         public int Minutes { get; }
         public string Label { get; }
+
+        /// <summary>Fallback für Stellen, die nur den Text anzeigen (z. B. das Auswahlfeld einer ComboBox ohne ItemTemplate).</summary>
+        public override string ToString() => Label;
     }
 }
