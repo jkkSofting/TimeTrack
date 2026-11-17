@@ -53,6 +53,10 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.47.6", new DateTime(2026, 11, 17), "Quick Switch beim Update sauber speichern",
+                Behoben("Beim Installieren einer neuen Version wurden laufende Quick-Switch-Buchungen nicht zuverlässig gespeichert, weil der Installer TimeTrack beenden konnte, bevor es fertig gespeichert hatte. Jetzt werden die laufenden Abschnitte gespeichert, bevor das Update startet, und auch dann, wenn der Installer TimeTrack selbst schließt oder Windows herunterfährt. Die Einträge sind danach pausiert."),
+                Behoben("Auch wenn das Hauptfenster bereits geschlossen war, konnte das Speichern beim Beenden übersprungen werden. Das ist behoben.")),
+
             new ChangelogRelease("2026.47.5", new DateTime(2026, 11, 17), "Pinguin: Fisch fangen, Wurfobjekte und Übungsmodus",
                 Neu("Der Pinguin wirft je nach Design etwas anderes: im Standard den Fisch, im „Wald“ einen Fliegenpilz, im „Ozean“ einen Seestern, an Halloween einen Kürbis, an Weihnachten eine Christbaumkugel, an Ostern ein Osterei, bei „GTA VI“ ein Geldbündel, bei „Star Wars“ den Todesstern und bei den Vereinsdesigns einen Fußball in Vereinsfarben. Gefangen wird es wie der Fisch und zählt in der Statistik „Fisch gefangen“."),
                 Neu("Zum Üben gibt es in den Einstellungen unter „Pinguin“ den Button „Pinguin zum Üben rufen“. Der Pinguin kommt sofort, auch wenn er sonst ausgeschaltet ist. Was du dabei fängst, zählt nicht in die Statistik."),

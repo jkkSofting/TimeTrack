@@ -143,7 +143,7 @@ namespace Zeitmanagement.Helpers
                 "Design: Motiv und Helligkeit (wie Windows, hell, dunkel) wählen. Saisonale Designs erscheinen rund um Halloween, Weihnachten und Ostern von selbst, wenn du das nicht abschaltest. Das Design „GTA VI“ (Vice-City-Look, hell und dunkel) bleibt dauerhaft auswählbar, erscheint automatisch aber nur einmalig vom 19.11. bis 30.11.2026. Das Design „Star Wars“ (Wüstensand oder tiefer Weltraum) erscheint automatisch nur am 4. Mai, bleibt aber jederzeit auswählbar.",
                 "Start & Fenster: mit Windows starten, normal oder minimiert starten, auf Wunsch gleich mit Quick Switch.",
                 "Automatisierung: Buchungen bei Sperrbildschirm oder Ruhemodus nach einer Wartezeit pausieren statt beenden und erinnern lassen, wenn kein Projekt läuft.",
-                "Updates: TimeTrack sucht regelmäßig nach neuen Versionen. „Installieren“ spielt ein Update ein, die App startet danach neu. Alle Versionen und eine Anleitung stehen auch auf github.com/jkkSofting/TimeTrack-Releases.",
+                "Updates: TimeTrack sucht regelmäßig nach neuen Versionen. „Installieren“ spielt ein Update ein, die App startet danach neu; laufende Quick-Switch-Buchungen werden vorher gespeichert und pausiert. Alle Versionen und eine Anleitung stehen auch auf github.com/jkkSofting/TimeTrack-Releases.",
                 "Datensicherung: Sicherungen erstellen und eine vorhandene Sicherung wiederherstellen.",
                 "Plugins: gefundene Plugins ein- und ausschalten, nach neuen Plugins suchen, Fehler ansehen, den Plugin-Ordner öffnen und die Einstellungen der Plugins bearbeiten."),
 
