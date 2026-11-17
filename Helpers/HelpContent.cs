@@ -167,7 +167,7 @@ namespace Zeitmanagement.Helpers
                 "Das Maskottchen von TimeTrack.",
                 "Ab und zu schaut der Pinguin hinter der Taskleiste hervor. Klick ihn rechtzeitig an, dann wirft er dir einen Fisch zu – und den musst du erwischen, bevor er herunterrutscht.",
                 "Wie oft er auftaucht, stellst du in den Einstellungen ein. Dort steht auch deine Fangstatistik.",
-                "Zu jedem Design trägt er etwas Passendes, zum Design „GTA VI“ eine Sonnenbrille und eine Hibiskusblüte, zum Design „Star Wars“ ein Lichtschwert."),
+                "Zu jedem Design trägt er etwas Passendes, zum Design „GTA VI“ eine Sonnenbrille und eine Hibiskusblüte, zum Design „Star Wars“ ein Lichtschwert (blau im hellen, rot im dunklen Design)."),
         };
     }
 }

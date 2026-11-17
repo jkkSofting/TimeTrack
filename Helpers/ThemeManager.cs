@@ -311,7 +311,9 @@ namespace Zeitmanagement.Helpers
                 .ToArray();
 
             var resources = Application.Current.Resources;
-            resources["Theme.MascotAccessory"] = resources["MascotAccessory." + theme] ?? resources["MascotAccessory.None"];
+            // Some motifs draw a different accessory in dark mode (e.g. the red lightsaber of Star Wars): MascotAccessory.[Motif].Dark.
+            resources["Theme.MascotAccessory"] = (dark ? resources["MascotAccessory." + theme + ".Dark"] : null)
+                ?? resources["MascotAccessory." + theme] ?? resources["MascotAccessory.None"];
         }
 
         private static bool IsPalette(ResourceDictionary dictionary) =>

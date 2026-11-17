@@ -575,6 +575,98 @@
         </DrawingImage.Drawing>
     </DrawingImage>
 
+    <!--
+        Star Wars im Dunkel-Modus: dasselbe Lichtschwert mit roter Klinge (Sith). ThemeManager.ApplyPalette waehlt im Dunkel-Modus
+        zuerst MascotAccessory.[Motiv].Dark und faellt sonst auf MascotAccessory.[Motiv] zurueck.
+    -->
+    <DrawingImage x:Key="MascotAccessory.StarWars.Dark" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="M 0,0 H 120 V 150 H 0 Z" />
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <RotateTransform Angle="-6" CenterX="14" CenterY="116" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Geometry="M 14,100 L 14,41">
+                        <GeometryDrawing.Pen>
+                            <Pen
+                                Brush="#2EF5453F"
+                                EndLineCap="Round"
+                                StartLineCap="Flat"
+                                Thickness="10" />
+                        </GeometryDrawing.Pen>
+                    </GeometryDrawing>
+                    <GeometryDrawing Geometry="M 14,100 L 14,41">
+                        <GeometryDrawing.Pen>
+                            <Pen
+                                Brush="#55FF5C5C"
+                                EndLineCap="Round"
+                                StartLineCap="Flat"
+                                Thickness="6.4" />
+                        </GeometryDrawing.Pen>
+                    </GeometryDrawing>
+                    <GeometryDrawing Geometry="M 14,100 L 14,41">
+                        <GeometryDrawing.Pen>
+                            <Pen
+                                Brush="#FF7C7C"
+                                EndLineCap="Round"
+                                StartLineCap="Flat"
+                                Thickness="3.4" />
+                        </GeometryDrawing.Pen>
+                    </GeometryDrawing>
+                    <GeometryDrawing Geometry="M 14,100 L 14,42">
+                        <GeometryDrawing.Pen>
+                            <Pen
+                                Brush="#FFF2F2"
+                                EndLineCap="Round"
+                                StartLineCap="Flat"
+                                Thickness="1.4" />
+                        </GeometryDrawing.Pen>
+                    </GeometryDrawing>
+                    <GeometryDrawing Pen="{StaticResource MascotAccessoryPen}">
+                        <GeometryDrawing.Brush>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Offset="0" Color="#D5DDEE" />
+                                <GradientStop Offset="1" Color="#8392B5" />
+                            </LinearGradientBrush>
+                        </GeometryDrawing.Brush>
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry
+                                RadiusX="0.8"
+                                RadiusY="0.8"
+                                Rect="12,101,4,16" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="#5C6A8E" Pen="{StaticResource MascotAccessoryPen}">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry
+                                RadiusX="0.6"
+                                RadiusY="0.6"
+                                Rect="11.4,99.6,5.2,2.6" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="#27325A">
+                        <GeometryDrawing.Geometry>
+                            <GeometryGroup>
+                                <RectangleGeometry Rect="12,105,4,1.1" />
+                                <RectangleGeometry Rect="12,108,4,1.1" />
+                                <RectangleGeometry Rect="12,111,4,1.1" />
+                            </GeometryGroup>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="#3A4670" Pen="{StaticResource MascotAccessoryPen}">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry
+                                RadiusX="0.8"
+                                RadiusY="0.8"
+                                Rect="11.8,115.6,4.4,2.4" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                </DrawingGroup>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
     <!--  Fan-Themes: Schal in Vereinsfarben um den Hals, ein Ende hängt herunter  -->
     <DrawingImage x:Key="MascotAccessory.VfbStuttgart" po:Freeze="True">
         <DrawingImage.Drawing>
