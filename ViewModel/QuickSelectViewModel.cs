@@ -14,7 +14,7 @@ namespace Zeitmanagement.ViewModel
 {
     /// <summary>
     /// Backs the floating Quick Switch window: which projects or To-Do tickets can be started, and the
-    /// bookings currently running or paused. Also runs the lock/sleep auto-stop and the idle reminder.
+    /// bookings currently running or paused. Also runs the lock/sleep auto-pause and the idle reminder.
     /// </summary>
     internal class QuickSelectViewModel:BindableBase
     {
@@ -35,9 +35,9 @@ namespace Zeitmanagement.ViewModel
 
         /// <summary>
         /// The projects currently running or paused, in parallel, up to <see cref="MaxActiveSlots"/>
-        /// at a time, in the order they were started. A slot lives exactly as long as its booking
-        /// is open: it is added on start and dropped on stop. Serves as the item source for the
-        /// floating window's slot list.
+        /// at a time, in the order they were started. A slot is added on start and only removed on an
+        /// explicit stop by the user; the automatic pause on lock/sleep keeps it in place. Serves as
+        /// the item source for the floating window's slot list.
         /// </summary>
         public ObservableCollection<QuickSelectItemViewModel> ActiveSlots { get; } = new ObservableCollection<QuickSelectItemViewModel>();
 
@@ -53,7 +53,7 @@ namespace Zeitmanagement.ViewModel
         public DelegateCommand StartNewSlotCommand { get; }
 
         /// <summary>
-        /// Raised when the user should be notified via a tray balloon: an auto-stop happened,
+        /// Raised when the user should be notified via a tray balloon: bookings were auto-paused,
         /// or no booking has been running for a while. (title, message)
         /// </summary>
         public event Action<string, string> NotificationRequested;
@@ -389,14 +389,20 @@ namespace Zeitmanagement.ViewModel
 
         #endregion
 
-        #region Session-based automation (auto-stop on lock/sleep, idle reminder)
+        #region Session-based automation (auto-pause on lock/sleep, idle reminder)
 
         private SessionActivityMonitor _sessionMonitor;
-        private DispatcherTimer _lockAutoStopTimer;
+        private DispatcherTimer _lockAutoPauseTimer;
         private DispatcherTimer _nudgeCheckTimer;
         private bool _isLocked;
         private bool _isSuspended;
         private DateTime _lastActiveOrNudge = DateTime.Now;
+
+        /// <summary>
+        /// Whether a booking is actually running right now. Unlike <see cref="IsAnyActive"/>, paused
+        /// slots do not count: a paused slot is reserved, but no time is being booked.
+        /// </summary>
+        private bool HasRunningSlot => ActiveSlots.Any(q => !q.IsPaused);
 
         private void InitializeSessionAutomation()
         {
@@ -407,12 +413,12 @@ namespace Zeitmanagement.ViewModel
             _sessionMonitor.Resumed += OnSessionResumed;
 
             // One-shot: (re)started on lock, stopped on unlock/suspend, fires the delayed
-            // auto-stop for the lock-screen case.
-            _lockAutoStopTimer = new DispatcherTimer();
-            _lockAutoStopTimer.Tick += (s, e) =>
+            // auto-pause for the lock-screen case.
+            _lockAutoPauseTimer = new DispatcherTimer();
+            _lockAutoPauseTimer.Tick += (s, e) =>
             {
-                _lockAutoStopTimer.Stop();
-                AutoStopActiveBooking("Sperrbildschirm");
+                _lockAutoPauseTimer.Stop();
+                AutoPauseRunningBookings("Sperrbildschirm");
             };
 
             _nudgeCheckTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
@@ -423,30 +429,30 @@ namespace Zeitmanagement.ViewModel
         private void OnSessionLocked()
         {
             _isLocked = true;
-            _lockAutoStopTimer.Stop();
+            _lockAutoPauseTimer.Stop();
 
-            if (Properties.Settings.Default.AutoStopOnLockEnabled && IsAnyActive)
+            if (Properties.Settings.Default.AutoStopOnLockEnabled && HasRunningSlot)
             {
                 var minutes = Math.Max(1, Properties.Settings.Default.AutoStopOnLockMinutes);
-                _lockAutoStopTimer.Interval = TimeSpan.FromMinutes(minutes);
-                _lockAutoStopTimer.Start();
+                _lockAutoPauseTimer.Interval = TimeSpan.FromMinutes(minutes);
+                _lockAutoPauseTimer.Start();
             }
         }
 
         private void OnSessionUnlocked()
         {
             _isLocked = false;
-            _lockAutoStopTimer.Stop();
+            _lockAutoPauseTimer.Stop();
             _lastActiveOrNudge = DateTime.Now;
         }
 
         private void OnSessionSuspending()
         {
-            _lockAutoStopTimer.Stop();
+            _lockAutoPauseTimer.Stop();
 
-            if (Properties.Settings.Default.AutoStopOnLockEnabled && IsAnyActive)
+            if (Properties.Settings.Default.AutoStopOnLockEnabled && HasRunningSlot)
             {
-                AutoStopActiveBooking("Ruhemodus");
+                AutoPauseRunningBookings("Ruhemodus");
             }
 
             _isSuspended = true;
@@ -458,26 +464,29 @@ namespace Zeitmanagement.ViewModel
             _lastActiveOrNudge = DateTime.Now;
         }
 
-        private void AutoStopActiveBooking(string reason)
+        /// <summary>
+        /// Pauses every running slot after the session went away (lock screen or sleep). Only the
+        /// running segments are closed out and saved; the slots stay in <see cref="ActiveSlots"/>
+        /// as paused, so the user can resume them with one click. Already paused slots are left
+        /// alone, and nothing is notified when no booking was running.
+        /// </summary>
+        private void AutoPauseRunningBookings(string reason)
         {
-            // Snapshot first: StopBooking removes the slots from ActiveSlots as it goes, so
-            // iterating the live collection would skip entries.
-            var active = ActiveSlots.Select(q => new { q.Key, q.Title }).ToList();
-            if (active.Count == 0)
+            // Snapshot first, so the notification names exactly the slots paused by this call.
+            var running = ActiveSlots.Where(q => !q.IsPaused).Select(q => new { q.Key, q.Title }).ToList();
+            if (running.Count == 0)
                 return;
 
-            foreach (var slot in active)
+            foreach (var slot in running)
             {
-                // Reuses the same booking-end/persistence logic as the manual per-slot stop
-                // button, so there's a single place that ends a booking. Always a full stop -
-                // even a paused slot is cleared out rather than left reserved - since the
-                // session is going away (lock/sleep), not just a short interruption.
-                StopBooking(slot.Key);
+                // Same persistence as the manual pause button, so there's a single place that
+                // closes a running segment.
+                PauseBooking(slot.Key);
             }
 
-            var names = string.Join(", ", active.Select(a => $"\"{a.Title}\""));
-            var verb = active.Count == 1 ? "wurde" : "wurden";
-            NotificationRequested?.Invoke("Buchung beendet", $"{names} {verb} automatisch beendet ({reason}).");
+            var names = string.Join(", ", running.Select(a => $"\"{a.Title}\""));
+            var verb = running.Count == 1 ? "wurde" : "wurden";
+            NotificationRequested?.Invoke("Buchung pausiert", $"{names} {verb} automatisch pausiert ({reason}).");
         }
 
         private void CheckNudge()
@@ -485,7 +494,9 @@ namespace Zeitmanagement.ViewModel
             if (!Properties.Settings.Default.ReminderNudgeEnabled || _isLocked || _isSuspended)
                 return;
 
-            if (IsAnyActive)
+            // Paused slots do not count as a running booking, so the reminder still fires while
+            // only paused slots exist.
+            if (HasRunningSlot)
             {
                 _lastActiveOrNudge = DateTime.Now;
                 return;
@@ -506,9 +517,30 @@ namespace Zeitmanagement.ViewModel
         public void Shutdown()
         {
             _statusTimer?.Stop();
-            _lockAutoStopTimer?.Stop();
+            _lockAutoPauseTimer?.Stop();
             _nudgeCheckTimer?.Stop();
             _sessionMonitor?.Dispose();
+        }
+
+        /// <summary>
+        /// Persists every running (not paused) slot up to now, exactly like a pause does, without
+        /// notifications. Called on application exit so open segments are not lost. Each slot is
+        /// saved on its own, so one failing slot cannot prevent the others. Saved slots become
+        /// paused, so calling this again writes nothing.
+        /// </summary>
+        public void SaveRunningBookings()
+        {
+            foreach (var slot in ActiveSlots.Where(q => !q.IsPaused).ToList())
+            {
+                try
+                {
+                    PauseBooking(slot.Key);
+                }
+                catch (Exception)
+                {
+                    // Exit path: must not throw. The remaining slots are still saved below.
+                }
+            }
         }
 
         #endregion
