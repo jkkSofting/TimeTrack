@@ -70,7 +70,8 @@ public sealed partial class TimeTracker : IDisposable
                 kunde           TEXT    NOT NULL,
                 anzahl_stunden  REAL    NOT NULL DEFAULT 0.0,
                 kostentraeger   TEXT    NOT NULL,
-                ist_extern      INTEGER NOT NULL DEFAULT 0 -- 1 = vom Kunden bezahlt
+                ist_extern      INTEGER NOT NULL DEFAULT 0, -- 1 = vom Kunden bezahlt
+                rundung_minuten INTEGER NOT NULL DEFAULT 0  -- SAP-Aufrundung je Buchung: 0 = aus, 5, 10, 15, 60
             );
             CREATE INDEX IF NOT EXISTS idx_projects_name ON projects(projektname);
 
@@ -143,6 +144,14 @@ public sealed partial class TimeTracker : IDisposable
                 cmd.ExecuteNonQuery();
             }
 
+            // Migration: Datenbanken vor der Rundung je Projekt haben noch keine Spalte rundung_minuten (0 = aus).
+            cmd.CommandText = "SELECT COUNT(*) FROM pragma_table_info('projects') WHERE name = 'rundung_minuten';";
+            if (Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) == 0)
+            {
+                cmd.CommandText = "ALTER TABLE projects ADD COLUMN rundung_minuten INTEGER NOT NULL DEFAULT 0;";
+                cmd.ExecuteNonQuery();
+            }
+
             // Projektcontrolling-Import (SAP-Excel): zusätzliche Tabellen, die Zeiterfassung bleibt unberührt.
             EnsureControllingSchema(cmd);
 
@@ -161,7 +170,7 @@ public sealed partial class TimeTracker : IDisposable
 
     // ---------- Projekte ----------
 
-    public void AddOrEnsureProject(string projektname, string kunde, string kostentraeger, bool istExtern = false)
+    public void AddOrEnsureProject(string projektname, string kunde, string kostentraeger, bool istExtern = false, int rundungMinuten = 0)
     {
         if (string.IsNullOrWhiteSpace(projektname)) throw new ArgumentException("leer", nameof(projektname));
         if (string.IsNullOrWhiteSpace(kunde)) throw new ArgumentException("leer", nameof(kunde));
@@ -172,17 +181,19 @@ public sealed partial class TimeTracker : IDisposable
             // SQLite ab 3.24.0: UPSERT via ON CONFLICT .. DO UPDATE
             cmd.CommandText =
             @"
-            INSERT INTO projects (projektname, kunde, kostentraeger, ist_extern)
-                 VALUES (@name, @kunde, @kost, @ext)
+            INSERT INTO projects (projektname, kunde, kostentraeger, ist_extern, rundung_minuten)
+                 VALUES (@name, @kunde, @kost, @ext, @rund)
             ON CONFLICT(projektname) DO UPDATE SET
                  kunde = excluded.kunde,
                  kostentraeger = excluded.kostentraeger,
-                 ist_extern = excluded.ist_extern
+                 ist_extern = excluded.ist_extern,
+                 rundung_minuten = excluded.rundung_minuten
             ";
             cmd.Parameters.AddWithValue("@name", projektname);
             cmd.Parameters.AddWithValue("@kunde", kunde);
             cmd.Parameters.AddWithValue("@kost", kostentraeger);
             cmd.Parameters.AddWithValue("@ext", istExtern ? 1 : 0);
+            cmd.Parameters.AddWithValue("@rund", RoundingOptions.Normalize(rundungMinuten));
             cmd.ExecuteNonQuery();
         }
     }
@@ -226,7 +237,7 @@ public sealed partial class TimeTracker : IDisposable
     {
         using (var cmd = _conn.CreateCommand())
         {
-            cmd.CommandText = "SELECT projektname, kunde, anzahl_stunden, kostentraeger, ist_extern, quickselect_aktiv FROM projects ORDER BY projektname;";
+            cmd.CommandText = "SELECT projektname, kunde, anzahl_stunden, kostentraeger, ist_extern, quickselect_aktiv, rundung_minuten FROM projects ORDER BY projektname;";
             using (var r = cmd.ExecuteReader())
             {
                 while (r.Read())
@@ -238,7 +249,8 @@ public sealed partial class TimeTracker : IDisposable
                         AnzahlStunden = r.GetDouble(2),
                         Kostentraeger = r.GetString(3),
                         IstExtern = r.GetInt32(4) != 0,
-                        QuickSelectAktiv = r.GetInt32(5) != 0
+                        QuickSelectAktiv = r.GetInt32(5) != 0,
+                        RundungMinuten = RoundingOptions.Normalize(r.GetInt32(6))
                     };
                 }
             }
@@ -263,7 +275,7 @@ public sealed partial class TimeTracker : IDisposable
         }
     }
 
-    public void UpdateProject(string originalProjektname, string newProjektname, string kunde, string kostentraeger, bool istExtern = false)
+    public void UpdateProject(string originalProjektname, string newProjektname, string kunde, string kostentraeger, bool istExtern = false, int rundungMinuten = 0)
     {
         if (string.IsNullOrWhiteSpace(originalProjektname)) throw new ArgumentException("leer", nameof(originalProjektname));
         if (string.IsNullOrWhiteSpace(newProjektname)) throw new ArgumentException("leer", nameof(newProjektname));
@@ -306,12 +318,14 @@ public sealed partial class TimeTracker : IDisposable
                SET projektname = @pname,
                    kunde = @kunde,
                    kostentraeger = @kost,
-                   ist_extern = @ext
+                   ist_extern = @ext,
+                   rundung_minuten = @rund
              WHERE id = @id;";
             cmd.Parameters.AddWithValue("@pname", newProjektname);
             cmd.Parameters.AddWithValue("@kunde", kunde);
             cmd.Parameters.AddWithValue("@kost", kostentraeger);
             cmd.Parameters.AddWithValue("@ext", istExtern ? 1 : 0);
+            cmd.Parameters.AddWithValue("@rund", RoundingOptions.Normalize(rundungMinuten));
             cmd.Parameters.AddWithValue("@id", originalId);
             cmd.ExecuteNonQuery();
 
@@ -462,7 +476,7 @@ public sealed partial class TimeTracker : IDisposable
         using (var cmd = _conn.CreateCommand())
         {
             cmd.CommandText = @"
-            SELECT te.id, te.datum, te.startzeit, te.endzeit, te.beschreibung, p.projektname, p.ist_extern
+            SELECT te.id, te.datum, te.startzeit, te.endzeit, te.beschreibung, p.projektname, p.ist_extern, p.rundung_minuten
               FROM time_entries te
               JOIN projects p ON p.id = te.projekt_id
              WHERE te.datum >= @from AND te.datum <= @to
@@ -482,7 +496,8 @@ public sealed partial class TimeTracker : IDisposable
                         Endzeit = r.GetString(3),
                         Beschreibung = r.IsDBNull(4) ? null : r.GetString(4),
                         Projektname = r.GetString(5),
-                        IstExtern = r.GetInt32(6) != 0
+                        IstExtern = r.GetInt32(6) != 0,
+                        RundungMinuten = RoundingOptions.Normalize(r.GetInt32(7))
                     });
                 }
             }
@@ -652,6 +667,7 @@ public sealed partial class TimeTracker : IDisposable
         public string Kostentraeger { get; set; }
         public bool IstExtern { get; set; }     // vom Kunden bezahlt
         public bool QuickSelectAktiv { get; set; } // im Quick Switch wählbar
+        public int RundungMinuten { get; set; }    // SAP-Aufrundung je Buchung: 0 = aus, 5, 10, 15, 60
     }
 
     public class TimeEntryRow
@@ -663,6 +679,7 @@ public sealed partial class TimeTracker : IDisposable
         public string Beschreibung { get; set; }
         public string Projektname { get; set; } // <— NEU (für Anzeige)
         public bool IstExtern { get; set; }     // nur von GetTimeEntriesBetween gefüllt
+        public int RundungMinuten { get; set; } // Rundung des Projekts (0 = aus); nur von GetTimeEntriesBetween gefüllt
     }
 
 }
