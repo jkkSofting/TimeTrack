@@ -58,7 +58,7 @@ namespace Zeitmanagement.Helpers
         public const int SeasonDaysBefore = 14;
         public const int SeasonDaysAfter = 7;
 
-        /// <summary>GTA VI is a one-time seasonal theme, available only from 19 to 30 November 2026.</summary>
+        /// <summary>GTA VI appears automatically only once, from 19 to 30 November 2026.</summary>
         public const int GtaViYear = 2026;
         private static readonly DateTime GtaViAvailableFrom = new DateTime(GtaViYear, 11, 19);
         private static readonly DateTime GtaViAvailableTo = new DateTime(GtaViYear, 11, 30);
@@ -78,11 +78,9 @@ namespace Zeitmanagement.Helpers
         private static ResourceDictionary _palette;
         private static Color[] _dataPalette = new Color[0];
         private static bool _initialized;
-        private static DateTime _lastAvailabilityDate = DateTime.Today;
 
         /// <summary>Raised after a different palette has been applied.</summary>
         public static event EventHandler ThemeChanged;
-        public static event EventHandler ThemeAvailabilityChanged;
 
         /// <summary>The motif that is actually shown (the chosen one or the holiday one).</summary>
         public static AppTheme Effective { get; private set; } = AppTheme.Standard;
@@ -101,25 +99,12 @@ namespace Zeitmanagement.Helpers
         /// </summary>
         public static IReadOnlyList<Color> DataPalette => _dataPalette;
 
-        public static AppTheme Selected
-        {
-            get
-            {
-                var selected = Parse(Properties.Settings.Default.Theme);
-                return IsAvailable(selected, DateTime.Today) ? selected : AppTheme.Standard;
-            }
-        }
+        public static AppTheme Selected => Parse(Properties.Settings.Default.Theme);
 
         public static ThemeMode SelectedMode =>
             Enum.TryParse(Properties.Settings.Default.ThemeMode, out ThemeMode mode) ? mode : ThemeMode.System;
 
-        public static IReadOnlyList<AppTheme> AllThemes =>
-            ((AppTheme[])Enum.GetValues(typeof(AppTheme)))
-                .Where(theme => IsAvailable(theme, DateTime.Today))
-                .ToArray();
-
-        public static bool IsAvailable(AppTheme theme, DateTime date) =>
-            theme != AppTheme.GtaVi || (date.Date >= GtaViAvailableFrom && date.Date <= GtaViAvailableTo);
+        public static IReadOnlyList<AppTheme> AllThemes { get; } = (AppTheme[])Enum.GetValues(typeof(AppTheme));
 
         public static bool IsSeasonal(AppTheme theme) =>
             theme == AppTheme.Halloween || theme == AppTheme.Christmas || theme == AppTheme.Easter || theme == AppTheme.GtaVi;
@@ -164,16 +149,7 @@ namespace Zeitmanagement.Helpers
             _initialized = true;
             Properties.Settings.Default.PropertyChanged += OnSettingsChanged;
             SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
-            DateTimer.Tick += (s, e) =>
-            {
-                Refresh();
-                var today = DateTime.Today;
-                if (today != _lastAvailabilityDate)
-                {
-                    _lastAvailabilityDate = today;
-                    ThemeAvailabilityChanged?.Invoke(null, EventArgs.Empty);
-                }
-            };
+            DateTimer.Tick += (s, e) => Refresh(); // a season may start or end while the app runs
             DateTimer.Start();
 
             // Colour the native title bar of every window that opens from now on.
@@ -193,12 +169,6 @@ namespace Zeitmanagement.Helpers
         {
             var settings = Properties.Settings.Default;
             var today = DateTime.Today;
-            if (Parse(settings.Theme) == AppTheme.GtaVi && !IsAvailable(AppTheme.GtaVi, today))
-            {
-                settings.Theme = AppTheme.Standard.ToString();
-                settings.Save();
-            }
-
             var season = settings.SeasonalThemesEnabled ? SeasonOn(today) : null;
             var theme = season ?? Selected;
             var dark = ResolveDark(SelectedMode);
@@ -234,7 +204,7 @@ namespace Zeitmanagement.Helpers
         {
             foreach (var theme in new[] { AppTheme.Halloween, AppTheme.GtaVi, AppTheme.Christmas, AppTheme.Easter })
             {
-                if (!IsAvailable(theme, date))
+                if (theme == AppTheme.GtaVi && date.Year != GtaViYear)
                     continue;
 
                 var (from, to) = SeasonRange(theme, date.Year);
