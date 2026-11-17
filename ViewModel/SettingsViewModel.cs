@@ -276,6 +276,8 @@ namespace Zeitmanagement.ViewModel
         public DelegateCommand BrowseBackupCommand { get; }
         public DelegateCommand CheckForUpdateCommand { get; }
         public DelegateCommand InstallUpdateCommand { get; }
+        public DelegateCommand ResetCatchStatsCommand { get; }
+        public DelegateCommand CallPenguinCommand { get; }
 
         /// <summary>Der Abschnitt „Plugins“. Schalter und Einstellungsbereiche der Plugins speichern sofort.</summary>
         public PluginSettingsViewModel Plugins { get; }
@@ -290,6 +292,9 @@ namespace Zeitmanagement.ViewModel
             BrowseBackupCommand = new DelegateCommand(_ => BrowseBackup());
             CheckForUpdateCommand = new DelegateCommand(async _ => await CheckForUpdate());
             InstallUpdateCommand = new DelegateCommand(async _ => await InstallUpdate());
+            ResetCatchStatsCommand = new DelegateCommand(_ => ResetCatchStats(),
+                _ => PenguinCaughtCount > 0 || FishCaughtCount > 0);
+            CallPenguinCommand = new DelegateCommand(_ => PenguinEasterEgg.Current?.CallForPractice());
 
             UpdateService.UpdateAvailable += _ => ShowUpdate(UpdateService.LatestUpdate);
             ThemeManager.ThemeChanged += (s, e) => RaisePropertyChanged(nameof(ThemeStatusText));
@@ -333,9 +338,11 @@ namespace Zeitmanagement.ViewModel
             {
                 case nameof(Properties.Settings.PenguinCaughtCount):
                     RaisePropertyChanged(nameof(PenguinCaughtCount));
+                    ResetCatchStatsCommand.RaiseCanExecuteChanged();
                     break;
                 case nameof(Properties.Settings.FishCaughtCount):
                     RaisePropertyChanged(nameof(FishCaughtCount));
+                    ResetCatchStatsCommand.RaiseCanExecuteChanged();
                     break;
                 case nameof(Properties.Settings.Theme):
                     RaisePropertyChanged(nameof(SelectedTheme));
@@ -349,6 +356,23 @@ namespace Zeitmanagement.ViewModel
                     RaisePropertyChanged(nameof(SeasonalThemesEnabled));
                     break;
             }
+        }
+
+        private void ResetCatchStats()
+        {
+            var result = MessageBox.Show(
+                "Möchtest du die Fangstatistik wirklich zurücksetzen? Gefangene Pinguine und Fische werden wieder auf 0 gesetzt.",
+                "Fangstatistik zurücksetzen",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question,
+                MessageBoxResult.No);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+
+            Properties.Settings.Default.PenguinCaughtCount = 0;
+            Properties.Settings.Default.FishCaughtCount = 0;
+            Properties.Settings.Default.Save();
         }
 
         private void ShowUpdate(UpdateChecker.UpdateInfo update)

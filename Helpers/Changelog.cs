@@ -53,7 +53,16 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
-            new ChangelogRelease("2026.47.4", new DateTime(2026, 11, 17), "Rundung pro Projekt, Quick Switch und neue Designs",
+            new ChangelogRelease("2026.47.5", new DateTime(2026, 11, 17), "Pinguin: Fisch fangen, Wurfobjekte und Übungsmodus",
+                Neu("Der Pinguin wirft je nach Design etwas anderes: im Standard den Fisch, im „Wald“ einen Fliegenpilz, im „Ozean“ einen Seestern, an Halloween einen Kürbis, an Weihnachten eine Christbaumkugel, an Ostern ein Osterei, bei „GTA VI“ ein Geldbündel, bei „Star Wars“ den Todesstern und bei den Vereinsdesigns einen Fußball in Vereinsfarben. Gefangen wird es wie der Fisch und zählt in der Statistik „Fisch gefangen“."),
+                Neu("Zum Üben gibt es in den Einstellungen unter „Pinguin“ den Button „Pinguin zum Üben rufen“. Der Pinguin kommt sofort, auch wenn er sonst ausgeschaltet ist. Was du dabei fängst, zählt nicht in die Statistik."),
+                Neu("Die Fangstatistik (Pinguin gefangen, Fisch gefangen) lässt sich in den Einstellungen mit „Statistik zurücksetzen“ wieder auf 0 setzen, nach einer Rückfrage."),
+                Neu("In den Einstellungen unter „Pinguin“ und in der Hilfe unter „Der Pinguin“ steht jetzt, wie du den Fisch fängst."),
+                Verbessert("Der Fisch ist leichter zu fangen: Er lässt sich schon fangen, sobald er an der Scheibe klebt, bleibt dort etwa eine Sekunde hängen, rutscht dann gut drei Sekunden lang langsam nach unten und zappelt dabei weniger."),
+                Verbessert("Um das Wurfobjekt liegt eine unsichtbare Fangfläche, die etwa 30 Pixel über seinen Rand hinausreicht. Ein Klick knapp daneben fängt es, und du klickst nicht versehentlich etwas dahinter an."),
+                Behoben("Der Fisch ließ sich gar nicht anklicken, weil sein Fenster alle Mausklicks durchgelassen hat. Jetzt fängst du ihn mit einem Klick.")),
+
+            new ChangelogRelease("2026.47.4",new DateTime(2026, 11, 17), "Rundung pro Projekt, Quick Switch und neue Designs",
                 Neu("Unter „Projekte“ lässt sich pro Projekt „Aufrunden pro Buchung“ einstellen: Aus, 5, 10, 15 oder 60 Minuten. Die Auswahl gibt es beim Anlegen und beim Bearbeiten, die Tabelle hat dafür eine Spalte „Rundung“."),
                 Neu("SAP-Verrechnung: Jede Buchung eines Projekts mit Rundung wird auf die nächste angefangene Zeiteinheit aufgerundet. Bei 15 Minuten werden aus 2 Minuten 15 und aus 17 Minuten 30. Die aufgerundete Zeit zählt im SAP wie echte Zeit und kann so zum Beispiel parallele interne Zeit abdecken."),
                 Neu("Auf der Seite „SAP-Verrechnung“ steht die aufgerundete Zeit in einer eigenen Farbe am Ende der Buchung (bei 2 Minuten also die 13 aufgerundeten Minuten). Die Kennzahl „Aufgerundet“ zeigt die Summe, und Hinweise je Tag und Kostenträger nennen, was dazugekommen ist."),

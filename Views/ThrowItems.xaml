@@ -1,0 +1,319 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+    mc:Ignorable="po">
+
+    <!--
+        Wurfobjekte des Pinguins, je Theme eines (Schluessel "ThrowItem.[Theme]"). Alle Zeichnungen
+        liegen im 80 x 44 Koordinatensystem (wie der Fisch); der unsichtbare Rahmen haelt die
+        Bildgroesse fest. Jedes Motiv hat eine dunklere Kontur und braucht keine feste Ausrichtung,
+        weil es beim Rutschen gedreht wird.
+    -->
+    <RectangleGeometry x:Key="ThrowItemFrame" po:Freeze="True" Rect="0,0,80,44" />
+
+    <!--  Konturen (je Motiv eine etwas dunklere Variante der Fuellfarbe)  -->
+    <Pen x:Key="ThrowItemPen.Fish" po:Freeze="True" Brush="#4F7FB0" LineJoin="Round" Thickness="1.2" />
+    <Pen x:Key="ThrowItemPen.FishGill" po:Freeze="True" Brush="#4F7FB0" Thickness="1.5" />
+    <Pen x:Key="ThrowItemPen.Mushroom" po:Freeze="True" Brush="#7A2A1C" LineJoin="Round" Thickness="1.2" />
+    <Pen x:Key="ThrowItemPen.MushroomThin" po:Freeze="True" Brush="#B9A98A" LineJoin="Round" Thickness="0.7" />
+    <Pen x:Key="ThrowItemPen.Starfish" po:Freeze="True" Brush="#A8431E" LineJoin="Round" Thickness="1.2" />
+    <Pen x:Key="ThrowItemPen.Pumpkin" po:Freeze="True" Brush="#8F3F08" LineJoin="Round" Thickness="1.2" />
+    <Pen x:Key="ThrowItemPen.Bauble" po:Freeze="True" Brush="#6E0E14" LineJoin="Round" Thickness="1.2" />
+    <Pen x:Key="ThrowItemPen.BaubleCap" po:Freeze="True" Brush="#8A6410" LineJoin="Round" Thickness="1" />
+    <Pen x:Key="ThrowItemPen.BaubleRing" po:Freeze="True" Brush="#C9971E" Thickness="1.3" />
+    <Pen x:Key="ThrowItemPen.Egg" po:Freeze="True" Brush="#9A6A98" LineJoin="Round" Thickness="1.2" />
+    <Pen x:Key="ThrowItemPen.Money" po:Freeze="True" Brush="#1B4A24" LineJoin="Round" Thickness="1.2" />
+    <Pen x:Key="ThrowItemPen.MoneyBand" po:Freeze="True" Brush="#8A7A44" LineJoin="Round" Thickness="0.8" />
+    <Pen x:Key="ThrowItemPen.MoneyLight" po:Freeze="True" Brush="#CFEFC9" LineJoin="Round" Thickness="0.8" />
+    <Pen
+        x:Key="ThrowItemPen.MoneySign"
+        po:Freeze="True"
+        Brush="#14401C"
+        EndLineCap="Round"
+        LineJoin="Round"
+        StartLineCap="Round"
+        Thickness="2.2" />
+    <Pen x:Key="ThrowItemPen.DeathStar" po:Freeze="True" Brush="#2B2F35" LineJoin="Round" Thickness="1.2" />
+    <Pen x:Key="ThrowItemPen.DeathStarTrench" po:Freeze="True" Brush="#2D3137" Thickness="1.8" />
+    <Pen x:Key="ThrowItemPen.DeathStarLine" po:Freeze="True" Brush="#5A5F67" Thickness="0.8" />
+    <Pen
+        x:Key="ThrowItemPen.DeathStarPanel"
+        po:Freeze="True"
+        Brush="#6F747C"
+        EndLineCap="Round"
+        StartLineCap="Round"
+        Thickness="0.7" />
+    <Pen x:Key="ThrowItemPen.DeathStarDish" po:Freeze="True" Brush="#2B2F35" Thickness="0.8" />
+    <Pen x:Key="ThrowItemPen.Football" po:Freeze="True" Brush="#22252B" LineJoin="Round" Thickness="1.2" />
+    <Pen x:Key="ThrowItemPen.FootballRingVfb" po:Freeze="True" Brush="#E32219" Thickness="2.2" />
+    <Pen x:Key="ThrowItemPen.FootballRingWerder" po:Freeze="True" Brush="#1D9053" Thickness="2.2" />
+
+    <!--  Verlaeufe  -->
+    <LinearGradientBrush x:Key="ThrowItemBrush.FishBody" po:Freeze="True" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#6F9CCB" />
+        <GradientStop Offset="0.55" Color="#B8D4EE" />
+        <GradientStop Offset="1" Color="#EEF5FB" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="ThrowItemBrush.MushroomCap" po:Freeze="True" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#EE4A38" />
+        <GradientStop Offset="1" Color="#C41F1D" />
+    </LinearGradientBrush>
+    <RadialGradientBrush
+        x:Key="ThrowItemBrush.Bauble"
+        po:Freeze="True"
+        Center="0.4,0.35"
+        GradientOrigin="0.35,0.3"
+        RadiusX="0.75"
+        RadiusY="0.75">
+        <GradientStop Offset="0" Color="#F0584C" />
+        <GradientStop Offset="0.6" Color="#D02B2E" />
+        <GradientStop Offset="1" Color="#8E1219" />
+    </RadialGradientBrush>
+    <LinearGradientBrush x:Key="ThrowItemBrush.Egg" po:Freeze="True" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#FDD9E8" />
+        <GradientStop Offset="1" Color="#E4D6F6" />
+    </LinearGradientBrush>
+    <RadialGradientBrush
+        x:Key="ThrowItemBrush.DeathStar"
+        po:Freeze="True"
+        Center="0.38,0.32"
+        GradientOrigin="0.3,0.25"
+        RadiusX="0.85"
+        RadiusY="0.85">
+        <GradientStop Offset="0" Color="#C3C7CD" />
+        <GradientStop Offset="0.55" Color="#8D9299" />
+        <GradientStop Offset="1" Color="#4E535B" />
+    </RadialGradientBrush>
+    <RadialGradientBrush
+        x:Key="ThrowItemBrush.Football"
+        po:Freeze="True"
+        Center="0.38,0.32"
+        GradientOrigin="0.32,0.26"
+        RadiusX="0.8"
+        RadiusY="0.8">
+        <GradientStop Offset="0" Color="#FFFFFF" />
+        <GradientStop Offset="0.6" Color="#E9ECF1" />
+        <GradientStop Offset="1" Color="#C5CBD5" />
+    </RadialGradientBrush>
+
+    <!--  Standard: der Fisch (Schwanz- und Rueckenflossen, Koerper mit hellem Bauch, Kieme, Auge; Kopf nach rechts)  -->
+    <DrawingImage x:Key="ThrowItem.Standard" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="{StaticResource ThrowItemFrame}" />
+                <GeometryDrawing Brush="#4F7FB0" Geometry="M 16,22 L 0,4 L 5,22 L 0,40 Z M 30,10 L 40,0 L 56,10 Z M 34,34 L 42,43 L 52,34 Z" />
+                <GeometryDrawing
+                    Brush="{StaticResource ThrowItemBrush.FishBody}"
+                    Geometry="M 10,22 A 33,15 0 1 1 76,22 A 33,15 0 1 1 10,22 Z"
+                    Pen="{StaticResource ThrowItemPen.Fish}" />
+                <GeometryDrawing Geometry="M 54,12 Q 48,22 54,32" Pen="{StaticResource ThrowItemPen.FishGill}" />
+                <GeometryDrawing Brush="White" Geometry="M 57,19.5 A 3.5,3.5 0 1 1 64,19.5 A 3.5,3.5 0 1 1 57,19.5 Z" />
+                <GeometryDrawing Brush="Black" Geometry="M 60,19.75 A 1.75,1.75 0 1 1 63.5,19.75 A 1.75,1.75 0 1 1 60,19.75 Z" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!--  Forest: Fliegenpilz, roter Hut mit weissen Punkten, heller Stiel mit Ring  -->
+    <DrawingImage x:Key="ThrowItem.Forest" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="{StaticResource ThrowItemFrame}" />
+                <GeometryDrawing
+                    Brush="#F3E9D2"
+                    Geometry="M 32,27 C 33,32 32,37 28,40 C 28,43 34,43 40,43 C 46,43 52,43 52,40 C 48,37 47,32 48,27 Z"
+                    Pen="{StaticResource ThrowItemPen.Mushroom}" />
+                <GeometryDrawing
+                    Brush="#FFFFFF"
+                    Geometry="M 32.4,32.5 Q 40,36 47.6,32.5 L 48.3,35.5 Q 40,39 31.7,35.5 Z"
+                    Pen="{StaticResource ThrowItemPen.MushroomThin}" />
+                <GeometryDrawing
+                    Brush="{StaticResource ThrowItemBrush.MushroomCap}"
+                    Geometry="M 12,26 C 12,10 26,3 40,3 C 54,3 68,10 68,26 C 68,29 60,31 40,31 C 20,31 12,29 12,26 Z"
+                    Pen="{StaticResource ThrowItemPen.Mushroom}" />
+                <GeometryDrawing Brush="#FFFFFF" Geometry="M 22,16 A 4,3.2 0 1 1 30,16 A 4,3.2 0 1 1 22,16 Z M 36.6,9.5 A 3.4,3.4 0 1 1 43.4,9.5 A 3.4,3.4 0 1 1 36.6,9.5 Z M 49.8,16 A 4.2,3.4 0 1 1 58.2,16 A 4.2,3.4 0 1 1 49.8,16 Z M 31.2,23 A 2.8,2.8 0 1 1 36.8,23 A 2.8,2.8 0 1 1 31.2,23 Z M 44,22 A 3,3 0 1 1 50,22 A 3,3 0 1 1 44,22 Z M 18,24.5 A 2,2 0 1 1 22,24.5 A 2,2 0 1 1 18,24.5 Z M 58.6,23 A 2.4,2.4 0 1 1 63.4,23 A 2.4,2.4 0 1 1 58.6,23 Z M 38,26 A 2,2 0 1 1 42,26 A 2,2 0 1 1 38,26 Z" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!--  Ocean: Seestern, korallenfarben, 5 Arme (Mittelpunkt 40,22), helle Punkte entlang der Arme  -->
+    <DrawingImage x:Key="ThrowItem.Ocean" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="{StaticResource ThrowItemFrame}" />
+                <GeometryDrawing
+                    Brush="#F08A4B"
+                    Geometry="M 40,1 L 45.88,13.91 L 59.97,15.51 L 49.51,25.09 L 52.34,38.99 L 40,32 L 27.66,38.99 L 30.49,25.09 L 20.03,15.51 L 34.12,13.91 Z"
+                    Pen="{StaticResource ThrowItemPen.Starfish}" />
+                <GeometryDrawing Brush="#FFD9B0" Geometry="M 37.8,22 A 2.2,2.2 0 1 1 42.2,22 A 2.2,2.2 0 1 1 37.8,22 Z M 38.6,10 A 1.4,1.4 0 1 1 41.4,10 A 1.4,1.4 0 1 1 38.6,10 Z M 38.9,5 A 1.1,1.1 0 1 1 41.1,5 A 1.1,1.1 0 1 1 38.9,5 Z M 49.54,18.45 A 1.4,1.4 0 1 1 52.34,18.45 A 1.4,1.4 0 1 1 49.54,18.45 Z M 54.59,16.9 A 1.1,1.1 0 1 1 56.79,16.9 A 1.1,1.1 0 1 1 54.59,16.9 Z M 45.36,31.3 A 1.4,1.4 0 1 1 48.16,31.3 A 1.4,1.4 0 1 1 45.36,31.3 Z M 48.6,35.35 A 1.1,1.1 0 1 1 50.8,35.35 A 1.1,1.1 0 1 1 48.6,35.35 Z M 31.84,31.3 A 1.4,1.4 0 1 1 34.64,31.3 A 1.4,1.4 0 1 1 31.84,31.3 Z M 29.2,35.35 A 1.1,1.1 0 1 1 31.4,35.35 A 1.1,1.1 0 1 1 29.2,35.35 Z M 27.66,18.45 A 1.4,1.4 0 1 1 30.46,18.45 A 1.4,1.4 0 1 1 27.66,18.45 Z M 23.21,16.9 A 1.1,1.1 0 1 1 25.41,16.9 A 1.1,1.1 0 1 1 23.21,16.9 Z" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!--  Halloween: Kuerbis aus drei Rippen, gruener Stiel, Jack-o'-Lantern-Gesicht in Dunkelbraun  -->
+    <DrawingImage x:Key="ThrowItem.Halloween" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="{StaticResource ThrowItemFrame}" />
+                <GeometryDrawing
+                    Brush="#4C7A2E"
+                    Geometry="M 36.5,10 C 37,6.5 36,4 34.5,2 C 38,0.8 42,0.8 45.5,2 C 44,4 43.5,6.5 43.5,10 Z"
+                    Pen="{StaticResource ThrowItemPen.Pumpkin}" />
+                <GeometryDrawing
+                    Brush="#E87510"
+                    Geometry="M 12,26 A 14,15 0 1 1 40,26 A 14,15 0 1 1 12,26 Z"
+                    Pen="{StaticResource ThrowItemPen.Pumpkin}" />
+                <GeometryDrawing
+                    Brush="#E87510"
+                    Geometry="M 40,26 A 14,15 0 1 1 68,26 A 14,15 0 1 1 40,26 Z"
+                    Pen="{StaticResource ThrowItemPen.Pumpkin}" />
+                <GeometryDrawing
+                    Brush="#F89A2B"
+                    Geometry="M 25,25 A 15,17 0 1 1 55,25 A 15,17 0 1 1 25,25 Z"
+                    Pen="{StaticResource ThrowItemPen.Pumpkin}" />
+                <GeometryDrawing Brush="#3B1D0B" Geometry="M 29.5,23.5 L 35.5,23.5 L 32.5,17.5 Z M 44.5,23.5 L 50.5,23.5 L 47.5,17.5 Z M 40,25.5 L 37.8,29 L 42.2,29 Z M 29,31.5 L 33,34 L 36,31.5 L 40,34 L 44,31.5 L 47,34 L 51,31.5 C 49,39 31,39 29,31.5 Z" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!--  Christmas: rote Weihnachtskugel mit goldener Kappe und Aufhaengung, weisses Zickzackband und Glanzlicht  -->
+    <DrawingImage x:Key="ThrowItem.Christmas" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="{StaticResource ThrowItemFrame}" />
+                <GeometryDrawing
+                    Brush="{StaticResource ThrowItemBrush.Bauble}"
+                    Geometry="M 24,26 A 16,16 0 1 1 56,26 A 16,16 0 1 1 24,26 Z"
+                    Pen="{StaticResource ThrowItemPen.Bauble}" />
+                <GeometryDrawing Brush="#F7F3E8" Geometry="M 26,28.5 C 32,25 36,33 40,29.5 C 44,26 48,33 54,28.5 L 54.3,31.8 C 48,35.5 44,29 40,32.8 C 36,36 32,28.5 25.7,31.8 Z" />
+                <GeometryDrawing Brush="#B3FFFFFF" Geometry="M 30,21 C 29,17 31.5,13.5 35.5,12.5 C 32.5,15.5 31.8,19 32.3,22.5 Z" />
+                <GeometryDrawing Geometry="M 36.8,3.8 A 3.2,2.7 0 1 1 43.2,3.8 A 3.2,2.7 0 1 1 36.8,3.8 Z" Pen="{StaticResource ThrowItemPen.BaubleRing}" />
+                <GeometryDrawing
+                    Brush="#E8B93A"
+                    Geometry="M 35.5,10.5 L 35.5,6.5 L 44.5,6.5 L 44.5,10.5 Z"
+                    Pen="{StaticResource ThrowItemPen.BaubleCap}" />
+                <GeometryDrawing
+                    Brush="#F2CC5A"
+                    Geometry="M 34,10.3 L 46,10.3 L 46,12.5 L 34,12.5 Z"
+                    Pen="{StaticResource ThrowItemPen.BaubleCap}" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!--  Easter: Osterei, pastellig, mit gelbem Zickzackband, rosa Punkten im Band und bunten Punkten (auf die Eiform zugeschnitten)  -->
+    <DrawingImage x:Key="ThrowItem.Easter" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="{StaticResource ThrowItemFrame}" />
+                <DrawingGroup ClipGeometry="M 40,3 C 49,3 55,17 55,27.5 C 55,36.5 48.5,43 40,43 C 31.5,43 25,36.5 25,27.5 C 25,17 31,3 40,3 Z">
+                    <GeometryDrawing Brush="{StaticResource ThrowItemBrush.Egg}" Geometry="M 20,0 H 60 V 44 H 20 Z" />
+                    <GeometryDrawing Brush="#FFD966" Geometry="M 22,20 L 26,16.5 L 30,20 L 34,16.5 L 38,20 L 42,16.5 L 46,20 L 50,16.5 L 54,20 L 58,16.5 L 58,27 L 54,30.5 L 50,27 L 46,30.5 L 42,27 L 38,30.5 L 34,27 L 30,30.5 L 26,27 L 22,30.5 Z" />
+                    <GeometryDrawing Brush="#E8739E" Geometry="M 27.8,23.5 A 1.2,1.2 0 1 1 30.2,23.5 A 1.2,1.2 0 1 1 27.8,23.5 Z M 33.8,23.5 A 1.2,1.2 0 1 1 36.2,23.5 A 1.2,1.2 0 1 1 33.8,23.5 Z M 39.8,23.5 A 1.2,1.2 0 1 1 42.2,23.5 A 1.2,1.2 0 1 1 39.8,23.5 Z M 45.8,23.5 A 1.2,1.2 0 1 1 48.2,23.5 A 1.2,1.2 0 1 1 45.8,23.5 Z M 51.8,23.5 A 1.2,1.2 0 1 1 54.2,23.5 A 1.2,1.2 0 1 1 51.8,23.5 Z" />
+                    <GeometryDrawing Brush="#9C8FD8" Geometry="M 38.4,10 A 1.6,1.6 0 1 1 41.6,10 A 1.6,1.6 0 1 1 38.4,10 Z M 32.5,35.5 A 1.6,1.6 0 1 1 35.7,35.5 A 1.6,1.6 0 1 1 32.5,35.5 Z M 44.3,35.5 A 1.6,1.6 0 1 1 47.5,35.5 A 1.6,1.6 0 1 1 44.3,35.5 Z" />
+                    <GeometryDrawing Brush="#7CCBB8" Geometry="M 32.5,14 A 1.5,1.5 0 1 1 35.5,14 A 1.5,1.5 0 1 1 32.5,14 Z M 44.5,14 A 1.5,1.5 0 1 1 47.5,14 A 1.5,1.5 0 1 1 44.5,14 Z M 38.4,38 A 1.6,1.6 0 1 1 41.6,38 A 1.6,1.6 0 1 1 38.4,38 Z" />
+                </DrawingGroup>
+                <GeometryDrawing
+                    Geometry="M 40,3 C 49,3 55,17 55,27.5 C 55,36.5 48.5,43 40,43 C 31.5,43 25,36.5 25,27.5 C 25,17 31,3 40,3 Z"
+                    Pen="{StaticResource ThrowItemPen.Egg}" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!--  GtaVi: Geldbuendel (drei gestapelte Scheine, Banderole rechts, links Medaillon mit "$" aus Linien)  -->
+    <DrawingImage x:Key="ThrowItem.GtaVi" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="{StaticResource ThrowItemFrame}" />
+                <GeometryDrawing
+                    Brush="#2E7D3A"
+                    Geometry="M 14,9 H 70 V 39 H 14 Z"
+                    Pen="{StaticResource ThrowItemPen.Money}" />
+                <GeometryDrawing
+                    Brush="#3C9648"
+                    Geometry="M 13,7.5 H 69 V 37.5 H 13 Z"
+                    Pen="{StaticResource ThrowItemPen.Money}" />
+                <GeometryDrawing
+                    Brush="#5CBA66"
+                    Geometry="M 12,6 H 68 V 36 H 12 Z"
+                    Pen="{StaticResource ThrowItemPen.Money}" />
+                <GeometryDrawing Geometry="M 15,8.5 H 65 V 33.5 H 15 Z" Pen="{StaticResource ThrowItemPen.MoneyLight}" />
+                <GeometryDrawing Brush="#8AD592" Geometry="M 20,21 A 11,11 0 1 1 42,21 A 11,11 0 1 1 20,21 Z" Pen="{StaticResource ThrowItemPen.MoneyLight}" />
+                <GeometryDrawing Geometry="M 35,16.5 C 35,12.5 27,12.5 27,17 C 27,20.5 35,20 35,24.5 C 35,29 27,29 27,25.5 M 31,11.5 L 31,30" Pen="{StaticResource ThrowItemPen.MoneySign}" />
+                <GeometryDrawing Brush="#CFEFC9" Geometry="M 61.6,12 A 1.4,1.4 0 1 1 64.4,12 A 1.4,1.4 0 1 1 61.6,12 Z M 61.6,30 A 1.4,1.4 0 1 1 64.4,30 A 1.4,1.4 0 1 1 61.6,30 Z" />
+                <GeometryDrawing
+                    Brush="#E8DCB0"
+                    Geometry="M 50,5 H 58 V 39 H 50 Z"
+                    Pen="{StaticResource ThrowItemPen.MoneyBand}" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!--  StarWars: Todesstern (graue Kugel, Aequatorrille mit Begleitlinien, Superlaser-Mulde oben rechts, Plattenfugen)  -->
+    <DrawingImage x:Key="ThrowItem.StarWars" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="{StaticResource ThrowItemFrame}" />
+                <GeometryDrawing
+                    Brush="{StaticResource ThrowItemBrush.DeathStar}"
+                    Geometry="M 20,22 A 20,20 0 1 1 60,22 A 20,20 0 1 1 20,22 Z"
+                    Pen="{StaticResource ThrowItemPen.DeathStar}" />
+                <GeometryDrawing Geometry="M 20.6,18.8 C 30,22.2 50,22.2 59.4,18.8 M 20.6,25.2 C 30,28.7 50,28.7 59.4,25.2" Pen="{StaticResource ThrowItemPen.DeathStarLine}" />
+                <GeometryDrawing Geometry="M 20.1,21 C 30,24.5 50,24.5 59.9,21" Pen="{StaticResource ThrowItemPen.DeathStarTrench}" />
+                <GeometryDrawing Geometry="M 24,15 L 29,13.5 M 33,8 L 38,9 M 27,33 L 33,34.5 M 44,35 L 51,33.5 M 34,37.5 L 41,38.5" Pen="{StaticResource ThrowItemPen.DeathStarPanel}" />
+                <GeometryDrawing
+                    Brush="#6B7078"
+                    Geometry="M 44.7,13.5 A 4.8,4.8 0 1 1 54.3,13.5 A 4.8,4.8 0 1 1 44.7,13.5 Z"
+                    Pen="{StaticResource ThrowItemPen.DeathStarDish}" />
+                <GeometryDrawing Brush="#30343A" Geometry="M 48,13.9 A 2,2 0 1 1 52,13.9 A 2,2 0 1 1 48,13.9 Z" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!--
+        VfbStuttgart: Fussball (Mittelpunkt 40,22, Radius 20): weisse Kugel, dunkles Mittelfuenfeck mit Nahtlinien
+        und fuenf angeschnittenen Aussenfuenfecken (am Rand auf die Kugel zugeschnitten), roter Ring (#E32219)
+    -->
+    <DrawingImage x:Key="ThrowItem.VfbStuttgart" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="{StaticResource ThrowItemFrame}" />
+                <GeometryDrawing Brush="{StaticResource ThrowItemBrush.Football}" Geometry="M 20,22 A 20,20 0 1 1 60,22 A 20,20 0 1 1 20,22 Z" />
+                <DrawingGroup>
+                    <DrawingGroup.ClipGeometry>
+                        <EllipseGeometry
+                            Center="40,22"
+                            RadiusX="19.6"
+                            RadiusY="19.6" />
+                    </DrawingGroup.ClipGeometry>
+                    <GeometryDrawing Geometry="M 40,15 L 40,10.5 M 46.66,19.84 L 50.94,18.45 M 44.11,27.66 L 46.76,31.3 M 35.89,27.66 L 33.24,31.3 M 33.34,19.84 L 29.06,18.45" Pen="{StaticResource ThrowItemPen.Football}" />
+                    <GeometryDrawing Brush="#22252B" Geometry="M 40,15 L 46.66,19.84 L 44.11,27.66 L 35.89,27.66 L 33.34,19.84 Z M 40,10.5 L 34.29,6.35 L 36.47,-0.35 L 43.53,-0.35 L 45.71,6.35 Z M 50.94,18.45 L 53.12,11.74 L 60.17,11.74 L 62.35,18.45 L 56.64,22.59 Z M 46.76,31.3 L 53.81,31.3 L 55.99,37.01 L 50.29,42.16 L 44.58,38.01 Z M 33.24,31.3 L 26.19,31.3 L 24.01,37.01 L 29.71,42.16 L 35.42,38.01 Z M 29.06,18.45 L 26.88,11.74 L 19.83,11.74 L 17.65,18.45 L 23.36,22.59 Z" />
+                </DrawingGroup>
+                <GeometryDrawing Geometry="M 22.5,22 A 17.5,17.5 0 1 1 57.5,22 A 17.5,17.5 0 1 1 22.5,22 Z" Pen="{StaticResource ThrowItemPen.FootballRingVfb}" />
+                <GeometryDrawing Geometry="M 20,22 A 20,20 0 1 1 60,22 A 20,20 0 1 1 20,22 Z" Pen="{StaticResource ThrowItemPen.Football}" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!--  WerderBremen: derselbe Fussball mit gruenem Ring (#1D9053)  -->
+    <DrawingImage x:Key="ThrowItem.WerderBremen" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="{StaticResource ThrowItemFrame}" />
+                <GeometryDrawing Brush="{StaticResource ThrowItemBrush.Football}" Geometry="M 20,22 A 20,20 0 1 1 60,22 A 20,20 0 1 1 20,22 Z" />
+                <DrawingGroup>
+                    <DrawingGroup.ClipGeometry>
+                        <EllipseGeometry
+                            Center="40,22"
+                            RadiusX="19.6"
+                            RadiusY="19.6" />
+                    </DrawingGroup.ClipGeometry>
+                    <GeometryDrawing Geometry="M 40,15 L 40,10.5 M 46.66,19.84 L 50.94,18.45 M 44.11,27.66 L 46.76,31.3 M 35.89,27.66 L 33.24,31.3 M 33.34,19.84 L 29.06,18.45" Pen="{StaticResource ThrowItemPen.Football}" />
+                    <GeometryDrawing Brush="#22252B" Geometry="M 40,15 L 46.66,19.84 L 44.11,27.66 L 35.89,27.66 L 33.34,19.84 Z M 40,10.5 L 34.29,6.35 L 36.47,-0.35 L 43.53,-0.35 L 45.71,6.35 Z M 50.94,18.45 L 53.12,11.74 L 60.17,11.74 L 62.35,18.45 L 56.64,22.59 Z M 46.76,31.3 L 53.81,31.3 L 55.99,37.01 L 50.29,42.16 L 44.58,38.01 Z M 33.24,31.3 L 26.19,31.3 L 24.01,37.01 L 29.71,42.16 L 35.42,38.01 Z M 29.06,18.45 L 26.88,11.74 L 19.83,11.74 L 17.65,18.45 L 23.36,22.59 Z" />
+                </DrawingGroup>
+                <GeometryDrawing Geometry="M 22.5,22 A 17.5,17.5 0 1 1 57.5,22 A 17.5,17.5 0 1 1 22.5,22 Z" Pen="{StaticResource ThrowItemPen.FootballRingWerder}" />
+                <GeometryDrawing Geometry="M 20,22 A 20,20 0 1 1 60,22 A 20,20 0 1 1 20,22 Z" Pen="{StaticResource ThrowItemPen.Football}" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+</ResourceDictionary>

@@ -15,11 +15,16 @@ namespace Zeitmanagement.Helpers
     /// (full-screen app, slideshow, screen sharing), the penguin skips its turn.
     /// The random pause between two appearances (also before the first one after app start)
     /// comes from the settings; changing it reschedules a pending appearance right away.
+    /// <see cref="CallForPractice"/> shows a penguin on demand (from the settings) whose catches
+    /// are not counted in the statistics; it does not change the regular schedule.
     /// </summary>
     internal sealed class PenguinEasterEgg : IDisposable
     {
         /// <summary>Shortest pause between two appearances the settings allow.</summary>
         public const int MinDelayLimitMinutes = 10;
+
+        /// <summary>The running scheduler, or null before it is created and after it is disposed.</summary>
+        public static PenguinEasterEgg Current { get; private set; }
 
         private readonly Random _random = new Random();
         private readonly DispatcherTimer _timer = new DispatcherTimer();
@@ -32,6 +37,7 @@ namespace Zeitmanagement.Helpers
         {
             _timer.Tick += OnTimerTick;
             Properties.Settings.Default.PropertyChanged += OnSettingsChanged;
+            Current = this;
         }
 
         public void Start() => ScheduleNext();
@@ -71,6 +77,8 @@ namespace Zeitmanagement.Helpers
             {
                 if (!Properties.Settings.Default.PenguinEnabled || PresentationDetector.IsPresenting())
                     ScheduleNext();
+                else if (_window != null)
+                    ScheduleNext(); // a penguin called up for practice is still here: no second one at the same time
                 else
                     ShowPenguin();
             }
@@ -87,11 +95,48 @@ namespace Zeitmanagement.Helpers
             var screens = Forms.Screen.AllScreens;
             var screen = screens[_random.Next(screens.Length)];
 
-            _window = new PenguinWindow(screen.WorkingArea, _random.NextDouble());
+            ShowOn(screen, countsInStats: true, scheduleNextWhenClosed: true);
+        }
+
+        /// <summary>
+        /// Shows a penguin right away on the monitor of the main window, for practice. Its catches
+        /// are not counted. Ignores the "enabled" setting and presentation detection. Returns false
+        /// if a penguin is already visible or the scheduler is gone.
+        /// </summary>
+        public bool CallForPractice()
+        {
+            if (_disposed || _window != null)
+                return false;
+
+            try
+            {
+                ShowOn(MainWindowScreen(), countsInStats: false, scheduleNextWhenClosed: false);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Purely decorative - never let a failure here take down the time tracker.
+                Debug.WriteLine($"Penguin practice call failed: {ex}");
+                return false;
+            }
+        }
+
+        private static Forms.Screen MainWindowScreen()
+        {
+            var mainWindow = System.Windows.Application.Current?.MainWindow;
+            if (mainWindow == null)
+                return Forms.Screen.PrimaryScreen;
+
+            return Forms.Screen.FromHandle(new System.Windows.Interop.WindowInteropHelper(mainWindow).Handle);
+        }
+
+        private void ShowOn(Forms.Screen screen, bool countsInStats, bool scheduleNextWhenClosed)
+        {
+            _window = new PenguinWindow(screen.WorkingArea, _random.NextDouble(), countsInStats);
             _window.Closed += (s, e) =>
             {
                 _window = null;
-                if (!_disposed)
+                if (scheduleNextWhenClosed && !_disposed)
                     ScheduleNext();
             };
             _window.Show();
@@ -100,6 +145,9 @@ namespace Zeitmanagement.Helpers
         public void Dispose()
         {
             _disposed = true;
+            if (Current == this)
+                Current = null;
+
             Properties.Settings.Default.PropertyChanged -= OnSettingsChanged;
             _timer.Stop();
             _window?.Close();

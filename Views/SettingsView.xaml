@@ -535,7 +535,7 @@
                             <Border Style="{StaticResource SettingRow}">
                                 <StackPanel>
                                     <TextBlock Style="{StaticResource Text.Body}" Text="Deine Fangstatistik" />
-                                    <TextBlock Style="{StaticResource Hint}" Text="Klick den Pinguin rechtzeitig an, dann wirft er dir einen Fisch zu. Den musst du dann noch erwischen, bevor er runterrutscht." />
+                                    <TextBlock Style="{StaticResource Hint}" Text="Klick den Pinguin an, solange er oben ist, dann wirft er dir einen Fisch zu. Den Fisch fängst du mit einem Klick, sobald er an der Scheibe klebt: Er bleibt etwa eine Sekunde hängen und rutscht dann gut drei Sekunden lang langsam nach unten. Ein Klick knapp daneben reicht auch." />
                                     <Grid Margin="0,12,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
@@ -571,6 +571,21 @@
                                             </StackPanel>
                                         </Border>
                                     </Grid>
+                                    <StackPanel
+                                        Margin="0,12,0,0"
+                                        HorizontalAlignment="Left"
+                                        Orientation="Horizontal">
+                                        <Button
+                                            local:Ui.Glyph="&#xE72C;"
+                                            Command="{Binding ResetCatchStatsCommand}"
+                                            Content="Statistik zurücksetzen" />
+                                        <Button
+                                            Margin="8,0,0,0"
+                                            local:Ui.Glyph="&#xE768;"
+                                            Command="{Binding CallPenguinCommand}"
+                                            Content="Pinguin zum Üben rufen"
+                                            ToolTip="Der Pinguin kommt sofort, zum Üben. Gefangene Pinguine und Fische zählen dabei nicht in die Statistik." />
+                                    </StackPanel>
                                 </StackPanel>
                             </Border>
                         </StackPanel>

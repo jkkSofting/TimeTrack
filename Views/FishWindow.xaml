@@ -13,15 +13,15 @@
     Topmost="True"
     WindowStartupLocation="Manual"
     WindowStyle="None">
-    <Window.Resources>
-        <SolidColorBrush x:Key="BrushFinDark" Color="#4F7FB0" />
-    </Window.Resources>
-
     <!--
-        Das Fenster sitzt auf der Oberkante der Taskleiste und ist hoch genug, dass der Fisch
-        "gegen die Scheibe" klatschen und nach unten rutschen kann. Position, Größe der Spur
-        und alle Animationen werden im Code gesetzt (Aufprallpunkt ist zufällig).
-        Nur der Fisch selbst nimmt Klicks an (zum Fangen), die Spur lässt sie nicht auslösen.
+        Das Fenster sitzt auf der Oberkante der Taskleiste und ist hoch genug, dass das Wurfobjekt
+        "gegen die Scheibe" klatschen und nach unten rutschen kann. Das Wurfobjekt wechselt je nach
+        Theme (Standard: Fisch) und wird als "Theme.ThrowItem" aus dem ThemeManager gezeichnet.
+        Position, Größe der Spur und alle Animationen werden im Code gesetzt (Aufprallpunkt ist zufällig).
+        Das Wurfobjekt ist fangbar, sobald es an der Scheibe klebt; es bleibt ca. 1 s hängen und
+        rutscht dann ca. 3 s lang langsam nach unten. Ein unsichtbares Rechteck rund um das
+        Wurfobjekt macht die Trefferfläche großzügig (auch ein Klick knapp daneben fängt es).
+        Nur das Wurfobjekt (samt Trefferfläche) nimmt Klicks an, die Spur lässt sie nicht auslösen.
     -->
     <Canvas ClipToBounds="True">
 
@@ -53,7 +53,7 @@
                 RadiusY="1.5" />
         </Grid>
 
-        <!--  Fisch (Kopf nach rechts), 80 x 44  -->
+        <!--  Wurfobjekt (je nach Theme, Standard: Fisch), 80 x 44  -->
         <Canvas
             x:Name="Fish"
             Width="80"
@@ -70,45 +70,24 @@
                 </TransformGroup>
             </Canvas.RenderTransform>
 
-            <!--  Schwanz- und Rückenflossen  -->
-            <Polygon Fill="{StaticResource BrushFinDark}" Points="16,22 0,4 5,22 0,40" />
-            <Polygon Fill="{StaticResource BrushFinDark}" Points="30,10 40,0 56,10" />
-            <Polygon Fill="{StaticResource BrushFinDark}" Points="34,34 42,43 52,34" />
+            <!--
+                Unsichtbare, großzügige Trefferfläche (Canvas clippt Kinder nicht, negative Offsets sind ok).
+                Nicht ganz transparent (Alpha 1): Das Fenster ist ein Layered Window, Pixel mit Alpha 0
+                nimmt Windows nicht als Klickziel, sie würden den Klick durchlassen.
+            -->
+            <Rectangle
+                Canvas.Left="-30"
+                Canvas.Top="-30"
+                Width="140"
+                Height="104"
+                Fill="#01000000" />
 
-            <!--  Körper mit hellem Bauch  -->
-            <Ellipse
-                Canvas.Left="10"
-                Canvas.Top="7"
-                Width="66"
-                Height="30"
-                Stroke="{StaticResource BrushFinDark}"
-                StrokeThickness="1.2">
-                <Ellipse.Fill>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Offset="0" Color="#6F9CCB" />
-                        <GradientStop Offset="0.55" Color="#B8D4EE" />
-                        <GradientStop Offset="1" Color="#EEF5FB" />
-                    </LinearGradientBrush>
-                </Ellipse.Fill>
-            </Ellipse>
-
-            <!--  Kieme, Auge  -->
-            <Path
-                Data="M 54,12 Q 48,22 54,32"
-                Stroke="{StaticResource BrushFinDark}"
-                StrokeThickness="1.5" />
-            <Ellipse
-                Canvas.Left="57"
-                Canvas.Top="16"
-                Width="7"
-                Height="7"
-                Fill="White" />
-            <Ellipse
-                Canvas.Left="60"
-                Canvas.Top="18"
-                Width="3.5"
-                Height="3.5"
-                Fill="Black" />
+            <!--  Das Wurfobjekt selbst, je Theme aus den ThrowItem-Ressourcen (Views/ThrowItems.xaml)  -->
+            <Image
+                Width="80"
+                Height="44"
+                Source="{DynamicResource Theme.ThrowItem}"
+                IsHitTestVisible="False" />
         </Canvas>
 
         <!--  Rückmeldung beim Fangen: steigt vom Fangpunkt auf und verblasst  -->
