@@ -131,7 +131,7 @@ namespace Zeitmanagement.ViewModel
         }
 
         public string SeasonalThemesHint { get; } =
-            $"Halloween, Weihnachten und Ostern erscheinen automatisch {ThemeManager.SeasonDaysBefore} Tage vor bis {ThemeManager.SeasonDaysAfter} Tage nach dem Fest.";
+            $"Halloween, Weihnachten und Ostern erscheinen automatisch {ThemeManager.SeasonDaysBefore} Tage vor bis {ThemeManager.SeasonDaysAfter} Tage nach dem Fest, GTA VI jedes Jahr vom 19.11. bis 30.11.";
 
         /// <summary>Which theme and variant is shown right now, and why if it isn't simply the chosen one.</summary>
         public string ThemeStatusText

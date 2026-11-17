@@ -24,6 +24,7 @@ namespace Zeitmanagement.Helpers
         Halloween,
         Christmas,
         Easter,
+        GtaVi,
         VfbStuttgart,
         WerderBremen
     }
@@ -45,7 +46,8 @@ namespace Zeitmanagement.Helpers
     /// recolours the whole app on the fly.
     /// The motif is the one chosen in the settings, except during a holiday season (Halloween,
     /// Christmas, Easter: <see cref="SeasonDaysBefore"/> days before until
-    /// <see cref="SeasonDaysAfter"/> days after) if seasonal themes are enabled; light or dark
+    /// <see cref="SeasonDaysAfter"/> days after; GTA VI: fixed from 19 to 30 November every year)
+    /// if seasonal themes are enabled; light or dark
     /// always follows the chosen mode. <see cref="ThemeMode.System"/> follows the Windows
     /// light/dark app mode and updates when it changes.
     /// The penguin mascot wears a matching accessory ("Theme.MascotAccessory", drawn in
@@ -55,6 +57,9 @@ namespace Zeitmanagement.Helpers
     {
         public const int SeasonDaysBefore = 14;
         public const int SeasonDaysAfter = 7;
+
+        /// <summary>GTA VI has no festival date, its season is a fixed range: 19 to 30 November (inclusive).</summary>
+        private const int GtaViFromMonth = 11, GtaViFromDay = 19, GtaViToMonth = 11, GtaViToDay = 30;
 
         private const int DWMWA_USE_IMMERSIVE_DARK_MODE_OLD = 19;
         private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
@@ -100,7 +105,7 @@ namespace Zeitmanagement.Helpers
         public static IReadOnlyList<AppTheme> AllThemes { get; } = (AppTheme[])Enum.GetValues(typeof(AppTheme));
 
         public static bool IsSeasonal(AppTheme theme) =>
-            theme == AppTheme.Halloween || theme == AppTheme.Christmas || theme == AppTheme.Easter;
+            theme == AppTheme.Halloween || theme == AppTheme.Christmas || theme == AppTheme.Easter || theme == AppTheme.GtaVi;
 
         public static string DisplayName(AppTheme theme)
         {
@@ -112,6 +117,7 @@ namespace Zeitmanagement.Helpers
                 case AppTheme.Halloween: return "Halloween";
                 case AppTheme.Christmas: return "Weihnachten";
                 case AppTheme.Easter: return "Ostern";
+                case AppTheme.GtaVi: return "GTA VI";
                 case AppTheme.VfbStuttgart: return "VfB Stuttgart";
                 case AppTheme.WerderBremen: return "Werder Bremen";
                 default: return theme.ToString();
@@ -193,7 +199,7 @@ namespace Zeitmanagement.Helpers
         /// <summary>The holiday theme whose season includes <paramref name="date"/>, if any.</summary>
         public static AppTheme? SeasonOn(DateTime date)
         {
-            foreach (var theme in new[] { AppTheme.Halloween, AppTheme.Christmas, AppTheme.Easter })
+            foreach (var theme in new[] { AppTheme.Halloween, AppTheme.GtaVi, AppTheme.Christmas, AppTheme.Easter })
             {
                 var (from, to) = SeasonRange(theme, date.Year);
                 if (date.Date >= from && date.Date <= to)
@@ -203,9 +209,15 @@ namespace Zeitmanagement.Helpers
             return null;
         }
 
-        /// <summary>First and last day on which a holiday theme is shown automatically in the given year.</summary>
+        /// <summary>
+        /// First and last day (inclusive) on which a holiday theme is shown automatically in the given
+        /// year: around the festival for Halloween, Christmas and Easter, a fixed range for GTA VI.
+        /// </summary>
         public static (DateTime From, DateTime To) SeasonRange(AppTheme theme, int year)
         {
+            if (theme == AppTheme.GtaVi)
+                return (new DateTime(year, GtaViFromMonth, GtaViFromDay), new DateTime(year, GtaViToMonth, GtaViToDay));
+
             DateTime day;
             switch (theme)
             {
