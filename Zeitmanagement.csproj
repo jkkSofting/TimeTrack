@@ -128,6 +128,7 @@
     <Compile Include="Helpers\SessionLockState.cs" />
     <Compile Include="Helpers\StartupMode.cs" />
     <Compile Include="Helpers\SystemAudio.cs" />
+    <Compile Include="Helpers\TagesschauJingle.cs" />
     <Compile Include="Helpers\ThemeManager.cs" />
     <Compile Include="Helpers\TrayNotificationService.cs" />
     <Compile Include="Helpers\UpdateChecker.cs" />
