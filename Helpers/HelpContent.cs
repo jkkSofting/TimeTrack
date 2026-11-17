@@ -165,8 +165,9 @@ namespace Zeitmanagement.Helpers
 
             new HelpTopic("", "Der Pinguin", "Settings",
                 "Das Maskottchen von TimeTrack.",
-                "Ab und zu schaut der Pinguin hinter der Taskleiste hervor. Klick ihn rechtzeitig an, dann wirft er dir einen Fisch zu – und den musst du erwischen, bevor er herunterrutscht.",
-                "Wie oft er auftaucht, stellst du in den Einstellungen ein. Dort steht auch deine Fangstatistik.",
+                "Ab und zu schaut der Pinguin hinter der Taskleiste hervor. Klick ihn an, solange er oben ist (also bevor er wieder abtaucht), dann wirft er dir einen Fisch zu.",
+                "Den Fisch fängst du mit einem Klick, sobald er an der Scheibe klebt. Er bleibt etwa eine Sekunde hängen und rutscht dann gut drei Sekunden lang langsam nach unten. Du musst ihn nicht genau treffen, ein Klick knapp daneben reicht auch. Ist er unten verschwunden, war er zu spät.",
+                "Wie oft er auftaucht, stellst du in den Einstellungen ein. Dort steht auch deine Fangstatistik, die du mit „Statistik zurücksetzen“ wieder auf 0 setzen kannst.",
                 "Zu jedem Design trägt er etwas Passendes, zum Design „GTA VI“ eine Sonnenbrille und eine Hibiskusblüte, zum Design „Star Wars“ ein Lichtschwert (blau im hellen, rot im dunklen Design)."),
         };
     }
