@@ -53,6 +53,18 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.47.4", new DateTime(2026, 11, 17), "Rundung pro Projekt, Quick Switch und neue Designs",
+                Neu("Unter „Projekte“ lässt sich pro Projekt „Aufrunden pro Buchung“ einstellen: Aus, 5, 10, 15 oder 60 Minuten. Die Auswahl gibt es beim Anlegen und beim Bearbeiten, die Tabelle hat dafür eine Spalte „Rundung“."),
+                Neu("SAP-Verrechnung: Jede Buchung eines Projekts mit Rundung wird auf die nächste angefangene Zeiteinheit aufgerundet. Bei 15 Minuten werden aus 2 Minuten 15 und aus 17 Minuten 30. Die aufgerundete Zeit zählt im SAP wie echte Zeit und kann so zum Beispiel parallele interne Zeit abdecken."),
+                Neu("Auf der Seite „SAP-Verrechnung“ steht die aufgerundete Zeit in einer eigenen Farbe am Ende der Buchung (bei 2 Minuten also die 13 aufgerundeten Minuten). Die Kennzahl „Aufgerundet“ zeigt die Summe, und Hinweise je Tag und Kostenträger nennen, was dazugekommen ist."),
+                Neu("Die Arbeitszeit (erste bis letzte Buchung) bleibt unverändert. Buchungen, Auswertungen und Exporte werden nicht gerundet, nur die SAP-Verrechnung."),
+                Neu("Neues Design „GTA VI“ im Vice-City-Look: tiefe Dämmerungs-Violetttöne, warme Pastellflächen und flamingopinke sowie sonnenuntergangsfarbene Akzente. Es gibt es in Hell und Dunkel, gewählt wird es unter „Einstellungen“ bei „Design“."),
+                Neu("Das Design „GTA VI“ erscheint automatisch nur einmalig vom 19.11. bis 30.11.2026, sofern du saisonale Designs nicht abschaltest. Danach bleibt es manuell auswählbar. Der Pinguin trägt dazu eine Sonnenbrille und eine Hibiskusblüte."),
+                Neu("Neues Design „Star Wars“: hell im Wüstensand von Tatooine, dunkel als tiefer Weltraum mit Lichtschwert-Blau und Crawl-Gelb. Es erscheint automatisch nur am 4. Mai („May the 4th“), gewählt werden kann es jederzeit unter „Einstellungen“ bei „Design“. Der Pinguin trägt dazu ein Lichtschwert: blau im hellen, rot im dunklen Design."),
+                Verbessert("Quick Switch: Bist du bei Sperrbildschirm oder Ruhemodus inaktiv, werden laufende Einträge nicht mehr entfernt, sondern pausiert. Der laufende Abschnitt wird gespeichert, der Eintrag bleibt in der Liste und lässt sich mit einem Klick fortsetzen. Im Tray erscheint der Hinweis „Buchung pausiert“. Die Einstellung heißt jetzt „Buchung bei Sperrbildschirm/Ruhemodus automatisch pausieren“."),
+                Verbessert("Die Erinnerung „Kein Projekt ausgewählt“ erscheint weiterhin, wenn nur noch pausierte Einträge da sind."),
+                Behoben("Beim Beenden von TimeTrack, auch über das Tray-Menü, bei einem Update oder bei der Windows-Abmeldung, werden laufende Quick-Switch-Einträge vorher gespeichert. Ihre Zeit geht nicht mehr verloren. Nur ein Absturz oder ein beendeter Prozess kann den laufenden Abschnitt seit der letzten Pause noch kosten.")),
+
             new ChangelogRelease("2026.47.3", new DateTime(2026, 11, 16), "SAP-Verrechnung zum Kopieren",
                 Neu("SAP-Verrechnung: Ein Klick auf einen Kostenträger kopiert seine Bezeichnung in die Zwischenablage, ein Klick auf die Stunden kopiert sie als „h:mm“. Das geht in der Monatstabelle und in den Tageskarten unter „Im SAP buchen“. Die Fläche färbt sich kurz ein, damit du siehst, dass kopiert wurde."),
                 Neu("Zusätzlich gilt beim Kostenträger: Rechtsklick kopiert den ganzen Text samt „(KTR-ID)“, Mausradklick nur die ID (nur wenn der Kostenträger eine ID in Klammern hat). Bei den Stunden kopiert der Rechtsklick sie mit Einheit, zum Beispiel „0:49 h“. Der Tooltip beim Überfahren nennt, was welcher Klick kopiert."),

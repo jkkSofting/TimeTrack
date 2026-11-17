@@ -97,6 +97,9 @@ namespace Zeitmanagement
 
         protected override void OnExit(ExitEventArgs e)
         {
+            // First: running Quick Switch bookings are written now, so the flush below includes them.
+            (MainWindow?.DataContext as MainViewModel)?.QuickSelectViewModel?.SaveRunningBookings();
+
             _penguin?.Dispose();
             _trayService?.Dispose();
             ThemeManager.Shutdown();

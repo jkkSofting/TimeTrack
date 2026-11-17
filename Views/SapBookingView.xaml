@@ -165,6 +165,10 @@
                         <TextBlock Style="{StaticResource Text.Muted}" Text="Intern, parallel zu internem Projekt mit mehr Stunden (verworfen)" />
                     </StackPanel>
                     <StackPanel Style="{StaticResource LegendItem}">
+                        <Border Background="{DynamicResource Theme.Data5}" Style="{StaticResource LegendSwatch}" />
+                        <TextBlock Style="{StaticResource Text.Muted}" Text="Aufgerundete Zeit (Rundung des Projekts)" />
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource LegendItem}">
                         <Border
                             Height="6"
                             Background="{DynamicResource Theme.Data4}"

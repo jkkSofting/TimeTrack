@@ -24,6 +24,8 @@ namespace Zeitmanagement.Helpers
         Halloween,
         Christmas,
         Easter,
+        GtaVi,
+        StarWars,
         VfbStuttgart,
         WerderBremen
     }
@@ -45,7 +47,9 @@ namespace Zeitmanagement.Helpers
     /// recolours the whole app on the fly.
     /// The motif is the one chosen in the settings, except during a holiday season (Halloween,
     /// Christmas, Easter: <see cref="SeasonDaysBefore"/> days before until
-    /// <see cref="SeasonDaysAfter"/> days after) if seasonal themes are enabled; light or dark
+    /// <see cref="SeasonDaysAfter"/> days after; GTA VI: once from 19 to 30 November 2026;
+    /// Star Wars: only on 4 May each year)
+    /// if seasonal themes are enabled; light or dark
     /// always follows the chosen mode. <see cref="ThemeMode.System"/> follows the Windows
     /// light/dark app mode and updates when it changes.
     /// The penguin mascot wears a matching accessory ("Theme.MascotAccessory", drawn in
@@ -55,6 +59,15 @@ namespace Zeitmanagement.Helpers
     {
         public const int SeasonDaysBefore = 14;
         public const int SeasonDaysAfter = 7;
+
+        /// <summary>GTA VI appears automatically only once, from 19 to 30 November 2026.</summary>
+        public const int GtaViYear = 2026;
+        private static readonly DateTime GtaViAvailableFrom = new DateTime(GtaViYear, 11, 19);
+        private static readonly DateTime GtaViAvailableTo = new DateTime(GtaViYear, 11, 30);
+
+        /// <summary>Star Wars appears automatically only on "May the 4th" (4 May) each year, a single day.</summary>
+        public const int StarWarsMonth = 5;
+        public const int StarWarsDay = 4;
 
         private const int DWMWA_USE_IMMERSIVE_DARK_MODE_OLD = 19;
         private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
@@ -100,7 +113,7 @@ namespace Zeitmanagement.Helpers
         public static IReadOnlyList<AppTheme> AllThemes { get; } = (AppTheme[])Enum.GetValues(typeof(AppTheme));
 
         public static bool IsSeasonal(AppTheme theme) =>
-            theme == AppTheme.Halloween || theme == AppTheme.Christmas || theme == AppTheme.Easter;
+            theme == AppTheme.Halloween || theme == AppTheme.Christmas || theme == AppTheme.Easter || theme == AppTheme.GtaVi || theme == AppTheme.StarWars;
 
         public static string DisplayName(AppTheme theme)
         {
@@ -112,6 +125,8 @@ namespace Zeitmanagement.Helpers
                 case AppTheme.Halloween: return "Halloween";
                 case AppTheme.Christmas: return "Weihnachten";
                 case AppTheme.Easter: return "Ostern";
+                case AppTheme.GtaVi: return "GTA VI";
+                case AppTheme.StarWars: return "Star Wars";
                 case AppTheme.VfbStuttgart: return "VfB Stuttgart";
                 case AppTheme.WerderBremen: return "Werder Bremen";
                 default: return theme.ToString();
@@ -160,7 +175,8 @@ namespace Zeitmanagement.Helpers
         public static void Refresh(bool force = false)
         {
             var settings = Properties.Settings.Default;
-            var season = settings.SeasonalThemesEnabled ? SeasonOn(DateTime.Today) : null;
+            var today = DateTime.Today;
+            var season = settings.SeasonalThemesEnabled ? SeasonOn(today) : null;
             var theme = season ?? Selected;
             var dark = ResolveDark(SelectedMode);
 
@@ -193,8 +209,11 @@ namespace Zeitmanagement.Helpers
         /// <summary>The holiday theme whose season includes <paramref name="date"/>, if any.</summary>
         public static AppTheme? SeasonOn(DateTime date)
         {
-            foreach (var theme in new[] { AppTheme.Halloween, AppTheme.Christmas, AppTheme.Easter })
+            foreach (var theme in new[] { AppTheme.Halloween, AppTheme.GtaVi, AppTheme.StarWars, AppTheme.Christmas, AppTheme.Easter })
             {
+                if (theme == AppTheme.GtaVi && date.Year != GtaViYear)
+                    continue;
+
                 var (from, to) = SeasonRange(theme, date.Year);
                 if (date.Date >= from && date.Date <= to)
                     return theme;
@@ -203,9 +222,28 @@ namespace Zeitmanagement.Helpers
             return null;
         }
 
-        /// <summary>First and last day on which a holiday theme is shown automatically in the given year.</summary>
+        /// <summary>
+        /// First and last day (inclusive) on which a holiday theme is shown automatically in the given
+        /// year: around the festival for Halloween, Christmas and Easter, a one-time range for GTA VI in 2026,
+        /// and the single day of 4 May for Star Wars (From == To).
+        /// The ranges of the holiday themes never overlap (the latest Easter season ends on 2 May).
+        /// </summary>
         public static (DateTime From, DateTime To) SeasonRange(AppTheme theme, int year)
         {
+            if (theme == AppTheme.GtaVi)
+            {
+                if (year != GtaViYear)
+                    throw new ArgumentOutOfRangeException(nameof(year), year, "The GTA VI theme is only available in 2026.");
+
+                return (GtaViAvailableFrom, GtaViAvailableTo);
+            }
+
+            if (theme == AppTheme.StarWars)
+            {
+                var starWarsDay = new DateTime(year, StarWarsMonth, StarWarsDay);
+                return (starWarsDay, starWarsDay);
+            }
+
             DateTime day;
             switch (theme)
             {
@@ -273,7 +311,9 @@ namespace Zeitmanagement.Helpers
                 .ToArray();
 
             var resources = Application.Current.Resources;
-            resources["Theme.MascotAccessory"] = resources["MascotAccessory." + theme] ?? resources["MascotAccessory.None"];
+            // Some motifs draw a different accessory in dark mode (e.g. the red lightsaber of Star Wars): MascotAccessory.[Motif].Dark.
+            resources["Theme.MascotAccessory"] = (dark ? resources["MascotAccessory." + theme + ".Dark"] : null)
+                ?? resources["MascotAccessory." + theme] ?? resources["MascotAccessory.None"];
         }
 
         private static bool IsPalette(ResourceDictionary dictionary) =>

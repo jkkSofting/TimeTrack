@@ -389,7 +389,7 @@
                             <Border BorderThickness="0" Style="{StaticResource SettingRow}">
                                 <StackPanel>
                                     <CheckBox
-                                        Content="Buchung bei Sperrbildschirm/Ruhemodus automatisch beenden"
+                                        Content="Buchung bei Sperrbildschirm/Ruhemodus automatisch pausieren"
                                         IsChecked="{Binding AutoStopOnLockEnabled, Mode=TwoWay}"
                                         Style="{StaticResource Switch}" />
                                     <StackPanel

@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Data;
+using Zeitmanagement.Helpers;
 using Zeitmanagement.MVVM;
 
 namespace Zeitmanagement.ViewModel
@@ -48,6 +49,14 @@ namespace Zeitmanagement.ViewModel
         public bool NewIstExtern { get => _newIstExtern; set => SetProperty(ref _newIstExtern, value); }
         private bool _newIstExtern;
 
+        /// <summary>Aufrundung je Buchung für die SAP-Verrechnung (0 = Aus).</summary>
+        public int NewRundungMinuten { get => _newRundungMinuten; set => SetProperty(ref _newRundungMinuten, value); }
+        private int _newRundungMinuten;
+
+        /// <summary>Auswahl für die Rundungs-ComboBoxes (Aus, 5, 10, 15, 60 Minuten).</summary>
+        public System.Collections.Generic.IReadOnlyList<RoundingChoice> RoundingChoices { get; } =
+            RoundingOptions.Allowed.Select(m => new RoundingChoice(m)).ToList();
+
         public string StartDate { get => _startDate; set => SetProperty(ref _startDate, value); }
         private string _startDate;
 
@@ -76,6 +85,10 @@ namespace Zeitmanagement.ViewModel
 
         public bool EditIstExtern { get => _editIstExtern; set => SetProperty(ref _editIstExtern, value); }
         private bool _editIstExtern;
+
+        /// <summary>Aufrundung je Buchung für die SAP-Verrechnung (0 = Aus).</summary>
+        public int EditRundungMinuten { get => _editRundungMinuten; set => SetProperty(ref _editRundungMinuten, value); }
+        private int _editRundungMinuten;
 
         // UI-Text
         private string _headerSubtitle = "Verwalte Projekte, Buchungen & Stunden";
@@ -209,6 +222,7 @@ namespace Zeitmanagement.ViewModel
                         Kunde = p.Kunde,
                         Kostentraeger = p.Kostentraeger,
                         IstExtern = p.IstExtern,
+                        RundungMinuten = p.RundungMinuten,
                         QuickSelectAktiv = p.QuickSelectAktiv,
                         Buchungen = count,
                         Stunden = Math.Round(hours, 2)
@@ -266,10 +280,11 @@ namespace Zeitmanagement.ViewModel
             var kunde = NewKunde.Trim();
             var kt = NewKostentraeger.Trim();
 
-            MainViewModel.DbInstance.AddOrEnsureProject(name, kunde, kt, NewIstExtern);
+            MainViewModel.DbInstance.AddOrEnsureProject(name, kunde, kt, NewIstExtern, rundungMinuten: NewRundungMinuten);
 
             NewProjektname = NewKunde = NewKostentraeger = string.Empty;
             NewIstExtern = false;
+            NewRundungMinuten = 0;
             IsAddPanelOpen = false;
 
             Refresh();
@@ -296,6 +311,7 @@ namespace Zeitmanagement.ViewModel
             EditKunde = item.Kunde;
             EditKostentraeger = item.Kostentraeger;
             EditIstExtern = item.IstExtern;
+            EditRundungMinuten = item.RundungMinuten;
 
             // Falls Add-Panel offen ist: zumachen, wir sind nicht im Basar
             IsAddPanelOpen = false;
@@ -321,7 +337,8 @@ namespace Zeitmanagement.ViewModel
                 newProjektname: newName,
                 kunde: newKunde,
                 kostentraeger: newKt,
-                istExtern: EditIstExtern);
+                istExtern: EditIstExtern,
+                rundungMinuten: EditRundungMinuten);
 
             CancelEdit(); // leert Felder & schließt Panel
             Refresh();
@@ -361,13 +378,32 @@ namespace Zeitmanagement.ViewModel
         /// <summary>Whether the project is offered in the Quick Switch window.</summary>
         public bool QuickSelectAktiv { get => _quickSelectAktiv; set => SetProperty(ref _quickSelectAktiv, value); }
         public string TypText => _istExtern ? "Extern" : "Intern";
+        /// <summary>Aufrundung je Buchung (0 = Aus).</summary>
+        public int RundungMinuten { get => _rundungMinuten; set { SetProperty(ref _rundungMinuten, value); RaisePropertyChanged(nameof(RundungText)); } }
+        public string RundungText => RoundingOptions.Label(_rundungMinuten);
         public int Buchungen { get => _buchungen; set => SetProperty(ref _buchungen, value); }
         public double Stunden { get => _stunden; set => SetProperty(ref _stunden, value); }
 
         private string _projektname, _kunde, _kostentraeger;
-        private int _buchungen;
+        private int _buchungen, _rundungMinuten;
         private bool _istExtern;
         private bool _quickSelectAktiv;
         private double _stunden;
+    }
+
+    /// <summary>Eintrag für die Rundungs-Auswahl (Minuten + Anzeigetext).</summary>
+    internal sealed class RoundingChoice
+    {
+        public RoundingChoice(int minutes)
+        {
+            Minutes = minutes;
+            Label = RoundingOptions.Label(minutes);
+        }
+
+        public int Minutes { get; }
+        public string Label { get; }
+
+        /// <summary>Fallback für Stellen, die nur den Text anzeigen (z. B. das Auswahlfeld einer ComboBox ohne ItemTemplate).</summary>
+        public override string ToString() => Label;
     }
 }

@@ -50,6 +50,7 @@ namespace Zeitmanagement.Helpers
                 "Ein Ticket buchst du auf das Projekt, zu dessen Board es gehört; als Buchungstext steht der Titel des Tickets (bei einem Projekt „Quick Select“). Welche Tickets erscheinen, legst du unter „To-Do“ fest: Im Spalten-Editor schaltest du „Tickets im Quick Switch anbieten“ ein. Standardmäßig gilt das für die Spalte „To Do“ jedes Projekts; Tickets im Board „Ohne Projekt“ fehlen, weil sich darauf nichts buchen lässt.",
                 "Auf ein Projekt läuft immer nur eine Buchung: Ist es schon aktiv, ob als Projekt oder über ein Ticket, beendest du es erst.",
                 "Jedes laufende Projekt hat eigene Knöpfe: Pause beendet den laufenden Abschnitt und hält das Projekt frei, Start setzt es fort, Stop beendet die Buchung ganz.",
+                "Bist du bei Sperrbildschirm oder Ruhemodus inaktiv, pausiert TimeTrack laufende Einträge automatisch. Sie bleiben in der Liste, und Start setzt sie mit einem Klick fort.",
                 "Jeder beendete Abschnitt wird sofort als Buchung gespeichert. Die Laufzeit zählt über Pausen hinweg weiter, bis du stoppst.",
                 "„Vordergrund“ hält das Fenster über allen anderen Fenstern.",
                 "Teilst du in Teams deinen Bildschirm, bekommt das Fenster einen roten Rahmen – es ist dann im Meeting zu sehen."),
@@ -73,6 +74,8 @@ namespace Zeitmanagement.Helpers
                 "Externe Projekte (vom Kunden bezahlt) decken interne Zeit ab, die parallel lief – diese interne Zeit entfällt im SAP.",
                 "Laufen mehrere externe Projekte parallel, entsteht Überschuss. Er wird bis zum Monatsende mit späterer freier interner Zeit verrechnet.",
                 "Laufen ohne externes Projekt mehrere interne parallel, zählt nur das Projekt mit weniger Stunden an diesem Tag.",
+                "Aufrunden pro Buchung (unter „Projekte“, Aus, 5, 10, 15 oder 60 Minuten): Jede Buchung dieses Projekts wird auf die nächste angefangene Zeiteinheit aufgerundet – bei 15 Minuten werden aus 2 Minuten 15 und aus 17 Minuten 30. Die aufgerundete Zeit zählt im SAP wie echte Zeit und kann so parallele interne Zeit abdecken.",
+                "Die aufgerundete Zeit steht in einer eigenen Farbe am Ende der Buchung (bei 2 Minuten also die 13 aufgerundeten Minuten). Die Kennzahl „Aufgerundet“ zeigt die Summe, und Hinweise je Tag und Kostenträger nennen, was dazugekommen ist. Die Arbeitszeit (erste bis letzte Buchung) bleibt unverändert; Buchungen, Auswertungen und Exporte werden nicht gerundet, nur die SAP-Verrechnung.",
                 "Die Tabelle zeigt pro Kostenträger, was im SAP zu buchen ist. Mit den Pfeilen wechselst du den Monat.",
                 "Zum Buchen im SAP klickst du auf einen Kostenträger oder auf seine Stunden: Das kopiert den Wert in die Zwischenablage. Das gilt für die Tabelle und für „Im SAP buchen“ in den Tageskarten; die Fläche färbt sich kurz ein, wenn kopiert wurde.",
                 "Kostenträger: Linksklick kopiert nur die Bezeichnung, aus „Bezeichnung (KTR-ID)“ wird also „Bezeichnung“. Rechtsklick kopiert den ganzen Text samt ID, Mausradklick nur die ID (nur wenn der Kostenträger eine ID in Klammern hat).",
@@ -129,6 +132,7 @@ namespace Zeitmanagement.Helpers
                 "Projekte anlegen, bearbeiten und auswerten.",
                 "„Neues Projekt“ öffnet das Formular: Projektname, Kunde, Kostenträger und ob das Projekt extern ist.",
                 "Über die Symbole in einer Zeile bearbeitest oder löschst du ein Projekt.",
+                "„Aufrunden pro Buchung“ (Aus, 5, 10, 15 oder 60 Minuten) legt fest, ob die SAP-Verrechnung jede Buchung dieses Projekts auf die nächste angefangene Zeiteinheit aufrundet. Die Spalte „Rundung“ der Tabelle zeigt die Einstellung. Die Buchungen selbst und die Auswertungen bleiben unverändert.",
                 "Der Schalter „Quick Switch“ bestimmt, ob ein Projekt im Quick-Switch-Fenster wählbar ist. Neue Projekte sind sofort dabei, Buchungen bleiben auch bei ausgeschaltetem Projekt erhalten.",
                 "Die Suche filtert nach Name, Kunde und Kostenträger. Mit Von/Bis und „Filtern“ siehst du die Stunden in einem Zeitraum.",
                 "Das Diagramm-Symbol in einer Zeile öffnet das „Projektcontrolling“ mit dem Kostenträger des Projekts.",
@@ -136,9 +140,9 @@ namespace Zeitmanagement.Helpers
 
             new HelpTopic("", "Einstellungen", "Settings",
                 "TimeTrack an dich anpassen. Das Design gilt sofort, alles andere nach „Speichern“.",
-                "Design: Motiv und Helligkeit (wie Windows, hell, dunkel) wählen. Saisonale Designs erscheinen rund um Halloween, Weihnachten und Ostern von selbst, wenn du das nicht abschaltest.",
+                "Design: Motiv und Helligkeit (wie Windows, hell, dunkel) wählen. Saisonale Designs erscheinen rund um Halloween, Weihnachten und Ostern von selbst, wenn du das nicht abschaltest. Das Design „GTA VI“ (Vice-City-Look, hell und dunkel) bleibt dauerhaft auswählbar, erscheint automatisch aber nur einmalig vom 19.11. bis 30.11.2026. Das Design „Star Wars“ (Wüstensand oder tiefer Weltraum) erscheint automatisch nur am 4. Mai, bleibt aber jederzeit auswählbar.",
                 "Start & Fenster: mit Windows starten, normal oder minimiert starten, auf Wunsch gleich mit Quick Switch.",
-                "Automatisierung: Buchungen bei Sperrbildschirm oder Ruhemodus nach einer Wartezeit beenden und erinnern lassen, wenn kein Projekt läuft.",
+                "Automatisierung: Buchungen bei Sperrbildschirm oder Ruhemodus nach einer Wartezeit pausieren statt beenden und erinnern lassen, wenn kein Projekt läuft.",
                 "Updates: TimeTrack sucht regelmäßig nach neuen Versionen. „Installieren“ spielt ein Update ein, die App startet danach neu. Alle Versionen und eine Anleitung stehen auch auf github.com/jkkSofting/TimeTrack-Releases.",
                 "Datensicherung: Sicherungen erstellen und eine vorhandene Sicherung wiederherstellen.",
                 "Plugins: gefundene Plugins ein- und ausschalten, nach neuen Plugins suchen, Fehler ansehen, den Plugin-Ordner öffnen und die Einstellungen der Plugins bearbeiten."),
@@ -156,14 +160,14 @@ namespace Zeitmanagement.Helpers
             new HelpTopic("", "Tray-Symbol & Hinweise", null,
                 "TimeTrack läuft im Infobereich der Taskleiste weiter.",
                 "Ein Doppelklick auf das Tray-Symbol öffnet das Hauptfenster, das Kontextmenü bietet „Öffnen“, „Quick Switch öffnen“ und „Beenden“.",
-                "Hinweise erscheinen, wenn eine Buchung automatisch beendet wurde, wenn länger kein Projekt läuft oder wenn ein Update bereitsteht.",
+                "Hinweise erscheinen, wenn eine Buchung automatisch pausiert wurde, wenn länger kein Projekt läuft oder wenn ein Update bereitsteht.",
                 "Ein Klick auf einen Hinweis öffnet das Passende, meist den Quick Switch, bei Updates die Einstellungen."),
 
             new HelpTopic("", "Der Pinguin", "Settings",
                 "Das Maskottchen von TimeTrack.",
                 "Ab und zu schaut der Pinguin hinter der Taskleiste hervor. Klick ihn rechtzeitig an, dann wirft er dir einen Fisch zu – und den musst du erwischen, bevor er herunterrutscht.",
                 "Wie oft er auftaucht, stellst du in den Einstellungen ein. Dort steht auch deine Fangstatistik.",
-                "Zu jedem Design trägt er etwas Passendes."),
+                "Zu jedem Design trägt er etwas Passendes, zum Design „GTA VI“ eine Sonnenbrille und eine Hibiskusblüte, zum Design „Star Wars“ ein Lichtschwert (blau im hellen, rot im dunklen Design)."),
         };
     }
 }

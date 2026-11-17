@@ -383,6 +383,290 @@
         </DrawingImage.Drawing>
     </DrawingImage>
 
+    <!--  GTA VI: Vice-City-Sonnenbrille (Flamingo-Pink bis Coral, Sunset-Gold-Glanz) über dem Auge bei (62.6, 24.2), Bügel nach hinten, Hibiskusblüte hinten am Kopf  -->
+    <DrawingImage x:Key="MascotAccessory.GtaVi" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="M 0,0 H 120 V 150 H 0 Z" />
+                <GeometryDrawing Geometry="M 56,22 C 52,21.4 48,21 44.2,21.4">
+                    <GeometryDrawing.Pen>
+                        <Pen
+                            Brush="#1D1729"
+                            EndLineCap="Round"
+                            StartLineCap="Round"
+                            Thickness="1.6" />
+                    </GeometryDrawing.Pen>
+                </GeometryDrawing>
+                <GeometryDrawing Geometry="M 56,22.4 C 53.4,22.2 51.8,22.2 50,22.4">
+                    <GeometryDrawing.Pen>
+                        <Pen
+                            Brush="#1D1729"
+                            EndLineCap="Round"
+                            StartLineCap="Round"
+                            Thickness="2.4" />
+                    </GeometryDrawing.Pen>
+                </GeometryDrawing>
+                <GeometryDrawing Geometry="M 56,21 L 69,21.6 C 69.6,26 67.2,29.2 62.8,29.2 C 58.4,29.2 55.4,26.4 56,21 Z">
+                    <GeometryDrawing.Brush>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Offset="0" Color="#E84E8A" />
+                            <GradientStop Offset="1" Color="#F26B5B" />
+                        </LinearGradientBrush>
+                    </GeometryDrawing.Brush>
+                    <GeometryDrawing.Pen>
+                        <Pen
+                            Brush="#1D1729"
+                            LineJoin="Round"
+                            Thickness="1.3" />
+                    </GeometryDrawing.Pen>
+                </GeometryDrawing>
+                <GeometryDrawing Geometry="M 55.2,21.1 L 70,21.9">
+                    <GeometryDrawing.Pen>
+                        <Pen
+                            Brush="#1D1729"
+                            EndLineCap="Round"
+                            StartLineCap="Round"
+                            Thickness="2.1" />
+                    </GeometryDrawing.Pen>
+                </GeometryDrawing>
+                <GeometryDrawing Brush="#D9F7A63B">
+                    <GeometryDrawing.Geometry>
+                        <GeometryGroup>
+                            <EllipseGeometry Center="59.2,24.2" RadiusX="1.8" RadiusY="0.7">
+                                <EllipseGeometry.Transform>
+                                    <RotateTransform Angle="-40" CenterX="59.2" CenterY="24.2" />
+                                </EllipseGeometry.Transform>
+                            </EllipseGeometry>
+                            <EllipseGeometry Center="65.8,26.4" RadiusX="0.7" RadiusY="0.7" />
+                        </GeometryGroup>
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+                <GeometryDrawing Brush="#F26B5B" Pen="{StaticResource MascotAccessoryPen}">
+                    <GeometryDrawing.Geometry>
+                        <GeometryGroup>
+                            <EllipseGeometry Center="46.5,11.3" RadiusX="2.6" RadiusY="3.4" />
+                            <EllipseGeometry Center="49.54,13.51" RadiusX="2.6" RadiusY="3.4">
+                                <EllipseGeometry.Transform>
+                                    <RotateTransform Angle="72" CenterX="49.54" CenterY="13.51" />
+                                </EllipseGeometry.Transform>
+                            </EllipseGeometry>
+                            <EllipseGeometry Center="48.38,17.09" RadiusX="2.6" RadiusY="3.4">
+                                <EllipseGeometry.Transform>
+                                    <RotateTransform Angle="144" CenterX="48.38" CenterY="17.09" />
+                                </EllipseGeometry.Transform>
+                            </EllipseGeometry>
+                            <EllipseGeometry Center="44.62,17.09" RadiusX="2.6" RadiusY="3.4">
+                                <EllipseGeometry.Transform>
+                                    <RotateTransform Angle="216" CenterX="44.62" CenterY="17.09" />
+                                </EllipseGeometry.Transform>
+                            </EllipseGeometry>
+                            <EllipseGeometry Center="43.46,13.51" RadiusX="2.6" RadiusY="3.4">
+                                <EllipseGeometry.Transform>
+                                    <RotateTransform Angle="288" CenterX="43.46" CenterY="13.51" />
+                                </EllipseGeometry.Transform>
+                            </EllipseGeometry>
+                        </GeometryGroup>
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+                <GeometryDrawing Brush="#F7A63B">
+                    <GeometryDrawing.Geometry>
+                        <EllipseGeometry Center="46.5,14.5" RadiusX="1.9" RadiusY="1.9" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+                <GeometryDrawing Brush="#E84E8A">
+                    <GeometryDrawing.Geometry>
+                        <EllipseGeometry Center="46.5,14.5" RadiusX="0.8" RadiusY="0.8" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!--
+        Star Wars: Jedi-Lichtschwert in der linken Flosse (aus Betrachtersicht, die Flosse bleibt beim Winken still).
+        Hilt (Silber-Blau mit dunklen Griffringen) bei der Flossenspitze (14,116), die Klinge zeigt leicht nach außen oben;
+        weicher Glow aus zwei durchscheinenden Strichen um eine hellblaue Klinge mit fast weißem Kern.
+    -->
+    <DrawingImage x:Key="MascotAccessory.StarWars" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="M 0,0 H 120 V 150 H 0 Z" />
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <RotateTransform Angle="-6" CenterX="14" CenterY="116" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Geometry="M 14,100 L 14,41">
+                        <GeometryDrawing.Pen>
+                            <Pen
+                                Brush="#2E3FA9F5"
+                                EndLineCap="Round"
+                                StartLineCap="Flat"
+                                Thickness="10" />
+                        </GeometryDrawing.Pen>
+                    </GeometryDrawing>
+                    <GeometryDrawing Geometry="M 14,100 L 14,41">
+                        <GeometryDrawing.Pen>
+                            <Pen
+                                Brush="#555CB8FF"
+                                EndLineCap="Round"
+                                StartLineCap="Flat"
+                                Thickness="6.4" />
+                        </GeometryDrawing.Pen>
+                    </GeometryDrawing>
+                    <GeometryDrawing Geometry="M 14,100 L 14,41">
+                        <GeometryDrawing.Pen>
+                            <Pen
+                                Brush="#7CC8FF"
+                                EndLineCap="Round"
+                                StartLineCap="Flat"
+                                Thickness="3.4" />
+                        </GeometryDrawing.Pen>
+                    </GeometryDrawing>
+                    <GeometryDrawing Geometry="M 14,100 L 14,42">
+                        <GeometryDrawing.Pen>
+                            <Pen
+                                Brush="#F2FAFF"
+                                EndLineCap="Round"
+                                StartLineCap="Flat"
+                                Thickness="1.4" />
+                        </GeometryDrawing.Pen>
+                    </GeometryDrawing>
+                    <GeometryDrawing Pen="{StaticResource MascotAccessoryPen}">
+                        <GeometryDrawing.Brush>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Offset="0" Color="#D5DDEE" />
+                                <GradientStop Offset="1" Color="#8392B5" />
+                            </LinearGradientBrush>
+                        </GeometryDrawing.Brush>
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry
+                                RadiusX="0.8"
+                                RadiusY="0.8"
+                                Rect="12,101,4,16" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="#5C6A8E" Pen="{StaticResource MascotAccessoryPen}">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry
+                                RadiusX="0.6"
+                                RadiusY="0.6"
+                                Rect="11.4,99.6,5.2,2.6" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="#27325A">
+                        <GeometryDrawing.Geometry>
+                            <GeometryGroup>
+                                <RectangleGeometry Rect="12,105,4,1.1" />
+                                <RectangleGeometry Rect="12,108,4,1.1" />
+                                <RectangleGeometry Rect="12,111,4,1.1" />
+                            </GeometryGroup>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="#3A4670" Pen="{StaticResource MascotAccessoryPen}">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry
+                                RadiusX="0.8"
+                                RadiusY="0.8"
+                                Rect="11.8,115.6,4.4,2.4" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                </DrawingGroup>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!--
+        Star Wars im Dunkel-Modus: dasselbe Lichtschwert mit roter Klinge (Sith). ThemeManager.ApplyPalette waehlt im Dunkel-Modus
+        zuerst MascotAccessory.[Motiv].Dark und faellt sonst auf MascotAccessory.[Motiv] zurueck.
+    -->
+    <DrawingImage x:Key="MascotAccessory.StarWars.Dark" po:Freeze="True">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="M 0,0 H 120 V 150 H 0 Z" />
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <RotateTransform Angle="-6" CenterX="14" CenterY="116" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Geometry="M 14,100 L 14,41">
+                        <GeometryDrawing.Pen>
+                            <Pen
+                                Brush="#2EF5453F"
+                                EndLineCap="Round"
+                                StartLineCap="Flat"
+                                Thickness="10" />
+                        </GeometryDrawing.Pen>
+                    </GeometryDrawing>
+                    <GeometryDrawing Geometry="M 14,100 L 14,41">
+                        <GeometryDrawing.Pen>
+                            <Pen
+                                Brush="#55FF5C5C"
+                                EndLineCap="Round"
+                                StartLineCap="Flat"
+                                Thickness="6.4" />
+                        </GeometryDrawing.Pen>
+                    </GeometryDrawing>
+                    <GeometryDrawing Geometry="M 14,100 L 14,41">
+                        <GeometryDrawing.Pen>
+                            <Pen
+                                Brush="#FF7C7C"
+                                EndLineCap="Round"
+                                StartLineCap="Flat"
+                                Thickness="3.4" />
+                        </GeometryDrawing.Pen>
+                    </GeometryDrawing>
+                    <GeometryDrawing Geometry="M 14,100 L 14,42">
+                        <GeometryDrawing.Pen>
+                            <Pen
+                                Brush="#FFF2F2"
+                                EndLineCap="Round"
+                                StartLineCap="Flat"
+                                Thickness="1.4" />
+                        </GeometryDrawing.Pen>
+                    </GeometryDrawing>
+                    <GeometryDrawing Pen="{StaticResource MascotAccessoryPen}">
+                        <GeometryDrawing.Brush>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Offset="0" Color="#D5DDEE" />
+                                <GradientStop Offset="1" Color="#8392B5" />
+                            </LinearGradientBrush>
+                        </GeometryDrawing.Brush>
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry
+                                RadiusX="0.8"
+                                RadiusY="0.8"
+                                Rect="12,101,4,16" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="#5C6A8E" Pen="{StaticResource MascotAccessoryPen}">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry
+                                RadiusX="0.6"
+                                RadiusY="0.6"
+                                Rect="11.4,99.6,5.2,2.6" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="#27325A">
+                        <GeometryDrawing.Geometry>
+                            <GeometryGroup>
+                                <RectangleGeometry Rect="12,105,4,1.1" />
+                                <RectangleGeometry Rect="12,108,4,1.1" />
+                                <RectangleGeometry Rect="12,111,4,1.1" />
+                            </GeometryGroup>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="#3A4670" Pen="{StaticResource MascotAccessoryPen}">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry
+                                RadiusX="0.8"
+                                RadiusY="0.8"
+                                Rect="11.8,115.6,4.4,2.4" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                </DrawingGroup>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
     <!--  Fan-Themes: Schal in Vereinsfarben um den Hals, ein Ende hängt herunter  -->
     <DrawingImage x:Key="MascotAccessory.VfbStuttgart" po:Freeze="True">
         <DrawingImage.Drawing>
