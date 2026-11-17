@@ -30,6 +30,10 @@ Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
 ArchitecturesInstallIn64BitMode=x64
+; Close a running TimeTracker via the Restart Manager (WM_QUERYENDSESSION) before replacing files, so it can save
+; running Quick Switch bookings, and start it again afterwards. Both are Inno defaults, stated explicitly on purpose.
+CloseApplications=yes
+RestartApplications=yes
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
