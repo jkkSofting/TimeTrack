@@ -53,6 +53,12 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.47.6", new DateTime(2026, 11, 17), "Quick Switch bleibt stehen, Star Wars Design",
+                Verbessert("Quick Switch: Bist du bei Sperrbildschirm oder Ruhemodus inaktiv, werden laufende Einträge nicht mehr entfernt, sondern pausiert. Der laufende Abschnitt wird gespeichert, der Eintrag bleibt in der Liste und lässt sich mit einem Klick fortsetzen. Im Tray erscheint der Hinweis „Buchung pausiert“. Die Einstellung heißt jetzt „Buchung bei Sperrbildschirm/Ruhemodus automatisch pausieren“."),
+                Verbessert("Die Erinnerung „Kein Projekt ausgewählt“ erscheint weiterhin, wenn nur noch pausierte Einträge da sind."),
+                Behoben("Beim Beenden von TimeTrack, auch über das Tray-Menü, bei einem Update oder bei der Windows-Abmeldung, werden laufende Quick-Switch-Einträge vorher gespeichert. Ihre Zeit geht nicht mehr verloren. Nur ein Absturz oder ein beendeter Prozess kann den laufenden Abschnitt seit der letzten Pause noch kosten."),
+                Neu("Neues Design „Star Wars“: hell im Wüstensand von Tatooine, dunkel als tiefer Weltraum mit Lichtschwert-Blau und Crawl-Gelb. Es erscheint automatisch nur am 4. Mai („May the 4th“), gewählt werden kann es jederzeit unter „Einstellungen“ bei „Design“. Der Pinguin trägt dazu ein Lichtschwert.")),
+
             new ChangelogRelease("2026.47.5", new DateTime(2026, 11, 17), "GTA VI Design",
                 Neu("Neues Design „GTA VI“ im Vice-City-Look: tiefe Dämmerungs-Violetttöne, warme Pastellflächen und flamingopinke sowie sonnenuntergangsfarbene Akzente. Es gibt es in Hell und Dunkel, gewählt wird es unter „Einstellungen“ bei „Design“."),
                 Neu("Das Design „GTA VI“ erscheint automatisch nur einmalig vom 19.11. bis 30.11.2026, sofern du saisonale Designs nicht abschaltest. Danach bleibt es manuell auswählbar. Der Pinguin trägt dazu eine Sonnenbrille und eine Hibiskusblüte.")),

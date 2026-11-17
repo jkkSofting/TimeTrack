@@ -50,6 +50,7 @@ namespace Zeitmanagement.Helpers
                 "Ein Ticket buchst du auf das Projekt, zu dessen Board es gehört; als Buchungstext steht der Titel des Tickets (bei einem Projekt „Quick Select“). Welche Tickets erscheinen, legst du unter „To-Do“ fest: Im Spalten-Editor schaltest du „Tickets im Quick Switch anbieten“ ein. Standardmäßig gilt das für die Spalte „To Do“ jedes Projekts; Tickets im Board „Ohne Projekt“ fehlen, weil sich darauf nichts buchen lässt.",
                 "Auf ein Projekt läuft immer nur eine Buchung: Ist es schon aktiv, ob als Projekt oder über ein Ticket, beendest du es erst.",
                 "Jedes laufende Projekt hat eigene Knöpfe: Pause beendet den laufenden Abschnitt und hält das Projekt frei, Start setzt es fort, Stop beendet die Buchung ganz.",
+                "Bist du bei Sperrbildschirm oder Ruhemodus inaktiv, pausiert TimeTrack laufende Einträge automatisch. Sie bleiben in der Liste, und Start setzt sie mit einem Klick fort.",
                 "Jeder beendete Abschnitt wird sofort als Buchung gespeichert. Die Laufzeit zählt über Pausen hinweg weiter, bis du stoppst.",
                 "„Vordergrund“ hält das Fenster über allen anderen Fenstern.",
                 "Teilst du in Teams deinen Bildschirm, bekommt das Fenster einen roten Rahmen – es ist dann im Meeting zu sehen."),
@@ -139,9 +140,9 @@ namespace Zeitmanagement.Helpers
 
             new HelpTopic("", "Einstellungen", "Settings",
                 "TimeTrack an dich anpassen. Das Design gilt sofort, alles andere nach „Speichern“.",
-                "Design: Motiv und Helligkeit (wie Windows, hell, dunkel) wählen. Saisonale Designs erscheinen rund um Halloween, Weihnachten und Ostern von selbst, wenn du das nicht abschaltest. Das Design „GTA VI“ (Vice-City-Look, hell und dunkel) bleibt dauerhaft auswählbar, erscheint automatisch aber nur einmalig vom 19.11. bis 30.11.2026.",
+                "Design: Motiv und Helligkeit (wie Windows, hell, dunkel) wählen. Saisonale Designs erscheinen rund um Halloween, Weihnachten und Ostern von selbst, wenn du das nicht abschaltest. Das Design „GTA VI“ (Vice-City-Look, hell und dunkel) bleibt dauerhaft auswählbar, erscheint automatisch aber nur einmalig vom 19.11. bis 30.11.2026. Das Design „Star Wars“ (Wüstensand oder tiefer Weltraum) erscheint automatisch nur am 4. Mai, bleibt aber jederzeit auswählbar.",
                 "Start & Fenster: mit Windows starten, normal oder minimiert starten, auf Wunsch gleich mit Quick Switch.",
-                "Automatisierung: Buchungen bei Sperrbildschirm oder Ruhemodus nach einer Wartezeit beenden und erinnern lassen, wenn kein Projekt läuft.",
+                "Automatisierung: Buchungen bei Sperrbildschirm oder Ruhemodus nach einer Wartezeit pausieren statt beenden und erinnern lassen, wenn kein Projekt läuft.",
                 "Updates: TimeTrack sucht regelmäßig nach neuen Versionen. „Installieren“ spielt ein Update ein, die App startet danach neu. Alle Versionen und eine Anleitung stehen auch auf github.com/jkkSofting/TimeTrack-Releases.",
                 "Datensicherung: Sicherungen erstellen und eine vorhandene Sicherung wiederherstellen.",
                 "Plugins: gefundene Plugins ein- und ausschalten, nach neuen Plugins suchen, Fehler ansehen, den Plugin-Ordner öffnen und die Einstellungen der Plugins bearbeiten."),
@@ -159,14 +160,14 @@ namespace Zeitmanagement.Helpers
             new HelpTopic("", "Tray-Symbol & Hinweise", null,
                 "TimeTrack läuft im Infobereich der Taskleiste weiter.",
                 "Ein Doppelklick auf das Tray-Symbol öffnet das Hauptfenster, das Kontextmenü bietet „Öffnen“, „Quick Switch öffnen“ und „Beenden“.",
-                "Hinweise erscheinen, wenn eine Buchung automatisch beendet wurde, wenn länger kein Projekt läuft oder wenn ein Update bereitsteht.",
+                "Hinweise erscheinen, wenn eine Buchung automatisch pausiert wurde, wenn länger kein Projekt läuft oder wenn ein Update bereitsteht.",
                 "Ein Klick auf einen Hinweis öffnet das Passende, meist den Quick Switch, bei Updates die Einstellungen."),
 
             new HelpTopic("", "Der Pinguin", "Settings",
                 "Das Maskottchen von TimeTrack.",
                 "Ab und zu schaut der Pinguin hinter der Taskleiste hervor. Klick ihn rechtzeitig an, dann wirft er dir einen Fisch zu – und den musst du erwischen, bevor er herunterrutscht.",
                 "Wie oft er auftaucht, stellst du in den Einstellungen ein. Dort steht auch deine Fangstatistik.",
-                "Zu jedem Design trägt er etwas Passendes, zum Design „GTA VI“ eine Sonnenbrille und eine Hibiskusblüte."),
+                "Zu jedem Design trägt er etwas Passendes, zum Design „GTA VI“ eine Sonnenbrille und eine Hibiskusblüte, zum Design „Star Wars“ ein Lichtschwert."),
         };
     }
 }
