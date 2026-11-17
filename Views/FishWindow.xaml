@@ -21,7 +21,10 @@
         Das Fenster sitzt auf der Oberkante der Taskleiste und ist hoch genug, dass der Fisch
         "gegen die Scheibe" klatschen und nach unten rutschen kann. Position, Größe der Spur
         und alle Animationen werden im Code gesetzt (Aufprallpunkt ist zufällig).
-        Nur der Fisch selbst nimmt Klicks an (zum Fangen), die Spur lässt sie nicht auslösen.
+        Der Fisch ist fangbar, sobald er an der Scheibe klebt; er bleibt ca. 1 s hängen und
+        rutscht dann ca. 3 s lang langsam nach unten. Ein unsichtbares Rechteck rund um den
+        Fisch macht die Trefferfläche großzügig (auch ein Klick knapp daneben fängt ihn).
+        Nur der Fisch (samt Trefferfläche) nimmt Klicks an, die Spur lässt sie nicht auslösen.
     -->
     <Canvas ClipToBounds="True">
 
@@ -69,6 +72,14 @@
                     <TranslateTransform x:Name="FishMove" />
                 </TransformGroup>
             </Canvas.RenderTransform>
+
+            <!--  Unsichtbare, großzügige Trefferfläche (Canvas clippt Kinder nicht, negative Offsets sind ok)  -->
+            <Rectangle
+                Canvas.Left="-12"
+                Canvas.Top="-12"
+                Width="104"
+                Height="68"
+                Fill="Transparent" />
 
             <!--  Schwanz- und Rückenflossen  -->
             <Polygon Fill="{StaticResource BrushFinDark}" Points="16,22 0,4 5,22 0,40" />

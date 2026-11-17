@@ -15,11 +15,12 @@ namespace Zeitmanagement.Views
     /// user. The penguin sits "behind" the screen, so the fish flies towards the viewer, splats
     /// against the glass, and slides down towards the taskbar, leaving a wet trail that fades
     /// out shortly after. Closes itself when done.
-    /// The fish can be caught with a click, but only once it sticks to the glass (not while it
-    /// is still flying) and before it is gone - and it doesn't make that easy: it only sticks
-    /// for a moment, then wriggles from side to side while sliding down faster and faster.
-    /// Catches are counted in the settings. Only the fish itself takes clicks; everything else
-    /// falls through to whatever is underneath.
+    /// The fish can be caught with a click as soon as it sticks to the glass (not while it is
+    /// still flying) and before it is gone. It stays stuck for about a second, then slides
+    /// down slowly for about three seconds, wriggling a little from side to side. The hit area
+    /// is generous (an invisible rectangle around the fish), so a click slightly off still
+    /// catches it. Catches are counted in the settings. Only the fish (with its hit area) takes
+    /// clicks; everything else falls through to whatever is underneath.
     /// </summary>
     public partial class FishWindow : Window
     {
@@ -31,16 +32,17 @@ namespace Zeitmanagement.Views
         // Animation timeline in seconds after the penguin released the fish.
         private const double FlightEnd = 0.30;
         private const double SquashPeak = 0.38;
-        private const double SquashEnd = 0.55; // from here on the fish can be caught
-        private const double SlideStart = 0.65;
-        private const double SlideDuration = 1.5;
+        private const double SquashEnd = 0.55;
+        private const double CatchableFrom = FlightEnd; // the fish can be caught as soon as it sticks
+        private const double SlideStart = 1.2;
+        private const double SlideDuration = 3.0;
         private const double SlideEnd = SlideStart + SlideDuration;
         private const double TrailFadeDuration = 1.0;
 
         // Wriggling while sliding down: sideways swings and a bit of tilt.
-        private const int WriggleSwings = 6;
-        private const double WriggleOffset = 14;
-        private const double WriggleAngle = 15;
+        private const int WriggleSwings = 4;
+        private const double WriggleOffset = 6;
+        private const double WriggleAngle = 6;
 
         // Feedback after a catch.
         private const double CaughtVanishDuration = 0.35;
@@ -116,9 +118,9 @@ namespace Zeitmanagement.Views
 
             var easeOut = new QuadraticEase { EasingMode = EasingMode.EaseOut };
             var easeIn = new QuadraticEase { EasingMode = EasingMode.EaseIn };
-            // Sticks to the glass first, then gravity wins. The trail uses the same curve so its
-            // end always stays at the fish.
-            var slideEase = new CubicEase { EasingMode = EasingMode.EaseIn };
+            // Sticks to the glass first, then slowly slides down (gentle acceleration). The trail
+            // uses the same curve so its end always stays at the fish.
+            var slideEase = new QuadraticEase { EasingMode = EasingMode.EaseIn };
 
             var visible = Animation(new DiscreteDoubleKeyFrame(1, At(0)));
             Fish.BeginAnimation(OpacityProperty, visible);
@@ -195,7 +197,7 @@ namespace Zeitmanagement.Views
 
             // Still flying towards the glass, already gone, or caught: doesn't count.
             var sinceRelease = _clock.Elapsed.TotalSeconds - _releaseDelay;
-            if (_isCaught || _isSlideFinished || sinceRelease < SquashEnd)
+            if (_isCaught || _isSlideFinished || sinceRelease < CatchableFrom)
                 return;
 
             _isCaught = true;
