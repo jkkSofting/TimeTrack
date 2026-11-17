@@ -56,7 +56,8 @@ namespace Zeitmanagement.Helpers
             new ChangelogRelease("2026.47.5", new DateTime(2026, 11, 17), "Pinguin-Fisch leichter zu fangen",
                 Verbessert("Der Fisch des Pinguins ist leichter zu fangen: Er lässt sich schon fangen, sobald er an der Scheibe klebt, bleibt dort etwa eine Sekunde hängen, rutscht dann gut drei Sekunden lang langsam nach unten und zappelt dabei weniger. Auch ein Klick knapp neben den Fisch trifft."),
                 Neu("In den Einstellungen unter „Pinguin“ steht jetzt, wie du den Fisch fängst, ebenso in der Hilfe unter „Der Pinguin“."),
-                Neu("Die Fangstatistik (Pinguin gefangen, Fisch gefangen) lässt sich in den Einstellungen mit „Statistik zurücksetzen“ wieder auf 0 setzen, nach einer Rückfrage.")),
+                Neu("Die Fangstatistik (Pinguin gefangen, Fisch gefangen) lässt sich in den Einstellungen mit „Statistik zurücksetzen“ wieder auf 0 setzen, nach einer Rückfrage."),
+                Neu("Zum Üben gibt es in den Einstellungen unter „Pinguin“ den Button „Pinguin zum Üben rufen“. Der Pinguin kommt sofort, auch wenn er sonst ausgeschaltet ist. Was du dabei fängst, zählt nicht in die Statistik.")),
 
             new ChangelogRelease("2026.47.4",new DateTime(2026, 11, 17), "Rundung pro Projekt, Quick Switch und neue Designs",
                 Neu("Unter „Projekte“ lässt sich pro Projekt „Aufrunden pro Buchung“ einstellen: Aus, 5, 10, 15 oder 60 Minuten. Die Auswahl gibt es beim Anlegen und beim Bearbeiten, die Tabelle hat dafür eine Spalte „Rundung“."),

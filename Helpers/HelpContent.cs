@@ -168,6 +168,7 @@ namespace Zeitmanagement.Helpers
                 "Ab und zu schaut der Pinguin hinter der Taskleiste hervor. Klick ihn an, solange er oben ist (also bevor er wieder abtaucht), dann wirft er dir einen Fisch zu.",
                 "Den Fisch fängst du mit einem Klick, sobald er an der Scheibe klebt. Er bleibt etwa eine Sekunde hängen und rutscht dann gut drei Sekunden lang langsam nach unten. Du musst ihn nicht genau treffen, ein Klick knapp daneben reicht auch. Ist er unten verschwunden, war er zu spät.",
                 "Wie oft er auftaucht, stellst du in den Einstellungen ein. Dort steht auch deine Fangstatistik, die du mit „Statistik zurücksetzen“ wieder auf 0 setzen kannst.",
+                "Zum Üben ruft „Pinguin zum Üben rufen“ in den Einstellungen den Pinguin sofort. Fänge dabei zählen nicht in die Statistik.",
                 "Zu jedem Design trägt er etwas Passendes, zum Design „GTA VI“ eine Sonnenbrille und eine Hibiskusblüte, zum Design „Star Wars“ ein Lichtschwert (blau im hellen, rot im dunklen Design)."),
         };
     }
