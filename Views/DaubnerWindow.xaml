@@ -1,0 +1,481 @@
+<Window
+    x:Class="Zeitmanagement.Views.DaubnerWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Width="200"
+    Height="200"
+    mc:Ignorable="po"
+    AllowsTransparency="True"
+    Background="Transparent"
+    Focusable="False"
+    IsHitTestVisible="False"
+    ResizeMode="NoResize"
+    ShowActivated="False"
+    ShowInTaskbar="False"
+    Topmost="True"
+    WindowStartupLocation="Manual"
+    WindowStyle="None">
+    <!--
+        Eine gezeichnete Nachbildung (Vektorgrafik, kein Foto): Nachrichtensprecherin im
+        dunkelblauen Blazer. Aufbau wie beim Pinguin: Die Figur ist 200 x 200 gross und hat genau
+        die Fenstergroesse; das Fenster sitzt auf der Taskleisten-Oberkante und schneidet sie
+        unten ab. Die Taskleiste ist der "Nachrichtentisch": die Haende liegen am unteren Rand
+        auf. Ueber den TranslateTransform "Shift" taucht sie dahinter auf und wieder ab.
+
+        Koordinaten (Figur 200 x 200, Mitte x = 100):
+          Haare (hinten)  y  22 ..  97     Gesicht   x 73..127, y 32 .. 101
+          Augen           y ~62            Nase      y 58 .. 76     Mund y 83 .. 90
+          Hals            y  92 .. 114     Schultern y ~114..132    Blazer bis zum unteren Rand
+          Haende          y 185 .. 200 (unten vom Fenster abgeschnitten)
+    -->
+    <Window.Resources>
+        <!--  Haut  -->
+        <RadialGradientBrush
+            x:Key="DaubnerSkinBrush"
+            po:Freeze="True"
+            Center="0.45,0.4"
+            GradientOrigin="0.4,0.3"
+            RadiusX="0.7"
+            RadiusY="0.75">
+            <GradientStop Offset="0" Color="#F8DABF" />
+            <GradientStop Offset="0.6" Color="#F0C6A5" />
+            <GradientStop Offset="1" Color="#E0AB88" />
+        </RadialGradientBrush>
+        <SolidColorBrush
+            x:Key="DaubnerNeckBrush"
+            po:Freeze="True"
+            Color="#E3B493" />
+        <SolidColorBrush
+            x:Key="DaubnerSkinEdgeBrush"
+            po:Freeze="True"
+            Color="#B97F5E" />
+
+        <!--  Haare: mittelbraun, oben etwas heller  -->
+        <LinearGradientBrush
+            x:Key="DaubnerHairBrush"
+            po:Freeze="True"
+            StartPoint="0.3,0"
+            EndPoint="0.7,1">
+            <GradientStop Offset="0" Color="#946238" />
+            <GradientStop Offset="0.5" Color="#7A5230" />
+            <GradientStop Offset="1" Color="#5A3A20" />
+        </LinearGradientBrush>
+        <SolidColorBrush
+            x:Key="DaubnerHairEdgeBrush"
+            po:Freeze="True"
+            Color="#4A2E18" />
+        <SolidColorBrush
+            x:Key="DaubnerHairLightBrush"
+            po:Freeze="True"
+            Color="#99C08F5C" />
+
+        <!--  Blazer: dunkelblau (navy)  -->
+        <LinearGradientBrush
+            x:Key="DaubnerBlazerBrush"
+            po:Freeze="True"
+            StartPoint="0.5,0"
+            EndPoint="0.5,1">
+            <GradientStop Offset="0" Color="#2B3E73" />
+            <GradientStop Offset="0.5" Color="#1D2D5A" />
+            <GradientStop Offset="1" Color="#15224A" />
+        </LinearGradientBrush>
+        <LinearGradientBrush
+            x:Key="DaubnerSleeveBrush"
+            po:Freeze="True"
+            StartPoint="0,0"
+            EndPoint="1,1">
+            <GradientStop Offset="0" Color="#24366A" />
+            <GradientStop Offset="1" Color="#182654" />
+        </LinearGradientBrush>
+        <SolidColorBrush
+            x:Key="DaubnerBlazerEdgeBrush"
+            po:Freeze="True"
+            Color="#0E1733" />
+
+        <!--  Perlmuttknoepfe  -->
+        <RadialGradientBrush
+            x:Key="DaubnerButtonBrush"
+            po:Freeze="True"
+            Center="0.4,0.35"
+            GradientOrigin="0.35,0.3"
+            RadiusX="0.7"
+            RadiusY="0.7">
+            <GradientStop Offset="0" Color="#FFFFFF" />
+            <GradientStop Offset="0.7" Color="#EEEBE4" />
+            <GradientStop Offset="1" Color="#CFCBC2" />
+        </RadialGradientBrush>
+
+        <SolidColorBrush
+            x:Key="DaubnerFeatureBrush"
+            po:Freeze="True"
+            Color="#3A2517" />
+    </Window.Resources>
+
+    <Grid ClipToBounds="True" IsHitTestVisible="False">
+        <Canvas
+            Width="200"
+            Height="200"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            IsHitTestVisible="False">
+            <Canvas.RenderTransform>
+                <TranslateTransform x:Name="Shift" Y="200" />
+            </Canvas.RenderTransform>
+
+            <!--
+                ============ KOERPER (atmet: leichte Streckung um die Unterkante) ============
+                Hals, Blazer, Knoepfe und Aermel. Die Haende liegen davor und bleiben ruhig.
+            -->
+            <Canvas Width="200" Height="200">
+                <Canvas.RenderTransform>
+                    <ScaleTransform
+                        x:Name="BreathScale"
+                        CenterX="100"
+                        CenterY="200"
+                        ScaleY="1" />
+                </Canvas.RenderTransform>
+
+                <!--  Hals und Dekollete (unter dem Blazer, nur im Ausschnitt sichtbar)  -->
+                <Path
+                    Data="M 89,92 L 89,108 C 89,112 85,113 82,114 L 82,140 L 118,140 L 118,114 C 115,113 111,112 111,108 L 111,92 Z"
+                    Fill="{StaticResource DaubnerNeckBrush}" />
+                <!--  Schatten unter dem Kinn auf dem Hals  -->
+                <Ellipse
+                    Canvas.Left="84"
+                    Canvas.Top="98"
+                    Width="32"
+                    Height="12"
+                    Fill="#38A06A4A" />
+
+                <!--
+                    Blazer ohne Kragen: Schulterlinie, rund-V-foermiger Ausschnitt
+                    (links 82,114 -> unten 100,134 -> rechts 118,114), unten offen.
+                -->
+                <Path
+                    Data="M 34,200 C 33,170 36,146 44,132 C 52,121 66,117 82,114 C 86,121 93,134 100,134 C 107,134 114,121 118,114 C 134,117 148,121 156,132 C 164,146 167,170 166,200 Z"
+                    Fill="{StaticResource DaubnerBlazerBrush}"
+                    Stroke="{StaticResource DaubnerBlazerEdgeBrush}"
+                    StrokeThickness="1" />
+                <!--  Heller Saum entlang des Ausschnitts  -->
+                <Path
+                    Data="M 82,114 C 86,121 93,134 100,134 C 107,134 114,121 118,114"
+                    Stroke="#4A5E98"
+                    StrokeEndLineCap="Round"
+                    StrokeStartLineCap="Round"
+                    StrokeThickness="1.4" />
+                <!--  Zarter Glanz auf den Schultern  -->
+                <Path Data="M 48,134 C 56,124 68,121 80,119 C 68,124 58,130 52,140 Z" Fill="#16FFFFFF" />
+                <Path Data="M 152,134 C 144,124 132,121 120,119 C 132,124 142,130 148,140 Z" Fill="#16FFFFFF" />
+                <!--  Knopfleiste in der Mitte  -->
+                <Path
+                    Data="M 100,134 L 100,200"
+                    Stroke="#0E1733"
+                    StrokeThickness="0.9" />
+
+                <!--  Drei Perlmuttknoepfe in senkrechter Reihe  -->
+                <Ellipse
+                    Canvas.Left="96.8"
+                    Canvas.Top="144.8"
+                    Width="6.4"
+                    Height="6.4"
+                    Fill="{StaticResource DaubnerButtonBrush}"
+                    Stroke="#8F95AE"
+                    StrokeThickness="0.6" />
+                <Ellipse
+                    Canvas.Left="96.8"
+                    Canvas.Top="159.8"
+                    Width="6.4"
+                    Height="6.4"
+                    Fill="{StaticResource DaubnerButtonBrush}"
+                    Stroke="#8F95AE"
+                    StrokeThickness="0.6" />
+                <Ellipse
+                    Canvas.Left="96.8"
+                    Canvas.Top="174.8"
+                    Width="6.4"
+                    Height="6.4"
+                    Fill="{StaticResource DaubnerButtonBrush}"
+                    Stroke="#8F95AE"
+                    StrokeThickness="0.6" />
+
+                <!--
+                    Aermel: Oberarm an der Seite herab, am Ellbogen (ca. 34,176 bzw. 166,176)
+                    nach innen zu den Haenden auf dem Tisch abgewinkelt; Manschette bei x 72..74
+                    (links) bzw. 126..128 (rechts).
+                -->
+                <Path
+                    Data="M 44,130 C 36,142 32,160 34,176 C 36,188 44,198 56,200 L 74,200 L 72,186 C 64,184 58,176 56,166 C 54,154 56,142 60,134 Z"
+                    Fill="{StaticResource DaubnerSleeveBrush}"
+                    Stroke="{StaticResource DaubnerBlazerEdgeBrush}"
+                    StrokeLineJoin="Round"
+                    StrokeThickness="1" />
+                <Path
+                    Data="M 156,130 C 164,142 168,160 166,176 C 164,188 156,198 144,200 L 126,200 L 128,186 C 136,184 142,176 144,166 C 146,154 144,142 140,134 Z"
+                    Fill="{StaticResource DaubnerSleeveBrush}"
+                    Stroke="{StaticResource DaubnerBlazerEdgeBrush}"
+                    StrokeLineJoin="Round"
+                    StrokeThickness="1" />
+            </Canvas>
+
+            <!--
+                ============ HAENDE: beide flach auf dem Tisch (= Taskleiste, unterer Rand) ============
+                Handruecken von vorn, Finger zeigen zum Betrachter und werden vom Fensterrand
+                abgeschnitten. Links x 70..99, rechts x 101..130.
+            -->
+            <Path
+                Data="M 70,192 C 72,187 84,185 93,188 C 98,190 99,196 97,200 L 72,200 C 70,198 69,195 70,192 Z"
+                Fill="{StaticResource DaubnerSkinBrush}"
+                Stroke="{StaticResource DaubnerSkinEdgeBrush}"
+                StrokeLineJoin="Round"
+                StrokeThickness="0.8" />
+            <Path
+                Data="M 78,194 L 78,200 M 84,193 L 84,200 M 90,194 L 90,200"
+                Stroke="#C99877"
+                StrokeEndLineCap="Round"
+                StrokeStartLineCap="Round"
+                StrokeThickness="0.8" />
+            <Path
+                Data="M 130,192 C 128,187 116,185 107,188 C 102,190 101,196 103,200 L 128,200 C 130,198 131,195 130,192 Z"
+                Fill="{StaticResource DaubnerSkinBrush}"
+                Stroke="{StaticResource DaubnerSkinEdgeBrush}"
+                StrokeLineJoin="Round"
+                StrokeThickness="0.8" />
+            <Path
+                Data="M 122,194 L 122,200 M 116,193 L 116,200 M 110,194 L 110,200"
+                Stroke="#C99877"
+                StrokeEndLineCap="Round"
+                StrokeStartLineCap="Round"
+                StrokeThickness="0.8" />
+
+            <!--
+                ============ KOPF (nickt leicht, neigt sich minimal, hebt sich beim Atmen) ============
+                Drehpunkt der Neigung ist der Halsansatz (100,110).
+            -->
+            <Canvas Width="200" Height="200">
+                <Canvas.RenderTransform>
+                    <TransformGroup>
+                        <RotateTransform
+                            x:Name="HeadTilt"
+                            CenterX="100"
+                            CenterY="110"
+                            Angle="0" />
+                        <TranslateTransform x:Name="HeadNod" Y="0" />
+                        <TranslateTransform x:Name="HeadBreath" Y="0" />
+                    </TransformGroup>
+                </Canvas.RenderTransform>
+
+                <!--
+                    Haare hinten: Bob, ohrlang (endet bei y ~97), leicht nach innen geschwungen,
+                    mit Volumen am Oberkopf (Oberkante y = 22, Gesicht beginnt bei y = 32).
+                -->
+                <Path
+                    Data="M 100,22 C 126,22 142,40 140,68 C 139,82 138,90 134,97 C 128,101 120,99 116,94 L 84,94 C 80,99 72,101 66,97 C 62,90 61,82 60,68 C 58,40 74,22 100,22 Z"
+                    Fill="{StaticResource DaubnerHairBrush}"
+                    Stroke="{StaticResource DaubnerHairEdgeBrush}"
+                    StrokeLineJoin="Round"
+                    StrokeThickness="0.8" />
+
+                <!--  Gesicht: Ei-Form, Breite x 73..127, Stirn y 32, Kinn y 101  -->
+                <Path
+                    Data="M 100,32 C 119,32 128,48 127,64 C 126,82 116,100 100,101 C 84,100 74,82 73,64 C 72,48 81,32 100,32 Z"
+                    Fill="{StaticResource DaubnerSkinBrush}"
+                    Stroke="{StaticResource DaubnerSkinEdgeBrush}"
+                    StrokeLineJoin="Round"
+                    StrokeThickness="0.8" />
+
+                <!--  Wangen, ganz dezent  -->
+                <Ellipse
+                    Canvas.Left="75"
+                    Canvas.Top="74"
+                    Width="14"
+                    Height="8"
+                    Fill="#30E3877A" />
+                <Ellipse
+                    Canvas.Left="111"
+                    Canvas.Top="74"
+                    Width="14"
+                    Height="8"
+                    Fill="#30E3877A" />
+
+                <!--
+                    Haare vorn: Seitenscheitel bei (89,35), die Haare fallen von dort nach rechts
+                    (aus Betrachtersicht) in einem Schwung ueber die Stirn zur Schlaefe (127,66);
+                    links liegt eine schmale Partie zur linken Schlaefe (73,66).
+                -->
+                <Path
+                    Data="M 73,66 C 72,46 82,30 100,29.5 C 120,29.5 129,46 127,66 C 125,58 121,52 114,47 C 106,43 96,40 89,35 C 86,44 80,54 73,66 Z"
+                    Fill="{StaticResource DaubnerHairBrush}"
+                    Stroke="{StaticResource DaubnerHairEdgeBrush}"
+                    StrokeLineJoin="Round"
+                    StrokeThickness="0.6" />
+                <!--  Scheitel und Glanzstraehnen  -->
+                <Path
+                    Data="M 89,35 L 87,31"
+                    Stroke="#3E2615"
+                    StrokeEndLineCap="Round"
+                    StrokeStartLineCap="Round"
+                    StrokeThickness="1" />
+                <Path
+                    Data="M 92,33 C 104,33 118,39 124,56"
+                    Stroke="{StaticResource DaubnerHairLightBrush}"
+                    StrokeEndLineCap="Round"
+                    StrokeStartLineCap="Round"
+                    StrokeThickness="1.8" />
+                <Path
+                    Data="M 84,38 C 78,46 75,55 74,63"
+                    Stroke="{StaticResource DaubnerHairLightBrush}"
+                    StrokeEndLineCap="Round"
+                    StrokeStartLineCap="Round"
+                    StrokeThickness="1.4" />
+                <Path
+                    Data="M 66,52 C 63,62 63,72 64,84"
+                    Stroke="{StaticResource DaubnerHairLightBrush}"
+                    StrokeEndLineCap="Round"
+                    StrokeStartLineCap="Round"
+                    StrokeThickness="1.4" />
+                <Path
+                    Data="M 134,52 C 137,62 137,72 136,84"
+                    Stroke="{StaticResource DaubnerHairLightBrush}"
+                    StrokeEndLineCap="Round"
+                    StrokeStartLineCap="Round"
+                    StrokeThickness="1.4" />
+
+                <!--  Augenbrauen: dunkel, leicht geschwungen, y ~ 50..55  -->
+                <Path
+                    Data="M 80,54.5 C 84,50.2 91,50 95,52.4"
+                    Stroke="{StaticResource DaubnerFeatureBrush}"
+                    StrokeEndLineCap="Round"
+                    StrokeStartLineCap="Round"
+                    StrokeThickness="2.2" />
+                <Path
+                    Data="M 105,52.4 C 109,50 116,50.2 120,54.5"
+                    Stroke="{StaticResource DaubnerFeatureBrush}"
+                    StrokeEndLineCap="Round"
+                    StrokeStartLineCap="Round"
+                    StrokeThickness="2.2" />
+
+                <!--
+                    Augen (Mittelpunkte 88,62 und 112,62): Das Blinzeln staucht diese Gruppe
+                    ueber ScaleY um die Augenlinie y = 62. Die Oberlidlinien bleiben stehen.
+                -->
+                <Canvas Width="200" Height="200">
+                    <Canvas.RenderTransform>
+                        <ScaleTransform
+                            x:Name="EyeBlink"
+                            CenterX="100"
+                            CenterY="62"
+                            ScaleY="1" />
+                    </Canvas.RenderTransform>
+                    <!--  Augaepfel  -->
+                    <Path Data="M 82,62 C 85,58.4 91,58.4 94,62 C 91,65.2 85,65.2 82,62 Z" Fill="#FBF8F4" />
+                    <Path Data="M 106,62 C 109,58.4 115,58.4 118,62 C 115,65.2 109,65.2 106,62 Z" Fill="#FBF8F4" />
+                    <!--  Iris, Pupille, Lichtpunkt  -->
+                    <Ellipse
+                        Canvas.Left="85.1"
+                        Canvas.Top="58.9"
+                        Width="5.8"
+                        Height="5.8"
+                        Fill="#3B2416" />
+                    <Ellipse
+                        Canvas.Left="109.1"
+                        Canvas.Top="58.9"
+                        Width="5.8"
+                        Height="5.8"
+                        Fill="#3B2416" />
+                    <Ellipse
+                        Canvas.Left="86.6"
+                        Canvas.Top="60.4"
+                        Width="2.8"
+                        Height="2.8"
+                        Fill="#120A06" />
+                    <Ellipse
+                        Canvas.Left="110.6"
+                        Canvas.Top="60.4"
+                        Width="2.8"
+                        Height="2.8"
+                        Fill="#120A06" />
+                    <Ellipse
+                        Canvas.Left="88.2"
+                        Canvas.Top="59.5"
+                        Width="1.4"
+                        Height="1.4"
+                        Fill="White" />
+                    <Ellipse
+                        Canvas.Left="112.2"
+                        Canvas.Top="59.5"
+                        Width="1.4"
+                        Height="1.4"
+                        Fill="White" />
+                </Canvas>
+                <!--  Oberlid / Wimpernlinie  -->
+                <Path
+                    Data="M 81.4,62.4 C 85,57.4 91,57.4 94.6,62"
+                    Stroke="#2A1B14"
+                    StrokeEndLineCap="Round"
+                    StrokeStartLineCap="Round"
+                    StrokeThickness="1.5" />
+                <Path
+                    Data="M 105.4,62 C 109,57.4 115,57.4 118.6,62.4"
+                    Stroke="#2A1B14"
+                    StrokeEndLineCap="Round"
+                    StrokeStartLineCap="Round"
+                    StrokeThickness="1.5" />
+
+                <!--  Schmale Nase: Schattenlinie am Nasenruecken, Nasenfluegel/-spitze y ~ 73..77  -->
+                <Path
+                    Data="M 98,58 C 97.6,64 96.6,69 95.4,73"
+                    Stroke="#B8D2A07F"
+                    StrokeEndLineCap="Round"
+                    StrokeStartLineCap="Round"
+                    StrokeThickness="1.1" />
+                <Path
+                    Data="M 95.4,73.4 C 96.4,75.6 98.4,76.2 100,75.2 C 101.6,76.2 103.6,75.6 104.6,73.4"
+                    Stroke="#BE8666"
+                    StrokeEndLineCap="Round"
+                    StrokeStartLineCap="Round"
+                    StrokeThickness="1.1" />
+                <Ellipse
+                    Canvas.Left="96.9"
+                    Canvas.Top="75"
+                    Width="1.4"
+                    Height="1"
+                    Fill="#809B6650" />
+                <Ellipse
+                    Canvas.Left="101.7"
+                    Canvas.Top="75"
+                    Width="1.4"
+                    Height="1"
+                    Fill="#809B6650" />
+
+                <!--
+                    Mund: dezentes, freundliches Laecheln mit leicht geoeffneten Lippen
+                    (Mundwinkel 91,85.4 und 109,85.4, Lippen bis y ~ 90).
+                -->
+                <Path Data="M 91,85.4 C 94,83 97.5,83 100,84.4 C 102.5,83 106,83 109,85.4 C 105.5,90.4 94.5,90.4 91,85.4 Z" Fill="#C8665F" />
+                <Path Data="M 93,85.8 C 96.5,88.2 103.5,88.2 107,85.8 C 103.5,86.2 96.5,86.2 93,85.8 Z" Fill="#4A2326" />
+                <Path Data="M 94.2,86 C 97,87.2 103,87.2 105.8,86 C 103,86.4 97,86.4 94.2,86 Z" Fill="#FFFFFF" />
+                <Ellipse
+                    Canvas.Left="97"
+                    Canvas.Top="88"
+                    Width="6"
+                    Height="1.4"
+                    Fill="#59FFFFFF" />
+                <!--  Laechelfalten an den Mundwinkeln  -->
+                <Path
+                    Data="M 89.6,84.4 C 89,85.6 89.4,87 90.4,87.8"
+                    Stroke="#80B8786A"
+                    StrokeEndLineCap="Round"
+                    StrokeStartLineCap="Round"
+                    StrokeThickness="0.8" />
+                <Path
+                    Data="M 110.4,84.4 C 111,85.6 110.6,87 109.6,87.8"
+                    Stroke="#80B8786A"
+                    StrokeEndLineCap="Round"
+                    StrokeStartLineCap="Round"
+                    StrokeThickness="0.8" />
+            </Canvas>
+        </Canvas>
+    </Grid>
+</Window>

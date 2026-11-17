@@ -175,6 +175,9 @@
     <Compile Include="Views\NumberFormatterConverter.cs" />
     <Compile Include="Views\Ui.cs" />
     <Compile Include="Views\PenguinWindow.xaml.cs">
+    <Compile Include="Views\DaubnerWindow.xaml.cs">
+      <DependentUpon>DaubnerWindow.xaml</DependentUpon>
+    </Compile>
       <DependentUpon>PenguinWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ProjectControllingView.xaml.cs">
@@ -233,6 +236,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\PenguinWindow.xaml">
+    <Page Include="Views\DaubnerWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
