@@ -133,6 +133,7 @@
                                 <ColumnDefinition Width="2*" />
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
                             <TextBox local:Ui.Placeholder="Projektname" Text="{Binding NewProjektname, UpdateSourceTrigger=PropertyChanged}" />
@@ -146,14 +147,33 @@
                                 Margin="10,0,0,0"
                                 local:Ui.Placeholder="Kostenträger"
                                 Text="{Binding NewKostentraeger, UpdateSourceTrigger=PropertyChanged}" />
-                            <CheckBox
+                            <StackPanel
                                 Grid.Column="3"
+                                Margin="16,0,0,0"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                                <TextBlock
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Style="{StaticResource FormLabel}"
+                                    Text="Aufrunden pro Buchung" />
+                                <ComboBox
+                                    Width="110"
+                                    AutomationProperties.Name="Aufrunden pro Buchung"
+                                    DisplayMemberPath="Label"
+                                    ItemsSource="{Binding RoundingChoices}"
+                                    SelectedValue="{Binding NewRundungMinuten}"
+                                    SelectedValuePath="Minutes"
+                                    ToolTip="Jede Buchung dieses Projekts wird in der SAP-Verrechnung auf die nächste angefangene Einheit aufgerundet (bei 15 Minuten: 2 Min → 15 Min, 17 Min → 30 Min)." />
+                            </StackPanel>
+                            <CheckBox
+                                Grid.Column="4"
                                 Margin="16,0"
                                 VerticalAlignment="Center"
                                 Content="Extern (vom Kunden bezahlt)"
                                 IsChecked="{Binding NewIstExtern}"
                                 ToolTip="Vom Kunden bezahlt. Externe Zeit deckt parallele interne Zeit in der SAP-Verrechnung ab." />
-                            <StackPanel Grid.Column="4" Orientation="Horizontal">
+                            <StackPanel Grid.Column="5" Orientation="Horizontal">
                                 <Button
                                     local:Ui.Glyph="&#xE710;"
                                     Command="{Binding AddProjectCommand}"
@@ -189,6 +209,7 @@
                                 <ColumnDefinition Width="2*" />
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
                             <TextBox local:Ui.Placeholder="Projektname" Text="{Binding EditProjektname, UpdateSourceTrigger=PropertyChanged}" />
@@ -202,14 +223,33 @@
                                 Margin="10,0,0,0"
                                 local:Ui.Placeholder="Kostenträger"
                                 Text="{Binding EditKostentraeger, UpdateSourceTrigger=PropertyChanged}" />
-                            <CheckBox
+                            <StackPanel
                                 Grid.Column="3"
+                                Margin="16,0,0,0"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                                <TextBlock
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Style="{StaticResource FormLabel}"
+                                    Text="Aufrunden pro Buchung" />
+                                <ComboBox
+                                    Width="110"
+                                    AutomationProperties.Name="Aufrunden pro Buchung"
+                                    DisplayMemberPath="Label"
+                                    ItemsSource="{Binding RoundingChoices}"
+                                    SelectedValue="{Binding EditRundungMinuten}"
+                                    SelectedValuePath="Minutes"
+                                    ToolTip="Jede Buchung dieses Projekts wird in der SAP-Verrechnung auf die nächste angefangene Einheit aufgerundet (bei 15 Minuten: 2 Min → 15 Min, 17 Min → 30 Min)." />
+                            </StackPanel>
+                            <CheckBox
+                                Grid.Column="4"
                                 Margin="16,0"
                                 VerticalAlignment="Center"
                                 Content="Extern (vom Kunden bezahlt)"
                                 IsChecked="{Binding EditIstExtern}"
                                 ToolTip="Vom Kunden bezahlt. Externe Zeit deckt parallele interne Zeit in der SAP-Verrechnung ab." />
-                            <StackPanel Grid.Column="4" Orientation="Horizontal">
+                            <StackPanel Grid.Column="5" Orientation="Horizontal">
                                 <Button
                                     local:Ui.Glyph="&#xE74E;"
                                     Command="{Binding SaveEditProjectCommand}"
@@ -273,6 +313,18 @@
                                             Foreground="{DynamicResource Theme.TextMuted}"
                                             Text="{Binding TypText}" />
                                     </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn
+                            Width="*"
+                            Header="Rundung"
+                            SortMemberPath="RundungMinuten">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock
+                                        Style="{StaticResource Text.Muted}"
+                                        Text="{Binding RundungText}" />
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
