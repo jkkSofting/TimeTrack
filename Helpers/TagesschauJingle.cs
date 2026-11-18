@@ -7,7 +7,7 @@ using System.Text;
 namespace Zeitmanagement.Helpers
 {
     /// <summary>
-    /// A short synthesized brass-style fanfare in D major. The melody is generated at runtime
+    /// A short synthesized brass-style fanfare in G minor. The melody is generated at runtime
     /// (additive synthesis, 16-bit mono PCM WAV in memory), so no audio asset is shipped.
     /// </summary>
     internal sealed class TagesschauJingle : IDisposable
@@ -17,8 +17,7 @@ namespace Zeitmanagement.Helpers
         private const int BitsPerSample = 16;
         private const int BytesPerSample = BitsPerSample / 8;
 
-        private const double Beat = 0.45;              // seconds per beat
-        private const double FinalChordSeconds = 3.0;  // ring-out of the closing chord
+        private const double Beat = 0.7;               // seconds per beat
         private const double PeakAmplitude = 0.6;      // normalization target, avoids clipping
 
         // Attack and release per note, in seconds, to avoid clicks at note boundaries.
@@ -44,17 +43,12 @@ namespace Zeitmanagement.Helpers
             }
         }
 
-        // Pitch names in Hz (equal temperament).
-        private const double A3 = 220.00;
-        private const double D3 = 146.83;
-        private const double D4 = 293.66;
-        private const double Fis4 = 369.99;
+        // Pitch names in Hz (equal temperament; the number is the octave, C4 = middle C).
         private const double G4 = 392.00;
-        private const double A4 = 440.00;
+        private const double C5 = 523.25;
         private const double D5 = 587.33;
-        private const double E5 = 659.25;
-        private const double Fis5 = 739.99;
-        private const double A5 = 880.00;
+        private const double F5 = 698.46;
+        private const double G5 = 783.99;
 
         // Start and length are given in beats and converted to seconds.
         private static Note N(double frequency, double startBeat, double lengthBeats)
@@ -62,22 +56,15 @@ namespace Zeitmanagement.Helpers
             return new Note(frequency, startBeat * Beat, lengthBeats * Beat);
         }
 
+        // 4/4, G minor (two flats): d'' - g' - d'' - c'' - f'' - g''
         private static readonly Note[] Melody =
         {
-            // D major: repeated dotted-rhythm call, then a rising fifth
-            N(D5, 0.0, 0.5), N(D5, 0.5, 0.5), N(D5, 1.0, 0.5), N(A4, 1.5, 1.5),
-            // G major
-            N(G4, 3.0, 0.5), N(G4, 3.5, 0.5), N(G4, 4.0, 0.5), N(D5, 4.5, 1.5),
-            // A major
-            N(A4, 6.0, 0.5), N(A4, 6.5, 0.5), N(A4, 7.0, 0.5), N(E5, 7.5, 1.5),
-            // back to D major
-            N(D5, 9.0, 0.5), N(Fis5, 9.5, 0.5), N(A5, 10.0, 0.5), N(D5, 10.5, 1.5),
-            // closing D-major chord: D3, A3, D4, F#4, A4
-            new Note(D3, 12.0 * Beat, FinalChordSeconds),
-            new Note(A3, 12.0 * Beat, FinalChordSeconds),
-            new Note(D4, 12.0 * Beat, FinalChordSeconds),
-            new Note(Fis4, 12.0 * Beat, FinalChordSeconds),
-            new Note(A4, 12.0 * Beat, FinalChordSeconds),
+            N(D5, 0.0, 2.0),  // half note
+            N(G4, 2.0, 3.0),  // half note tied to a quarter note across the barline
+            N(D5, 5.0, 1.0),  // quarter notes
+            N(C5, 6.0, 1.0),
+            N(F5, 7.0, 1.0),
+            N(G5, 8.0, 4.0),  // whole note
         };
 
         private static readonly double MelodyDuration = CalculateDuration(Melody);
