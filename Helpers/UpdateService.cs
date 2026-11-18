@@ -92,7 +92,13 @@ namespace Zeitmanagement.Helpers
                 Arguments = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /LANG=german",
                 UseShellExecute = true
             };
+
+            // Start the installer first: if the user declines the UAC prompt this throws and the
+            // app keeps running untouched. Directly afterwards - before the installer gets to its
+            // "close applications" step, which can end this process without running OnExit -
+            // the running Quick Switch bookings are saved.
             Process.Start(startInfo);
+            App.SaveBeforeExit();
             Application.Current.Shutdown();
         }
     }

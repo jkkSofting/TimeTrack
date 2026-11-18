@@ -19,6 +19,11 @@ namespace Zeitmanagement
     {
         private TrayNotificationService _trayService;
         private PenguinEasterEgg _penguin;
+        private DaubnerEasterEgg _daubner;
+
+        // Kept on its own: Application.MainWindow can already be null by the time OnExit runs
+        // (e.g. after the main window was closed), which used to skip saving the running bookings.
+        private static MainViewModel _mainViewModel;
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -43,6 +48,12 @@ namespace Zeitmanagement
             mainWindow.Show();
 
             var mainViewModel = (MainViewModel)mainWindow.DataContext;
+            _mainViewModel = mainViewModel;
+
+            // Windows logoff/shutdown/restart and the installer's Restart Manager ask the app to
+            // close via WM_QUERYENDSESSION. The process can be ended right after WM_ENDSESSION
+            // returns - possibly before OnExit ever runs - so persist here, synchronously.
+            SessionEnding += (s, args) => SaveBeforeExit();
 
             if (startupMode == StartupMode.NormalWithFloating || startupMode == StartupMode.MinimizedWithFloating)
             {
@@ -93,21 +104,50 @@ namespace Zeitmanagement
 
             _penguin = new PenguinEasterEgg();
             _penguin.Start();
+
+            _daubner = new DaubnerEasterEgg();
+            _daubner.Start();
         }
 
         protected override void OnExit(ExitEventArgs e)
         {
             // First: running Quick Switch bookings are written now, so the flush below includes them.
-            (MainWindow?.DataContext as MainViewModel)?.QuickSelectViewModel?.SaveRunningBookings();
+            SaveBeforeExit();
 
             _penguin?.Dispose();
+            _daubner?.Dispose();
             _trayService?.Dispose();
             ThemeManager.Shutdown();
-            (MainWindow?.DataContext as MainViewModel)?.FlushPending();
-            (MainWindow?.DataContext as MainViewModel)?.QuickSelectViewModel?.Shutdown();
-            (MainWindow?.DataContext as MainViewModel)?.Plugins?.ShutdownAll();
+            _mainViewModel?.QuickSelectViewModel?.Shutdown();
+            _mainViewModel?.Plugins?.ShutdownAll();
 
             base.OnExit(e);
+        }
+
+        /// <summary>
+        /// Writes everything that must not be lost when the process ends: the running Quick
+        /// Switch segments (they become paused) and pending note edits. Safe to call repeatedly
+        /// and from several exit paths (session end, update install, normal exit) - once the
+        /// slots are saved, further calls write nothing. Never throws.
+        /// </summary>
+        public static void SaveBeforeExit()
+        {
+            try
+            {
+                _mainViewModel?.QuickSelectViewModel?.SaveRunningBookings();
+            }
+            catch (Exception)
+            {
+                // Exit path: the flush below must still run.
+            }
+
+            try
+            {
+                _mainViewModel?.FlushPending();
+            }
+            catch (Exception)
+            {
+            }
         }
 
         /// <summary>

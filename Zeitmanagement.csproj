@@ -116,6 +116,8 @@
     <Compile Include="Helpers\Plugins\PluginLoader.cs" />
     <Compile Include="Helpers\Plugins\PluginHost.cs" />
     <Compile Include="Helpers\Plugins\PluginManager.cs" />
+    <Compile Include="Helpers\DaubnerEasterEgg.cs" />
+    <Compile Include="Helpers\DaubnerSchedule.cs" />
     <Compile Include="Helpers\OverlayWindowHelper.cs" />
     <Compile Include="Helpers\PenguinEasterEgg.cs" />
     <Compile Include="Helpers\PresentationDetector.cs" />
@@ -124,7 +126,10 @@
     <Compile Include="Helpers\SafeFile.cs" />
     <Compile Include="Helpers\SapBookingCalculator.cs" />
     <Compile Include="Helpers\SessionActivityMonitor.cs" />
+    <Compile Include="Helpers\SessionLockState.cs" />
     <Compile Include="Helpers\StartupMode.cs" />
+    <Compile Include="Helpers\SystemAudio.cs" />
+    <Compile Include="Helpers\TagesschauJingle.cs" />
     <Compile Include="Helpers\ThemeManager.cs" />
     <Compile Include="Helpers\TrayNotificationService.cs" />
     <Compile Include="Helpers\UpdateChecker.cs" />
@@ -170,6 +175,9 @@
     <Compile Include="Views\XyChart.cs" />
     <Compile Include="Views\NumberFormatterConverter.cs" />
     <Compile Include="Views\Ui.cs" />
+    <Compile Include="Views\DaubnerWindow.xaml.cs">
+      <DependentUpon>DaubnerWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\PenguinWindow.xaml.cs">
       <DependentUpon>PenguinWindow.xaml</DependentUpon>
     </Compile>
@@ -225,6 +233,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\HelpView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\DaubnerWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

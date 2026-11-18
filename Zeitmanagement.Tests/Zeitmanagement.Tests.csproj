@@ -57,6 +57,7 @@
     <Compile Include="..\Helpers\ControllingImportService.cs" Link="Linked\ControllingImportService.cs" />
     <Compile Include="..\Helpers\ControllingOverview.cs" Link="Linked\ControllingOverview.cs" />
     <Compile Include="..\Helpers\CsvExporter.cs" Link="Linked\CsvExporter.cs" />
+    <Compile Include="..\Helpers\DaubnerSchedule.cs" Link="Linked\DaubnerSchedule.cs" />
     <Compile Include="..\Helpers\ExportFileName.cs" Link="Linked\ExportFileName.cs" />
     <Compile Include="..\Helpers\ExportModels.cs" Link="Linked\ExportModels.cs" />
     <Compile Include="..\Helpers\ExportPrefs.cs" Link="Linked\ExportPrefs.cs" />
@@ -68,6 +69,9 @@
     <Compile Include="..\Helpers\SapBookingCalculator.cs" Link="Linked\SapBookingCalculator.cs" />
     <Compile Include="..\Helpers\PdfReportLayout.cs" Link="Linked\PdfReportLayout.cs" />
     <Compile Include="..\Helpers\ProjectControllingExcelReader.cs" Link="Linked\ProjectControllingExcelReader.cs" />
+    <Compile Include="..\Helpers\SessionLockState.cs" Link="Linked\SessionLockState.cs" />
+    <Compile Include="..\Helpers\SystemAudio.cs" Link="Linked\SystemAudio.cs" />
+    <Compile Include="..\Helpers\TagesschauJingle.cs" Link="Linked\TagesschauJingle.cs" />
   </ItemGroup>
 
   <ItemGroup>

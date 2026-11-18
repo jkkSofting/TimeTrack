@@ -77,6 +77,8 @@ namespace Zeitmanagement.Helpers
             {
                 if (!Properties.Settings.Default.PenguinEnabled || PresentationDetector.IsPresenting())
                     ScheduleNext();
+                else if (DaubnerEasterEgg.IsActiveWindow(DateTime.Now))
+                    ScheduleNext(); // the 20:00 news anchor takes the stage instead: no penguin around that time
                 else if (_window != null)
                     ScheduleNext(); // a penguin called up for practice is still here: no second one at the same time
                 else
@@ -121,7 +123,7 @@ namespace Zeitmanagement.Helpers
             }
         }
 
-        private static Forms.Screen MainWindowScreen()
+        internal static Forms.Screen MainWindowScreen()
         {
             var mainWindow = System.Windows.Application.Current?.MainWindow;
             if (mainWindow == null)
