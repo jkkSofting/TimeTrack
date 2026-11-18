@@ -8,9 +8,10 @@ using Zeitmanagement.Views;
 namespace Zeitmanagement.Helpers
 {
     /// <summary>
-    /// Easter egg scheduler: when the app is running at 20:00 local time, a drawn news anchor
+    /// Easter egg scheduler: when the app is running at one of the scheduled local times (see
+    /// <see cref="DaubnerSchedule.TimesOfDay"/>, currently 08:00 and 20:00), a drawn news anchor
     /// appears on the taskbar of the main window's monitor instead of the penguin (see
-    /// <see cref="DaubnerWindow"/>). She comes at most once a day and only if the moment is
+    /// <see cref="DaubnerWindow"/>). She comes at most once per scheduled time and only if the moment is
     /// right: a missed time (standby, locked session, presenting, ...) is skipped, never made up
     /// for. She replaces the penguin, so whoever switched the penguin off does not get her either.
     /// If the sound is on, a short jingle plays while she is up. Everything here is purely
@@ -26,7 +27,7 @@ namespace Zeitmanagement.Helpers
 
         private readonly DispatcherTimer _timer = new DispatcherTimer();
         private DateTime _scheduled;
-        private DateTime _lastShownDate = DateTime.MinValue;
+        private DateTime _lastShownScheduled = DateTime.MinValue;
         private DaubnerWindow _window;
         private TagesschauJingle _jingle;
         private bool _disposed;
@@ -48,12 +49,12 @@ namespace Zeitmanagement.Helpers
             if (Current?._window != null)
                 return true;
 
-            return DaubnerSchedule.IsWithinWindow(now, now.Date + DaubnerSchedule.TimeOfDay);
+            return DaubnerSchedule.IsWithinAnyWindow(now);
         }
 
         public void Start() => ScheduleNext();
 
-        /// <summary>Arms the timer for the next 20:00 (calculated from the current clock, not accumulated).</summary>
+        /// <summary>Arms the timer for the next scheduled time (calculated from the current clock, not accumulated).</summary>
         private void ScheduleNext()
         {
             if (_disposed)
@@ -125,7 +126,7 @@ namespace Zeitmanagement.Helpers
                         Properties.Settings.Default.PenguinEnabled,
                         SessionLockState.IsLocked(),
                         PresentationDetector.IsPresenting(),
-                        _lastShownDate == now.Date);
+                        _lastShownScheduled == _scheduled);
 
                 if (show)
                     ShowAnchor(now);
@@ -137,7 +138,7 @@ namespace Zeitmanagement.Helpers
             }
             finally
             {
-                // Whether she came or not: the next chance is tomorrow.
+                // Whether she came or not: the next chance is the next scheduled time.
                 try
                 {
                     ScheduleNext();
@@ -158,7 +159,7 @@ namespace Zeitmanagement.Helpers
             var holdSeconds = Math.Max(MinHoldSeconds, TagesschauJingle.DurationSeconds);
             var screen = PenguinEasterEgg.MainWindowScreen();
 
-            _lastShownDate = now.Date;
+            _lastShownScheduled = _scheduled;
             _window = new DaubnerWindow(screen.WorkingArea, holdSeconds);
             _window.Closed += (s, e) =>
             {

@@ -8,7 +8,7 @@ using Drawing = System.Drawing;
 namespace Zeitmanagement.Views
 {
     /// <summary>
-    /// Easter egg (20:00, see <see cref="DaubnerEasterEgg"/>): a drawn news anchor who rises from
+    /// Easter egg (scheduled times, see <see cref="DaubnerEasterEgg"/>): a drawn news anchor who rises from
     /// behind the taskbar, stays for a while with gentle breathing, a slight nod and the occasional
     /// blink, and sinks back down. Like the penguin, the window sits directly on top of the taskbar
     /// edge and clips the figure at its bottom border - the taskbar is the news desk her hands rest on.

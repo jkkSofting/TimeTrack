@@ -3,14 +3,17 @@ using System;
 namespace Zeitmanagement.Helpers
 {
     /// <summary>
-    /// Pure decision logic of the 20:00 easter egg (see <see cref="DaubnerEasterEgg"/>): when is
+    /// Pure decision logic of the news anchor easter egg (08:00 and 20:00) (see <see cref="DaubnerEasterEgg"/>): when is
     /// the next appearance and may it happen right now. Free of any UI or system access so it can
     /// be tested.
     /// </summary>
     internal static class DaubnerSchedule
     {
-        /// <summary>Local time of the appearance.</summary>
-        public static readonly TimeSpan TimeOfDay = TimeSpan.FromHours(20);
+        /// <summary>
+        /// Local times of the appearance, ascending. To add another time, just add an entry here;
+        /// everything else (scheduling, penguin keeping out of the way) follows from this list.
+        /// </summary>
+        public static readonly TimeSpan[] TimesOfDay = { TimeSpan.FromHours(8), TimeSpan.FromHours(20) };
 
         /// <summary>
         /// How long after the scheduled time an appearance is still allowed. Later (after standby,
@@ -18,14 +21,35 @@ namespace Zeitmanagement.Helpers
         /// </summary>
         public static readonly TimeSpan Tolerance = TimeSpan.FromSeconds(90);
 
-        /// <summary>The next 20:00:00 local time: today if <paramref name="now"/> is before it, otherwise tomorrow.</summary>
+        /// <summary>
+        /// The next scheduled time (strictly after <paramref name="now"/>): the next one still
+        /// ahead today, otherwise the first one tomorrow.
+        /// </summary>
         public static DateTime NextOccurrence(DateTime now)
         {
-            var today = now.Date + TimeOfDay;
-            return now < today ? today : today.AddDays(1);
+            foreach (var time in TimesOfDay)
+            {
+                var candidate = now.Date + time;
+                if (now < candidate)
+                    return candidate;
+            }
+
+            return now.Date.AddDays(1) + TimesOfDay[0];
         }
 
-        /// <summary>True from 20:00:00 up to and including the tolerance after it.</summary>
+        /// <summary>True if <paramref name="now"/> is within the window of any of today's scheduled times.</summary>
+        public static bool IsWithinAnyWindow(DateTime now)
+        {
+            foreach (var time in TimesOfDay)
+            {
+                if (IsWithinWindow(now, now.Date + time))
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>True from the scheduled time up to and including the tolerance after it.</summary>
         public static bool IsWithinWindow(DateTime now, DateTime scheduled)
         {
             var late = now - scheduled;
@@ -35,14 +59,14 @@ namespace Zeitmanagement.Helpers
         /// <summary>
         /// Whether the anchor may appear now. Only the penguin fans get her (she replaces the
         /// penguin), and never while the session is locked, the user is presenting, she already
-        /// came today, or the scheduled time is not (just) now.
+        /// came for this scheduled time, or the scheduled time is not (just) now.
         /// </summary>
-        public static bool ShouldShow(DateTime now, DateTime scheduled, bool penguinEnabled, bool locked, bool presenting, bool alreadyShownToday)
+        public static bool ShouldShow(DateTime now, DateTime scheduled, bool penguinEnabled, bool locked, bool presenting, bool alreadyShown)
         {
             return penguinEnabled
                 && !locked
                 && !presenting
-                && !alreadyShownToday
+                && !alreadyShown
                 && IsWithinWindow(now, scheduled);
         }
     }
