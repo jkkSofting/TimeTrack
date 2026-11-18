@@ -3,7 +3,7 @@ using System;
 namespace Zeitmanagement.Helpers
 {
     /// <summary>
-    /// Pure decision logic of the news anchor easter egg (08:00 and 20:00) (see <see cref="DaubnerEasterEgg"/>): when is
+    /// Pure decision logic of the 20:00 news anchor easter egg (see <see cref="DaubnerEasterEgg"/>): when is
     /// the next appearance and may it happen right now. Free of any UI or system access so it can
     /// be tested.
     /// </summary>
@@ -13,7 +13,7 @@ namespace Zeitmanagement.Helpers
         /// Local times of the appearance, ascending. To add another time, just add an entry here;
         /// everything else (scheduling, penguin keeping out of the way) follows from this list.
         /// </summary>
-        public static readonly TimeSpan[] TimesOfDay = { TimeSpan.FromHours(8), TimeSpan.FromHours(20) };
+        public static readonly TimeSpan[] TimesOfDay = { TimeSpan.FromHours(20) };
 
         /// <summary>
         /// How long after the scheduled time an appearance is still allowed. Later (after standby,

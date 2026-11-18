@@ -9,7 +9,7 @@ namespace Zeitmanagement.Helpers
 {
     /// <summary>
     /// Easter egg scheduler: when the app is running at one of the scheduled local times (see
-    /// <see cref="DaubnerSchedule.TimesOfDay"/>, currently 08:00 and 20:00), a drawn news anchor
+    /// <see cref="DaubnerSchedule.TimesOfDay"/>, currently 20:00), a drawn news anchor
     /// appears on the taskbar of the main window's monitor instead of the penguin (see
     /// <see cref="DaubnerWindow"/>). She comes at most once per scheduled time and only if the moment is
     /// right: a missed time (standby, locked session, presenting, ...) is skipped, never made up
