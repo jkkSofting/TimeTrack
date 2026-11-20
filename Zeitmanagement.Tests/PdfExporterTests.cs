@@ -154,6 +154,41 @@ namespace Zeitmanagement.Tests
         // ---------- Layout ----------
 
         [Fact]
+        public void Rounded_up_entries_show_the_real_duration_and_the_rounding_in_summary_and_project_table()
+        {
+            var projects = new[]
+            {
+                new TimeTracker.ProjectRow { Projektname = "Projekt Alpha", Kunde = "Muster GmbH", Kostentraeger = "KST-1", IstExtern = true, RundungMinuten = 15 },
+                new TimeTracker.ProjectRow { Projektname = "Projekt Beta", Kunde = "Muster GmbH", Kostentraeger = "KST-2", IstExtern = true }
+            };
+            var entries = new[]
+            {
+                E(1, "2026-10-05", "09:00", "09:25", "Projekt Alpha"),   // 25 -> 30
+                E(2, "2026-10-05", "10:00", "11:00", "Projekt Beta")
+            };
+
+            var body = BodyText(PdfReportLayout.Build(ExportReportBuilder.Build(entries, projects, Options()), Meta()));
+
+            Assert.Contains("real 0:25 · +0:05", body);
+            Assert.Contains("davon +0:05 aufgerundet (Rundung 15 min)", body);
+            Assert.Contains("Davon aufgerundet (Rundung je Projekt): +0,08 h in 1 Buchung", body);
+            Assert.Contains("Enthält Aufrundungen je Projekt", body);
+        }
+
+        [Fact]
+        public void Without_project_rounding_the_document_shows_no_rounding_marks()
+        {
+            var projects = new[] { new TimeTracker.ProjectRow { Projektname = "Projekt Alpha", Kunde = "Muster GmbH", Kostentraeger = "KST-1", RundungMinuten = 15 } };
+            var options = Options();
+            options.ApplyProjectRounding = false;
+
+            var body = BodyText(PdfReportLayout.Build(ExportReportBuilder.Build(new[] { E(1, "2026-10-05", "09:00", "09:25", "Projekt Alpha") }, projects, options), Meta()));
+
+            Assert.DoesNotContain("real 0:25", body);
+            Assert.DoesNotContain("aufgerundet", body);
+        }
+
+        [Fact]
         public void Document_has_title_period_parties_and_facts()
         {
             var document = PdfReportLayout.Build(Report(Options(), SomeEntries()), Meta());

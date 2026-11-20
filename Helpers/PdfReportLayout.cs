@@ -253,10 +253,27 @@ namespace Zeitmanagement.Helpers
                 row.Cells[i].Borders.Left.Width = 3;
                 row.Cells[i].Borders.Left.Color = White;
             }
+            if (report.RoundedUpTotalMinutes > 0)
+            {
+                var extra = table.AddRow();
+                extra.Shading.Color = Soft;
+                extra.Cells[0].MergeRight = 3;
+                var text = extra.Cells[0].AddParagraph();
+                text.Format.Font.Size = 8;
+                text.Format.Font.Color = Muted;
+                text.AddText("Davon aufgerundet (Rundung je Projekt): +" + Hours(report.RoundedUpTotalMinutes, options.DurationFormat) +
+                             " in " + ExportFormat.Plural(report.RoundedUpCount, "Buchung", "Buchungen"));
+            }
             table.TopPadding = 6;
             table.BottomPadding = 6;
             table.LeftPadding = 8;
             Spacer(section, 12);
+        }
+
+        /// <summary>Eine Dauer mit Einheit "h" in der Form, die die Dauer-Option vorgibt (Stunden:Minuten, sonst Dezimal).</summary>
+        private static string Hours(int minutes, ExportDurationFormat format)
+        {
+            return (format == ExportDurationFormat.Clock ? ExportFormat.Clock(minutes) : ExportFormat.Decimal(minutes)) + " h";
         }
 
         private static void Kpi(Cell cell, string label, string value, string secondary)
@@ -300,6 +317,13 @@ namespace Zeitmanagement.Helpers
                 row.Borders.Bottom.Width = 0.5;
                 row.Borders.Bottom.Color = Hair;
                 row.Cells[0].AddParagraph(Clean(p.Project));
+                if (p.RoundedUpMinutes > 0)
+                {
+                    var roundedNote = row.Cells[0].AddParagraph("davon +" + ExportFormat.Clock(p.RoundedUpMinutes) + " aufgerundet (Rundung " +
+                                                                p.RoundingUnitMinutes.ToString(CultureInfo.InvariantCulture) + " min)");
+                    roundedNote.Format.Font.Size = 7;
+                    roundedNote.Format.Font.Color = Muted;
+                }
                 row.Cells[1].AddParagraph(Clean(p.Carrier));
                 Right(row.Cells[2].AddParagraph(p.Count.ToString(CultureInfo.InvariantCulture)));
                 Right(row.Cells[3].AddParagraph(ExportFormat.Duration(p.Minutes, options.DurationFormat)));
@@ -345,7 +369,7 @@ namespace Zeitmanagement.Helpers
             {
                 Key = "dur",
                 Header = options.DurationFormat == ExportDurationFormat.Clock ? "Dauer (h:mm)" : "Dauer (h)",
-                Mm = options.DurationFormat == ExportDurationFormat.Both ? 30 : 22,
+                Mm = options.DurationFormat == ExportDurationFormat.Both ? 30 : report.RoundedUpCount > 0 ? 28 : 22,
                 Right = true
             });
             if (report.ShowProjectColumn && !byProject) columns.Add(new Col { Key = "project", Header = "Projekt", Mm = 32 });
@@ -442,6 +466,14 @@ namespace Zeitmanagement.Helpers
                     break;
                 case "dur":
                     Right(cell.AddParagraph(ExportFormat.Duration(line.Minutes, options.DurationFormat)));
+                    if (line.RoundedUpMinutes > 0)
+                    {
+                        // Die reale Dauer und der Zusatz der Rundung je Projekt, gedämpft unter der Dauer.
+                        var real = cell.AddParagraph("real " + ExportFormat.Clock(line.RawMinutes) + " · +" + ExportFormat.Clock(line.RoundedUpMinutes));
+                        Right(real);
+                        real.Format.Font.Size = 7;
+                        real.Format.Font.Color = Muted;
+                    }
                     break;
                 case "project":
                     cell.AddParagraph(Clean(line.Project));

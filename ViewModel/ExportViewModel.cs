@@ -82,6 +82,7 @@ namespace Zeitmanagement.ViewModel
             _showCarrierColumn = prefs.ShowCarrierColumn;
             _showDaySubtotals = prefs.GetShowDaySubtotals();
             _showSummary = prefs.GetShowSummary();
+            _applyProjectRounding = prefs.GetApplyProjectRounding();
             _showClient = prefs.ShowClient;
             if (!string.IsNullOrWhiteSpace(prefs.Title)) _title = prefs.Title;
             _landscape = prefs.Landscape;
@@ -137,6 +138,7 @@ namespace Zeitmanagement.ViewModel
                 ShowCarrierColumn = _showCarrierColumn,
                 ShowDaySubtotals = _showDaySubtotals,
                 ShowSummary = _showSummary,
+                ApplyProjectRounding = _applyProjectRounding,
                 ShowClient = _showClient,
                 Title = _title,
                 Landscape = _landscape,
@@ -435,6 +437,9 @@ namespace Zeitmanagement.ViewModel
 
         private bool _showSummary = true;
         public bool ShowSummary { get => _showSummary; set { if (SetProperty(ref _showSummary, value)) Rebuild(); } }
+
+        private bool _applyProjectRounding = true;
+        public bool ApplyProjectRounding { get => _applyProjectRounding; set { if (SetProperty(ref _applyProjectRounding, value)) Rebuild(); } }
 
         public IReadOnlyList<ExportRoundingItem> RoundingChoices { get; }
         private ExportRoundingItem _selectedRounding;
@@ -816,6 +821,7 @@ namespace Zeitmanagement.ViewModel
                 Grouping = _grouping,
                 DurationFormat = _durationFormat,
                 RoundingMinutes = _selectedRounding.Minutes,
+                ApplyProjectRounding = _applyProjectRounding,
                 ShowTimes = _showTimes,
                 ShowProjectColumn = _alwaysShowProjectColumn ? true : (bool?)null,
                 ShowCarrierColumn = _showCarrierColumn,
@@ -842,7 +848,10 @@ namespace Zeitmanagement.ViewModel
             {
                 var flagged = new HashSet<int>(_report.Warnings.Where(w => w.Severity == ExportWarningSeverity.Warning).SelectMany(w => w.EntryIds));
                 PreviewRows = _report.Lines.Select(l => new ExportPreviewRow(l, options.DurationFormat, flagged.Contains(l.Id))).ToList();
-                Warnings = _report.Warnings.Select(w => new ExportWarningVM(w)).ToList();
+                // Die Hinweise im Dokument (Rundung, Auslassungen) stehen auch hier, als Information.
+                Warnings = _report.Warnings.Select(w => new ExportWarningVM(w))
+                    .Concat(_report.Notes.Select(n => new ExportWarningVM(n)))
+                    .ToList();
 
                 TotalText = ExportFormat.Decimal(_report.TotalMinutes) + " h";
                 EntryCountText = _report.EntryCount.ToString(CultureInfo.InvariantCulture);
@@ -1161,6 +1170,9 @@ namespace Zeitmanagement.ViewModel
             DurationText = ExportFormat.Duration(line.Minutes, format);
             Project = line.Project;
             Description = line.Description.Replace("\r\n", " ").Replace('\n', ' ').Replace('\r', ' ');
+            RoundingText = line.RoundedUpMinutes > 0
+                ? "real " + ExportFormat.Clock(line.RawMinutes) + " · +" + ExportFormat.Clock(line.RoundedUpMinutes)
+                : string.Empty;
             HasIssue = hasIssue;
         }
 
@@ -1169,6 +1181,8 @@ namespace Zeitmanagement.ViewModel
         public string DurationText { get; }
         public string Project { get; }
         public string Description { get; }
+        /// <summary>Bei einer Aufrundung je Projekt: die reale Dauer und der Zusatz, sonst leer.</summary>
+        public string RoundingText { get; }
         /// <summary>Die Buchung steht in einer Warnung (z. B. ohne Beschreibung) und wird hervorgehoben.</summary>
         public bool HasIssue { get; }
     }
@@ -1179,6 +1193,13 @@ namespace Zeitmanagement.ViewModel
         {
             Message = warning.Message;
             IsWarning = warning.Severity == ExportWarningSeverity.Warning;
+        }
+
+        /// <summary>Ein Hinweis aus dem Nachweis (keine Warnung).</summary>
+        public ExportWarningVM(string message)
+        {
+            Message = message;
+            IsWarning = false;
         }
 
         public string Message { get; }
