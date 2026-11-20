@@ -46,7 +46,7 @@ namespace Zeitmanagement.Helpers
 
             var delimiter = options.International ? ',' : ';';
             var culture = options.International ? CultureInfo.InvariantCulture : ExportFormat.German;
-            var columns = Columns(report.Options, options, culture);
+            var columns = Columns(report, options, culture);
 
             var sb = new StringBuilder();
             AppendRow(sb, columns.Select(c => c.Header), delimiter);
@@ -82,10 +82,12 @@ namespace Zeitmanagement.Helpers
             SafeFile.WriteAllBytes(path, ToBytes(Build(report, options)));
         }
 
-        private static List<Column> Columns(ExportOptions export, CsvOptions csv, CultureInfo culture)
+        private static List<Column> Columns(ExportReport report, CsvOptions csv, CultureInfo culture)
         {
             Func<int, string> hours = m => (m / 60.0).ToString("0.00", culture);
             Func<DateTime, string> date = d => csv.IsoDates ? ExportFormat.IsoDate(d) : ExportFormat.Date(d);
+            Func<int, string> minutes = m => m.ToString(CultureInfo.InvariantCulture);
+            var export = report.Options;
             var showTimes = export == null || export.ShowTimes;
 
             var columns = new List<Column>
@@ -100,7 +102,13 @@ namespace Zeitmanagement.Helpers
             }
             columns.Add(new Column { Header = "Dauer (h)", Value = l => hours(l.Minutes), Total = r => hours(r.TotalMinutes) });
             columns.Add(new Column { Header = "Dauer (h:mm)", Value = l => ExportFormat.Clock(l.Minutes), Total = r => ExportFormat.Clock(r.TotalMinutes) });
-            columns.Add(new Column { Header = "Minuten", Value = l => l.Minutes.ToString(CultureInfo.InvariantCulture), Total = r => r.TotalMinutes.ToString(CultureInfo.InvariantCulture) });
+            columns.Add(new Column { Header = "Minuten", Value = l => minutes(l.Minutes), Total = r => minutes(r.TotalMinutes) });
+            // Nur wenn es eine Aufrundung je Projekt gibt: Ohne sie bleibt das CSV wie bisher.
+            if (report.RoundedUpCount > 0)
+            {
+                columns.Add(new Column { Header = "Davon aufgerundet (min)", Value = l => minutes(l.RoundedUpMinutes), Total = r => minutes(r.RoundedUpTotalMinutes) });
+                columns.Add(new Column { Header = "Reale Dauer (min)", Value = l => minutes(l.RawMinutes), Total = r => minutes(r.RawTotalMinutes) });
+            }
             columns.Add(new Column { Header = "Projekt", Value = l => Neutralize(l.Project) });
             columns.Add(new Column { Header = "Kunde", Value = l => Neutralize(l.Customer) });
             columns.Add(new Column { Header = "Kostenträger", Value = l => Neutralize(l.Carrier) });

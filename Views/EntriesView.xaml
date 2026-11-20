@@ -100,6 +100,12 @@
                     Command="{Binding RefreshCommand}"
                     Style="{StaticResource Button.Icon}"
                     ToolTip="Aktualisieren" />
+                <CheckBox
+                    Margin="18,0,0,0"
+                    VerticalAlignment="Center"
+                    Content="Rundungen anzeigen"
+                    IsChecked="{Binding ShowRounding}"
+                    ToolTip="Zeigt zusätzlich die Aufrundung pro Projekt (siehe Projekte → Rundung) in der Stundenbuchung an. Einstellung wird gespeichert." />
             </StackPanel>
 
             <StackPanel VerticalAlignment="Center">
@@ -164,24 +170,19 @@
                 </StackPanel>
             </Border>
 
-            <!--  Gebuchtes Ende zzgl. Überschneidungen und fehlender Pause  -->
+            <!--  Durch die Rundung pro Projekt dazugekommene Zeit (nur mit Schalter „Rundungen anzeigen“)  -->
             <Border
-                Background="{DynamicResource Theme.SuccessSoft}"
+                Background="{DynamicResource Theme.AccentSoft}"
                 BorderBrush="Transparent"
                 Style="{StaticResource KpiPill}"
-                ToolTip="{Binding ActualDayEndToolTip}"
-                Visibility="{Binding HasWorkDay, Converter={StaticResource BoolToVis}}">
+                ToolTip="Durch die Rundung pro Projekt dazugekommene Zeit (wird im SAP so gebucht). Reale Zeiten bleiben unverändert."
+                Visibility="{Binding HasRoundingExtra, Converter={StaticResource BoolToVis}}">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Foreground="{DynamicResource Theme.Success}" Text="Tatsächliches Ende " />
+                    <TextBlock Foreground="{DynamicResource Theme.AccentSoftText}" Text="Gerundet " />
                     <TextBlock
                         FontWeight="SemiBold"
-                        Foreground="{DynamicResource Theme.Success}"
-                        Text="{Binding ActualDayEnd}" />
-                    <TextBlock
-                        Margin="6,0,0,0"
-                        Foreground="{DynamicResource Theme.Success}"
-                        Opacity="0.8"
-                        Text="{Binding ActualDayEndNote, StringFormat={}({0})}" />
+                        Foreground="{DynamicResource Theme.AccentSoftText}"
+                        Text="{Binding RoundingExtraText}" />
                 </StackPanel>
             </Border>
 

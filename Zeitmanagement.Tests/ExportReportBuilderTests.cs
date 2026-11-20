@@ -563,5 +563,100 @@ namespace Zeitmanagement.Tests
             Assert.Equal("05.10.2026", ExportFormat.Period(new DateTime(2026, 10, 5), new DateTime(2026, 10, 5)));
             Assert.Equal("01.10.2026 – 31.10.2026", ExportFormat.Period(new DateTime(2026, 10, 1), new DateTime(2026, 10, 31)));
         }
+
+        // ---------- Rundung je Projekt ----------
+
+        private static TimeTracker.ProjectRow Rounded(string name, int unit)
+        {
+            return new TimeTracker.ProjectRow { Projektname = name, Kunde = "Kunde 1", Kostentraeger = "KST-1", RundungMinuten = unit };
+        }
+
+        [Fact]
+        public void Project_rounding_rounds_each_entry_up_and_shows_the_difference()
+        {
+            var entries = new[] { E(1, "2026-10-05", "09:00", "09:25", "A") };   // 25 -> 30 bei 15 Minuten
+            var options = Options("2026-10-01", "2026-10-31");
+
+            var report = Build(entries, options, Rounded("A", 15));
+
+            var line = report.Lines.Single();
+            Assert.Equal(25, line.RawMinutes);
+            Assert.Equal(30, line.Minutes);
+            Assert.Equal(15, line.ProjectRoundingMinutes);
+            Assert.Equal(5, line.RoundedUpMinutes);
+            Assert.Equal(30, report.TotalMinutes);
+            Assert.Equal(25, report.RawTotalMinutes);
+            Assert.Equal(5, report.RoundedUpTotalMinutes);
+            Assert.Equal(1, report.RoundedUpCount);
+            Assert.Equal(5, report.Projects.Single().RoundedUpMinutes);
+            Assert.Equal(15, report.Projects.Single().RoundingUnitMinutes);
+            Assert.Contains(report.Notes, n => n.Contains("+0:05 in 1 Buchung") && n.Contains("Reale Summe: 0,42 h (0:25)"));
+        }
+
+        [Fact]
+        public void Entries_already_on_a_full_unit_and_projects_without_rounding_are_not_changed()
+        {
+            var entries = new[]
+            {
+                E(1, "2026-10-05", "09:00", "09:15", "A"),   // genau 15: nichts aufzurunden
+                E(2, "2026-10-05", "10:00", "10:25", "B")    // B ohne Rundung
+            };
+            var report = Build(entries, Options("2026-10-01", "2026-10-31"), Rounded("A", 15), Rounded("B", 0));
+
+            Assert.Equal(new[] { 15, 25 }, report.Lines.Select(l => l.Minutes).ToArray());
+            Assert.Equal(0, report.RoundedUpTotalMinutes);
+            Assert.Equal(0, report.RoundedUpCount);
+            Assert.DoesNotContain(report.Notes, n => n.Contains("Aufrundungen"));
+        }
+
+        [Fact]
+        public void Switching_the_project_rounding_off_keeps_the_real_durations()
+        {
+            var entries = new[] { E(1, "2026-10-05", "09:00", "09:25", "A") };
+            var options = Options("2026-10-01", "2026-10-31");
+            options.ApplyProjectRounding = false;
+
+            var report = Build(entries, options, Rounded("A", 15));
+
+            var line = report.Lines.Single();
+            Assert.Equal(25, line.Minutes);
+            Assert.Equal(0, line.ProjectRoundingMinutes);
+            Assert.Equal(0, line.RoundedUpMinutes);
+            Assert.Equal(0, report.RoundedUpCount);
+            Assert.Equal(0, report.Projects.Single().RoundingUnitMinutes);
+            Assert.DoesNotContain(report.Notes, n => n.Contains("Aufrundungen"));
+        }
+
+        [Fact]
+        public void Project_rounding_comes_before_the_global_rounding_and_the_note_names_the_sum_before_it()
+        {
+            var entries = new[]
+            {
+                E(1, "2026-10-05", "09:00", "09:25", "A"),   // 25 -> 30 (Projekt) -> 30 (global 30)
+                E(2, "2026-10-05", "10:00", "10:40", "A")    // 40 -> 45 (Projekt) -> 60 (global 30, halbe Einheit rundet auf)
+            };
+            var options = Options("2026-10-01", "2026-10-31");
+            options.RoundingMinutes = 30;
+
+            var report = Build(entries, options, Rounded("A", 15));
+
+            Assert.Equal(new[] { 30, 60 }, report.Lines.Select(l => l.Minutes).ToArray());
+            Assert.Equal(new[] { 5, 5 }, report.Lines.Select(l => l.RoundedUpMinutes).ToArray());
+            Assert.Equal(90, report.TotalMinutes);
+            Assert.Equal(65, report.RawTotalMinutes);
+            Assert.Contains(report.Notes, n => n.Contains("Summe vor dieser Rundung: 1,25 h (1:15)"));
+            Assert.DoesNotContain(report.Notes, n => n.Contains("Ungerundete Summe"));
+        }
+
+        [Fact]
+        public void Project_rounding_never_turns_an_entry_into_zero()
+        {
+            var entries = new[] { E(1, "2026-10-05", "09:00", "09:01", "A") };   // 1 -> 15
+
+            var report = Build(entries, Options("2026-10-01", "2026-10-31"), Rounded("A", 15));
+
+            Assert.Equal(15, report.Lines.Single().Minutes);
+            Assert.Equal(0, report.Warnings.Count(w => w.Kind == ExportWarningKind.RoundedToZero));
+        }
     }
 }

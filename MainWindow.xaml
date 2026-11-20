@@ -18,7 +18,12 @@
     ResizeMode="CanResize"
     UseLayoutRounding="True"
     WindowState="Maximized"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    PreviewMouseDown="Window_PreviewMouseDown">
+    <Window.InputBindings>
+        <KeyBinding Key="Left" Modifiers="Alt" Command="{Binding GoBackCommand}" />
+        <KeyBinding Key="Right" Modifiers="Alt" Command="{Binding GoForwardCommand}" />
+    </Window.InputBindings>
     <Window.Resources>
         <!--  Kleine Gruppenüberschrift in der Navigation  -->
         <Style x:Key="NavGroup" TargetType="TextBlock">
@@ -62,6 +67,26 @@
                             Foreground="{DynamicResource Theme.SidebarTextMuted}"
                             Text="Zeiterfassung" />
                     </StackPanel>
+                </StackPanel>
+
+                <!--  Verlauf: Zurück und Vor (auch Alt+Links/Alt+Rechts und die Maus-Zusatztasten)  -->
+                <StackPanel
+                    Margin="18,6,18,0"
+                    DockPanel.Dock="Top"
+                    Orientation="Horizontal">
+                    <Button
+                        views:Ui.Glyph="&#xE72B;"
+                        Command="{Binding GoBackCommand}"
+                        Foreground="{DynamicResource Theme.SidebarText}"
+                        Style="{StaticResource Button.IconGhost}"
+                        ToolTip="Zurück (Alt+Links)" />
+                    <Button
+                        Margin="4,0,0,0"
+                        views:Ui.Glyph="&#xE72A;"
+                        Command="{Binding GoForwardCommand}"
+                        Foreground="{DynamicResource Theme.SidebarText}"
+                        Style="{StaticResource Button.IconGhost}"
+                        ToolTip="Vor (Alt+Rechts)" />
                 </StackPanel>
 
                 <!--  Gruß des saisonalen bzw. Fan-Themes (sonst ausgeblendet)  -->

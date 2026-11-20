@@ -78,6 +78,10 @@ namespace Zeitmanagement.Helpers
                     continue;
                 }
 
+                // Rundung je Projekt zuerst (wie in der SAP-Verrechnung, immer aufwärts), danach die optionale globale Rundung.
+                var projectUnit = options.ApplyProjectRounding && project != null ? RoundingOptions.Normalize(project.RundungMinuten) : 0;
+                var projectMinutes = RoundingOptions.RoundUp(rawMinutes, projectUnit);
+
                 report.Lines.Add(new ExportLine
                 {
                     Id = entry.Id,
@@ -86,7 +90,9 @@ namespace Zeitmanagement.Helpers
                     Start = ExportFormat.TimeOfDay(startMinute),
                     End = ExportFormat.TimeOfDay(endMinute),
                     RawMinutes = rawMinutes,
-                    Minutes = Round(rawMinutes, options.RoundingMinutes),
+                    ProjectRoundingMinutes = projectUnit,
+                    RoundedUpMinutes = projectMinutes - rawMinutes,
+                    Minutes = Round(projectMinutes, options.RoundingMinutes),
                     Overnight = endMinute < startMinute,
                     Project = projectName,
                     Customer = project?.Kunde ?? string.Empty,
@@ -108,6 +114,8 @@ namespace Zeitmanagement.Helpers
 
             report.TotalMinutes = report.Lines.Sum(l => l.Minutes);
             report.RawTotalMinutes = report.Lines.Sum(l => l.RawMinutes);
+            report.RoundedUpTotalMinutes = report.Lines.Sum(l => l.RoundedUpMinutes);
+            report.RoundedUpCount = report.Lines.Count(l => l.RoundedUpMinutes > 0);
             report.WorkDays = report.Lines.Select(l => l.Date).Distinct().Count();
             if (report.Lines.Count > 0)
             {
@@ -206,7 +214,9 @@ namespace Zeitmanagement.Helpers
                         IsExternal = first.IsExternal,
                         Count = g.Count(),
                         Minutes = minutes,
-                        SharePercent = report.TotalMinutes > 0 ? minutes * 100.0 / report.TotalMinutes : 0
+                        SharePercent = report.TotalMinutes > 0 ? minutes * 100.0 / report.TotalMinutes : 0,
+                        RoundedUpMinutes = g.Sum(l => l.RoundedUpMinutes),
+                        RoundingUnitMinutes = first.ProjectRoundingMinutes
                     };
                 })
                 .OrderByDescending(s => s.Minutes)
@@ -347,10 +357,20 @@ namespace Zeitmanagement.Helpers
 
         private static void BuildNotes(ExportReport report, ExportOptions options)
         {
+            if (report.RoundedUpTotalMinutes > 0)
+            {
+                report.Notes.Add("Enthält Aufrundungen je Projekt (Projekte → Rundung): +" + ExportFormat.Clock(report.RoundedUpTotalMinutes) +
+                                 " in " + ExportFormat.Plural(report.RoundedUpCount, "Buchung", "Buchungen") + ". " +
+                                 "Reale Summe: " + ExportFormat.Decimal(report.RawTotalMinutes) + " h (" + ExportFormat.Clock(report.RawTotalMinutes) + ").");
+            }
+
             if (options.RoundingMinutes > 1)
             {
+                // Die Summe vor der globalen Rundung enthält die Aufrundung je Projekt; ohne sie ist das die ungerundete Summe.
+                var beforeRounding = report.RawTotalMinutes + report.RoundedUpTotalMinutes;
+                var label = report.RoundedUpTotalMinutes > 0 ? "Summe vor dieser Rundung: " : "Ungerundete Summe: ";
                 report.Notes.Add("Die Dauer jeder Buchung ist kaufmännisch auf " + options.RoundingMinutes + " Minuten gerundet. " +
-                                 "Ungerundete Summe: " + ExportFormat.Decimal(report.RawTotalMinutes) + " h (" + ExportFormat.Clock(report.RawTotalMinutes) + ").");
+                                 label + ExportFormat.Decimal(beforeRounding) + " h (" + ExportFormat.Clock(beforeRounding) + ").");
             }
 
             if (options.DurationFormat != ExportDurationFormat.Clock && DecimalValuesDoNotAddUp(report))

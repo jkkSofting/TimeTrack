@@ -49,6 +49,11 @@
             <Setter Property="HorizontalAlignment" Value="Right" />
         </Style>
 
+        <Style x:Key="RoundingNote" BasedOn="{StaticResource RightText}" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource Theme.TextMuted}" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+
         <Style x:Key="TrimmedText" TargetType="TextBlock">
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
             <Setter Property="ToolTip" Value="{Binding Text, RelativeSource={RelativeSource Self}}" />
@@ -334,7 +339,12 @@
                                 DisplayMemberPath="Text"
                                 ItemsSource="{Binding RoundingChoices}"
                                 SelectedItem="{Binding SelectedRounding, Mode=TwoWay}"
-                                ToolTip="Rundet die Dauer jeder Buchung kaufmännisch. Im Dokument steht dann ein Hinweis mit der ungerundeten Summe." />
+                                ToolTip="Rundet die Dauer jeder Buchung kaufmännisch. Im Dokument steht dann ein Hinweis mit der Summe vor der Rundung." />
+                            <CheckBox
+                                Content="Rundung je Projekt anwenden"
+                                IsChecked="{Binding ApplyProjectRounding}"
+                                Style="{StaticResource OptionCheck}"
+                                ToolTip="Rundet die Dauer jeder Buchung auf die Rundungseinheit ihres Projekts auf (Projekte → Rundung), wie in der SAP-Verrechnung. Im Dokument wird die Aufrundung ausgewiesen." />
 
                             <TextBlock Style="{StaticResource FieldLabel}" Text="SPALTEN" />
                             <CheckBox
@@ -670,6 +680,11 @@
                                     Binding="{Binding DurationText}"
                                     ElementStyle="{StaticResource RightText}"
                                     Header="Dauer" />
+                                <DataGridTextColumn
+                                    Width="130"
+                                    Binding="{Binding RoundingText}"
+                                    ElementStyle="{StaticResource RoundingNote}"
+                                    Header="Rundung" />
                                 <DataGridTextColumn
                                     Width="1.2*"
                                     Binding="{Binding Project}"

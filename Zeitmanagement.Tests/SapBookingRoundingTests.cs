@@ -49,6 +49,17 @@ namespace Zeitmanagement.Tests
             Assert.Equal(expected, RoundingOptions.Normalize(input));
         }
 
+        [Theory]
+        [InlineData(25, 15, 5)]
+        [InlineData(30, 15, 0)]
+        [InlineData(25, 0, 0)]
+        [InlineData(25, 60, 35)]
+        [InlineData(0, 15, 0)]
+        public void AddedMinutes_is_the_extra_time_of_rounding_up(int length, int unit, int expected)
+        {
+            Assert.Equal(expected, RoundingOptions.AddedMinutes(length, unit));
+        }
+
         [Fact]
         public void Labels_and_allowed_values()
         {

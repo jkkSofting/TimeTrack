@@ -118,9 +118,9 @@ namespace Zeitmanagement.ViewModel
             private set => SetProperty(ref _hasOverlaps, value);
         }
 
-        // --- Arbeitstag: Beginn und Ende wie gebucht, tatsächliches Ende inkl. Überschneidungen und Pause ---
+        // --- Arbeitstag: Beginn und Ende wie gebucht ---
         private bool _hasWorkDay;
-        private string _workDayStart, _workDayEnd, _workDayReal, _actualDayEnd, _actualDayEndNote, _actualDayEndToolTip;
+        private string _workDayStart, _workDayEnd, _workDayReal;
 
         /// <summary>True, wenn der ausgewählte Tag gültige Buchungen hat (steuert die Arbeitstag-Kacheln).</summary>
         public bool HasWorkDay { get => _hasWorkDay; private set => SetProperty(ref _hasWorkDay, value); }
@@ -134,16 +134,31 @@ namespace Zeitmanagement.ViewModel
         /// <summary>Spätestes gebuchtes Ende des Tages (HH:mm).</summary>
         public string WorkDayEnd { get => _workDayEnd; private set => SetProperty(ref _workDayEnd, value); }
 
-        /// <summary>
-        /// Tatsächliches Ende (HH:mm): gebuchtes Ende zzgl. parallel gebuchter Zeit (Überschneidungen
-        /// zählen nacheinander) und der noch fehlenden gesetzlichen Pause.
-        /// </summary>
-        public string ActualDayEnd { get => _actualDayEnd; private set => SetProperty(ref _actualDayEnd, value); }
+        // --- Rundungen (Aufrundung je Projekt; nur sichtbar, wenn der Schalter an ist) ---
+        private bool _showRounding = Properties.Settings.Default.ShowRoundingInBookings;
 
-        /// <summary>Kurzinfo, was auf das gebuchte Ende aufgeschlagen wurde, z. B. "+30m Pause".</summary>
-        public string ActualDayEndNote { get => _actualDayEndNote; private set => SetProperty(ref _actualDayEndNote, value); }
+        private bool _hasRoundingExtra;
+        private string _roundingExtraText;
 
-        public string ActualDayEndToolTip { get => _actualDayEndToolTip; private set => SetProperty(ref _actualDayEndToolTip, value); }
+        /// <summary>Schalter „Rundungen anzeigen“. Wird dauerhaft in den User-Settings gespeichert.</summary>
+        public bool ShowRounding
+        {
+            get => _showRounding;
+            set
+            {
+                if (!SetProperty(ref _showRounding, value)) return;
+
+                Properties.Settings.Default.ShowRoundingInBookings = value;
+                Properties.Settings.Default.Save();
+                Refresh();
+            }
+        }
+
+        /// <summary>True, wenn der Schalter an ist und der Tag durch Rundung Zeit dazubekommt.</summary>
+        public bool HasRoundingExtra { get => _hasRoundingExtra; private set => SetProperty(ref _hasRoundingExtra, value); }
+
+        /// <summary>Summe der Aufrundungen des Tages, z. B. "+1h 05m" (nur gesetzt, wenn HasRoundingExtra).</summary>
+        public string RoundingExtraText { get => _roundingExtraText; private set => SetProperty(ref _roundingExtraText, value); }
 
         // --- Add-Form ---
         private string _newProjektname, _newStart, _newEnd, _newBeschreibung;
@@ -228,10 +243,14 @@ namespace Zeitmanagement.ViewModel
         {
             var db = MainViewModel.DbInstance;
 
-            // Projekte neu laden (für Dropdowns)
+            // Projekte neu laden (für Dropdowns) und Rundung je Projekt merken
             ProjectNames.Clear();
+            var roundingByProject = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             foreach (var p in db.GetProjects())
+            {
                 ProjectNames.Add(p.Projektname);
+                roundingByProject[p.Projektname] = p.RundungMinuten;
+            }
 
             // Einträge des ausgewählten Tages neu laden
             Entries.Clear();
@@ -250,9 +269,20 @@ namespace Zeitmanagement.ViewModel
                     Startzeit = e.Startzeit,
                     Endzeit = e.Endzeit,
                     Beschreibung = e.Beschreibung,
-                    Dauer = Math.Round(dur, 2)
+                    Dauer = Math.Round(dur, 2),
+                    RoundingMinutes = roundingByProject.TryGetValue(e.Projektname ?? string.Empty, out var ru) ? ru : 0
                 });
             }
+
+            // Durch die Rundung pro Projekt dazugekommene Zeit des Tages (Kennzahl "Gerundet")
+            int roundingExtra = 0;
+            foreach (var en in Entries)
+            {
+                if (TryParseTime(en.Startzeit, out var s) && TryParseTime(en.Endzeit, out var end) && end > s)
+                    roundingExtra += RoundingOptions.AddedMinutes((int)Math.Round((end - s).TotalMinutes), en.RoundingMinutes);
+            }
+            HasRoundingExtra = ShowRounding && roundingExtra > 0;
+            RoundingExtraText = HasRoundingExtra ? "+" + FormatSpan(TimeSpan.FromMinutes(roundingExtra)) : null;
 
             // --- Pausen, Arbeitszeit und Überschneidungen berechnen ---
             // Verglichen wird mit dem spätesten Ende aller bisherigen Buchungen, nicht nur der direkt
@@ -268,7 +298,6 @@ namespace Zeitmanagement.ViewModel
             intervals.Sort((a, b) => a.Start.CompareTo(b.Start));
 
             var totalBreak = TimeSpan.Zero;
-            var workTime = TimeSpan.Zero;
             int overlaps = 0;
             TimeSpan? coveredUntil = null;
             foreach (var iv in intervals)
@@ -283,13 +312,12 @@ namespace Zeitmanagement.ViewModel
 
                 if (!coveredUntil.HasValue || iv.End > coveredUntil.Value)
                     coveredUntil = iv.End;
-                workTime += iv.End - iv.Start;
             }
             TotalBreakHours = Math.Round(totalBreak.TotalHours, 2);
             OverlapCount = overlaps;
             HasOverlaps = overlaps > 0;
 
-            UpdateWorkDay(intervals.Count > 0 ? intervals[0].Start : (TimeSpan?)null, coveredUntil, workTime, totalBreak);
+            UpdateWorkDay(intervals.Count > 0 ? intervals[0].Start : (TimeSpan?)null, coveredUntil, totalBreak);
             BuildGraph();
 
             // Defaults im Add-Panel
@@ -519,49 +547,24 @@ namespace Zeitmanagement.ViewModel
         }
 
         /// <summary>
-        /// Setzt Beginn und Ende des Arbeitstages wie gebucht sowie das tatsächliche Ende. Dafür zählen
-        /// überschneidende Buchungen nacheinander statt gleichzeitig: Der Tag dauert so lange wie alle
-        /// Buchungen zusammen plus die gemachten Pausen, die parallel gebuchte Zeit wird also hinten
-        /// angehängt. Gemachte Pausen (Lücken ohne Buchung) bleiben dabei unangetastet. Zusätzlich wird
-        /// die noch fehlende gesetzliche Pause aufgeschlagen: bis 6h Arbeitszeit keine, über 6h bis 9h
-        /// 30 Minuten, über 9h 45 Minuten, abzüglich der bereits gemachten Pausen.
+        /// Setzt Beginn und Ende des Arbeitstages wie gebucht sowie die real gearbeitete Zeit
+        /// (Beginn bis Ende abzüglich der gemachten Pausen).
         /// </summary>
         /// <param name="bookedEnd">Spätestes gebuchtes Ende.</param>
-        /// <param name="work">Summe aller Buchungsdauern (parallel gebuchte Zeit voll gezählt).</param>
         /// <param name="takenBreak">Summe der Lücken, in denen nichts gebucht ist.</param>
-        private void UpdateWorkDay(TimeSpan? start, TimeSpan? bookedEnd, TimeSpan work, TimeSpan takenBreak)
+        private void UpdateWorkDay(TimeSpan? start, TimeSpan? bookedEnd, TimeSpan takenBreak)
         {
             HasWorkDay = start.HasValue && bookedEnd.HasValue;
             if (!HasWorkDay)
             {
-                WorkDayStart = WorkDayEnd = WorkDayReal = ActualDayEnd = ActualDayEndNote = ActualDayEndToolTip = null;
+                WorkDayStart = WorkDayEnd = WorkDayReal = null;
                 return;
             }
-
-            var required = TimeSpan.FromMinutes(work.TotalHours > 9 ? 45 : work.TotalHours > 6 ? 30 : 0);
-            var missingBreak = required > takenBreak ? required - takenBreak : TimeSpan.Zero;
-            var overlapExtra = start.Value + work + takenBreak - bookedEnd.Value;
-            var actualEnd = bookedEnd.Value + overlapExtra + missingBreak;
 
             WorkDayStart = FormatClock(start.Value);
             WorkDayEnd = FormatClock(bookedEnd.Value);
             var real = bookedEnd.Value - start.Value - takenBreak;
             WorkDayReal = FormatSpan(real > TimeSpan.Zero ? real : TimeSpan.Zero);
-            ActualDayEnd = FormatClock(actualEnd);
-
-            string breakNote = required == TimeSpan.Zero ? "keine Pause nötig"
-                             : missingBreak > TimeSpan.Zero ? $"+{FormatSpan(missingBreak)} Pause"
-                             : "Pause schon gemacht";
-            ActualDayEndNote = overlapExtra > TimeSpan.Zero
-                ? $"+{FormatSpan(overlapExtra)} Überschneidung, {breakNote}"
-                : breakNote;
-
-            ActualDayEndToolTip = $"Gebuchtes Ende: {FormatClock(bookedEnd.Value)}\n"
-                                + $"+ Überschneidungen: {FormatSpan(overlapExtra)} (parallel gebuchte Zeit zählt nacheinander)\n"
-                                + $"+ Fehlende Pause: {FormatSpan(missingBreak)}\n"
-                                + $"= Tatsächliches Ende: {FormatClock(actualEnd)}\n\n"
-                                + $"Arbeitszeit: {FormatSpan(work)}, nötige Pause: {FormatSpan(required)} (bis 6h keine, über 6h 30m, über 9h 45m)\n"
-                                + $"Gemachte Pausen: {FormatSpan(takenBreak)}";
         }
 
         private static string FormatSpan(TimeSpan span) =>
@@ -887,7 +890,21 @@ namespace Zeitmanagement.ViewModel
                 string range = FormatTimeRange(iv.Start, iv.End);
                 string duration = FormatGraphDuration(iv.End - iv.Start);
                 bool hasDescription = !string.IsNullOrWhiteSpace(iv.Source.Beschreibung);
+
+                // Nur Texte: Rundung wird nur angezeigt, wenn der Schalter an ist und tatsächlich aufgerundet wird.
+                int lengthMin = (int)Math.Round((iv.End - iv.Start).TotalMinutes);
+                int addedMin = ShowRounding ? RoundingOptions.AddedMinutes(lengthMin, iv.Source.RoundingMinutes) : 0;
+                string durationText = duration;
+                string roundingLine = string.Empty;
+                if (addedMin > 0)
+                {
+                    string roundedText = FormatGraphDuration(TimeSpan.FromMinutes(lengthMin + addedMin));
+                    durationText = $"{duration} → {roundedText} (+{FormatGraphDuration(TimeSpan.FromMinutes(addedMin))} gerundet)";
+                    roundingLine = $"\nGerundet: {roundedText} (Rundung {iv.Source.RoundingMinutes} min)";
+                }
+
                 string tooltip = $"{iv.Source.Projektname}\n{range} · {duration}"
+                                 + roundingLine
                                  + (hasDescription ? "\n" + iv.Source.Beschreibung : string.Empty)
                                  + "\nKlicken zum Bearbeiten";
 
@@ -901,7 +918,7 @@ namespace Zeitmanagement.ViewModel
                     Height = GraphLabelHeight,
                     TimeText = range,
                     Title = iv.Source.Projektname,
-                    Detail = hasDescription ? $"{duration} · {iv.Source.Beschreibung}" : duration,
+                    Detail = hasDescription ? $"{durationText} · {iv.Source.Beschreibung}" : durationText,
                     Brush = brush,
                     ToolTip = tooltip,
                     Entry = iv.Source
@@ -986,6 +1003,7 @@ namespace Zeitmanagement.ViewModel
         private int _id;
         private string _projektname, _start, _end, _beschreibung;
         private double _dauer;
+        private int _roundingMinutes;
 
         public int Id { get => _id; set => SetProperty(ref _id, value); }
         public string Projektname { get => _projektname; set => SetProperty(ref _projektname, value); }
@@ -993,6 +1011,9 @@ namespace Zeitmanagement.ViewModel
         public string Endzeit { get => _end; set => SetProperty(ref _end, value); }
         public string Beschreibung { get => _beschreibung; set => SetProperty(ref _beschreibung, value); }
         public double Dauer { get => _dauer; set => SetProperty(ref _dauer, value); }
+
+        /// <summary>Rundungseinheit des Projekts in Minuten (0 = aus).</summary>
+        public int RoundingMinutes { get => _roundingMinutes; set => SetProperty(ref _roundingMinutes, value); }
     }
 
     internal sealed class SummaryItem : BindableBase

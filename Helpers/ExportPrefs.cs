@@ -11,7 +11,8 @@ namespace Zeitmanagement.Helpers
     /// <summary>
     /// Die zuletzt benutzte Auswahl des Tätigkeitsnachweises (Zeitraum, Projekte, Optionen), als JSON in den Benutzereinstellungen.
     /// Lesen wirft nie: Fehlt etwas oder ist der Text unlesbar, gelten die Standardwerte. Unbekannte Werte bleiben beim Standard.
-    /// Die Rundung der Dauer wird bewusst nie gemerkt: Sie ändert die abrechenbare Zeit und muss jedes Mal ausdrücklich gewählt werden.
+    /// Die globale Rundung der Dauer wird bewusst nie gemerkt: Sie ändert die abrechenbare Zeit und muss jedes Mal ausdrücklich gewählt werden.
+    /// Die Rundung je Projekt dagegen ist nur ein Schalter, ob sie im Nachweis angewendet wird, und wird gemerkt.
     /// </summary>
     [DataContract]
     public sealed class ExportPrefs
@@ -30,6 +31,8 @@ namespace Zeitmanagement.Helpers
         [DataMember(Name = "carrier")] public bool ShowCarrierColumn { get; set; }
         [DataMember(Name = "daySums")] public bool? ShowDaySubtotals { get; set; }
         [DataMember(Name = "summary")] public bool? ShowSummary { get; set; }
+        /// <summary>Die Rundung je Projekt (Projekte → Rundung) auf die Dauer der Buchungen anwenden (Standard: ja).</summary>
+        [DataMember(Name = "applyProjectRounding")] public bool? ApplyProjectRounding { get; set; }
         /// <summary>Der Auftraggeber steht nur im Dokument, wenn der Nutzer es will (Standard: nein).</summary>
         [DataMember(Name = "showClient")] public bool ShowClient { get; set; }
 
@@ -81,6 +84,7 @@ namespace Zeitmanagement.Helpers
         public bool GetShowDaySubtotals() { return ShowDaySubtotals ?? true; }
         public bool GetShowSummary() { return ShowSummary ?? true; }
         public bool GetShowBranding() { return ShowBranding ?? true; }
+        public bool GetApplyProjectRounding() { return ApplyProjectRounding ?? true; }
 
         /// <summary>Der Zeitraum, falls er fest gespeichert ist (Benutzerdefiniert); sonst <c>false</c>.</summary>
         public bool TryGetCustomRange(out DateTime from, out DateTime to)

@@ -92,6 +92,34 @@ namespace Zeitmanagement.ViewModel
 
         private readonly DispatcherTimer _timer;
 
+        /// <summary>Ein Eintrag des Navigationsverlaufs: Seite und optional der Tag der Stundenbuchung.</summary>
+        private sealed class NavigationEntry
+        {
+            public NavigationEntry(string key, DateTime? day = null, Action restore = null)
+            {
+                Key = key;
+                Day = day;
+                Restore = restore;
+            }
+
+            public string Key { get; }
+
+            /// <summary>Tag, auf den die Stundenbuchung gesetzt wurde (null, wenn kein Tagesbezug).</summary>
+            public DateTime? Day { get; }
+
+            /// <summary>Stellt den Zusatzzustand wieder her, bevor die Seite gezeigt wird (null, wenn keiner nötig ist).</summary>
+            public Action Restore { get; }
+        }
+
+        private readonly NavigationHistory<NavigationEntry> _history =
+            new NavigationHistory<NavigationEntry>((a, b) => a.Key == b.Key && a.Day == b.Day);
+
+        /// <summary>Geht im Navigationsverlauf zur zuvor besuchten Seite zurück.</summary>
+        public DelegateCommand GoBackCommand { get; private set; }
+
+        /// <summary>Geht im Navigationsverlauf zur zuletzt verlassenen Seite vor.</summary>
+        public DelegateCommand GoForwardCommand { get; private set; }
+
         public MainViewModel()
         {
             var version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -114,8 +142,8 @@ namespace Zeitmanagement.ViewModel
             _projectView = new ProjectsViewModel(() => QuickSelectViewModel.ReloadProjects(), OpenControlling, OpenExport);
             _entriesView = new EntriesViewModel();
             _quickSelect = new QuickSelectViewModel();
-            _fragmentationView = new FragmentationViewModel();
-            _sapBookingView = new SapBookingViewModel();
+            _fragmentationView = new FragmentationViewModel(OpenDay);
+            _sapBookingView = new SapBookingViewModel(OpenDay);
             _exportView = new ExportViewModel();
             _todoView = new TodoViewModel(() => QuickSelectViewModel.ReloadTickets());
             _notesView = new NotesViewModel();
@@ -131,6 +159,9 @@ namespace Zeitmanagement.ViewModel
 
             _settingsView = new SettingsViewModel(_plugins);
             _helpView = new HelpViewModel(SelectViewCommandExecute);
+
+            GoBackCommand = new DelegateCommand(_ => GoBack(), _ => _history.CanGoBack);
+            GoForwardCommand = new DelegateCommand(_ => GoForward(), _ => _history.CanGoForward);
 
             SelectViewCommandExecute("dashboard");
 
@@ -173,7 +204,39 @@ namespace Zeitmanagement.ViewModel
 
         private void SelectViewCommandExecute(object obj)
         {
-            var mode = obj.ToString().ToLower();
+            Navigate(new NavigationEntry(obj.ToString().ToLower()), recordHistory: true);
+        }
+
+        private void GoBack()
+        {
+            if (_history.CanGoBack)
+                Navigate(_history.GoBack(), recordHistory: false);
+        }
+
+        private void GoForward()
+        {
+            if (_history.CanGoForward)
+                Navigate(_history.GoForward(), recordHistory: false);
+        }
+
+        /// <summary>
+        /// Zeigt die Seite eines Verlaufseintrags. Mit <paramref name="recordHistory"/> wird der Eintrag
+        /// als neuer Verlaufsschritt abgelegt; Zurück/Vor legen nichts neu ab.
+        /// </summary>
+        private void Navigate(NavigationEntry entry, bool recordHistory)
+        {
+            if (recordHistory)
+                _history.Push(entry);
+
+            entry.Restore?.Invoke();
+            ShowPage(entry.Key);
+
+            GoBackCommand.RaiseCanExecuteChanged();
+            GoForwardCommand.RaiseCanExecuteChanged();
+        }
+
+        private void ShowPage(string mode)
+        {
             CurrentView = mode;
 
             switch (mode)
@@ -259,8 +322,9 @@ namespace Zeitmanagement.ViewModel
         /// </summary>
         private void OpenDay(DateTime date)
         {
-            ((EntriesViewModel)_entriesView).SelectedDate = date.ToString("dd.MM.yyyy");
-            SelectViewCommandExecute("hours");
+            var day = date.Date;
+            Action restore = () => ((EntriesViewModel)_entriesView).SelectedDate = day.ToString("dd.MM.yyyy");
+            Navigate(new NavigationEntry("hours", day, restore), recordHistory: true);
         }
 
     }

@@ -51,8 +51,14 @@ namespace Zeitmanagement.ViewModel
             set => SetProperty(ref _selectedSegment, value);
         }
 
-        public FragmentationViewModel()
+        /// <summary>Öffnet einen Tag in der Stundenbuchung (aus der Tageszeile heraus).</summary>
+        private readonly Action<DateTime> _openDay;
+
+        public FragmentationViewModel() : this(null) { }
+
+        public FragmentationViewModel(Action<DateTime> openDay)
         {
+            _openDay = openDay;
             PreviousCommand = new DelegateCommand(_ => Navigate(-1));
             NextCommand = new DelegateCommand(_ => Navigate(1));
             SelectSegmentCommand = new DelegateCommand(o => SelectedSegment = o as Segment);
@@ -162,6 +168,8 @@ namespace Zeitmanagement.ViewModel
                 Days.Add(new DayRow
                 {
                     DateLabel = d.ToString("ddd dd.MM"),
+                    Date = d,
+                    OpenDayCommand = new DelegateCommand(_ => _openDay?.Invoke(d), _ => _openDay != null),
                     Segments = segments,
                     SwitchCount = switchCount,
                     TotalHours = totalMinutes / 60.0,
@@ -190,6 +198,8 @@ namespace Zeitmanagement.ViewModel
         internal class DayRow
         {
             public string DateLabel { get; set; }
+            public DateTime Date { get; set; }
+            public DelegateCommand OpenDayCommand { get; set; }
             public ObservableCollection<Segment> Segments { get; set; }
             public int SwitchCount { get; set; }
             public double TotalHours { get; set; }

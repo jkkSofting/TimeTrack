@@ -37,6 +37,11 @@ namespace Zeitmanagement.Helpers
                 "Wechsle zwischen Projekten mit Pause, Stop und Start. Jede Buchung landet automatisch in der „Stundenbuchung“, wo du sie korrigieren oder ergänzen kannst.",
                 "Für den Alltag praktisch: Das kleine Quick-Switch-Fenster kann immer sichtbar bleiben."),
 
+            new HelpTopic("", "Navigation & Verlauf", null,
+                "Zurück und vor wie im Browser.",
+                "Die Pfeile oben in der Seitenleiste gehen zur zuvor besuchten Seite zurück oder wieder vor. Alt+Links und Alt+Rechts oder die Maus-Zusatztasten machen dasselbe.",
+                "Springst du per Klick auf ein Datum in der Stundenbuchung, steht auch dieser Tag im Verlauf; zurück führt dann wieder zu genau diesem Tag."),
+
             new HelpTopic("", "Dashboard", "Dashboard",
                 "Dein Tag und dein Jahr auf einen Blick.",
                 "Oben siehst du die heute gebuchte Zeit, deinen Durchschnitt der letzten 5 Werktage und dein Top-Projekt der letzten 30 Tage.",
@@ -61,13 +66,15 @@ namespace Zeitmanagement.Helpers
                 "Neue Buchung: Projekt wählen, optional eine Beschreibung, Von und Bis als HH:mm eintragen, dann „Hinzufügen“.",
                 "Ein Klick auf eine Buchung im Zeitstrahl öffnet sie zum Bearbeiten oder Löschen.",
                 "Der Arbeitstag zeigt Beginn und Ende, Pausen und in Klammern die real gearbeitete Zeit, bei der parallele Buchungen nur einmal zählen.",
+                "Mit „Rundungen anzeigen“ siehst du zusätzlich, wie viel Zeit die Rundung pro Projekt dazurechnet: in der Timeline pro Buchung und oben als Summe. Die realen Zeiten bleiben dabei unverändert.",
                 "Überschneiden sich Buchungen, weist ein Hinweis darauf hin. Unten siehst du die Stunden je Projekt und je Kostenträger."),
 
             new HelpTopic("", "Fragmentierung", "Fragmentation",
                 "Wie zersplittert war dein Tag?",
                 "Jeder Balken zeigt einen Tag, jeder Abschnitt eine Buchung. Viele kurze Abschnitte bedeuten viele Wechsel.",
                 "Oben wählst du, ob du einen Tag, eine Woche oder einen Monat siehst, mit den Pfeilen blätterst du weiter.",
-                "Ein Klick auf einen Abschnitt zeigt Projekt, Zeit und Dauer."),
+                "Ein Klick auf einen Abschnitt zeigt Projekt, Zeit und Dauer.",
+                "Ein Klick auf das Datum eines Tages springt zu diesem Tag in der Stundenbuchung."),
 
             new HelpTopic("", "SAP-Verrechnung", "Sap",
                 "Was muss am Monatsende wirklich im SAP gebucht werden?",
@@ -80,7 +87,8 @@ namespace Zeitmanagement.Helpers
                 "Zum Buchen im SAP klickst du auf einen Kostenträger oder auf seine Stunden: Das kopiert den Wert in die Zwischenablage. Das gilt für die Tabelle und für „Im SAP buchen“ in den Tageskarten; die Fläche färbt sich kurz ein, wenn kopiert wurde.",
                 "Kostenträger: Linksklick kopiert nur die Bezeichnung, aus „Bezeichnung (KTR-ID)“ wird also „Bezeichnung“. Rechtsklick kopiert den ganzen Text samt ID, Mausradklick nur die ID (nur wenn der Kostenträger eine ID in Klammern hat).",
                 "Stunden: Linksklick kopiert „h:mm“ (zum Beispiel 0:49), Rechtsklick mit Einheit („0:49 h“). Der Tooltip beim Überfahren zeigt, was welcher Klick kopiert.",
-                "Ob ein Projekt extern ist, legst du unter „Projekte“ fest."),
+                "Ob ein Projekt extern ist, legst du unter „Projekte“ fest.",
+                "Ein Klick auf das Datum eines Tages in der Tagesübersicht springt zu diesem Tag in der Stundenbuchung."),
 
             new HelpTopic("", "Projektcontrolling", "Controlling",
                 "SAP-Kosten zu deinen Kostenträgern ansehen – getrennt von deinen gebuchten Stunden.",
@@ -102,7 +110,8 @@ namespace Zeitmanagement.Helpers
                 "Links wählst du den Zeitraum (Schnellwahl wie „Letzter Monat“ oder Von/Bis) und mindestens ein Projekt. „Alle Buchungen“ nimmt alles, was zu den gewählten Projekten je gebucht wurde; Von und Bis zeigen dann die erste und die letzte Buchung. Mit Suche und Kunden-Auswahl findest du Projekte schnell; „Alle gezeigten wählen“ nimmt alle Projekte der Liste. Unter jedem Projekt steht, wie viele Buchungen und Stunden im Zeitraum liegen. Es wird nur exportiert, was du wählst.",
                 "Rechts siehst du vor dem Export, was im Nachweis steht: Gesamtzeit, Buchungen, Arbeitstage, Durchschnitt und jede Buchung. Warnungen weisen auf Buchungen ohne Beschreibung, Überschneidungen im selben Projekt, nicht lesbare Zeiten (sie fehlen im Nachweis), Dauer 0 und Tage über 12 Stunden hin. Betroffene Zeilen sind hinterlegt.",
                 "Inhalt: Gliederung nach Tag, Projekt oder Kalenderwoche mit Zwischensummen; bei „Nach Tag“ lässt sich die Tagessumme (unter jedem Tag) mit „Tagessumme zeigen“ abschalten. Die Dauer zeigst du dezimal (1,50), als h:mm (1:30) oder beides. Uhrzeiten, Projekt- und Kostenträger-Spalte schaltest du ein und aus. „Extern“ oder „Intern“ begrenzt die Projekte nach dem Kennzeichen unter „Projekte“.",
-                "Rundung: Standard ist „Nicht runden“, jede Minute zählt. Nur wenn du es ausdrücklich wählst, wird die Dauer jeder Buchung kaufmännisch auf 5, 10, 15 oder 30 Minuten gerundet; das Dokument nennt dann die ungerundete Summe, damit nichts stillschweigend abweicht. Die Rundung wird nie gemerkt, jeder Nachweis beginnt wieder ohne. Für die genaue Minute wähle bei der Dauer „h:mm“ oder „Beides“: Dezimalstunden sind auf zwei Stellen gerundet (10 Minuten sind 0,17 h). Jede Buchung zählt einzeln; läuft Zeit parallel in mehreren Projekten, zählt sie in jedem voll. Eine Buchung über Mitternacht zählt am Tag ihres Beginns.",
+                "Rundung: Standard ist „Nicht runden“, jede Minute zählt. Nur wenn du es ausdrücklich wählst, wird die Dauer jeder Buchung kaufmännisch auf 5, 10, 15 oder 30 Minuten gerundet; das Dokument nennt dann die ungerundete Summe, damit nichts stillschweigend abweicht. Die globale Rundung wird nie gemerkt, jeder Nachweis beginnt wieder ohne. Für die genaue Minute wähle bei der Dauer „h:mm“ oder „Beides“: Dezimalstunden sind auf zwei Stellen gerundet (10 Minuten sind 0,17 h). Jede Buchung zählt einzeln; läuft Zeit parallel in mehreren Projekten, zählt sie in jedem voll. Eine Buchung über Mitternacht zählt am Tag ihres Beginns.",
+                "Rundung je Projekt: Hat ein Projekt unter „Projekte“ eine Aufrundung pro Buchung (5, 10, 15 oder 60 Minuten), rundet der Nachweis jede Buchung dieses Projekts wie die SAP-Verrechnung auf die nächste angefangene Einheit auf. Das ist standardmäßig an, „Rundung je Projekt anwenden“ schaltet es aus, und diese Einstellung wird gemerkt. Die Aufrundung steht im Nachweis: in der PDF-Spalte Dauer als „real 0:25 · +0:05“, in der Projekt-Übersicht und der Zusammenfassung als „davon aufgerundet“, im CSV als Spalten „Davon aufgerundet (min)“ und „Reale Dauer (min)“. Ein Hinweis nennt die reale Summe.",
                 "„PDF speichern“ erzeugt ein A4-Dokument mit Titel und Zeitraum, Auftragnehmer und Auftraggeber, Zusammenfassung, Einzelnachweis mit Gesamtsumme und Bemerkung. Die Kopfzeile der Tabelle wiederholt sich auf jeder Seite, die Fußzeile nennt die Seitenzahl. Unter „Dokument“ ändern Titel, Bemerkung, Querformat und Fußzeile das Aussehen; „Zusammenfassung zeigen“ blendet den Kasten mit Gesamtzeit, Buchungen, Arbeitstagen und Durchschnitt ein oder aus.",
                 "„Auftragnehmer & Auftraggeber“ nimmt die Angaben für den Briefkopf auf. Dein Name und deine Anschrift bleiben für den nächsten Nachweis gespeichert; Beides ist optional: Der Auftragnehmer steht nur im Dokument, wenn du ihn einträgst, der Auftraggeber nur mit „Auftraggeber im Dokument zeigen“ (vorbelegt mit dem Kunden der gewählten Projekte). Der Kostenträger steht immer im Dokument. Auftrags-/Bestellnummer, Auftraggeber und Anschrift merkt sich TimeTrack für das Projekt, sobald du einen Nachweis mit genau einem Projekt gespeichert hast, und füllt sie beim nächsten Mal wieder ein. Ein Logo (PNG oder JPEG) steht oben rechts im PDF; die Datei bleibt dort, wo sie liegt.",
                 "„PDF-Vorschau“ öffnet den Nachweis als temporäre Datei im PDF-Programm, ohne zu speichern und ohne etwas zu merken. Die letzte gespeicherte Auswahl (Optionen, Projekte, Zeitraum-Schnellwahl) ist beim nächsten Öffnen wieder da; „Letzter Monat“ gilt dann für den dann letzten Monat.",
