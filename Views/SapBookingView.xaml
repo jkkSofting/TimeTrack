@@ -81,8 +81,12 @@
         </DockPanel>
 
         <ScrollViewer
+            x:Name="PageScroll"
             Grid.Row="1"
             HorizontalScrollBarVisibility="Disabled"
+            PreviewMouseDown="OnUserScroll"
+            PreviewMouseWheel="OnUserScroll"
+            ScrollChanged="OnScrollChanged"
             VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="28,0,28,24">
 
