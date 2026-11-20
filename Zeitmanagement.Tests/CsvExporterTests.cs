@@ -219,5 +219,42 @@ namespace Zeitmanagement.Tests
             Assert.Equal(new byte[] { 0xEF, 0xBB, 0xBF }, bytes.Take(3).ToArray());
             Assert.Equal(3 + 5, bytes.Length);
         }
+
+        private static ExportReport RoundedReport(ExportOptions options)
+        {
+            var projects = new[] { new TimeTracker.ProjectRow { Projektname = "Projekt R", Kunde = "Muster GmbH", Kostentraeger = "KST-1", RundungMinuten = 15 } };
+            var entries = new[] { E(1, "2026-10-05", "09:00", "09:25", "Projekt R", "Konzept") };   // 25 -> 30
+            return ExportReportBuilder.Build(entries, projects, options);
+        }
+
+        [Fact]
+        public void Rounded_up_columns_appear_only_when_an_entry_was_rounded_up()
+        {
+            var rows = Rows(CsvExporter.Build(RoundedReport(Options())));
+
+            Assert.Equal("Datum;Wochentag;Von;Bis;Dauer (h);Dauer (h:mm);Minuten;Davon aufgerundet (min);Reale Dauer (min);Projekt;Kunde;Kostenträger;Extern/Intern;Beschreibung", rows[0]);
+            Assert.Equal("05.10.2026;Mo;09:00;09:25;0,50;0:30;30;5;25;Projekt R;Muster GmbH;KST-1;Intern;Konzept", rows[1]);
+        }
+
+        [Fact]
+        public void The_total_row_sums_the_rounded_up_and_the_real_minutes()
+        {
+            var rows = Rows(CsvExporter.Build(RoundedReport(Options()), new CsvOptions { IncludeTotalRow = true }));
+
+            Assert.StartsWith("Summe;", rows[2]);
+            Assert.Contains("0:30;30;5;25;", rows[2]);
+        }
+
+        [Fact]
+        public void Without_project_rounding_the_csv_keeps_its_columns()
+        {
+            var options = Options();
+            options.ApplyProjectRounding = false;
+
+            var rows = Rows(CsvExporter.Build(RoundedReport(options)));
+
+            Assert.Equal("Datum;Wochentag;Von;Bis;Dauer (h);Dauer (h:mm);Minuten;Projekt;Kunde;Kostenträger;Extern/Intern;Beschreibung", rows[0]);
+            Assert.Equal("05.10.2026;Mo;09:00;09:25;0,42;0:25;25;Projekt R;Muster GmbH;KST-1;Intern;Konzept", rows[1]);
+        }
     }
 }

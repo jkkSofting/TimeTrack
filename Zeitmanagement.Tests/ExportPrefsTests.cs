@@ -25,6 +25,7 @@ namespace Zeitmanagement.Tests
                 ShowCarrierColumn = true,
                 ShowDaySubtotals = false,
                 ShowSummary = false,
+                ApplyProjectRounding = false,
                 ShowClient = true,
                 Title = "Stundennachweis – Oktober",
                 Landscape = true,
@@ -46,6 +47,7 @@ namespace Zeitmanagement.Tests
             Assert.True(back.ShowCarrierColumn);
             Assert.False(back.GetShowDaySubtotals());
             Assert.False(back.GetShowSummary());
+            Assert.False(back.GetApplyProjectRounding());
             Assert.True(back.ShowClient);
             Assert.Equal("Stundennachweis – Oktober", back.Title);
             Assert.True(back.Landscape);
@@ -73,6 +75,7 @@ namespace Zeitmanagement.Tests
             Assert.True(prefs.GetShowTimes());
             Assert.True(prefs.GetShowDaySubtotals());
             Assert.True(prefs.GetShowSummary());
+            Assert.True(prefs.GetApplyProjectRounding());   // Rundung je Projekt ist standardmäßig an
             Assert.False(prefs.ShowClient);   // Der Auftraggeber ist optional: ohne Wahl steht er nicht im Dokument
             Assert.True(prefs.GetShowBranding());
             Assert.False(prefs.Landscape);
@@ -103,11 +106,12 @@ namespace Zeitmanagement.Tests
         }
 
         [Fact]
-        public void Rounding_is_never_stored_so_it_can_not_come_back_unnoticed()
+        public void Global_rounding_is_never_stored_so_it_can_not_come_back_unnoticed()
         {
-            // Eine Rundung ändert die abrechenbare Zeit: Sie muss jedes Mal ausdrücklich gewählt werden.
-            Assert.DoesNotContain("round", new ExportPrefs().ToJson(), StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(typeof(ExportPrefs).GetProperties(), p => p.Name.IndexOf("Round", StringComparison.OrdinalIgnoreCase) >= 0);
+            // Eine globale Rundung ändert die abrechenbare Zeit: Sie muss jedes Mal ausdrücklich gewählt werden.
+            // Gespeichert wird nur der Schalter "Rundung je Projekt anwenden", nie ein Rundungswert.
+            Assert.DoesNotContain("\"rounding\"", new ExportPrefs().ToJson());
+            Assert.DoesNotContain(typeof(ExportPrefs).GetProperties(), p => p.Name == "RoundingMinutes");
         }
 
         [Fact]

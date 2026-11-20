@@ -71,6 +71,8 @@ namespace Zeitmanagement.Helpers
         public ExportDurationFormat DurationFormat { get; set; }
         /// <summary>Dauer je Buchung auf dieses Vielfache von Minuten runden (kaufmännisch); 0 = nicht runden.</summary>
         public int RoundingMinutes { get; set; }
+        /// <summary>Dauer je Buchung auf die Rundungseinheit ihres Projekts aufrunden (Projekte → Rundung, wie in der SAP-Verrechnung).</summary>
+        public bool ApplyProjectRounding { get; set; }
         /// <summary>Uhrzeiten Von/Bis zeigen; aus = nur die Dauer.</summary>
         public bool ShowTimes { get; set; }
         /// <summary>Projekt-Spalte zeigen; <c>null</c> = automatisch, wenn mehr als ein Projekt im Nachweis steht.</summary>
@@ -88,6 +90,7 @@ namespace Zeitmanagement.Helpers
             ShowTimes = true;
             ShowDaySubtotals = true;
             ShowSummary = true;
+            ApplyProjectRounding = true;
         }
     }
 
@@ -103,8 +106,12 @@ namespace Zeitmanagement.Helpers
         public string End { get; set; }
         /// <summary>Tatsächlich gebuchte Dauer in Minuten.</summary>
         public int RawMinutes { get; set; }
-        /// <summary>Dauer im Nachweis in Minuten, nach der optionalen Rundung.</summary>
+        /// <summary>Dauer im Nachweis in Minuten, nach der Rundung je Projekt und der optionalen globalen Rundung.</summary>
         public int Minutes { get; set; }
+        /// <summary>Rundungseinheit des Projekts in Minuten; 0 = keine Rundung (auch wenn die Option aus ist).</summary>
+        public int ProjectRoundingMinutes { get; set; }
+        /// <summary>Minuten, die die Rundung je Projekt dazugibt (ab 0). Die reale Dauer bleibt in <see cref=RawMinutes/>.</summary>
+        public int RoundedUpMinutes { get; set; }
         /// <summary>Ende liegt vor dem Beginn: die Buchung geht über Mitternacht und zählt am Tag ihres Beginns.</summary>
         public bool Overnight { get; set; }
         public string Project { get; set; }
@@ -140,6 +147,10 @@ namespace Zeitmanagement.Helpers
         public int Minutes { get; set; }
         /// <summary>Anteil an der Gesamtzeit in Prozent (0 bis 100).</summary>
         public double SharePercent { get; set; }
+        /// <summary>Minuten, die die Rundung je Projekt in diesem Projekt dazugibt.</summary>
+        public int RoundedUpMinutes { get; set; }
+        /// <summary>Rundungseinheit des Projekts in Minuten; 0 = keine.</summary>
+        public int RoundingUnitMinutes { get; set; }
     }
 
     public sealed class ExportWarning
@@ -171,6 +182,10 @@ namespace Zeitmanagement.Helpers
         public int TotalMinutes { get; set; }
         /// <summary>Gesamtzeit ohne Rundung.</summary>
         public int RawTotalMinutes { get; set; }
+        /// <summary>Summe der Aufrundungen durch die Rundung je Projekt (Minuten).</summary>
+        public int RoundedUpTotalMinutes { get; set; }
+        /// <summary>Anzahl der Buchungen, die durch die Rundung je Projekt aufgerundet wurden.</summary>
+        public int RoundedUpCount { get; set; }
         /// <summary>Tage, an denen mindestens eine Buchung liegt.</summary>
         public int WorkDays { get; set; }
         public int AverageMinutesPerWorkDay => WorkDays == 0 ? 0 : (int)Math.Round(TotalMinutes / (double)WorkDays, MidpointRounding.AwayFromZero);
