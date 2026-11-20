@@ -51,6 +51,12 @@ namespace Zeitmanagement.ViewModel
             }
         }
 
+        /// <summary>
+        /// Zuletzt gesehene vertikale Scrollposition der Seite. Die View wird bei jedem Seitenwechsel neu
+        /// erzeugt, das ViewModel bleibt bestehen und merkt sich deshalb die Position.
+        /// </summary>
+        public double ScrollOffset { get; set; }
+
         private string _rangeLabel;
         public string RangeLabel { get => _rangeLabel; private set => SetProperty(ref _rangeLabel, value); }
 
