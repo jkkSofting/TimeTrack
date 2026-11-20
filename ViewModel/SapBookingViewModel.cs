@@ -73,8 +73,14 @@ namespace Zeitmanagement.ViewModel
         public DelegateCommand NextCommand { get; }
         public DelegateCommand TodayCommand { get; }
 
-        public SapBookingViewModel()
+        /// <summary>Öffnet einen Tag in der Stundenbuchung (aus der Tageszeile heraus).</summary>
+        private readonly Action<DateTime> _openDay;
+
+        public SapBookingViewModel() : this(null) { }
+
+        public SapBookingViewModel(Action<DateTime> openDay)
         {
+            _openDay = openDay;
             PreviousCommand = new DelegateCommand(_ => ReferenceDate = _month.AddMonths(-1));
             NextCommand = new DelegateCommand(_ => ReferenceDate = _month.AddMonths(1));
             TodayCommand = new DelegateCommand(_ => ReferenceDate = DateTime.Today);
@@ -178,6 +184,8 @@ namespace Zeitmanagement.ViewModel
                 var vm = new SapDayVM
                 {
                     DateLabel = d.Date.ToString("ddd dd.MM", CultureInfo.CurrentCulture),
+                    Date = d.Date,
+                    OpenDayCommand = new DelegateCommand(_ => _openDay?.Invoke(d.Date), _ => _openDay != null),
                     SpanText = Fmt(d.SpanMin),
                     RangeText = $"{FmtClock(d.FirstStartMin)} – {FmtClock(d.LastEndMin)}",
                     StartLabel = FmtClock(d.FirstStartMin),
@@ -458,6 +466,8 @@ namespace Zeitmanagement.ViewModel
     internal sealed class SapDayVM
     {
         public string DateLabel { get; set; }
+        public DateTime Date { get; set; }
+        public DelegateCommand OpenDayCommand { get; set; }
         public string SpanText { get; set; }
         public string RangeText { get; set; }
         public string StartLabel { get; set; }

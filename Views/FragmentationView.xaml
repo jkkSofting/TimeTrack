@@ -114,11 +114,14 @@
                                         <ColumnDefinition Width="110" />
                                     </Grid.ColumnDefinitions>
 
-                                    <TextBlock
+                                    <Button
                                         VerticalAlignment="Center"
+                                        Command="{Binding OpenDayCommand}"
+                                        Content="{Binding DateLabel}"
+                                        FontSize="13"
                                         FontWeight="SemiBold"
-                                        Style="{StaticResource Text.Body}"
-                                        Text="{Binding DateLabel}" />
+                                        Style="{StaticResource Button.Link}"
+                                        ToolTip="In der Stundenbuchung öffnen" />
 
                                     <!--  Segmentierte Leiste: Canvas = 1000 Einheiten breit, die Viewbox streckt sie  -->
                                     <Border

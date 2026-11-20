@@ -55,7 +55,8 @@ namespace Zeitmanagement.Helpers
         {
             new ChangelogRelease("2026.47.7", new DateTime(2026, 11, 20), "Navigation, Datumssprünge und Stundenbuchung",
                 Verbessert("Das „Tatsächliche Ende“ wurde aus der Stundenbuchung entfernt."),
-                Neu("In der Stundenbuchung lässt sich über „Rundungen anzeigen“ zusätzlich die Aufrundung pro Projekt einblenden: pro Buchung in der Timeline und als Summe in der Kennzahlenleiste.")),
+                Neu("In der Stundenbuchung lässt sich über „Rundungen anzeigen“ zusätzlich die Aufrundung pro Projekt einblenden: pro Buchung in der Timeline und als Summe in der Kennzahlenleiste."),
+                Neu("In der SAP-Verrechnung und der Fragmentierung springt ein Klick auf das Datum direkt zu diesem Tag in der Stundenbuchung.")),
 
             new ChangelogRelease("2026.47.6",new DateTime(2026, 11, 18), "Quick Switch beim Update sauber speichern",
                 Behoben("Beim Installieren einer neuen Version wurden laufende Quick-Switch-Buchungen nicht zuverlässig gespeichert, weil der Installer TimeTrack beenden konnte, bevor es fertig gespeichert hatte. Jetzt werden die laufenden Abschnitte gespeichert, bevor das Update startet, und auch dann, wenn der Installer TimeTrack selbst schließt oder Windows herunterfährt. Die Einträge sind danach pausiert."),

@@ -114,8 +114,8 @@ namespace Zeitmanagement.ViewModel
             _projectView = new ProjectsViewModel(() => QuickSelectViewModel.ReloadProjects(), OpenControlling, OpenExport);
             _entriesView = new EntriesViewModel();
             _quickSelect = new QuickSelectViewModel();
-            _fragmentationView = new FragmentationViewModel();
-            _sapBookingView = new SapBookingViewModel();
+            _fragmentationView = new FragmentationViewModel(OpenDay);
+            _sapBookingView = new SapBookingViewModel(OpenDay);
             _exportView = new ExportViewModel();
             _todoView = new TodoViewModel(() => QuickSelectViewModel.ReloadTickets());
             _notesView = new NotesViewModel();

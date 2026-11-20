@@ -68,7 +68,8 @@ namespace Zeitmanagement.Helpers
                 "Wie zersplittert war dein Tag?",
                 "Jeder Balken zeigt einen Tag, jeder Abschnitt eine Buchung. Viele kurze Abschnitte bedeuten viele Wechsel.",
                 "Oben wählst du, ob du einen Tag, eine Woche oder einen Monat siehst, mit den Pfeilen blätterst du weiter.",
-                "Ein Klick auf einen Abschnitt zeigt Projekt, Zeit und Dauer."),
+                "Ein Klick auf einen Abschnitt zeigt Projekt, Zeit und Dauer.",
+                "Ein Klick auf das Datum eines Tages springt zu diesem Tag in der Stundenbuchung."),
 
             new HelpTopic("", "SAP-Verrechnung", "Sap",
                 "Was muss am Monatsende wirklich im SAP gebucht werden?",
@@ -81,7 +82,8 @@ namespace Zeitmanagement.Helpers
                 "Zum Buchen im SAP klickst du auf einen Kostenträger oder auf seine Stunden: Das kopiert den Wert in die Zwischenablage. Das gilt für die Tabelle und für „Im SAP buchen“ in den Tageskarten; die Fläche färbt sich kurz ein, wenn kopiert wurde.",
                 "Kostenträger: Linksklick kopiert nur die Bezeichnung, aus „Bezeichnung (KTR-ID)“ wird also „Bezeichnung“. Rechtsklick kopiert den ganzen Text samt ID, Mausradklick nur die ID (nur wenn der Kostenträger eine ID in Klammern hat).",
                 "Stunden: Linksklick kopiert „h:mm“ (zum Beispiel 0:49), Rechtsklick mit Einheit („0:49 h“). Der Tooltip beim Überfahren zeigt, was welcher Klick kopiert.",
-                "Ob ein Projekt extern ist, legst du unter „Projekte“ fest."),
+                "Ob ein Projekt extern ist, legst du unter „Projekte“ fest.",
+                "Ein Klick auf das Datum eines Tages in der Tagesübersicht springt zu diesem Tag in der Stundenbuchung."),
 
             new HelpTopic("", "Projektcontrolling", "Controlling",
                 "SAP-Kosten zu deinen Kostenträgern ansehen – getrennt von deinen gebuchten Stunden.",
