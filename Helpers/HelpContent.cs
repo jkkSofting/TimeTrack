@@ -61,6 +61,7 @@ namespace Zeitmanagement.Helpers
                 "Neue Buchung: Projekt wählen, optional eine Beschreibung, Von und Bis als HH:mm eintragen, dann „Hinzufügen“.",
                 "Ein Klick auf eine Buchung im Zeitstrahl öffnet sie zum Bearbeiten oder Löschen.",
                 "Der Arbeitstag zeigt Beginn und Ende, Pausen und in Klammern die real gearbeitete Zeit, bei der parallele Buchungen nur einmal zählen.",
+                "Mit „Rundungen anzeigen“ siehst du zusätzlich, wie viel Zeit die Rundung pro Projekt dazurechnet: in der Timeline pro Buchung und oben als Summe. Die realen Zeiten bleiben dabei unverändert.",
                 "Überschneiden sich Buchungen, weist ein Hinweis darauf hin. Unten siehst du die Stunden je Projekt und je Kostenträger."),
 
             new HelpTopic("", "Fragmentierung", "Fragmentation",

@@ -134,6 +134,32 @@ namespace Zeitmanagement.ViewModel
         /// <summary>Spätestes gebuchtes Ende des Tages (HH:mm).</summary>
         public string WorkDayEnd { get => _workDayEnd; private set => SetProperty(ref _workDayEnd, value); }
 
+        // --- Rundungen (Aufrundung je Projekt; nur sichtbar, wenn der Schalter an ist) ---
+        private bool _showRounding = Properties.Settings.Default.ShowRoundingInBookings;
+
+        private bool _hasRoundingExtra;
+        private string _roundingExtraText;
+
+        /// <summary>Schalter „Rundungen anzeigen“. Wird dauerhaft in den User-Settings gespeichert.</summary>
+        public bool ShowRounding
+        {
+            get => _showRounding;
+            set
+            {
+                if (!SetProperty(ref _showRounding, value)) return;
+
+                Properties.Settings.Default.ShowRoundingInBookings = value;
+                Properties.Settings.Default.Save();
+                Refresh();
+            }
+        }
+
+        /// <summary>True, wenn der Schalter an ist und der Tag durch Rundung Zeit dazubekommt.</summary>
+        public bool HasRoundingExtra { get => _hasRoundingExtra; private set => SetProperty(ref _hasRoundingExtra, value); }
+
+        /// <summary>Summe der Aufrundungen des Tages, z. B. "+1h 05m" (nur gesetzt, wenn HasRoundingExtra).</summary>
+        public string RoundingExtraText { get => _roundingExtraText; private set => SetProperty(ref _roundingExtraText, value); }
+
         // --- Add-Form ---
         private string _newProjektname, _newStart, _newEnd, _newBeschreibung;
 
@@ -217,10 +243,14 @@ namespace Zeitmanagement.ViewModel
         {
             var db = MainViewModel.DbInstance;
 
-            // Projekte neu laden (für Dropdowns)
+            // Projekte neu laden (für Dropdowns) und Rundung je Projekt merken
             ProjectNames.Clear();
+            var roundingByProject = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             foreach (var p in db.GetProjects())
+            {
                 ProjectNames.Add(p.Projektname);
+                roundingByProject[p.Projektname] = p.RundungMinuten;
+            }
 
             // Einträge des ausgewählten Tages neu laden
             Entries.Clear();
@@ -239,9 +269,20 @@ namespace Zeitmanagement.ViewModel
                     Startzeit = e.Startzeit,
                     Endzeit = e.Endzeit,
                     Beschreibung = e.Beschreibung,
-                    Dauer = Math.Round(dur, 2)
+                    Dauer = Math.Round(dur, 2),
+                    RoundingMinutes = roundingByProject.TryGetValue(e.Projektname ?? string.Empty, out var ru) ? ru : 0
                 });
             }
+
+            // Durch die Rundung pro Projekt dazugekommene Zeit des Tages (Kennzahl "Gerundet")
+            int roundingExtra = 0;
+            foreach (var en in Entries)
+            {
+                if (TryParseTime(en.Startzeit, out var s) && TryParseTime(en.Endzeit, out var end) && end > s)
+                    roundingExtra += RoundingOptions.AddedMinutes((int)Math.Round((end - s).TotalMinutes), en.RoundingMinutes);
+            }
+            HasRoundingExtra = ShowRounding && roundingExtra > 0;
+            RoundingExtraText = HasRoundingExtra ? "+" + FormatSpan(TimeSpan.FromMinutes(roundingExtra)) : null;
 
             // --- Pausen, Arbeitszeit und Überschneidungen berechnen ---
             // Verglichen wird mit dem spätesten Ende aller bisherigen Buchungen, nicht nur der direkt
@@ -849,7 +890,21 @@ namespace Zeitmanagement.ViewModel
                 string range = FormatTimeRange(iv.Start, iv.End);
                 string duration = FormatGraphDuration(iv.End - iv.Start);
                 bool hasDescription = !string.IsNullOrWhiteSpace(iv.Source.Beschreibung);
+
+                // Nur Texte: Rundung wird nur angezeigt, wenn der Schalter an ist und tatsächlich aufgerundet wird.
+                int lengthMin = (int)Math.Round((iv.End - iv.Start).TotalMinutes);
+                int addedMin = ShowRounding ? RoundingOptions.AddedMinutes(lengthMin, iv.Source.RoundingMinutes) : 0;
+                string durationText = duration;
+                string roundingLine = string.Empty;
+                if (addedMin > 0)
+                {
+                    string roundedText = FormatGraphDuration(TimeSpan.FromMinutes(lengthMin + addedMin));
+                    durationText = $"{duration} → {roundedText} (+{FormatGraphDuration(TimeSpan.FromMinutes(addedMin))} gerundet)";
+                    roundingLine = $"\nGerundet: {roundedText} (Rundung {iv.Source.RoundingMinutes} min)";
+                }
+
                 string tooltip = $"{iv.Source.Projektname}\n{range} · {duration}"
+                                 + roundingLine
                                  + (hasDescription ? "\n" + iv.Source.Beschreibung : string.Empty)
                                  + "\nKlicken zum Bearbeiten";
 
@@ -863,7 +918,7 @@ namespace Zeitmanagement.ViewModel
                     Height = GraphLabelHeight,
                     TimeText = range,
                     Title = iv.Source.Projektname,
-                    Detail = hasDescription ? $"{duration} · {iv.Source.Beschreibung}" : duration,
+                    Detail = hasDescription ? $"{durationText} · {iv.Source.Beschreibung}" : durationText,
                     Brush = brush,
                     ToolTip = tooltip,
                     Entry = iv.Source
@@ -948,6 +1003,7 @@ namespace Zeitmanagement.ViewModel
         private int _id;
         private string _projektname, _start, _end, _beschreibung;
         private double _dauer;
+        private int _roundingMinutes;
 
         public int Id { get => _id; set => SetProperty(ref _id, value); }
         public string Projektname { get => _projektname; set => SetProperty(ref _projektname, value); }
@@ -955,6 +1011,9 @@ namespace Zeitmanagement.ViewModel
         public string Endzeit { get => _end; set => SetProperty(ref _end, value); }
         public string Beschreibung { get => _beschreibung; set => SetProperty(ref _beschreibung, value); }
         public double Dauer { get => _dauer; set => SetProperty(ref _dauer, value); }
+
+        /// <summary>Rundungseinheit des Projekts in Minuten (0 = aus).</summary>
+        public int RoundingMinutes { get => _roundingMinutes; set => SetProperty(ref _roundingMinutes, value); }
     }
 
     internal sealed class SummaryItem : BindableBase

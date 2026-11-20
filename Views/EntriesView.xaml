@@ -100,6 +100,12 @@
                     Command="{Binding RefreshCommand}"
                     Style="{StaticResource Button.Icon}"
                     ToolTip="Aktualisieren" />
+                <CheckBox
+                    Margin="18,0,0,0"
+                    VerticalAlignment="Center"
+                    Content="Rundungen anzeigen"
+                    IsChecked="{Binding ShowRounding}"
+                    ToolTip="Zeigt zusätzlich die Aufrundung pro Projekt (siehe Projekte → Rundung) in der Stundenbuchung an. Einstellung wird gespeichert." />
             </StackPanel>
 
             <StackPanel VerticalAlignment="Center">
@@ -161,6 +167,22 @@
                         FontWeight="SemiBold"
                         Foreground="{DynamicResource Theme.Warning}"
                         Text="{Binding TotalBreakHours, Converter={StaticResource HoursToHHmm}}" />
+                </StackPanel>
+            </Border>
+
+            <!--  Durch die Rundung pro Projekt dazugekommene Zeit (nur mit Schalter „Rundungen anzeigen“)  -->
+            <Border
+                Background="{DynamicResource Theme.AccentSoft}"
+                BorderBrush="Transparent"
+                Style="{StaticResource KpiPill}"
+                ToolTip="Durch die Rundung pro Projekt dazugekommene Zeit (wird im SAP so gebucht). Reale Zeiten bleiben unverändert."
+                Visibility="{Binding HasRoundingExtra, Converter={StaticResource BoolToVis}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Foreground="{DynamicResource Theme.AccentSoftText}" Text="Gerundet " />
+                    <TextBlock
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource Theme.AccentSoftText}"
+                        Text="{Binding RoundingExtraText}" />
                 </StackPanel>
             </Border>
 

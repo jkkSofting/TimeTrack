@@ -32,5 +32,11 @@ namespace Zeitmanagement.Helpers
             int rem = lengthMin % roundingMinutes;
             return rem == 0 ? lengthMin : lengthMin + (roundingMinutes - rem);
         }
+
+        /// <summary>Minuten, um die eine Dauer durch die Aufrundung länger wird (0, wenn nichts aufgerundet wird).</summary>
+        public static int AddedMinutes(int lengthMin, int roundingMinutes)
+        {
+            return RoundUp(lengthMin, roundingMinutes) - lengthMin;
+        }
     }
 }

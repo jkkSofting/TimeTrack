@@ -298,5 +298,17 @@ namespace Zeitmanagement.Properties {
                 this["ExportPrefsJson"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowRoundingInBookings {
+            get {
+                return ((bool)(this["ShowRoundingInBookings"]));
+            }
+            set {
+                this["ShowRoundingInBookings"] = value;
+            }
+        }
     }
 }
