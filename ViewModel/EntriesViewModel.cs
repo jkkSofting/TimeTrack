@@ -118,9 +118,9 @@ namespace Zeitmanagement.ViewModel
             private set => SetProperty(ref _hasOverlaps, value);
         }
 
-        // --- Arbeitstag: Beginn und Ende wie gebucht, tatsächliches Ende inkl. Überschneidungen und Pause ---
+        // --- Arbeitstag: Beginn und Ende wie gebucht ---
         private bool _hasWorkDay;
-        private string _workDayStart, _workDayEnd, _workDayReal, _actualDayEnd, _actualDayEndNote, _actualDayEndToolTip;
+        private string _workDayStart, _workDayEnd, _workDayReal;
 
         /// <summary>True, wenn der ausgewählte Tag gültige Buchungen hat (steuert die Arbeitstag-Kacheln).</summary>
         public bool HasWorkDay { get => _hasWorkDay; private set => SetProperty(ref _hasWorkDay, value); }
@@ -133,17 +133,6 @@ namespace Zeitmanagement.ViewModel
 
         /// <summary>Spätestes gebuchtes Ende des Tages (HH:mm).</summary>
         public string WorkDayEnd { get => _workDayEnd; private set => SetProperty(ref _workDayEnd, value); }
-
-        /// <summary>
-        /// Tatsächliches Ende (HH:mm): gebuchtes Ende zzgl. parallel gebuchter Zeit (Überschneidungen
-        /// zählen nacheinander) und der noch fehlenden gesetzlichen Pause.
-        /// </summary>
-        public string ActualDayEnd { get => _actualDayEnd; private set => SetProperty(ref _actualDayEnd, value); }
-
-        /// <summary>Kurzinfo, was auf das gebuchte Ende aufgeschlagen wurde, z. B. "+30m Pause".</summary>
-        public string ActualDayEndNote { get => _actualDayEndNote; private set => SetProperty(ref _actualDayEndNote, value); }
-
-        public string ActualDayEndToolTip { get => _actualDayEndToolTip; private set => SetProperty(ref _actualDayEndToolTip, value); }
 
         // --- Add-Form ---
         private string _newProjektname, _newStart, _newEnd, _newBeschreibung;
@@ -268,7 +257,6 @@ namespace Zeitmanagement.ViewModel
             intervals.Sort((a, b) => a.Start.CompareTo(b.Start));
 
             var totalBreak = TimeSpan.Zero;
-            var workTime = TimeSpan.Zero;
             int overlaps = 0;
             TimeSpan? coveredUntil = null;
             foreach (var iv in intervals)
@@ -283,13 +271,12 @@ namespace Zeitmanagement.ViewModel
 
                 if (!coveredUntil.HasValue || iv.End > coveredUntil.Value)
                     coveredUntil = iv.End;
-                workTime += iv.End - iv.Start;
             }
             TotalBreakHours = Math.Round(totalBreak.TotalHours, 2);
             OverlapCount = overlaps;
             HasOverlaps = overlaps > 0;
 
-            UpdateWorkDay(intervals.Count > 0 ? intervals[0].Start : (TimeSpan?)null, coveredUntil, workTime, totalBreak);
+            UpdateWorkDay(intervals.Count > 0 ? intervals[0].Start : (TimeSpan?)null, coveredUntil, totalBreak);
             BuildGraph();
 
             // Defaults im Add-Panel
@@ -519,49 +506,24 @@ namespace Zeitmanagement.ViewModel
         }
 
         /// <summary>
-        /// Setzt Beginn und Ende des Arbeitstages wie gebucht sowie das tatsächliche Ende. Dafür zählen
-        /// überschneidende Buchungen nacheinander statt gleichzeitig: Der Tag dauert so lange wie alle
-        /// Buchungen zusammen plus die gemachten Pausen, die parallel gebuchte Zeit wird also hinten
-        /// angehängt. Gemachte Pausen (Lücken ohne Buchung) bleiben dabei unangetastet. Zusätzlich wird
-        /// die noch fehlende gesetzliche Pause aufgeschlagen: bis 6h Arbeitszeit keine, über 6h bis 9h
-        /// 30 Minuten, über 9h 45 Minuten, abzüglich der bereits gemachten Pausen.
+        /// Setzt Beginn und Ende des Arbeitstages wie gebucht sowie die real gearbeitete Zeit
+        /// (Beginn bis Ende abzüglich der gemachten Pausen).
         /// </summary>
         /// <param name="bookedEnd">Spätestes gebuchtes Ende.</param>
-        /// <param name="work">Summe aller Buchungsdauern (parallel gebuchte Zeit voll gezählt).</param>
         /// <param name="takenBreak">Summe der Lücken, in denen nichts gebucht ist.</param>
-        private void UpdateWorkDay(TimeSpan? start, TimeSpan? bookedEnd, TimeSpan work, TimeSpan takenBreak)
+        private void UpdateWorkDay(TimeSpan? start, TimeSpan? bookedEnd, TimeSpan takenBreak)
         {
             HasWorkDay = start.HasValue && bookedEnd.HasValue;
             if (!HasWorkDay)
             {
-                WorkDayStart = WorkDayEnd = WorkDayReal = ActualDayEnd = ActualDayEndNote = ActualDayEndToolTip = null;
+                WorkDayStart = WorkDayEnd = WorkDayReal = null;
                 return;
             }
-
-            var required = TimeSpan.FromMinutes(work.TotalHours > 9 ? 45 : work.TotalHours > 6 ? 30 : 0);
-            var missingBreak = required > takenBreak ? required - takenBreak : TimeSpan.Zero;
-            var overlapExtra = start.Value + work + takenBreak - bookedEnd.Value;
-            var actualEnd = bookedEnd.Value + overlapExtra + missingBreak;
 
             WorkDayStart = FormatClock(start.Value);
             WorkDayEnd = FormatClock(bookedEnd.Value);
             var real = bookedEnd.Value - start.Value - takenBreak;
             WorkDayReal = FormatSpan(real > TimeSpan.Zero ? real : TimeSpan.Zero);
-            ActualDayEnd = FormatClock(actualEnd);
-
-            string breakNote = required == TimeSpan.Zero ? "keine Pause nötig"
-                             : missingBreak > TimeSpan.Zero ? $"+{FormatSpan(missingBreak)} Pause"
-                             : "Pause schon gemacht";
-            ActualDayEndNote = overlapExtra > TimeSpan.Zero
-                ? $"+{FormatSpan(overlapExtra)} Überschneidung, {breakNote}"
-                : breakNote;
-
-            ActualDayEndToolTip = $"Gebuchtes Ende: {FormatClock(bookedEnd.Value)}\n"
-                                + $"+ Überschneidungen: {FormatSpan(overlapExtra)} (parallel gebuchte Zeit zählt nacheinander)\n"
-                                + $"+ Fehlende Pause: {FormatSpan(missingBreak)}\n"
-                                + $"= Tatsächliches Ende: {FormatClock(actualEnd)}\n\n"
-                                + $"Arbeitszeit: {FormatSpan(work)}, nötige Pause: {FormatSpan(required)} (bis 6h keine, über 6h 30m, über 9h 45m)\n"
-                                + $"Gemachte Pausen: {FormatSpan(takenBreak)}";
         }
 
         private static string FormatSpan(TimeSpan span) =>

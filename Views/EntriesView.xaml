@@ -164,27 +164,6 @@
                 </StackPanel>
             </Border>
 
-            <!--  Gebuchtes Ende zzgl. Überschneidungen und fehlender Pause  -->
-            <Border
-                Background="{DynamicResource Theme.SuccessSoft}"
-                BorderBrush="Transparent"
-                Style="{StaticResource KpiPill}"
-                ToolTip="{Binding ActualDayEndToolTip}"
-                Visibility="{Binding HasWorkDay, Converter={StaticResource BoolToVis}}">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Foreground="{DynamicResource Theme.Success}" Text="Tatsächliches Ende " />
-                    <TextBlock
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource Theme.Success}"
-                        Text="{Binding ActualDayEnd}" />
-                    <TextBlock
-                        Margin="6,0,0,0"
-                        Foreground="{DynamicResource Theme.Success}"
-                        Opacity="0.8"
-                        Text="{Binding ActualDayEndNote, StringFormat={}({0})}" />
-                </StackPanel>
-            </Border>
-
             <!--  Warnung: nur sichtbar bei Überschneidungen  -->
             <Border
                 Background="{DynamicResource Theme.DangerSoft}"
