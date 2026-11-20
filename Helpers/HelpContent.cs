@@ -37,6 +37,11 @@ namespace Zeitmanagement.Helpers
                 "Wechsle zwischen Projekten mit Pause, Stop und Start. Jede Buchung landet automatisch in der „Stundenbuchung“, wo du sie korrigieren oder ergänzen kannst.",
                 "Für den Alltag praktisch: Das kleine Quick-Switch-Fenster kann immer sichtbar bleiben."),
 
+            new HelpTopic("", "Navigation & Verlauf", null,
+                "Zurück und vor wie im Browser.",
+                "Die Pfeile oben in der Seitenleiste gehen zur zuvor besuchten Seite zurück oder wieder vor. Alt+Links und Alt+Rechts oder die Maus-Zusatztasten machen dasselbe.",
+                "Springst du per Klick auf ein Datum in der Stundenbuchung, steht auch dieser Tag im Verlauf; zurück führt dann wieder zu genau diesem Tag."),
+
             new HelpTopic("", "Dashboard", "Dashboard",
                 "Dein Tag und dein Jahr auf einen Blick.",
                 "Oben siehst du die heute gebuchte Zeit, deinen Durchschnitt der letzten 5 Werktage und dein Top-Projekt der letzten 30 Tage.",

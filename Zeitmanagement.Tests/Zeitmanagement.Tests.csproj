@@ -63,6 +63,7 @@
     <Compile Include="..\Helpers\ExportPrefs.cs" Link="Linked\ExportPrefs.cs" />
     <Compile Include="..\Helpers\ExportReportBuilder.cs" Link="Linked\ExportReportBuilder.cs" />
     <Compile Include="..\Helpers\LocalHoursCalculator.cs" Link="Linked\LocalHoursCalculator.cs" />
+    <Compile Include="..\Helpers\NavigationHistory.cs" Link="Linked\NavigationHistory.cs" />
     <Compile Include="..\Helpers\PdfExporter.cs" Link="Linked\PdfExporter.cs" />
     <Compile Include="..\Helpers\SafeFile.cs" Link="Linked\SafeFile.cs" />
     <Compile Include="..\Helpers\RoundingOptions.cs" Link="Linked\RoundingOptions.cs" />
