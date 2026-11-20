@@ -53,7 +53,10 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
-            new ChangelogRelease("2026.47.7", new DateTime(2026, 11, 20), "Navigation, Datumssprünge, Stundenbuchung und Tätigkeitsbericht",
+            new ChangelogRelease("2026.47.8", new DateTime(2026, 11, 20), "SAP-Verrechnung merkt sich die Scrollposition",
+                Verbessert("Die SAP-Verrechnung merkt sich, wie weit du nach unten gescrollt hast. Springst du über ein Datum zur Stundenbuchung und kehrst zurück, steht die Seite wieder an derselben Stelle.")),
+
+            new ChangelogRelease("2026.47.7",new DateTime(2026, 11, 20), "Navigation, Datumssprünge, Stundenbuchung und Tätigkeitsbericht",
                 Verbessert("Das „Tatsächliche Ende“ wurde aus der Stundenbuchung entfernt."),
                 Neu("In der Stundenbuchung lässt sich über „Rundungen anzeigen“ zusätzlich die Aufrundung pro Projekt einblenden: pro Buchung in der Timeline und als Summe in der Kennzahlenleiste."),
                 Neu("In der SAP-Verrechnung und der Fragmentierung springt ein Klick auf das Datum direkt zu diesem Tag in der Stundenbuchung."),
