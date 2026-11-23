@@ -53,6 +53,13 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.47.9", new DateTime(2026, 11, 23), "Standardrundung und Overlays",
+                Neu("Globale Standardrundung: Die SAP-Verrechnung rundet jede Buchung auf die nächste angefangene Zeiteinheit auf. Die Standardrundung gilt ab Werk für 15 Minuten und ist für alle Projekte gleich, die sie erben."),
+                Neu("Jedes Projekt wählt unter „Projekte“ seine Rundung: die Standardrundung erben, eine eigene Rundung (5, 10, 15 oder 60 Minuten) festlegen oder die Rundung für dieses Projekt ausschalten."),
+                Neu("Auf der Seite „Projekte“ steht die Standardrundung über der Tabelle, und ein Stift-Button daneben ändert sie in einem Overlay. Die Spalte „Rundung“ zeigt „Standard (15 Minuten)“, „Aus“ oder den eigenen Wert."),
+                Verbessert("Bestehende Projekte mit eigener Rundung behalten sie. Projekte ohne eigene Rundung nutzen künftig die Standardrundung. Wenn ein Projekt nicht gerundet werden soll, stelle es in seinen Einstellungen auf „Keine Rundung“."),
+                Verbessert("Projekte anlegen und bearbeiten sowie Buchungen bearbeiten in der Stundenbuchung öffnen sich jetzt in einem Overlay über dem Fenster statt in einem Panel auf der Seite. Esc bricht ab. Neue Buchungen in der Stundenbuchung werden weiterhin direkt auf der Seite angelegt.")),
+
             new ChangelogRelease("2026.47.8", new DateTime(2026, 11, 20), "Navigation, Datumssprünge, Stundenbuchung und Tätigkeitsbericht",
                 Verbessert("Das Scroll-Verhalten in der SAP-Buchung wurde verbessert.")),
 
