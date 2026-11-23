@@ -164,9 +164,21 @@ namespace Zeitmanagement
             if (_singleInstance.TryAcquire(wait))
                 return true;
 
-            _singleInstance.SignalRunningInstance();
+            var informed = _singleInstance.SignalRunningInstance();
             _singleInstance.Dispose();
             _singleInstance = null;
+
+            if (!informed)
+            {
+                // Nobody answered (hung instance, or one running with other rights): without this
+                // the start would end without any sign of life.
+                MessageBox.Show(
+                    "TimeTrack läuft bereits, das Fenster lässt sich aber nicht in den Vordergrund holen.\n\nFalls es nicht reagiert, beende es im Task-Manager und starte TimeTrack danach erneut.",
+                    "TimeTrack",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+
             return false;
         }
 
@@ -185,6 +197,11 @@ namespace Zeitmanagement
             // background; briefly toggling Topmost reliably raises it.
             window.Topmost = true;
             window.Topmost = false;
+
+            // Say why no second window appeared, also when the window was already in front.
+            _trayService?.ShowBalloon(
+                "TimeTrack läuft bereits",
+                "Es kann nur eine Instanz gleichzeitig laufen. Das vorhandene Fenster wurde in den Vordergrund geholt.");
         }
 
         /// <summary>
