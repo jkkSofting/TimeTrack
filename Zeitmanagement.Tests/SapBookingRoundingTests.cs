@@ -322,22 +322,143 @@ namespace Zeitmanagement.Tests
             Assert.Equal(26, result.RoundedUpMin);
         }
 
+        // ---------- Optionen: globale Standardrundung ----------
+
+        [Fact]
+        public void Default_global_rounding_is_fifteen_minutes()
+        {
+            Assert.Equal(15, RoundingOptions.DefaultGlobalMinutes);
+        }
+
+        [Theory]
+        [InlineData(true, 10, 15, 15)]   // erbt: globaler Wert
+        [InlineData(true, 10, 0, 0)]     // erbt, global aus
+        [InlineData(true, 0, 60, 60)]
+        [InlineData(false, 10, 15, 10)]  // eigener Wert gewinnt
+        [InlineData(false, 0, 15, 0)]    // für das Projekt ausgeschaltet
+        [InlineData(false, 7, 15, 0)]    // ungültiger eigener Wert -> aus
+        [InlineData(true, 0, 7, 0)]      // ungültiger globaler Wert -> aus
+        public void Resolve_uses_global_or_own_value(bool useGlobal, int own, int global, int expected)
+        {
+            Assert.Equal(expected, RoundingOptions.Resolve(useGlobal, own, global));
+        }
+
+        [Fact]
+        public void LabelFor_describes_inherited_and_own_values()
+        {
+            Assert.Equal("Standard (15 Minuten)", RoundingOptions.LabelFor(true, 0, 15));
+            Assert.Equal("Standard (15 Minuten)", RoundingOptions.LabelFor(true, 10, 15));
+            Assert.Equal("Standard (Aus)", RoundingOptions.LabelFor(true, 10, 0));
+            Assert.Equal("10 Minuten", RoundingOptions.LabelFor(false, 10, 15));
+            Assert.Equal("Aus", RoundingOptions.LabelFor(false, 0, 15));
+        }
+
         // ---------- Datenbank ----------
 
         [Fact]
-        public void New_database_has_the_rounding_column_and_defaults_to_off()
+        public void New_database_has_the_rounding_columns_and_inherits_the_global_default()
         {
             using (var t = new TestDb())
             {
                 t.Db.AddOrEnsureProject("Alpha", "Kunde", "K.01");
 
                 Assert.Equal(1, t.Scalar("SELECT COUNT(*) FROM pragma_table_info('projects') WHERE name = 'rundung_minuten'"));
-                Assert.Equal(0, t.Db.GetProjects().Single().RundungMinuten);
+                Assert.Equal(1, t.Scalar("SELECT COUNT(*) FROM pragma_table_info('projects') WHERE name = 'rundung_global'"));
+
+                var p = t.Db.GetProjects().Single();
+                Assert.True(p.RundungGlobal);
+                Assert.Equal(0, p.RundungEigenMinuten);
+                Assert.Equal(15, p.RundungMinuten);
             }
         }
 
         [Fact]
-        public void Migration_adds_the_column_to_an_existing_database_and_keeps_data()
+        public void Global_rounding_defaults_to_fifteen_and_roundtrips()
+        {
+            using (var t = new TestDb())
+            {
+                Assert.Equal(15, t.Db.GetGlobalRoundingMinutes());
+
+                t.Db.SetGlobalRoundingMinutes(60);
+                Assert.Equal(60, t.Db.GetGlobalRoundingMinutes());
+
+                t.Db.SetGlobalRoundingMinutes(0);   // UPSERT; 0 = aus ist ein gültiger, gespeicherter Wert (nicht der Default)
+                Assert.Equal(0, t.Db.GetGlobalRoundingMinutes());
+
+                t.Db.SetGlobalRoundingMinutes(10);
+                t.Restart();
+                Assert.Equal(10, t.Db.GetGlobalRoundingMinutes());
+                Assert.Equal(1, t.Scalar("SELECT COUNT(*) FROM app_settings"));
+            }
+        }
+
+        [Fact]
+        public void Invalid_global_rounding_is_stored_as_off()
+        {
+            using (var t = new TestDb())
+            {
+                t.Db.SetGlobalRoundingMinutes(7);
+                Assert.Equal(0, t.Db.GetGlobalRoundingMinutes());
+            }
+        }
+
+        [Fact]
+        public void Migration_keeps_own_rounding_and_lets_projects_without_rounding_inherit()
+        {
+            var path = Fixtures.TempDbPath();
+            try
+            {
+                using (var conn = new SQLiteConnection("Data Source=" + path))
+                {
+                    conn.Open();
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        // Schema vor der globalen Rundung: rundung_minuten vorhanden, rundung_global noch nicht
+                        cmd.CommandText = @"
+                        CREATE TABLE projects(
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            projektname TEXT NOT NULL UNIQUE,
+                            kunde TEXT NOT NULL,
+                            anzahl_stunden REAL NOT NULL DEFAULT 0.0,
+                            kostentraeger TEXT NOT NULL,
+                            ist_extern INTEGER NOT NULL DEFAULT 0,
+                            quickselect_aktiv INTEGER NOT NULL DEFAULT 1,
+                            rundung_minuten INTEGER NOT NULL DEFAULT 0
+                        );
+                        INSERT INTO projects (projektname, kunde, kostentraeger, ist_extern, rundung_minuten) VALUES ('Eigen', 'Kunde', 'K.01', 1, 15);
+                        INSERT INTO projects (projektname, kunde, kostentraeger, ist_extern, rundung_minuten) VALUES ('Ohne', 'Kunde', 'K.02', 0, 0);";
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                SQLiteConnection.ClearAllPools();
+
+                for (int round = 0; round < 2; round++) // zweiter Durchlauf: Migration ist idempotent
+                {
+                    using (var db = new TimeTracker(path))
+                    {
+                        db.SetGlobalRoundingMinutes(60);
+                        var projects = db.GetProjects().ToDictionary(p => p.Projektname);
+
+                        Assert.False(projects["Eigen"].RundungGlobal);
+                        Assert.Equal(15, projects["Eigen"].RundungEigenMinuten);
+                        Assert.Equal(15, projects["Eigen"].RundungMinuten);
+                        Assert.True(projects["Eigen"].IstExtern);
+
+                        Assert.True(projects["Ohne"].RundungGlobal);
+                        Assert.Equal(60, projects["Ohne"].RundungMinuten);
+                    }
+                    SQLiteConnection.ClearAllPools();
+                }
+            }
+            finally
+            {
+                SQLiteConnection.ClearAllPools();
+                try { System.IO.Directory.Delete(System.IO.Path.GetDirectoryName(path), true); } catch (System.IO.IOException) { }
+            }
+        }
+
+        [Fact]
+        public void Migration_adds_the_columns_to_an_old_database_and_keeps_data()
         {
             var path = Fixtures.TempDbPath();
             try
@@ -370,7 +491,9 @@ namespace Zeitmanagement.Tests
                         var p = db.GetProjects().Single();
                         Assert.Equal("Alt", p.Projektname);
                         Assert.True(p.IstExtern);
-                        Assert.Equal(0, p.RundungMinuten);
+                        Assert.True(p.RundungGlobal);
+                        Assert.Equal(0, p.RundungEigenMinuten);
+                        Assert.Equal(15, p.RundungMinuten);   // erbt die globale Standardrundung
                     }
                     SQLiteConnection.ClearAllPools();
                 }
@@ -387,12 +510,15 @@ namespace Zeitmanagement.Tests
         {
             using (var t = new TestDb())
             {
+                t.Db.SetGlobalRoundingMinutes(0);
                 t.Db.AddOrEnsureProject("Alpha", "Kunde", "K.01", istExtern: true, rundungMinuten: 15);
                 t.Db.AddOrEnsureProject("Beta", "Kunde", "K.02");
 
                 var projects = t.Db.GetProjects().ToDictionary(p => p.Projektname);
                 Assert.Equal(15, projects["Alpha"].RundungMinuten);
+                Assert.False(projects["Alpha"].RundungGlobal);
                 Assert.Equal(0, projects["Beta"].RundungMinuten);
+                Assert.True(projects["Beta"].RundungGlobal);
 
                 // UPSERT aktualisiert die Rundung ebenfalls
                 t.Db.AddOrEnsureProject("Alpha", "Kunde", "K.01", istExtern: true, rundungMinuten: 60);
@@ -401,8 +527,11 @@ namespace Zeitmanagement.Tests
                 t.Db.UpdateProject("Beta", "Beta neu", "Kunde", "K.02", false, 5);
                 Assert.Equal(5, t.Db.GetProjects().Single(p => p.Projektname == "Beta neu").RundungMinuten);
 
+                // Update mit 0 und ohne Globalangabe: das Projekt erbt wieder (global ist hier aus)
                 t.Db.UpdateProject("Beta neu", "Beta neu", "Kunde", "K.02", false, 0);
-                Assert.Equal(0, t.Db.GetProjects().Single(p => p.Projektname == "Beta neu").RundungMinuten);
+                var beta = t.Db.GetProjects().Single(p => p.Projektname == "Beta neu");
+                Assert.True(beta.RundungGlobal);
+                Assert.Equal(0, beta.RundungMinuten);
 
                 // bleibt nach Neustart erhalten
                 t.Restart();
@@ -411,11 +540,61 @@ namespace Zeitmanagement.Tests
         }
 
         [Fact]
+        public void Update_without_rounding_arguments_keeps_the_existing_rounding()
+        {
+            using (var t = new TestDb())
+            {
+                t.Db.AddOrEnsureProject("Eigen", "Kunde", "K.01", rundungMinuten: 10);
+                t.Db.AddOrEnsureProject("Aus", "Kunde", "K.02", rundungMinuten: 0, rundungGlobal: false);
+                t.Db.AddOrEnsureProject("Erbt", "Kunde", "K.03");
+
+                t.Db.UpdateProject("Eigen", "Eigen", "Kunde", "K.01x");
+                t.Db.UpdateProject("Aus", "Aus", "Kunde", "K.02x");
+                t.Db.UpdateProject("Erbt", "Erbt", "Kunde", "K.03x");
+
+                var projects = t.Db.GetProjects().ToDictionary(p => p.Projektname);
+                Assert.Equal(10, projects["Eigen"].RundungMinuten);
+                Assert.False(projects["Eigen"].RundungGlobal);
+                Assert.Equal(0, projects["Aus"].RundungMinuten);
+                Assert.False(projects["Aus"].RundungGlobal);
+                Assert.Equal(15, projects["Erbt"].RundungMinuten);
+                Assert.True(projects["Erbt"].RundungGlobal);
+                Assert.Equal("K.01x", projects["Eigen"].Kostentraeger);
+            }
+        }
+
+        [Fact]
+        public void Explicit_global_flag_wins_over_the_minutes()
+        {
+            using (var t = new TestDb())
+            {
+                // Eigener Wert 10 gemerkt, aber Projekt erbt
+                t.Db.AddOrEnsureProject("Alpha", "Kunde", "K.01", rundungMinuten: 10, rundungGlobal: true);
+                var p = t.Db.GetProjects().Single();
+                Assert.True(p.RundungGlobal);
+                Assert.Equal(10, p.RundungEigenMinuten);
+                Assert.Equal(15, p.RundungMinuten);
+
+                // Nur das Flag umstellen: der gespeicherte eigene Wert bleibt erhalten und gilt jetzt
+                t.Db.UpdateProject("Alpha", "Alpha", "Kunde", "K.01", false, rundungGlobal: false);
+                p = t.Db.GetProjects().Single();
+                Assert.False(p.RundungGlobal);
+                Assert.Equal(10, p.RundungMinuten);
+
+                // Eigener Wert 0 = für das Projekt aus, auch bei globaler Rundung
+                t.Db.UpdateProject("Alpha", "Alpha", "Kunde", "K.01", false, 0, false);
+                p = t.Db.GetProjects().Single();
+                Assert.False(p.RundungGlobal);
+                Assert.Equal(0, p.RundungMinuten);
+            }
+        }
+
+        [Fact]
         public void Invalid_rounding_value_is_stored_as_off()
         {
             using (var t = new TestDb())
             {
-                t.Db.AddOrEnsureProject("Alpha", "Kunde", "K.01", rundungMinuten: 7);
+                t.Db.AddOrEnsureProject("Alpha", "Kunde", "K.01", rundungMinuten: 7, rundungGlobal: false);
 
                 Assert.Equal(0, t.Db.GetProjects().Single().RundungMinuten);
                 Assert.Equal(0, t.Scalar("SELECT rundung_minuten FROM projects"));
@@ -423,19 +602,58 @@ namespace Zeitmanagement.Tests
         }
 
         [Fact]
-        public void Time_entries_carry_the_rounding_of_their_project()
+        public void Changing_the_global_rounding_affects_only_inheriting_projects()
         {
             using (var t = new TestDb())
             {
-                t.Db.AddOrEnsureProject("Alpha", "Kunde", "K.01", rundungMinuten: 15);
-                t.Db.AddOrEnsureProject("Beta", "Kunde", "K.02");
+                t.Db.AddOrEnsureProject("Erbt", "Kunde", "K.01");
+                t.Db.AddOrEnsureProject("Eigen", "Kunde", "K.02", rundungMinuten: 10);
+                t.Db.AddOrEnsureProject("Aus", "Kunde", "K.03", rundungMinuten: 0, rundungGlobal: false);
+
+                Func<Dictionary<string, int>> effective = () => t.Db.GetProjects().ToDictionary(p => p.Projektname, p => p.RundungMinuten);
+
+                var before = effective();
+                Assert.Equal(15, before["Erbt"]);
+                Assert.Equal(10, before["Eigen"]);
+                Assert.Equal(0, before["Aus"]);
+
+                t.Db.SetGlobalRoundingMinutes(60);
+                var after = effective();
+                Assert.Equal(60, after["Erbt"]);
+                Assert.Equal(10, after["Eigen"]);
+                Assert.Equal(0, after["Aus"]);
+
+                t.Db.SetGlobalRoundingMinutes(0);
+                Assert.Equal(0, effective()["Erbt"]);
+                Assert.Equal(10, effective()["Eigen"]);
+            }
+        }
+
+        [Fact]
+        public void Time_entries_carry_the_effective_rounding_of_their_project()
+        {
+            using (var t = new TestDb())
+            {
+                t.Db.AddOrEnsureProject("Alpha", "Kunde", "K.01", rundungMinuten: 15);                       // eigen
+                t.Db.AddOrEnsureProject("Beta", "Kunde", "K.02");                                            // erbt
+                t.Db.AddOrEnsureProject("Gamma", "Kunde", "K.03", rundungMinuten: 0, rundungGlobal: false);  // aus
                 t.Db.AddTimeEntry(Day, "09:00", "09:02", "Alpha");
                 t.Db.AddTimeEntry(Day, "10:00", "10:30", "Beta");
+                t.Db.AddTimeEntry(Day, "11:00", "11:30", "Gamma");
 
+                t.Db.SetGlobalRoundingMinutes(10);
                 var entries = t.Db.GetTimeEntriesBetween(Day, Day);
 
                 Assert.Equal(15, entries.Single(e => e.Projektname == "Alpha").RundungMinuten);
-                Assert.Equal(0, entries.Single(e => e.Projektname == "Beta").RundungMinuten);
+                Assert.Equal(10, entries.Single(e => e.Projektname == "Beta").RundungMinuten);
+                Assert.Equal(0, entries.Single(e => e.Projektname == "Gamma").RundungMinuten);
+
+                // Globalwert ändern wirkt rückwirkend nur auf erbende Projekte
+                t.Db.SetGlobalRoundingMinutes(60);
+                entries = t.Db.GetTimeEntriesBetween(Day, Day);
+                Assert.Equal(15, entries.Single(e => e.Projektname == "Alpha").RundungMinuten);
+                Assert.Equal(60, entries.Single(e => e.Projektname == "Beta").RundungMinuten);
+                Assert.Equal(0, entries.Single(e => e.Projektname == "Gamma").RundungMinuten);
 
                 // Rundung des Projekts ändern wirkt sich rückwirkend auf alle Buchungen aus
                 t.Db.UpdateProject("Alpha", "Alpha", "Kunde", "K.01", false, 5);
