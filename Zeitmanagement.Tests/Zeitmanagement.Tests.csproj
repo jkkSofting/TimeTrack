@@ -44,6 +44,10 @@
     <Compile Include="..\TimeTracker.Plugins.cs" Link="Linked\TimeTracker.Plugins.cs" />
     <Compile Include="..\TimeTracker.Todo.cs" Link="Linked\TimeTracker.Todo.cs" />
     <Compile Include="..\ViewModel\ListSync.cs" Link="Linked\ListSync.cs" />
+    <Compile Include="..\ViewModel\OverlayService.cs" Link="Linked\OverlayService.cs" />
+    <Compile Include="..\ViewModel\OverlayViewModelBase.cs" Link="Linked\OverlayViewModelBase.cs" />
+    <Compile Include="..\MVVM\BindableBase.cs" Link="Linked\BindableBase.cs" />
+    <Compile Include="..\MVVM\DelegateCommand.cs" Link="Linked\DelegateCommand.cs" />
     <Compile Include="..\Helpers\Plugins\PluginStorage.cs" Link="Linked\PluginStorage.cs" />
     <Compile Include="..\Helpers\Plugins\PluginInfo.cs" Link="Linked\PluginInfo.cs" />
     <Compile Include="..\Helpers\Plugins\PluginLoader.cs" Link="Linked\PluginLoader.cs" />

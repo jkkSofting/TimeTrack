@@ -19,6 +19,7 @@
 
     <BooleanToVisibilityConverter x:Key="BoolToVis" />
     <views:EqualsConverter x:Key="Equals" />
+    <views:InverseBooleanConverter x:Key="InverseBool" />
 
     <Style x:Key="FocusVisual">
         <Setter Property="Control.Template">

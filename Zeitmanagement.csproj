@@ -152,6 +152,8 @@
     <Compile Include="ViewModel\SettingsViewModel.cs" />
     <Compile Include="ViewModel\ListSync.cs" />
     <Compile Include="ViewModel\NotesViewModel.cs" />
+    <Compile Include="ViewModel\OverlayService.cs" />
+    <Compile Include="ViewModel\OverlayViewModelBase.cs" />
     <Compile Include="ViewModel\TodoViewModel.cs" />
     <Compile Include="Views\CountUpTextblock.cs" />
     <Compile Include="Views\DashboardView.xaml.cs">
