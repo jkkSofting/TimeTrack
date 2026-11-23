@@ -71,6 +71,7 @@
     <Compile Include="..\Helpers\PdfReportLayout.cs" Link="Linked\PdfReportLayout.cs" />
     <Compile Include="..\Helpers\ProjectControllingExcelReader.cs" Link="Linked\ProjectControllingExcelReader.cs" />
     <Compile Include="..\Helpers\SessionLockState.cs" Link="Linked\SessionLockState.cs" />
+    <Compile Include="..\Helpers\SingleInstanceGuard.cs" Link="Linked\SingleInstanceGuard.cs" />
     <Compile Include="..\Helpers\SystemAudio.cs" Link="Linked\SystemAudio.cs" />
     <Compile Include="..\Helpers\TagesschauJingle.cs" Link="Linked\TagesschauJingle.cs" />
   </ItemGroup>
