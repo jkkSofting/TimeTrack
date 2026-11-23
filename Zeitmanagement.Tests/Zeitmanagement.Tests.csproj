@@ -44,6 +44,13 @@
     <Compile Include="..\TimeTracker.Plugins.cs" Link="Linked\TimeTracker.Plugins.cs" />
     <Compile Include="..\TimeTracker.Todo.cs" Link="Linked\TimeTracker.Todo.cs" />
     <Compile Include="..\ViewModel\ListSync.cs" Link="Linked\ListSync.cs" />
+    <Compile Include="..\ViewModel\OverlayService.cs" Link="Linked\OverlayService.cs" />
+    <Compile Include="..\ViewModel\OverlayViewModelBase.cs" Link="Linked\OverlayViewModelBase.cs" />
+    <Compile Include="..\ViewModel\RoundingChoice.cs" Link="Linked\RoundingChoice.cs" />
+    <Compile Include="..\ViewModel\ProjectEditOverlayViewModel.cs" Link="Linked\ProjectEditOverlayViewModel.cs" />
+    <Compile Include="..\ViewModel\GlobalRoundingOverlayViewModel.cs" Link="Linked\GlobalRoundingOverlayViewModel.cs" />
+    <Compile Include="..\MVVM\BindableBase.cs" Link="Linked\BindableBase.cs" />
+    <Compile Include="..\MVVM\DelegateCommand.cs" Link="Linked\DelegateCommand.cs" />
     <Compile Include="..\Helpers\Plugins\PluginStorage.cs" Link="Linked\PluginStorage.cs" />
     <Compile Include="..\Helpers\Plugins\PluginInfo.cs" Link="Linked\PluginInfo.cs" />
     <Compile Include="..\Helpers\Plugins\PluginLoader.cs" Link="Linked\PluginLoader.cs" />
@@ -71,6 +78,7 @@
     <Compile Include="..\Helpers\PdfReportLayout.cs" Link="Linked\PdfReportLayout.cs" />
     <Compile Include="..\Helpers\ProjectControllingExcelReader.cs" Link="Linked\ProjectControllingExcelReader.cs" />
     <Compile Include="..\Helpers\SessionLockState.cs" Link="Linked\SessionLockState.cs" />
+    <Compile Include="..\Helpers\SingleInstanceGuard.cs" Link="Linked\SingleInstanceGuard.cs" />
     <Compile Include="..\Helpers\SystemAudio.cs" Link="Linked\SystemAudio.cs" />
     <Compile Include="..\Helpers\TagesschauJingle.cs" Link="Linked\TagesschauJingle.cs" />
   </ItemGroup>

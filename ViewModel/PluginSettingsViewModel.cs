@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows;
+using Zeitmanagement.Helpers;
 using Zeitmanagement.Helpers.Plugins;
 using Zeitmanagement.MVVM;
 
@@ -110,7 +110,7 @@ namespace Zeitmanagement.ViewModel
 
         private static void Restart()
         {
-            Process.Start(Process.GetCurrentProcess().MainModule.FileName);
+            SingleInstanceGuard.RestartCurrentProcess();
             Application.Current.Shutdown();
         }
     }

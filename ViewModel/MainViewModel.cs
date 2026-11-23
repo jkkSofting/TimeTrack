@@ -120,6 +120,9 @@ namespace Zeitmanagement.ViewModel
         /// <summary>Geht im Navigationsverlauf zur zuletzt verlassenen Seite vor.</summary>
         public DelegateCommand GoForwardCommand { get; private set; }
 
+        /// <summary>Das modale Bearbeiten-Overlay über dem Hauptfenster (das MainWindow bindet <c>Overlay.Current</c>).</summary>
+        public OverlayService Overlay => OverlayService.Instance;
+
         public MainViewModel()
         {
             var version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -160,15 +163,26 @@ namespace Zeitmanagement.ViewModel
             _settingsView = new SettingsViewModel(_plugins);
             _helpView = new HelpViewModel(SelectViewCommandExecute);
 
-            GoBackCommand = new DelegateCommand(_ => GoBack(), _ => _history.CanGoBack);
-            GoForwardCommand = new DelegateCommand(_ => GoForward(), _ => _history.CanGoForward);
+            GoBackCommand = new DelegateCommand(_ => GoBack(), _ => !Overlay.IsOpen && _history.CanGoBack);
+            GoForwardCommand = new DelegateCommand(_ => GoForward(), _ => !Overlay.IsOpen && _history.CanGoForward);
 
             SelectViewCommandExecute("dashboard");
 
-            SelectViewCommand = new DelegateCommand(SelectViewCommandExecute);
+            SelectViewCommand = new DelegateCommand(SelectViewCommandExecute, _ => !Overlay.IsOpen);
             ToggleDarkModeCommand = new DelegateCommand(_ => ToggleDarkMode());
 
             GetDbProjects();
+
+            // Bei offenem Overlay sind Navigation und Verlauf gesperrt (auch Alt+Links/Rechts, Maus-Zusatztasten).
+            Overlay.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(OverlayService.IsOpen))
+                {
+                    GoBackCommand.RaiseCanExecuteChanged();
+                    GoForwardCommand.RaiseCanExecuteChanged();
+                    SelectViewCommand.RaiseCanExecuteChanged();
+                }
+            };
         }
 
         private void UpdateClock()

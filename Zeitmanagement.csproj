@@ -128,6 +128,7 @@
     <Compile Include="Helpers\SapBookingCalculator.cs" />
     <Compile Include="Helpers\SessionActivityMonitor.cs" />
     <Compile Include="Helpers\SessionLockState.cs" />
+    <Compile Include="Helpers\SingleInstanceGuard.cs" />
     <Compile Include="Helpers\StartupMode.cs" />
     <Compile Include="Helpers\SystemAudio.cs" />
     <Compile Include="Helpers\TagesschauJingle.cs" />
@@ -146,12 +147,18 @@
     <Compile Include="ViewModel\PluginSettingsViewModel.cs" />
     <Compile Include="ViewModel\ProjectControllingViewModel.cs" />
     <Compile Include="ViewModel\ProjectsViewModel.cs" />
+    <Compile Include="ViewModel\ProjectEditOverlayViewModel.cs" />
+    <Compile Include="ViewModel\GlobalRoundingOverlayViewModel.cs" />
+    <Compile Include="ViewModel\RoundingChoice.cs" />
     <Compile Include="ViewModel\QuickSelectItemViewModel.cs" />
     <Compile Include="ViewModel\SapBookingViewModel.cs" />
     <Compile Include="ViewModel\QuickSelectViewModel.cs" />
     <Compile Include="ViewModel\SettingsViewModel.cs" />
     <Compile Include="ViewModel\ListSync.cs" />
     <Compile Include="ViewModel\NotesViewModel.cs" />
+    <Compile Include="ViewModel\OverlayService.cs" />
+    <Compile Include="ViewModel\OverlayViewModelBase.cs" />
+    <Compile Include="ViewModel\EntryEditOverlayViewModel.cs" />
     <Compile Include="ViewModel\TodoViewModel.cs" />
     <Compile Include="Views\CountUpTextblock.cs" />
     <Compile Include="Views\DashboardView.xaml.cs">
@@ -161,6 +168,9 @@
     <Compile Include="Views\DoubleToGridLengthConverter.cs" />
     <Compile Include="Views\EntriesView.xaml.cs">
       <DependentUpon>EntriesView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\EntryEditOverlayView.xaml.cs">
+      <DependentUpon>EntryEditOverlayView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ExportView.xaml.cs">
       <DependentUpon>ExportView.xaml</DependentUpon>
@@ -187,6 +197,12 @@
     </Compile>
     <Compile Include="Views\ProjectsView.xaml.cs">
       <DependentUpon>ProjectsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ProjectEditOverlayView.xaml.cs">
+      <DependentUpon>ProjectEditOverlayView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\GlobalRoundingOverlayView.xaml.cs">
+      <DependentUpon>GlobalRoundingOverlayView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\FishWindow.xaml.cs">
       <DependentUpon>FishWindow.xaml</DependentUpon>
@@ -226,6 +242,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\EntryEditOverlayView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\ExportView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -250,6 +270,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\ProjectsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ProjectEditOverlayView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\GlobalRoundingOverlayView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

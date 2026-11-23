@@ -25,9 +25,22 @@ namespace Zeitmanagement
         // (e.g. after the main window was closed), which used to skip saving the running bookings.
         private static MainViewModel _mainViewModel;
 
+        // Only release builds are limited to one running instance; debug builds never create it.
+        private SingleInstanceGuard _singleInstance;
+        private bool _isDuplicateInstance;
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            if (!TryBecomeRunningInstance(e.Args))
+            {
+                // Another instance is running and was asked to come to the front. Nothing of this
+                // process may touch settings, database or windows.
+                _isDuplicateInstance = true;
+                Shutdown();
+                return;
+            }
 
             UpgradeSettingsIfNeeded();
 
@@ -46,6 +59,9 @@ namespace Zeitmanagement
             }
 
             mainWindow.Show();
+
+            // A second start brings this window to the front instead of opening another instance.
+            _singleInstance?.StartListening(() => Dispatcher.BeginInvoke(new Action(BringMainWindowToFront)));
 
             var mainViewModel = (MainViewModel)mainWindow.DataContext;
             _mainViewModel = mainViewModel;
@@ -111,6 +127,12 @@ namespace Zeitmanagement
 
         protected override void OnExit(ExitEventArgs e)
         {
+            if (_isDuplicateInstance)
+            {
+                base.OnExit(e);
+                return;
+            }
+
             // First: running Quick Switch bookings are written now, so the flush below includes them.
             SaveBeforeExit();
 
@@ -122,6 +144,64 @@ namespace Zeitmanagement
             _mainViewModel?.Plugins?.ShutdownAll();
 
             base.OnExit(e);
+
+            // Last: a restarted process is waiting for this, and it must find everything saved.
+            _singleInstance?.Dispose();
+        }
+
+        /// <summary>
+        /// Release builds: takes the single-instance lock. Returns false if another instance runs
+        /// (it is then told to show its window). A restart started by the app waits for the old
+        /// process to exit instead of giving up. Debug builds always return true.
+        /// </summary>
+        private bool TryBecomeRunningInstance(string[] args)
+        {
+            if (!SingleInstanceGuard.IsRestrictedBuild)
+                return true;
+
+            _singleInstance = new SingleInstanceGuard();
+            var wait = SingleInstanceGuard.IsRestart(args) ? SingleInstanceGuard.RestartWait : TimeSpan.Zero;
+            if (_singleInstance.TryAcquire(wait))
+                return true;
+
+            var informed = _singleInstance.SignalRunningInstance();
+            _singleInstance.Dispose();
+            _singleInstance = null;
+
+            if (!informed)
+            {
+                // Nobody answered (hung instance, or one running with other rights): without this
+                // the start would end without any sign of life.
+                MessageBox.Show(
+                    "TimeTrack läuft bereits, das Fenster lässt sich aber nicht in den Vordergrund holen.\n\nFalls es nicht reagiert, beende es im Task-Manager und starte TimeTrack danach erneut.",
+                    "TimeTrack",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+
+            return false;
+        }
+
+        private void BringMainWindowToFront()
+        {
+            var window = MainWindow;
+            if (window == null)
+                return;
+
+            window.Show();
+            if (window.WindowState == WindowState.Minimized)
+                window.WindowState = WindowState.Normal;
+            window.Activate();
+
+            // Windows often only flashes the taskbar button for a window activated from the
+            // background; briefly toggling Topmost reliably raises it.
+            window.Topmost = true;
+            window.Topmost = false;
+
+            // Say why no second window appeared, also when the window was already in front.
+            _trayService?.ShowBalloon(
+                "TimeTrack läuft bereits",
+                "Es kann nur eine Instanz gleichzeitig laufen. Das vorhandene Fenster wurde in den Vordergrund geholt.");
         }
 
         /// <summary>

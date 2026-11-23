@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -488,7 +487,7 @@ namespace Zeitmanagement.ViewModel
                 MainViewModel.DbInstance.Dispose();
                 BackupHelper.RestoreBackup(backupFilePath);
 
-                Process.Start(Process.GetCurrentProcess().MainModule.FileName);
+                SingleInstanceGuard.RestartCurrentProcess();
                 Application.Current.Shutdown();
             }
             catch (Exception ex)

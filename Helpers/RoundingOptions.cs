@@ -24,6 +24,24 @@ namespace Zeitmanagement.Helpers
             return minutes == 0 ? "Aus" : minutes + " Minuten";
         }
 
+        /// <summary>Globale Standardrundung, solange in den Einstellungen nichts anderes gewählt wurde.</summary>
+        public const int DefaultGlobalMinutes = 15;
+
+        /// <summary>
+        /// Effektive Rundung eines Projekts: die globale Standardrundung, wenn das Projekt sie erbt,
+        /// sonst der eigene Wert (0 = für dieses Projekt aus). Das Ergebnis ist immer ein erlaubter Wert.
+        /// </summary>
+        public static int Resolve(bool useGlobal, int ownMinutes, int globalMinutes)
+        {
+            return useGlobal ? Normalize(globalMinutes) : Normalize(ownMinutes);
+        }
+
+        /// <summary>Anzeigetext für die Auswahl am Projekt, z. B. "Standard (15 Minuten)", "Standard (Aus)", "Aus", "10 Minuten".</summary>
+        public static string LabelFor(bool useGlobal, int ownMinutes, int globalMinutes)
+        {
+            return useGlobal ? "Standard (" + Label(globalMinutes) + ")" : Label(ownMinutes);
+        }
+
         /// <summary>Rundet eine Dauer auf das nächste Vielfache der Einheit auf (Einheit 0 = unverändert).</summary>
         public static int RoundUp(int lengthMin, int roundingMinutes)
         {

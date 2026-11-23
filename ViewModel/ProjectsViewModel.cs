@@ -29,33 +29,10 @@ namespace Zeitmanagement.ViewModel
             }
         }
 
-        // Add-Panel
-        private bool _isAddPanelOpen;
+        /// <summary>Anzeige der globalen Standardrundung, z. B. „Standardrundung: 15 Minuten“.</summary>
+        public string GlobalRoundingText => "Standardrundung: " + RoundingOptions.Label(_globalRoundingMinutes);
 
-        public bool IsAddPanelOpen { get => _isAddPanelOpen; set => SetProperty(ref _isAddPanelOpen, value); }
-
-        public string NewProjektname
-        { get => _newProjektname; set { SetProperty(ref _newProjektname, value); AddProjectCommand.RaiseCanExecuteChanged(); } }
-
-        public string NewKunde
-        { get => _newKunde; set { SetProperty(ref _newKunde, value); AddProjectCommand.RaiseCanExecuteChanged(); } }
-
-        public string NewKostentraeger
-        { get => _newKostentraeger; set { SetProperty(ref _newKostentraeger, value); AddProjectCommand.RaiseCanExecuteChanged(); } }
-
-        private string _newProjektname, _newKunde, _newKostentraeger;
-
-        /// <summary>Neues Projekt wird vom Kunden bezahlt (extern).</summary>
-        public bool NewIstExtern { get => _newIstExtern; set => SetProperty(ref _newIstExtern, value); }
-        private bool _newIstExtern;
-
-        /// <summary>Aufrundung je Buchung für die SAP-Verrechnung (0 = Aus).</summary>
-        public int NewRundungMinuten { get => _newRundungMinuten; set => SetProperty(ref _newRundungMinuten, value); }
-        private int _newRundungMinuten;
-
-        /// <summary>Auswahl für die Rundungs-ComboBoxes (Aus, 5, 10, 15, 60 Minuten).</summary>
-        public System.Collections.Generic.IReadOnlyList<RoundingChoice> RoundingChoices { get; } =
-            RoundingOptions.Allowed.Select(m => new RoundingChoice(m)).ToList();
+        private int _globalRoundingMinutes;
 
         public string StartDate { get => _startDate; set => SetProperty(ref _startDate, value); }
         private string _startDate;
@@ -65,31 +42,6 @@ namespace Zeitmanagement.ViewModel
 
         private bool _isFiltering;
 
-        // Edit-Panel
-        private bool _isEditPanelOpen;
-
-        public bool IsEditPanelOpen { get => _isEditPanelOpen; set => SetProperty(ref _isEditPanelOpen, value); }
-
-        private string _editProjektnameOriginal; // zum Identifizieren in der DB
-
-        public string EditProjektname
-        { get => _editProjektname; set { SetProperty(ref _editProjektname, value); SaveEditProjectCommand.RaiseCanExecuteChanged(); } }
-
-        public string EditKunde
-        { get => _editKunde; set { SetProperty(ref _editKunde, value); SaveEditProjectCommand.RaiseCanExecuteChanged(); } }
-
-        public string EditKostentraeger
-        { get => _editKostentraeger; set { SetProperty(ref _editKostentraeger, value); SaveEditProjectCommand.RaiseCanExecuteChanged(); } }
-
-        private string _editProjektname, _editKunde, _editKostentraeger;
-
-        public bool EditIstExtern { get => _editIstExtern; set => SetProperty(ref _editIstExtern, value); }
-        private bool _editIstExtern;
-
-        /// <summary>Aufrundung je Buchung für die SAP-Verrechnung (0 = Aus).</summary>
-        public int EditRundungMinuten { get => _editRundungMinuten; set => SetProperty(ref _editRundungMinuten, value); }
-        private int _editRundungMinuten;
-
         // UI-Text
         private string _headerSubtitle = "Verwalte Projekte, Buchungen & Stunden";
 
@@ -98,8 +50,12 @@ namespace Zeitmanagement.ViewModel
         // Commands
         public DelegateCommand RefreshCommand { get; }
 
-        public DelegateCommand ToggleAddPanelCommand { get; }
-        public DelegateCommand AddProjectCommand { get; }
+        /// <summary>Öffnet das Overlay „Neues Projekt“.</summary>
+        public DelegateCommand NewProjectCommand { get; }
+
+        /// <summary>Öffnet das Overlay „Standardrundung“.</summary>
+        public DelegateCommand EditGlobalRoundingCommand { get; }
+
         public DelegateCommand DeleteProjectCommand { get; }
 
         public DelegateCommand FilterProjectsCommand { get; }
@@ -111,9 +67,8 @@ namespace Zeitmanagement.ViewModel
         /// <summary>Öffnet den „Tätigkeitsnachweis“ mit diesem Projekt gewählt.</summary>
         public DelegateCommand OpenExportCommand { get; }
 
+        /// <summary>Öffnet das Overlay „Projekt bearbeiten“ für die Zeile.</summary>
         public DelegateCommand StartEditProjectCommand { get; }
-        public DelegateCommand SaveEditProjectCommand { get; }
-        public DelegateCommand CancelEditProjectCommand { get; }
 
         /// <summary>
         /// Called whenever the set of projects (or which of them are enabled for Quick Switch)
@@ -134,8 +89,8 @@ namespace Zeitmanagement.ViewModel
             ProjectsView.Filter = FilterProject;
 
             RefreshCommand = new DelegateCommand(_ => Refresh());
-            ToggleAddPanelCommand = new DelegateCommand(_ => IsAddPanelOpen = !IsAddPanelOpen);
-            AddProjectCommand = new DelegateCommand(_ => AddProject(), _ => CanAddProject());
+            NewProjectCommand = new DelegateCommand(_ => StartNew());
+            EditGlobalRoundingCommand = new DelegateCommand(_ => EditGlobalRounding());
             DeleteProjectCommand = new DelegateCommand(p => DeleteProject(p as ProjectItemVM), p => p is ProjectItemVM);
 
             OpenControllingCommand = new DelegateCommand(
@@ -147,8 +102,6 @@ namespace Zeitmanagement.ViewModel
                 p => p is ProjectItemVM && _openExport != null);
 
             StartEditProjectCommand = new DelegateCommand(p => StartEdit(p as ProjectItemVM), p => p is ProjectItemVM);
-            SaveEditProjectCommand = new DelegateCommand(_ => SaveEdit(), _ => CanSaveEdit());
-            CancelEditProjectCommand = new DelegateCommand(_ => CancelEdit());
 
             FilterProjectsCommand = new DelegateCommand(_ => FilterProjectsCommandExecute(null));
             ResetProjectsFilterCommand = new DelegateCommand(_ => ResetProjectsCommandExecute(null));
@@ -169,6 +122,8 @@ namespace Zeitmanagement.ViewModel
 
             var db = MainViewModel.DbInstance;
             var projects = db.GetProjects().ToList();
+            _globalRoundingMinutes = db.GetGlobalRoundingMinutes();
+            RaisePropertyChanged(nameof(GlobalRoundingText));
 
             foreach (var p in projects)
             {
@@ -222,7 +177,10 @@ namespace Zeitmanagement.ViewModel
                         Kunde = p.Kunde,
                         Kostentraeger = p.Kostentraeger,
                         IstExtern = p.IstExtern,
+                        GlobalRundungMinuten = _globalRoundingMinutes,
                         RundungMinuten = p.RundungMinuten,
+                        RundungEigenMinuten = p.RundungEigenMinuten,
+                        RundungGlobal = p.RundungGlobal,
                         QuickSelectAktiv = p.QuickSelectAktiv,
                         Buchungen = count,
                         Stunden = Math.Round(hours, 2)
@@ -266,31 +224,6 @@ namespace Zeitmanagement.ViewModel
                    || (it.Kostentraeger?.IndexOf(q, StringComparison.OrdinalIgnoreCase) ?? -1) >= 0;
         }
 
-        // --- Add ---
-        private bool CanAddProject()
-        {
-            return !string.IsNullOrWhiteSpace(NewProjektname)
-                && !string.IsNullOrWhiteSpace(NewKunde)
-                && !string.IsNullOrWhiteSpace(NewKostentraeger);
-        }
-
-        private void AddProject()
-        {
-            var name = NewProjektname.Trim();
-            var kunde = NewKunde.Trim();
-            var kt = NewKostentraeger.Trim();
-
-            MainViewModel.DbInstance.AddOrEnsureProject(name, kunde, kt, NewIstExtern, rundungMinuten: NewRundungMinuten);
-
-            NewProjektname = NewKunde = NewKostentraeger = string.Empty;
-            NewIstExtern = false;
-            NewRundungMinuten = 0;
-            IsAddPanelOpen = false;
-
-            Refresh();
-            _projectsChanged?.Invoke();
-        }
-
         // --- Delete ---
         private void DeleteProject(ProjectItemVM item)
         {
@@ -301,57 +234,35 @@ namespace Zeitmanagement.ViewModel
             _projectsChanged?.Invoke();
         }
 
-        // --- Edit ---
+        // --- Neu / Bearbeiten / Standardrundung (alles als Overlay) ---
+        private void StartNew()
+        {
+            OverlayService.Instance.Show(ProjectEditOverlayViewModel.ForNew(MainViewModel.DbInstance, OnOverlaySaved));
+        }
+
         private void StartEdit(ProjectItemVM item)
         {
             if (item == null) return;
 
-            _editProjektnameOriginal = item.Projektname; // zum WHERE-Vergleich in der DB
-            EditProjektname = item.Projektname;
-            EditKunde = item.Kunde;
-            EditKostentraeger = item.Kostentraeger;
-            EditIstExtern = item.IstExtern;
-            EditRundungMinuten = item.RundungMinuten;
-
-            // Falls Add-Panel offen ist: zumachen, wir sind nicht im Basar
-            IsAddPanelOpen = false;
-            IsEditPanelOpen = true;
+            OverlayService.Instance.Show(ProjectEditOverlayViewModel.ForEdit(
+                MainViewModel.DbInstance,
+                item.Projektname, item.Kunde, item.Kostentraeger, item.IstExtern,
+                item.RundungGlobal, item.RundungEigenMinuten,
+                OnOverlaySaved));
         }
 
-        private bool CanSaveEdit()
+        private void EditGlobalRounding()
         {
-            return !string.IsNullOrWhiteSpace(EditProjektname)
-                && !string.IsNullOrWhiteSpace(EditKunde)
-                && !string.IsNullOrWhiteSpace(EditKostentraeger)
-                && !string.IsNullOrWhiteSpace(_editProjektnameOriginal);
+            var db = MainViewModel.DbInstance;
+            // Aus der DB gezählt (nicht aus der Liste), damit ein aktiver Zeitraumfilter die Zahl nicht verfälscht.
+            int inheriting = db.GetProjects().Count(p => p.RundungGlobal);
+            OverlayService.Instance.Show(new GlobalRoundingOverlayViewModel(db, inheriting, OnOverlaySaved));
         }
 
-        private void SaveEdit()
+        private void OnOverlaySaved()
         {
-            var newName = EditProjektname.Trim();
-            var newKunde = EditKunde.Trim();
-            var newKt = EditKostentraeger.Trim();
-
-            MainViewModel.DbInstance.UpdateProject(
-                originalProjektname: _editProjektnameOriginal,
-                newProjektname: newName,
-                kunde: newKunde,
-                kostentraeger: newKt,
-                istExtern: EditIstExtern,
-                rundungMinuten: EditRundungMinuten);
-
-            CancelEdit(); // leert Felder & schließt Panel
             Refresh();
             _projectsChanged?.Invoke();
-        }
-
-        private void CancelEdit()
-        {
-            _editProjektnameOriginal = null;
-            EditProjektname = string.Empty;
-            EditKunde = string.Empty;
-            EditKostentraeger = string.Empty;
-            IsEditPanelOpen = false;
         }
 
         // --- Filter ---
@@ -378,32 +289,24 @@ namespace Zeitmanagement.ViewModel
         /// <summary>Whether the project is offered in the Quick Switch window.</summary>
         public bool QuickSelectAktiv { get => _quickSelectAktiv; set => SetProperty(ref _quickSelectAktiv, value); }
         public string TypText => _istExtern ? "Extern" : "Intern";
-        /// <summary>Aufrundung je Buchung (0 = Aus).</summary>
-        public int RundungMinuten { get => _rundungMinuten; set { SetProperty(ref _rundungMinuten, value); RaisePropertyChanged(nameof(RundungText)); } }
-        public string RundungText => RoundingOptions.Label(_rundungMinuten);
+        /// <summary>EFFEKTIVE Aufrundung je Buchung (0 = Aus); zum Sortieren der Spalte.</summary>
+        public int RundungMinuten { get => _rundungMinuten; set => SetProperty(ref _rundungMinuten, value); }
+        /// <summary>Eigener Rundungswert des Projekts (gilt nur, wenn <see cref="RundungGlobal"/> false ist).</summary>
+        public int RundungEigenMinuten { get => _rundungEigenMinuten; set { SetProperty(ref _rundungEigenMinuten, value); RaisePropertyChanged(nameof(RundungText)); } }
+        /// <summary>true = das Projekt erbt die Standardrundung.</summary>
+        public bool RundungGlobal { get => _rundungGlobal; set { SetProperty(ref _rundungGlobal, value); RaisePropertyChanged(nameof(RundungText)); } }
+        /// <summary>Aktuelle Standardrundung (für den Anzeigetext).</summary>
+        public int GlobalRundungMinuten { get => _globalRundungMinuten; set { SetProperty(ref _globalRundungMinuten, value); RaisePropertyChanged(nameof(RundungText)); } }
+        /// <summary>Anzeige: „Standard (15 Minuten)“, „Aus“, „10 Minuten“.</summary>
+        public string RundungText => RoundingOptions.LabelFor(_rundungGlobal, _rundungEigenMinuten, _globalRundungMinuten);
         public int Buchungen { get => _buchungen; set => SetProperty(ref _buchungen, value); }
         public double Stunden { get => _stunden; set => SetProperty(ref _stunden, value); }
 
         private string _projektname, _kunde, _kostentraeger;
-        private int _buchungen, _rundungMinuten;
+        private int _buchungen, _rundungMinuten, _rundungEigenMinuten, _globalRundungMinuten;
+        private bool _rundungGlobal;
         private bool _istExtern;
         private bool _quickSelectAktiv;
         private double _stunden;
-    }
-
-    /// <summary>Eintrag für die Rundungs-Auswahl (Minuten + Anzeigetext).</summary>
-    internal sealed class RoundingChoice
-    {
-        public RoundingChoice(int minutes)
-        {
-            Minutes = minutes;
-            Label = RoundingOptions.Label(minutes);
-        }
-
-        public int Minutes { get; }
-        public string Label { get; }
-
-        /// <summary>Fallback für Stellen, die nur den Text anzeigen (z. B. das Auswahlfeld einer ComboBox ohne ItemTemplate).</summary>
-        public override string ToString() => Label;
     }
 }

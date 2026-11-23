@@ -64,6 +64,16 @@ namespace Zeitmanagement.Views
         }
     }
 
+    /// <summary>Kehrt einen Wahrheitswert um (z. B. IsEnabled = nicht Overlay offen).</summary>
+    public sealed class InverseBooleanConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+            !(value is bool b && b);
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+            !(value is bool b && b);
+    }
+
     /// <summary>
     /// True if the bound value equals the converter parameter (compared as text, ignoring case),
     /// e.g. to check the navigation entry of the currently shown page.

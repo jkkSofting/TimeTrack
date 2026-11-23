@@ -152,6 +152,22 @@ public sealed partial class TimeTracker : IDisposable
                 cmd.ExecuteNonQuery();
             }
 
+            // Migration: Datenbanken vor der globalen Standardrundung haben noch keine Spalte rundung_global (1 = erbt die globale Rundung).
+            // Nur beim Anlegen der Spalte (idempotent): Projekte mit eigener Rundung behalten diese (rundung_global = 0),
+            // Projekte ohne Rundung erben künftig die globale Standardrundung.
+            cmd.CommandText = "SELECT COUNT(*) FROM pragma_table_info('projects') WHERE name = 'rundung_global';";
+            if (Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) == 0)
+            {
+                cmd.CommandText = "ALTER TABLE projects ADD COLUMN rundung_global INTEGER NOT NULL DEFAULT 1;";
+                cmd.ExecuteNonQuery();
+                cmd.CommandText = "UPDATE projects SET rundung_global = 0 WHERE rundung_minuten > 0;";
+                cmd.ExecuteNonQuery();
+            }
+
+            // Programmweite Einstellungen als Schlüssel/Wert (z. B. die globale Standardrundung).
+            cmd.CommandText = "CREATE TABLE IF NOT EXISTS app_settings(key TEXT PRIMARY KEY, value TEXT);";
+            cmd.ExecuteNonQuery();
+
             // Projektcontrolling-Import (SAP-Excel): zusätzliche Tabellen, die Zeiterfassung bleibt unberührt.
             EnsureControllingSchema(cmd);
 
@@ -168,9 +184,53 @@ public sealed partial class TimeTracker : IDisposable
         }
     }
 
+    // ---------- Globale Einstellungen ----------
+
+    private const string GlobalRoundingKey = "rundung_global_minuten";
+
+    /// <summary>
+    /// Globale Standardrundung in Minuten (0 = aus), die alle Projekte mit <c>rundung_global = 1</c> erben.
+    /// Fehlt der Eintrag, gilt <see cref="RoundingOptions.DefaultGlobalMinutes"/>; der Wert ist immer ein erlaubter Wert.
+    /// </summary>
+    public int GetGlobalRoundingMinutes()
+    {
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = "SELECT value FROM app_settings WHERE key = @k;";
+            cmd.Parameters.AddWithValue("@k", GlobalRoundingKey);
+            var o = cmd.ExecuteScalar();
+            if (o == null || o == DBNull.Value) return RoundingOptions.DefaultGlobalMinutes;
+
+            int minutes;
+            if (!int.TryParse(Convert.ToString(o, CultureInfo.InvariantCulture), NumberStyles.Integer, CultureInfo.InvariantCulture, out minutes))
+                return RoundingOptions.DefaultGlobalMinutes;
+            return RoundingOptions.Normalize(minutes);
+        }
+    }
+
+    /// <summary>Speichert die globale Standardrundung (nicht erlaubte Werte werden zu 0 = aus normalisiert).</summary>
+    public void SetGlobalRoundingMinutes(int minutes)
+    {
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText =
+            @"INSERT INTO app_settings (key, value) VALUES (@k, @v)
+              ON CONFLICT(key) DO UPDATE SET value = excluded.value;";
+            cmd.Parameters.AddWithValue("@k", GlobalRoundingKey);
+            cmd.Parameters.AddWithValue("@v", RoundingOptions.Normalize(minutes).ToString(CultureInfo.InvariantCulture));
+            cmd.ExecuteNonQuery();
+        }
+    }
+
     // ---------- Projekte ----------
 
-    public void AddOrEnsureProject(string projektname, string kunde, string kostentraeger, bool istExtern = false, int rundungMinuten = 0)
+    /// <summary>
+    /// Legt ein Projekt an oder aktualisiert es (UPSERT; die Rundung wird dabei immer mitgeschrieben).
+    /// Rundung: <paramref name="rundungGlobal"/> true = erbt die globale Standardrundung, false = eigener Wert
+    /// (<paramref name="rundungMinuten"/>, 0 = für das Projekt aus). Ohne Angabe (null) gilt aus Gründen der
+    /// Rückwärtskompatibilität: <paramref name="rundungMinuten"/> &gt; 0 = eigener Wert, sonst erbt das Projekt die globale Rundung.
+    /// </summary>
+    public void AddOrEnsureProject(string projektname, string kunde, string kostentraeger, bool istExtern = false, int rundungMinuten = 0, bool? rundungGlobal = null)
     {
         if (string.IsNullOrWhiteSpace(projektname)) throw new ArgumentException("leer", nameof(projektname));
         if (string.IsNullOrWhiteSpace(kunde)) throw new ArgumentException("leer", nameof(kunde));
@@ -181,19 +241,23 @@ public sealed partial class TimeTracker : IDisposable
             // SQLite ab 3.24.0: UPSERT via ON CONFLICT .. DO UPDATE
             cmd.CommandText =
             @"
-            INSERT INTO projects (projektname, kunde, kostentraeger, ist_extern, rundung_minuten)
-                 VALUES (@name, @kunde, @kost, @ext, @rund)
+            INSERT INTO projects (projektname, kunde, kostentraeger, ist_extern, rundung_minuten, rundung_global)
+                 VALUES (@name, @kunde, @kost, @ext, @rund, @glob)
             ON CONFLICT(projektname) DO UPDATE SET
                  kunde = excluded.kunde,
                  kostentraeger = excluded.kostentraeger,
                  ist_extern = excluded.ist_extern,
-                 rundung_minuten = excluded.rundung_minuten
+                 rundung_minuten = excluded.rundung_minuten,
+                 rundung_global = excluded.rundung_global
             ";
+            int own = RoundingOptions.Normalize(rundungMinuten);
+            bool useGlobal = rundungGlobal ?? own <= 0;
             cmd.Parameters.AddWithValue("@name", projektname);
             cmd.Parameters.AddWithValue("@kunde", kunde);
             cmd.Parameters.AddWithValue("@kost", kostentraeger);
             cmd.Parameters.AddWithValue("@ext", istExtern ? 1 : 0);
-            cmd.Parameters.AddWithValue("@rund", RoundingOptions.Normalize(rundungMinuten));
+            cmd.Parameters.AddWithValue("@rund", own);
+            cmd.Parameters.AddWithValue("@glob", useGlobal ? 1 : 0);
             cmd.ExecuteNonQuery();
         }
     }
@@ -235,13 +299,18 @@ public sealed partial class TimeTracker : IDisposable
 
     public IEnumerable<ProjectRow> GetProjects()
     {
+        // Globalwert VOR dem Reader lesen (einmal pro Aufruf, nicht je Zeile).
+        int globalRounding = GetGlobalRoundingMinutes();
+
         using (var cmd = _conn.CreateCommand())
         {
-            cmd.CommandText = "SELECT projektname, kunde, anzahl_stunden, kostentraeger, ist_extern, quickselect_aktiv, rundung_minuten FROM projects ORDER BY projektname;";
+            cmd.CommandText = "SELECT projektname, kunde, anzahl_stunden, kostentraeger, ist_extern, quickselect_aktiv, rundung_minuten, rundung_global FROM projects ORDER BY projektname;";
             using (var r = cmd.ExecuteReader())
             {
                 while (r.Read())
                 {
+                    int own = RoundingOptions.Normalize(r.GetInt32(6));
+                    bool useGlobal = r.GetInt32(7) != 0;
                     yield return new ProjectRow
                     {
                         Projektname = r.GetString(0),
@@ -250,7 +319,9 @@ public sealed partial class TimeTracker : IDisposable
                         Kostentraeger = r.GetString(3),
                         IstExtern = r.GetInt32(4) != 0,
                         QuickSelectAktiv = r.GetInt32(5) != 0,
-                        RundungMinuten = RoundingOptions.Normalize(r.GetInt32(6))
+                        RundungEigenMinuten = own,
+                        RundungGlobal = useGlobal,
+                        RundungMinuten = RoundingOptions.Resolve(useGlobal, own, globalRounding)
                     };
                 }
             }
@@ -275,7 +346,14 @@ public sealed partial class TimeTracker : IDisposable
         }
     }
 
-    public void UpdateProject(string originalProjektname, string newProjektname, string kunde, string kostentraeger, bool istExtern = false, int rundungMinuten = 0)
+    /// <summary>
+    /// Aktualisiert ein Projekt. Rundung: Werden weder <paramref name="rundungMinuten"/> noch <paramref name="rundungGlobal"/>
+    /// übergeben (beide null), bleibt die bisherige Rundung des Projekts UNVERÄNDERT (bewusst konservativ; früher wurde sie auf 0 überschrieben,
+    /// kein Test verlangt das). Sonst: <paramref name="rundungGlobal"/> true = erbt die globale Standardrundung, false = eigener Wert;
+    /// ohne Angabe von <paramref name="rundungGlobal"/> gilt <paramref name="rundungMinuten"/> &gt; 0 = eigener Wert, 0 = erbt die globale Rundung.
+    /// Wird nur <paramref name="rundungGlobal"/> übergeben, bleibt der gespeicherte eigene Wert erhalten.
+    /// </summary>
+    public void UpdateProject(string originalProjektname, string newProjektname, string kunde, string kostentraeger, bool istExtern = false, int? rundungMinuten = null, bool? rundungGlobal = null)
     {
         if (string.IsNullOrWhiteSpace(originalProjektname)) throw new ArgumentException("leer", nameof(originalProjektname));
         if (string.IsNullOrWhiteSpace(newProjektname)) throw new ArgumentException("leer", nameof(newProjektname));
@@ -311,6 +389,24 @@ public sealed partial class TimeTracker : IDisposable
                 throw new InvalidOperationException($"Projektname '{newProjektname}' ist bereits vergeben.");
             }
 
+            // Rundung bestimmen (siehe XML-Kommentar): ohne Angabe die vorhandenen Werte behalten
+            int own;
+            bool useGlobal;
+            cmd.Parameters.Clear();
+            cmd.CommandText = "SELECT rundung_minuten, rundung_global FROM projects WHERE id = @id;";
+            cmd.Parameters.AddWithValue("@id", originalId);
+            using (var r = cmd.ExecuteReader())
+            {
+                r.Read();
+                own = RoundingOptions.Normalize(r.GetInt32(0));
+                useGlobal = r.GetInt32(1) != 0;
+            }
+            if (rundungMinuten.HasValue || rundungGlobal.HasValue)
+            {
+                if (rundungMinuten.HasValue) own = RoundingOptions.Normalize(rundungMinuten.Value);
+                useGlobal = rundungGlobal ?? (own <= 0);
+            }
+
             // Update
             cmd.Parameters.Clear();
             cmd.CommandText = @"
@@ -319,13 +415,15 @@ public sealed partial class TimeTracker : IDisposable
                    kunde = @kunde,
                    kostentraeger = @kost,
                    ist_extern = @ext,
-                   rundung_minuten = @rund
+                   rundung_minuten = @rund,
+                   rundung_global = @glob
              WHERE id = @id;";
             cmd.Parameters.AddWithValue("@pname", newProjektname);
             cmd.Parameters.AddWithValue("@kunde", kunde);
             cmd.Parameters.AddWithValue("@kost", kostentraeger);
             cmd.Parameters.AddWithValue("@ext", istExtern ? 1 : 0);
-            cmd.Parameters.AddWithValue("@rund", RoundingOptions.Normalize(rundungMinuten));
+            cmd.Parameters.AddWithValue("@rund", own);
+            cmd.Parameters.AddWithValue("@glob", useGlobal ? 1 : 0);
             cmd.Parameters.AddWithValue("@id", originalId);
             cmd.ExecuteNonQuery();
 
@@ -473,10 +571,11 @@ public sealed partial class TimeTracker : IDisposable
     public List<TimeEntryRow> GetTimeEntriesBetween(DateTime fromInclusive, DateTime toInclusive)
     {
         var result = new List<TimeEntryRow>();
+        int globalRounding = GetGlobalRoundingMinutes();
         using (var cmd = _conn.CreateCommand())
         {
             cmd.CommandText = @"
-            SELECT te.id, te.datum, te.startzeit, te.endzeit, te.beschreibung, p.projektname, p.ist_extern, p.rundung_minuten
+            SELECT te.id, te.datum, te.startzeit, te.endzeit, te.beschreibung, p.projektname, p.ist_extern, p.rundung_global, p.rundung_minuten
               FROM time_entries te
               JOIN projects p ON p.id = te.projekt_id
              WHERE te.datum >= @from AND te.datum <= @to
@@ -497,7 +596,7 @@ public sealed partial class TimeTracker : IDisposable
                         Beschreibung = r.IsDBNull(4) ? null : r.GetString(4),
                         Projektname = r.GetString(5),
                         IstExtern = r.GetInt32(6) != 0,
-                        RundungMinuten = RoundingOptions.Normalize(r.GetInt32(7))
+                        RundungMinuten = RoundingOptions.Resolve(r.GetInt32(7) != 0, r.GetInt32(8), globalRounding)
                     });
                 }
             }
@@ -667,7 +766,12 @@ public sealed partial class TimeTracker : IDisposable
         public string Kostentraeger { get; set; }
         public bool IstExtern { get; set; }     // vom Kunden bezahlt
         public bool QuickSelectAktiv { get; set; } // im Quick Switch wählbar
-        public int RundungMinuten { get; set; }    // SAP-Aufrundung je Buchung: 0 = aus, 5, 10, 15, 60
+        /// <summary>EFFEKTIVE SAP-Aufrundung je Buchung (bereits aufgelöst, 0 = aus, 5, 10, 15, 60).</summary>
+        public int RundungMinuten { get; set; }
+        /// <summary>Eigener, roher Rundungswert des Projekts (0 = aus); gilt nur, wenn <see cref="RundungGlobal"/> false ist.</summary>
+        public int RundungEigenMinuten { get; set; }
+        /// <summary>true = das Projekt erbt die globale Standardrundung.</summary>
+        public bool RundungGlobal { get; set; }
     }
 
     public class TimeEntryRow
@@ -679,7 +783,7 @@ public sealed partial class TimeTracker : IDisposable
         public string Beschreibung { get; set; }
         public string Projektname { get; set; } // <— NEU (für Anzeige)
         public bool IstExtern { get; set; }     // nur von GetTimeEntriesBetween gefüllt
-        public int RundungMinuten { get; set; } // Rundung des Projekts (0 = aus); nur von GetTimeEntriesBetween gefüllt
+        public int RundungMinuten { get; set; } // effektive Rundung des Projekts (0 = aus); nur von GetTimeEntriesBetween gefüllt
     }
 
 }

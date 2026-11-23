@@ -168,25 +168,19 @@ namespace Zeitmanagement.ViewModel
         public string NewEnd { get => _newEnd; set => SetProperty(ref _newEnd, value); }
         public string NewBeschreibung { get => _newBeschreibung; set => SetProperty(ref _newBeschreibung, value); }
 
-        // --- Edit-Form ---
-        private bool _isEditPanelOpen;
+        // --- Bearbeiten (Overlay) ---
+        private int? _editingEntryId;
 
-        private int _editId;
-        private string _editProjektname, _editStart, _editEnd, _editBeschreibung;
-
-        public bool IsEditPanelOpen
+        /// <summary>Id der Buchung, die gerade im Bearbeiten-Overlay offen ist; sonst null. Steuert die Graph-Hervorhebung.</summary>
+        public int? EditingEntryId
         {
-            get => _isEditPanelOpen;
-            set
+            get => _editingEntryId;
+            private set
             {
-                SetProperty(ref _isEditPanelOpen, value);
-                UpdateGraphSelection();
+                if (SetProperty(ref _editingEntryId, value))
+                    UpdateGraphSelection();
             }
         }
-        public string EditProjektname { get => _editProjektname; set => SetProperty(ref _editProjektname, value); }
-        public string EditStart { get => _editStart; set => SetProperty(ref _editStart, value); }
-        public string EditEnd { get => _editEnd; set => SetProperty(ref _editEnd, value); }
-        public string EditBeschreibung { get => _editBeschreibung; set => SetProperty(ref _editBeschreibung, value); }
 
         // --- Commands ---
         public DelegateCommand RefreshCommand { get; }
@@ -195,9 +189,6 @@ namespace Zeitmanagement.ViewModel
         public DelegateCommand AddEntryCommand { get; }
         public DelegateCommand ResetNewFormCommand { get; }
         public DelegateCommand EditEntryCommand { get; }
-        public DelegateCommand SaveEditCommand { get; }
-        public DelegateCommand CancelEditCommand { get; }
-        public DelegateCommand DeleteEditingEntryCommand { get; }
         public DelegateCommand GoToNextDayCommand { get; }
         public DelegateCommand GoToLastDayCommand { get; }
 
@@ -211,9 +202,8 @@ namespace Zeitmanagement.ViewModel
             ResetNewFormCommand = new DelegateCommand(_ => ResetNewForm());
 
             EditEntryCommand = new DelegateCommand(o => BeginEdit(o as EntryItemVM), o => o is EntryItemVM);
-            SaveEditCommand = new DelegateCommand(_ => SaveEdit(), _ => CanSaveEdit());
-            CancelEditCommand = new DelegateCommand(_ => CancelEdit());
-            DeleteEditingEntryCommand = new DelegateCommand(_ => DeleteEditingEntry(), _ => IsEditPanelOpen);
+            // Jedes geschlossene Overlay (Speichern, Löschen, Abbrechen, Esc) hebt die Graph-Hervorhebung auf.
+            OverlayService.Instance.Closed += (s, e) => EditingEntryId = null;
 
             GoToNextDayCommand = new DelegateCommand(_ =>
             {
@@ -419,63 +409,56 @@ namespace Zeitmanagement.ViewModel
         }
 
         // --- Edit ---
+        /// <summary>Öffnet das Bearbeiten-Overlay für eine Buchung.</summary>
         private void BeginEdit(EntryItemVM vm)
         {
             if (vm == null) return;
-            _editId = vm.Id;
-            EditProjektname = vm.Projektname;
-            EditStart = vm.Startzeit;
-            EditEnd = vm.Endzeit;
-            EditBeschreibung = vm.Beschreibung;
-            IsEditPanelOpen = true;
+            EditingEntryId = vm.Id;
+            OverlayService.Instance.Show(new EntryEditOverlayViewModel(
+                vm.Id,
+                vm.Projektname,
+                vm.Startzeit,
+                vm.Endzeit,
+                vm.Beschreibung,
+                ProjectNames,
+                SaveEdit,
+                DeleteEntry));
         }
 
-        private bool CanSaveEdit()
-        {
-            return IsEditPanelOpen
-                   && IsHHmm(EditStart)
-                   && IsHHmm(EditEnd)
-                   && IsStartBeforeEnd(EditStart, EditEnd);
-        }
-
-        private void SaveEdit()
+        /// <summary>Speichert die Änderungen aus dem Overlay. Liefert false, wenn das Overlay offen bleiben soll.</summary>
+        private bool SaveEdit(EntryEditOverlayViewModel vm)
         {
             var selectedDate = DateTime.TryParseExact(SelectedDate, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt)
                 ? dt
                 : DateTime.Today;
 
-            if (!ConfirmIfOverlapping(EditStart, EditEnd, _editId))
-                return;
+            if (!ConfirmIfOverlapping(vm.Start, vm.End, vm.Id))
+                return false;
 
             try
             {
-                MainViewModel.DbInstance.UpdateTimeEntry(_editId, selectedDate, EditStart, EditEnd, EditProjektname, EditBeschreibung);
+                MainViewModel.DbInstance.UpdateTimeEntry(vm.Id, selectedDate, vm.Start, vm.End, vm.Projektname, vm.Beschreibung);
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Buchung konnte nicht gespeichert werden", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                return false;
             }
-            IsEditPanelOpen = false;
             Refresh();
-        }
-
-        private void CancelEdit()
-        {
-            IsEditPanelOpen = false;
+            return true;
         }
 
         // --- Delete ---
-        /// <summary>Löscht die Buchung, die gerade im Bearbeiten-Panel geöffnet ist.</summary>
-        private void DeleteEditingEntry()
+        /// <summary>Löscht die Buchung aus dem Bearbeiten-Overlay.</summary>
+        private bool DeleteEntry(EntryEditOverlayViewModel vm)
         {
-            MainViewModel.DbInstance.DeleteTimeEntry(_editId);
-            IsEditPanelOpen = false;
+            MainViewModel.DbInstance.DeleteTimeEntry(vm.Id);
             Refresh();
+            return true;
         }
 
         // --- Helpers ---
-        private static bool IsHHmm(string s)
+        internal static bool IsHHmm(string s)
         {
             return TimeSpan.TryParseExact(
                 s,
@@ -484,7 +467,7 @@ namespace Zeitmanagement.ViewModel
                 out _);
         }
 
-        private static bool IsStartBeforeEnd(string startHHmm, string endHHmm)
+        internal static bool IsStartBeforeEnd(string startHHmm, string endHHmm)
         {
             var formats = new[] { @"hh\:mm", @"h\:mm" };
             return TimeSpan.TryParseExact(startHHmm, formats, CultureInfo.InvariantCulture, out var start)
@@ -988,13 +971,13 @@ namespace Zeitmanagement.ViewModel
             UpdateGraphSelection();
         }
 
-        /// <summary>Hebt Knoten und Label der Buchung hervor, die gerade im Bearbeiten-Panel offen ist.</summary>
+        /// <summary>Hebt Knoten und Label der Buchung hervor, die gerade im Bearbeiten-Overlay offen ist.</summary>
         private void UpdateGraphSelection()
         {
             foreach (var node in GraphNodes)
-                node.IsSelected = IsEditPanelOpen && node.Entry != null && node.Entry.Id == _editId;
+                node.IsSelected = EditingEntryId.HasValue && node.Entry != null && node.Entry.Id == EditingEntryId.Value;
             foreach (var label in GraphLabels)
-                label.IsSelected = IsEditPanelOpen && label.Entry != null && label.Entry.Id == _editId;
+                label.IsSelected = EditingEntryId.HasValue && label.Entry != null && label.Entry.Id == EditingEntryId.Value;
         }
     }
 
@@ -1053,7 +1036,7 @@ namespace Zeitmanagement.ViewModel
         /// <summary>Die zugehörige Buchung; null bei den Beginn-/Ende-Markern (nicht klickbar).</summary>
         public EntryItemVM Entry { get; set; }
 
-        /// <summary>True, solange die zugehörige Buchung im Bearbeiten-Panel offen ist.</summary>
+        /// <summary>True, solange die zugehörige Buchung im Bearbeiten-Overlay offen ist.</summary>
         public bool IsSelected { get => _isSelected; set => SetProperty(ref _isSelected, value); }
     }
 
@@ -1073,7 +1056,7 @@ namespace Zeitmanagement.ViewModel
         /// <summary>Die zugehörige Buchung; null bei Pausen (nicht klickbar).</summary>
         public EntryItemVM Entry { get; set; }
 
-        /// <summary>True, solange die zugehörige Buchung im Bearbeiten-Panel offen ist.</summary>
+        /// <summary>True, solange die zugehörige Buchung im Bearbeiten-Overlay offen ist.</summary>
         public bool IsSelected { get => _isSelected; set => SetProperty(ref _isSelected, value); }
     }
 }
