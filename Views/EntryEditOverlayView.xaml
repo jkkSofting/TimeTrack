@@ -1,0 +1,59 @@
+<UserControl
+    x:Class="Zeitmanagement.Views.EntryEditOverlayView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Zeitmanagement.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodel="clr-namespace:Zeitmanagement.ViewModel"
+    d:DataContext="{d:DesignInstance Type=viewmodel:EntryEditOverlayViewModel}"
+    d:DesignHeight="360"
+    d:DesignWidth="560"
+    mc:Ignorable="d">
+
+    <!--  Nur die Formularfelder; Titel und Speichern/Abbrechen/Löschen zeichnet das MainWindow (Overlay-Hülle)  -->
+    <UserControl.Resources>
+        <Style x:Key="FormLabel" TargetType="TextBlock">
+            <Setter Property="Margin" Value="2,0,0,4" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource Theme.TextMuted}" />
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <TextBlock Style="{StaticResource FormLabel}" Text="Projekt" />
+        <ComboBox ItemsSource="{Binding ProjectNames}" SelectedItem="{Binding Projektname, Mode=TwoWay}" />
+
+        <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
+            <StackPanel>
+                <TextBlock Style="{StaticResource FormLabel}" Text="Von" />
+                <TextBox
+                    Width="90"
+                    local:Ui.Placeholder="HH:mm"
+                    Text="{Binding Start, UpdateSourceTrigger=PropertyChanged}"
+                    ToolTip="Start (HH:mm)" />
+            </StackPanel>
+            <StackPanel Margin="10,0,0,0">
+                <TextBlock Style="{StaticResource FormLabel}" Text="Bis" />
+                <TextBox
+                    Width="90"
+                    local:Ui.Placeholder="HH:mm"
+                    Text="{Binding End, UpdateSourceTrigger=PropertyChanged}"
+                    ToolTip="Ende (HH:mm)" />
+            </StackPanel>
+        </StackPanel>
+
+        <TextBlock
+            Margin="0,12,0,0"
+            Style="{StaticResource FormLabel}"
+            Text="Beschreibung" />
+        <TextBox
+            MinHeight="70"
+            local:Ui.Placeholder="Woran hast du gearbeitet? (optional)"
+            AcceptsReturn="True"
+            Text="{Binding Beschreibung, UpdateSourceTrigger=PropertyChanged}"
+            TextWrapping="Wrap"
+            VerticalContentAlignment="Top"
+            VerticalScrollBarVisibility="Auto" />
+    </StackPanel>
+</UserControl>

@@ -222,7 +222,6 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <!--  Neue Buchung  -->
@@ -309,7 +308,7 @@
                         bis zur letzten Endzeit von oben nach unten. Überschneidende Buchungen zweigen als
                         parallele Branches ab, echte Pausen werden gestrichelt dargestellt. Jede Buchung
                         hat eine eigene Zeile: Knoten und Label stehen immer auf gleicher Höhe. Klick auf
-                        einen Knoten oder ein Label öffnet die Buchung im Bearbeiten-Panel unten (inkl.
+                        einen Knoten oder ein Label öffnet die Buchung im Bearbeiten-Overlay (inkl.
                         Löschen dort); die geöffnete Buchung bleibt im Graph hervorgehoben.
                     -->
                     <Grid Grid.Row="1" Margin="0,16,0,0">
@@ -504,73 +503,6 @@
                         </ScrollViewer>
                     </Grid>
 
-                    <!--  Buchung bearbeiten (öffnet sich per Klick auf eine Buchung im Verlauf)  -->
-                    <Border
-                        Grid.Row="2"
-                        Margin="0,12,0,0"
-                        Background="{DynamicResource Theme.AccentSoft}"
-                        BorderBrush="{DynamicResource Theme.Accent}"
-                        Style="{StaticResource Inset}"
-                        Visibility="{Binding IsEditPanelOpen, Converter={StaticResource BoolToVis}}">
-                        <StackPanel>
-                            <TextBlock
-                                Margin="2,0,0,8"
-                                FontWeight="SemiBold"
-                                Foreground="{DynamicResource Theme.AccentSoftText}"
-                                Text="Buchung bearbeiten" />
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="2*" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="3*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-
-                                <ComboBox ItemsSource="{Binding ProjectNames}" SelectedItem="{Binding EditProjektname, Mode=TwoWay}" />
-                                <TextBox
-                                    Grid.Column="1"
-                                    Width="80"
-                                    Margin="10,0,0,0"
-                                    local:Ui.Placeholder="HH:mm"
-                                    Text="{Binding EditStart}"
-                                    ToolTip="Start (HH:mm)" />
-                                <TextBox
-                                    Grid.Column="2"
-                                    Width="80"
-                                    Margin="10,0,0,0"
-                                    local:Ui.Placeholder="HH:mm"
-                                    Text="{Binding EditEnd}"
-                                    ToolTip="Ende (HH:mm)" />
-                                <TextBox
-                                    Grid.Column="3"
-                                    Margin="10,0,0,0"
-                                    local:Ui.Placeholder="Beschreibung"
-                                    Text="{Binding EditBeschreibung}" />
-
-                                <StackPanel
-                                    Grid.Column="4"
-                                    Margin="10,0,0,0"
-                                    Orientation="Horizontal">
-                                    <Button
-                                        local:Ui.Glyph="&#xE74E;"
-                                        Command="{Binding SaveEditCommand}"
-                                        Content="Speichern"
-                                        Style="{StaticResource Button.Primary}" />
-                                    <Button
-                                        Margin="6,0,0,0"
-                                        Command="{Binding CancelEditCommand}"
-                                        Content="Abbrechen" />
-                                    <Button
-                                        Margin="6,0,0,0"
-                                        local:Ui.Glyph="&#xE74D;"
-                                        Command="{Binding DeleteEditingEntryCommand}"
-                                        Content="Löschen"
-                                        Style="{StaticResource Button.Danger}" />
-                                </StackPanel>
-                            </Grid>
-                        </StackPanel>
-                    </Border>
                 </Grid>
             </Border>
 
