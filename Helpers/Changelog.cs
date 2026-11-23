@@ -53,6 +53,10 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.48.0", new DateTime(2026, 11, 23), "Nur eine Instanz",
+                Neu("TimeTrack läuft jetzt nur noch einmal: Startest du es ein zweites Mal – etwa über die Verknüpfung oder den Autostart –, wird das bereits laufende Fenster in den Vordergrund geholt und ein Hinweis eingeblendet, statt eine zweite Instanz zu öffnen. Lässt sich die laufende Instanz nicht erreichen, erklärt eine Meldung, was zu tun ist. So greifen nie zwei Instanzen gleichzeitig auf dieselbe Datenbank zu."),
+                Verbessert("Beim Neustart aus den Einstellungen (Sicherung wiederherstellen, Plugins) wartet die neue Instanz, bis die alte beendet ist.")),
+
             new ChangelogRelease("2026.47.9", new DateTime(2026, 11, 23), "Standardrundung und Overlays",
                 Neu("Globale Standardrundung: Die SAP-Verrechnung rundet jede Buchung auf die nächste angefangene Zeiteinheit auf. Die Standardrundung gilt ab Werk für 15 Minuten und ist für alle Projekte gleich, die sie erben."),
                 Neu("Jedes Projekt wählt unter „Projekte“ seine Rundung: die Standardrundung erben, eine eigene Rundung (5, 10, 15 oder 60 Minuten) festlegen oder die Rundung für dieses Projekt ausschalten."),

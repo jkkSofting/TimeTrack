@@ -128,6 +128,7 @@
     <Compile Include="Helpers\SapBookingCalculator.cs" />
     <Compile Include="Helpers\SessionActivityMonitor.cs" />
     <Compile Include="Helpers\SessionLockState.cs" />
+    <Compile Include="Helpers\SingleInstanceGuard.cs" />
     <Compile Include="Helpers\StartupMode.cs" />
     <Compile Include="Helpers\SystemAudio.cs" />
     <Compile Include="Helpers\TagesschauJingle.cs" />
