@@ -13,17 +13,6 @@
 
     <UserControl.Resources>
         <local:DecimalHoursToHHmmConverter x:Key="HoursToHHmm" />
-
-        <Style x:Key="FormLabel" TargetType="TextBlock">
-            <Setter Property="Margin" Value="2,0,0,4" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="{DynamicResource Theme.TextMuted}" />
-        </Style>
-
-        <!--  Gemeinsame Felder für "Neues Projekt" und "Projekt bearbeiten"  -->
-        <Style x:Key="ProjectFormGrid" TargetType="Grid">
-            <Setter Property="Margin" Value="0,8,0,0" />
-        </Style>
     </UserControl.Resources>
 
     <Grid Style="{StaticResource Page}">
@@ -61,7 +50,7 @@
                 <Button
                     Margin="8,0,0,0"
                     local:Ui.Glyph="&#xE710;"
-                    Command="{Binding ToggleAddPanelCommand}"
+                    Command="{Binding NewProjectCommand}"
                     Content="Neues Projekt"
                     Style="{StaticResource Button.Primary}" />
             </StackPanel>
@@ -79,204 +68,64 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <!--  Zeitraum-Filter für Buchungen/Stunden  -->
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock
-                        Margin="0,0,10,0"
+                <!--  Zeitraum-Filter für Buchungen/Stunden; rechts die Standardrundung (Einstellung nur im Overlay)  -->
+                <DockPanel>
+                    <StackPanel
                         VerticalAlignment="Center"
-                        Style="{StaticResource Text.Muted}"
-                        Text="Stunden im Zeitraum" />
-                    <TextBox
-                        Width="110"
-                        local:Ui.Placeholder="Von (TT.MM.JJJJ)"
-                        Text="{Binding StartDate, UpdateSourceTrigger=PropertyChanged}"
-                        ToolTip="Von (TT.MM.JJJJ)" />
-                    <TextBlock
-                        Margin="8,0"
-                        VerticalAlignment="Center"
-                        Style="{StaticResource Text.Muted}"
-                        Text="–" />
-                    <TextBox
-                        Width="110"
-                        local:Ui.Placeholder="Bis (TT.MM.JJJJ)"
-                        Text="{Binding EndDate, UpdateSourceTrigger=PropertyChanged}"
-                        ToolTip="Bis (TT.MM.JJJJ)" />
-                    <Button
-                        Margin="10,0,0,0"
-                        local:Ui.Glyph="&#xE71C;"
-                        Command="{Binding FilterProjectsCommand}"
-                        Content="Filtern" />
-                    <Button
-                        Margin="6,0,0,0"
-                        Command="{Binding ResetProjectsFilterCommand}"
-                        Content="Zurücksetzen"
-                        Style="{StaticResource Button.Ghost}" />
-                </StackPanel>
-
-                <!--  Neues Projekt  -->
-                <Border
-                    Grid.Row="1"
-                    Margin="0,16,0,0"
-                    Style="{StaticResource Inset}"
-                    Visibility="{Binding IsAddPanelOpen, Converter={StaticResource BoolToVis}}">
-                    <StackPanel>
-                        <TextBlock Style="{StaticResource Text.Section}" Text="Neues Projekt" />
-                        <Grid Style="{StaticResource ProjectFormGrid}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="2*" />
-                                <ColumnDefinition Width="2*" />
-                                <ColumnDefinition Width="2*" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-
-                            <TextBox local:Ui.Placeholder="Projektname" Text="{Binding NewProjektname, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBox
-                                Grid.Column="1"
-                                Margin="10,0,0,0"
-                                local:Ui.Placeholder="Kunde"
-                                Text="{Binding NewKunde, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBox
-                                Grid.Column="2"
-                                Margin="10,0,0,0"
-                                local:Ui.Placeholder="Kostenträger"
-                                Text="{Binding NewKostentraeger, UpdateSourceTrigger=PropertyChanged}" />
-                            <StackPanel
-                                Grid.Column="3"
-                                Margin="16,0,0,0"
-                                VerticalAlignment="Center"
-                                Orientation="Horizontal">
-                                <TextBlock
-                                    Margin="0,0,8,0"
-                                    VerticalAlignment="Center"
-                                    Style="{StaticResource FormLabel}"
-                                    Text="Aufrunden pro Buchung" />
-                                <ComboBox
-                                    Width="110"
-                                    AutomationProperties.Name="Aufrunden pro Buchung"
-                                    ItemsSource="{Binding RoundingChoices}"
-                                    SelectedValue="{Binding NewRundungMinuten}"
-                                    SelectedValuePath="Minutes"
-                                    ToolTip="Jede Buchung dieses Projekts wird in der SAP-Verrechnung auf die nächste angefangene Einheit aufgerundet (bei 15 Minuten: 2 Min → 15 Min, 17 Min → 30 Min).">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Label}" />
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
-                            </StackPanel>
-                            <CheckBox
-                                Grid.Column="4"
-                                Margin="16,0"
-                                VerticalAlignment="Center"
-                                Content="Extern (vom Kunden bezahlt)"
-                                IsChecked="{Binding NewIstExtern}"
-                                ToolTip="Vom Kunden bezahlt. Externe Zeit deckt parallele interne Zeit in der SAP-Verrechnung ab." />
-                            <StackPanel Grid.Column="5" Orientation="Horizontal">
-                                <Button
-                                    local:Ui.Glyph="&#xE710;"
-                                    Command="{Binding AddProjectCommand}"
-                                    Content="Hinzufügen"
-                                    Style="{StaticResource Button.Primary}" />
-                                <Button
-                                    Margin="6,0,0,0"
-                                    Command="{Binding ToggleAddPanelCommand}"
-                                    Content="Abbrechen" />
-                            </StackPanel>
-                        </Grid>
-                    </StackPanel>
-                </Border>
-
-                <!--  Projekt bearbeiten  -->
-                <Border
-                    Grid.Row="2"
-                    Margin="0,16,0,0"
-                    Background="{DynamicResource Theme.AccentSoft}"
-                    BorderBrush="{DynamicResource Theme.Accent}"
-                    Style="{StaticResource Inset}"
-                    Visibility="{Binding IsEditPanelOpen, Converter={StaticResource BoolToVis}}">
-                    <StackPanel>
+                        DockPanel.Dock="Right"
+                        Orientation="Horizontal">
                         <TextBlock
-                            FontWeight="SemiBold"
-                            Foreground="{DynamicResource Theme.AccentSoftText}"
-                            Style="{StaticResource Text.Section}"
-                            Text="Projekt bearbeiten" />
-                        <Grid Style="{StaticResource ProjectFormGrid}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="2*" />
-                                <ColumnDefinition Width="2*" />
-                                <ColumnDefinition Width="2*" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-
-                            <TextBox local:Ui.Placeholder="Projektname" Text="{Binding EditProjektname, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBox
-                                Grid.Column="1"
-                                Margin="10,0,0,0"
-                                local:Ui.Placeholder="Kunde"
-                                Text="{Binding EditKunde, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBox
-                                Grid.Column="2"
-                                Margin="10,0,0,0"
-                                local:Ui.Placeholder="Kostenträger"
-                                Text="{Binding EditKostentraeger, UpdateSourceTrigger=PropertyChanged}" />
-                            <StackPanel
-                                Grid.Column="3"
-                                Margin="16,0,0,0"
-                                VerticalAlignment="Center"
-                                Orientation="Horizontal">
-                                <TextBlock
-                                    Margin="0,0,8,0"
-                                    VerticalAlignment="Center"
-                                    Style="{StaticResource FormLabel}"
-                                    Text="Aufrunden pro Buchung" />
-                                <ComboBox
-                                    Width="110"
-                                    AutomationProperties.Name="Aufrunden pro Buchung"
-                                    ItemsSource="{Binding RoundingChoices}"
-                                    SelectedValue="{Binding EditRundungMinuten}"
-                                    SelectedValuePath="Minutes"
-                                    ToolTip="Jede Buchung dieses Projekts wird in der SAP-Verrechnung auf die nächste angefangene Einheit aufgerundet (bei 15 Minuten: 2 Min → 15 Min, 17 Min → 30 Min).">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Label}" />
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
-                            </StackPanel>
-                            <CheckBox
-                                Grid.Column="4"
-                                Margin="16,0"
-                                VerticalAlignment="Center"
-                                Content="Extern (vom Kunden bezahlt)"
-                                IsChecked="{Binding EditIstExtern}"
-                                ToolTip="Vom Kunden bezahlt. Externe Zeit deckt parallele interne Zeit in der SAP-Verrechnung ab." />
-                            <StackPanel Grid.Column="5" Orientation="Horizontal">
-                                <Button
-                                    local:Ui.Glyph="&#xE74E;"
-                                    Command="{Binding SaveEditProjectCommand}"
-                                    Content="Speichern"
-                                    Style="{StaticResource Button.Primary}" />
-                                <Button
-                                    Margin="6,0,0,0"
-                                    Command="{Binding CancelEditProjectCommand}"
-                                    Content="Abbrechen" />
-                            </StackPanel>
-                        </Grid>
+                            VerticalAlignment="Center"
+                            Style="{StaticResource Text.Muted}"
+                            Text="{Binding GlobalRoundingText}"
+                            ToolTip="Gilt für alle Projekte ohne eigene Rundung" />
+                        <Button
+                            Margin="4,0,0,0"
+                            local:Ui.Glyph="&#xE70F;"
+                            Command="{Binding EditGlobalRoundingCommand}"
+                            Style="{StaticResource Button.IconGhost}"
+                            ToolTip="Standardrundung ändern" />
                     </StackPanel>
-                </Border>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock
+                            Margin="0,0,10,0"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource Text.Muted}"
+                            Text="Stunden im Zeitraum" />
+                        <TextBox
+                            Width="110"
+                            local:Ui.Placeholder="Von (TT.MM.JJJJ)"
+                            Text="{Binding StartDate, UpdateSourceTrigger=PropertyChanged}"
+                            ToolTip="Von (TT.MM.JJJJ)" />
+                        <TextBlock
+                            Margin="8,0"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource Text.Muted}"
+                            Text="–" />
+                        <TextBox
+                            Width="110"
+                            local:Ui.Placeholder="Bis (TT.MM.JJJJ)"
+                            Text="{Binding EndDate, UpdateSourceTrigger=PropertyChanged}"
+                            ToolTip="Bis (TT.MM.JJJJ)" />
+                        <Button
+                            Margin="10,0,0,0"
+                            local:Ui.Glyph="&#xE71C;"
+                            Command="{Binding FilterProjectsCommand}"
+                            Content="Filtern" />
+                        <Button
+                            Margin="6,0,0,0"
+                            Command="{Binding ResetProjectsFilterCommand}"
+                            Content="Zurücksetzen"
+                            Style="{StaticResource Button.Ghost}" />
+                    </StackPanel>
+                </DockPanel>
 
                 <!--  Tabelle  -->
                 <DataGrid
-                    Grid.Row="3"
+                    Grid.Row="1"
                     Margin="0,16,0,0"
                     AutoGenerateColumns="False"
                     CanUserAddRows="False"

@@ -1,0 +1,55 @@
+<UserControl
+    x:Class="Zeitmanagement.Views.GlobalRoundingOverlayView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodel="clr-namespace:Zeitmanagement.ViewModel"
+    d:DataContext="{d:DesignInstance Type=viewmodel:GlobalRoundingOverlayViewModel}"
+    mc:Ignorable="d">
+
+    <StackPanel MinWidth="420">
+        <TextBlock
+            Style="{StaticResource Text.Muted}"
+            Text="Gilt für alle Projekte, die keine eigene Rundung haben."
+            TextWrapping="Wrap" />
+
+        <TextBlock
+            Margin="2,16,0,4"
+            FontSize="12"
+            Foreground="{DynamicResource Theme.TextMuted}"
+            Text="Aufrunden pro Buchung" />
+        <ComboBox
+            Width="180"
+            HorizontalAlignment="Left"
+            AutomationProperties.Name="Standardrundung"
+            ItemsSource="{Binding Choices}"
+            SelectedValue="{Binding SelectedMinutes}"
+            SelectedValuePath="Minutes">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Label}" />
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+
+        <TextBlock
+            Margin="0,14,0,0"
+            Style="{StaticResource Text.Muted}"
+            Text="Jede Buchung wird in der SAP-Verrechnung auf die nächste angefangene Einheit aufgerundet (bei 15 Minuten: 2 Min → 15 Min, 17 Min → 30 Min)."
+            TextWrapping="Wrap" />
+
+        <TextBlock
+            Margin="0,10,0,0"
+            Style="{StaticResource Text.Body}"
+            Text="{Binding InheritText}"
+            TextWrapping="Wrap" />
+
+        <TextBlock
+            Margin="0,14,0,0"
+            Foreground="{DynamicResource Theme.Danger}"
+            Text="{Binding ErrorText}"
+            TextWrapping="Wrap"
+            Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}" />
+    </StackPanel>
+</UserControl>

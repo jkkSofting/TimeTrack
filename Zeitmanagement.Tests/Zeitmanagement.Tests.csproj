@@ -46,6 +46,9 @@
     <Compile Include="..\ViewModel\ListSync.cs" Link="Linked\ListSync.cs" />
     <Compile Include="..\ViewModel\OverlayService.cs" Link="Linked\OverlayService.cs" />
     <Compile Include="..\ViewModel\OverlayViewModelBase.cs" Link="Linked\OverlayViewModelBase.cs" />
+    <Compile Include="..\ViewModel\RoundingChoice.cs" Link="Linked\RoundingChoice.cs" />
+    <Compile Include="..\ViewModel\ProjectEditOverlayViewModel.cs" Link="Linked\ProjectEditOverlayViewModel.cs" />
+    <Compile Include="..\ViewModel\GlobalRoundingOverlayViewModel.cs" Link="Linked\GlobalRoundingOverlayViewModel.cs" />
     <Compile Include="..\MVVM\BindableBase.cs" Link="Linked\BindableBase.cs" />
     <Compile Include="..\MVVM\DelegateCommand.cs" Link="Linked\DelegateCommand.cs" />
     <Compile Include="..\Helpers\Plugins\PluginStorage.cs" Link="Linked\PluginStorage.cs" />

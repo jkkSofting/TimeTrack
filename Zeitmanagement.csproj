@@ -146,6 +146,9 @@
     <Compile Include="ViewModel\PluginSettingsViewModel.cs" />
     <Compile Include="ViewModel\ProjectControllingViewModel.cs" />
     <Compile Include="ViewModel\ProjectsViewModel.cs" />
+    <Compile Include="ViewModel\ProjectEditOverlayViewModel.cs" />
+    <Compile Include="ViewModel\GlobalRoundingOverlayViewModel.cs" />
+    <Compile Include="ViewModel\RoundingChoice.cs" />
     <Compile Include="ViewModel\QuickSelectItemViewModel.cs" />
     <Compile Include="ViewModel\SapBookingViewModel.cs" />
     <Compile Include="ViewModel\QuickSelectViewModel.cs" />
@@ -189,6 +192,12 @@
     </Compile>
     <Compile Include="Views\ProjectsView.xaml.cs">
       <DependentUpon>ProjectsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ProjectEditOverlayView.xaml.cs">
+      <DependentUpon>ProjectEditOverlayView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\GlobalRoundingOverlayView.xaml.cs">
+      <DependentUpon>GlobalRoundingOverlayView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\FishWindow.xaml.cs">
       <DependentUpon>FishWindow.xaml</DependentUpon>
@@ -252,6 +261,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\ProjectsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ProjectEditOverlayView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\GlobalRoundingOverlayView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

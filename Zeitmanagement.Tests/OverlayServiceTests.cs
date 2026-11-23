@@ -8,6 +8,8 @@ using Zeitmanagement.ViewModel;
 namespace Zeitmanagement.Tests
 {
     /// <summary>Tests für das Overlay-Grundgerüst (OverlayService und OverlayViewModelBase).</summary>
+    // Alle Tests, die den statischen OverlayService.Instance benutzen, laufen nacheinander (gleiche Collection).
+    [Collection("OverlayService")]
     public class OverlayServiceTests : IDisposable
     {
         private sealed class TestOverlay : OverlayViewModelBase

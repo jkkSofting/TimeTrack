@@ -12,6 +12,15 @@
         <views:ProjectsView />
     </DataTemplate>
 
+    <!--  Overlays der Projekte-Seite (nur die Formularfelder; Titel und Buttons zeichnet das MainWindow)  -->
+    <DataTemplate DataType="{x:Type vm:ProjectEditOverlayViewModel}">
+        <views:ProjectEditOverlayView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:GlobalRoundingOverlayViewModel}">
+        <views:GlobalRoundingOverlayView />
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:EntriesViewModel}">
         <views:EntriesView />
     </DataTemplate>

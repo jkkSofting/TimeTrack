@@ -1,0 +1,150 @@
+<UserControl
+    x:Class="Zeitmanagement.Views.ProjectEditOverlayView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Zeitmanagement.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodel="clr-namespace:Zeitmanagement.ViewModel"
+    d:DataContext="{d:DesignInstance Type=viewmodel:ProjectEditOverlayViewModel}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <Style x:Key="FormLabel" TargetType="TextBlock">
+            <Setter Property="Margin" Value="2,12,0,4" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource Theme.TextMuted}" />
+        </Style>
+
+        <!--  Rundes Auswahlfeld für die Rundungs-Optionen  -->
+        <Style x:Key="OptionRadio" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource Theme.Text}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Grid Background="Transparent">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid
+                                Width="18"
+                                Height="18"
+                                VerticalAlignment="Center">
+                                <Ellipse
+                                    x:Name="ring"
+                                    Fill="{DynamicResource Theme.Control}"
+                                    Stroke="{DynamicResource Theme.ControlBorder}"
+                                    StrokeThickness="1.5" />
+                                <Ellipse
+                                    x:Name="dot"
+                                    Width="8"
+                                    Height="8"
+                                    Fill="{DynamicResource Theme.OnAccent}"
+                                    Visibility="Collapsed" />
+                            </Grid>
+                            <ContentPresenter
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                RecognizesAccessKey="True"
+                                TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ring" Property="Stroke" Value="{DynamicResource Theme.Accent}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="ring" Property="Fill" Value="{DynamicResource Theme.Accent}" />
+                                <Setter TargetName="ring" Property="Stroke" Value="{DynamicResource Theme.Accent}" />
+                                <Setter TargetName="dot" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel MinWidth="420">
+        <TextBlock Margin="2,0,0,4" Style="{StaticResource FormLabel}" Text="Projektname" />
+        <TextBox
+            x:Name="NameBox"
+            local:Ui.Placeholder="Projektname"
+            Text="{Binding Projektname, UpdateSourceTrigger=PropertyChanged}" />
+
+        <TextBlock Style="{StaticResource FormLabel}" Text="Kunde" />
+        <TextBox local:Ui.Placeholder="Kunde" Text="{Binding Kunde, UpdateSourceTrigger=PropertyChanged}" />
+
+        <TextBlock Style="{StaticResource FormLabel}" Text="Kostenträger" />
+        <TextBox local:Ui.Placeholder="Kostenträger" Text="{Binding Kostentraeger, UpdateSourceTrigger=PropertyChanged}" />
+
+        <CheckBox
+            Margin="0,16,0,0"
+            HorizontalAlignment="Left"
+            Content="Extern (vom Kunden bezahlt)"
+            IsChecked="{Binding IstExtern}"
+            ToolTip="Vom Kunden bezahlt. Externe Zeit deckt parallele interne Zeit in der SAP-Verrechnung ab." />
+
+        <!--  Rundung: Standard erben, eigener Wert oder aus  -->
+        <TextBlock
+            Margin="0,20,0,8"
+            Style="{StaticResource Text.Section}"
+            Text="Aufrunden pro Buchung" />
+
+        <RadioButton
+            Content="{Binding StandardOptionText}"
+            GroupName="ProjectRounding"
+            IsChecked="{Binding IsRoundingStandard, Mode=TwoWay}"
+            Style="{StaticResource OptionRadio}" />
+
+        <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+            <RadioButton
+                Content="Eigene Rundung:"
+                GroupName="ProjectRounding"
+                IsChecked="{Binding IsRoundingOwn, Mode=TwoWay}"
+                Style="{StaticResource OptionRadio}" />
+            <ComboBox
+                Width="130"
+                Margin="12,0,0,0"
+                AutomationProperties.Name="Eigene Rundung"
+                IsEnabled="{Binding IsRoundingOwn}"
+                ItemsSource="{Binding RoundingChoices}"
+                SelectedValue="{Binding OwnMinutes}"
+                SelectedValuePath="Minutes">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Label}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+
+        <RadioButton
+            Margin="0,10,0,0"
+            Content="Keine Rundung für dieses Projekt"
+            GroupName="ProjectRounding"
+            IsChecked="{Binding IsRoundingOff, Mode=TwoWay}"
+            Style="{StaticResource OptionRadio}" />
+
+        <TextBlock
+            Margin="0,12,0,0"
+            Style="{StaticResource Text.Muted}"
+            Text="Jede Buchung wird in der SAP-Verrechnung auf die nächste angefangene Einheit aufgerundet (bei 15 Minuten: 2 Min → 15 Min, 17 Min → 30 Min)."
+            TextWrapping="Wrap" />
+
+        <TextBlock
+            Margin="0,14,0,0"
+            Foreground="{DynamicResource Theme.Danger}"
+            Text="{Binding ErrorText}"
+            TextWrapping="Wrap"
+            Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}" />
+    </StackPanel>
+</UserControl>

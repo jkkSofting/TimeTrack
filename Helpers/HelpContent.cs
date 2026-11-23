@@ -140,9 +140,9 @@ namespace Zeitmanagement.Helpers
 
             new HelpTopic("", "Projekte", "Projects",
                 "Projekte anlegen, bearbeiten und auswerten.",
-                "„Neues Projekt“ öffnet das Formular: Projektname, Kunde, Kostenträger und ob das Projekt extern ist.",
+                "„Neues Projekt“ öffnet ein Formular über der Seite: Projektname, Kunde, Kostenträger, ob das Projekt extern ist und die Rundung.",
                 "Über die Symbole in einer Zeile bearbeitest oder löschst du ein Projekt.",
-                "„Aufrunden pro Buchung“ (Aus, 5, 10, 15 oder 60 Minuten) legt fest, ob die SAP-Verrechnung jede Buchung dieses Projekts auf die nächste angefangene Zeiteinheit aufrundet. Die Spalte „Rundung“ der Tabelle zeigt die Einstellung. Die Buchungen selbst und die Auswertungen bleiben unverändert.",
+                "Rundung: Die SAP-Verrechnung rundet jede Buchung auf die nächste angefangene Zeiteinheit auf. Die „Standardrundung“ (oben rechts über der Tabelle angezeigt und mit dem Stift daneben änderbar, ab Werk 15 Minuten) gilt für alle Projekte ohne eigene Rundung. Im Formular eines Projekts wählst du „Standard verwenden“, eine eigene Rundung (5, 10, 15 oder 60 Minuten) oder „Keine Rundung für dieses Projekt“. Die Spalte „Rundung“ der Tabelle zeigt die Einstellung. Die Buchungen selbst und die Auswertungen bleiben unverändert.",
                 "Der Schalter „Quick Switch“ bestimmt, ob ein Projekt im Quick-Switch-Fenster wählbar ist. Neue Projekte sind sofort dabei, Buchungen bleiben auch bei ausgeschaltetem Projekt erhalten.",
                 "Die Suche filtert nach Name, Kunde und Kostenträger. Mit Von/Bis und „Filtern“ siehst du die Stunden in einem Zeitraum.",
                 "Das Diagramm-Symbol in einer Zeile öffnet das „Projektcontrolling“ mit dem Kostenträger des Projekts.",
