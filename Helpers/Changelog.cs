@@ -53,6 +53,10 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.48.0", new DateTime(2026, 11, 23), "Nur eine Instanz",
+                Neu("TimeTrack läuft jetzt nur noch einmal: Startest du es ein zweites Mal – etwa über die Verknüpfung oder den Autostart –, wird das bereits laufende Fenster in den Vordergrund geholt, statt eine zweite Instanz zu öffnen. So greifen nie zwei Instanzen gleichzeitig auf dieselbe Datenbank zu."),
+                Verbessert("Beim Neustart aus den Einstellungen (Sicherung wiederherstellen, Plugins) wartet die neue Instanz, bis die alte beendet ist.")),
+
             new ChangelogRelease("2026.47.8", new DateTime(2026, 11, 20), "Navigation, Datumssprünge, Stundenbuchung und Tätigkeitsbericht",
                 Verbessert("Das Scroll-Verhalten in der SAP-Buchung wurde verbessert.")),
 
