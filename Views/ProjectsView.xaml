@@ -280,11 +280,13 @@
                         <DataGridTextColumn
                             Width="2*"
                             Binding="{Binding Kunde}"
-                            Header="Kunde" />
+                            Header="Kunde"
+                            SortMemberPath="Kunde" />
                         <DataGridTextColumn
                             Width="2*"
                             Binding="{Binding Kostentraeger}"
-                            Header="Kostenträger" />
+                            Header="Kostenträger"
+                            SortMemberPath="Kostentraeger" />
                         <DataGridTemplateColumn
                             Width="*"
                             Header="Typ"
@@ -321,7 +323,8 @@
                         <DataGridTextColumn
                             Width="*"
                             Binding="{Binding Buchungen}"
-                            Header="Buchungen" />
+                            Header="Buchungen"
+                            SortMemberPath="Buchungen" />
                         <DataGridTemplateColumn
                             Width="*"
                             Header="Stunden"

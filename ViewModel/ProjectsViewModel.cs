@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
@@ -146,7 +147,7 @@ namespace Zeitmanagement.ViewModel
 
         public DelegateCommand ResetFilterPanelCommand { get; }
 
-        // Sortierung (Dropdown; setzt ProjectsView.SortDescriptions, überschreibt also die Spaltenkopf-Sortierung)
+        // Sortierung (Dropdown; setzt ProjectsView.SortDescriptions, bleibt mit der Spaltenkopf-Sortierung synchron)
         public ProjectSortOption[] SortChoices => ProjectSort.Choices;
 
         private ProjectSortOption _selectedSort = ProjectSort.Choices[0];
@@ -154,7 +155,7 @@ namespace Zeitmanagement.ViewModel
         public ProjectSortOption SelectedSort
         {
             get => _selectedSort;
-            set { if (value != null && SetProperty(ref _selectedSort, value)) ApplySort(); }
+            set { if (value != null && SetProperty(ref _selectedSort, value) && !_syncingSort) ApplySort(); }
         }
 
         private bool _sortDescending;
@@ -168,18 +169,45 @@ namespace Zeitmanagement.ViewModel
             _sortDescending = descending;
             RaisePropertyChanged(nameof(IsSortAscending));
             RaisePropertyChanged(nameof(IsSortDescending));
-            ApplySort();
+            if (!_syncingSort) ApplySort();
+        }
+
+        // true, solange Dropdown/Richtung und View-SortDescriptions sich gegenseitig nachziehen (verhindert Rückkopplung)
+        private bool _syncingSort;
+
+        /// <summary>Spaltenkopf-Klick (DataGrid ändert SortDescriptions): Dropdown und Richtung nachziehen.</summary>
+        private void OnViewSortDescriptionsChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (_syncingSort) return;
+            var descriptions = ProjectsView.SortDescriptions;
+            // Clear/Add des DataGrids: Zwischenzustand ohne Beschreibung ignorieren, der folgende Add setzt den Endstand
+            if (descriptions.Count == 0) return;
+
+            _syncingSort = true;
+            try
+            {
+                var first = descriptions[0];
+                var choice = ProjectSort.ChoiceFromProperty(first.PropertyName);
+                SelectedSort = ProjectSort.Choices.First(c => c.Value == choice);
+                SetSortDescending(ProjectSort.IsDescending(first.Direction));
+            }
+            finally { _syncingSort = false; }
         }
 
         private void ApplySort()
         {
             var descriptions = ProjectsView.SortDescriptions;
-            descriptions.Clear();
+            _syncingSort = true;
+            try
+            {
+                descriptions.Clear();
 
-            var property = ProjectSort.PropertyName(_selectedSort.Value);
-            if (property != null)
-                descriptions.Add(new SortDescription(property,
-                    _sortDescending ? ListSortDirection.Descending : ListSortDirection.Ascending));
+                var property = ProjectSort.PropertyName(_selectedSort.Value);
+                if (property != null)
+                    descriptions.Add(new SortDescription(property,
+                        _sortDescending ? ListSortDirection.Descending : ListSortDirection.Ascending));
+            }
+            finally { _syncingSort = false; }
         }
 
         /// <summary>Anzeige der globalen Standardrundung, z. B. „Standardrundung: 15 Minuten“.</summary>
@@ -240,6 +268,7 @@ namespace Zeitmanagement.ViewModel
 
             ProjectsView = CollectionViewSource.GetDefaultView(Projects);
             ProjectsView.Filter = FilterProject;
+            ((INotifyCollectionChanged)ProjectsView.SortDescriptions).CollectionChanged += OnViewSortDescriptionsChanged;
 
             RefreshCommand = new DelegateCommand(_ => Refresh());
             NewProjectCommand = new DelegateCommand(_ => StartNew());

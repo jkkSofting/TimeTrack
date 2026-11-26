@@ -263,6 +263,25 @@ namespace Zeitmanagement.Tests
         }
 
         [Fact]
+        public void SortChoiceFromPropertyIsInverseOfPropertyName()
+        {
+            foreach (var option in ProjectSort.Choices)
+                Assert.Equal(option.Value, ProjectSort.ChoiceFromProperty(ProjectSort.PropertyName(option.Value)));
+            Assert.Equal(ProjectSortChoice.Standard, ProjectSort.ChoiceFromProperty("RundungMinuten"));
+            Assert.Equal(ProjectSortChoice.Standard, ProjectSort.ChoiceFromProperty("QuickSelectAktiv"));
+            Assert.Equal(ProjectSortChoice.Standard, ProjectSort.ChoiceFromProperty(null));
+        }
+
+        [Fact]
+        public void SortDirectionMapsBothWays()
+        {
+            Assert.Equal(System.ComponentModel.ListSortDirection.Descending, ProjectSort.Direction(true));
+            Assert.Equal(System.ComponentModel.ListSortDirection.Ascending, ProjectSort.Direction(false));
+            Assert.True(ProjectSort.IsDescending(System.ComponentModel.ListSortDirection.Descending));
+            Assert.False(ProjectSort.IsDescending(System.ComponentModel.ListSortDirection.Ascending));
+        }
+
+        [Fact]
         public void SortChoicesCoverEveryEnumValueOnce()
         {
             var values = ProjectSort.Choices.Select(c => c.Value).ToList();
