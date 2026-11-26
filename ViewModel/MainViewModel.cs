@@ -26,6 +26,7 @@ namespace Zeitmanagement.ViewModel
         private readonly ExportViewModel _exportView;
         private readonly TodoViewModel _todoView;
         private readonly NotesViewModel _notesView;
+        private readonly TrashViewModel _trashView;
         private readonly BaseViewModel _settingsView;
         private readonly HelpViewModel _helpView;
         private readonly PluginManager _plugins;
@@ -150,6 +151,7 @@ namespace Zeitmanagement.ViewModel
             _exportView = new ExportViewModel();
             _todoView = new TodoViewModel(() => QuickSelectViewModel.ReloadTickets());
             _notesView = new NotesViewModel();
+            _trashView = new TrashViewModel(DbInstance, new MessageBoxConfirmService(), () => QuickSelectViewModel.ReloadProjects());
 
             // Plugins nach den festen Seiten laden: Ein fehlerhaftes Plugin darf den Start nicht verhindern.
             _plugins = new PluginManager(DbInstance) { NavigateHandler = SelectViewCommandExecute };
@@ -281,6 +283,9 @@ namespace Zeitmanagement.ViewModel
                     break;
                 case "notes":
                     RightSide = _notesView;
+                    break;
+                case "trash":
+                    RightSide = _trashView;
                     break;
                 case "settings":
                     RightSide = _settingsView;

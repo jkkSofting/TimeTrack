@@ -242,6 +242,14 @@
                                 IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=projects}"
                                 Style="{StaticResource NavItem}" />
                             <RadioButton
+                                views:Ui.Glyph="&#xE74D;"
+                                Command="{Binding SelectViewCommand}"
+                                CommandParameter="Trash"
+                                Content="Papierkorb"
+                                GroupName="Nav"
+                                IsChecked="{Binding CurrentView, Mode=OneWay, Converter={StaticResource Equals}, ConverterParameter=trash}"
+                                Style="{StaticResource NavItem}" />
+                            <RadioButton
                                 views:Ui.Glyph="&#xE713;"
                                 Command="{Binding SelectViewCommand}"
                                 CommandParameter="Settings"

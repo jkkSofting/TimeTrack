@@ -225,6 +225,9 @@
     <Compile Include="Views\TodoView.xaml.cs">
       <DependentUpon>TodoView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\TrashView.xaml.cs">
+      <DependentUpon>TrashView.xaml</DependentUpon>
+    </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -301,6 +304,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\NotesView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\TrashView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
