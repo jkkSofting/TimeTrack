@@ -225,13 +225,20 @@ namespace Zeitmanagement.ViewModel
         }
 
         // --- Delete ---
+        private readonly IConfirmService _confirm = new MessageBoxConfirmService();
+
         private void DeleteProject(ProjectItemVM item)
         {
             if (item == null) return;
 
-            MainViewModel.DbInstance.DeleteProject(item.Projektname);
+            var db = MainViewModel.DbInstance;
+            int count = db.CountTimeEntries(item.Projektname);
+            if (!_confirm.Confirm(ConfirmTexts.MoveProjectText(item.Projektname, count), ConfirmTexts.MoveProjectTitle))
+                return;
+
+            db.MoveProjectToTrash(item.Projektname);
             Refresh();
-            _projectsChanged?.Invoke();
+            _projectsChanged?.Invoke();   // Quick Switch neu laden
         }
 
         // --- Neu / Bearbeiten / Standardrundung (alles als Overlay) ---

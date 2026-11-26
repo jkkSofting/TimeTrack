@@ -327,6 +327,25 @@ namespace Zeitmanagement.Tests
         }
 
         [Fact]
+        public void CountTimeEntries_IgnoresTrashedEntries()
+        {
+            using (var t = new TestDb())
+            {
+                var db = t.Db;
+                Seed(db);
+                db.AddTimeEntry(Day, "08:00", "09:00", "Alpha", "a1");
+                db.AddTimeEntry(Day, "09:00", "10:00", "Alpha", "a2");
+                Assert.Equal(2, db.CountTimeEntries("Alpha"));
+
+                Assert.True(db.MoveTimeEntryToTrash(FirstEntryId(db, Day, "Alpha")));
+                Assert.Equal(1, db.CountTimeEntries("Alpha"));
+
+                Assert.True(db.MoveProjectToTrash("Alpha"));
+                Assert.Equal(0, db.CountTimeEntries("Alpha"));
+            }
+        }
+
+        [Fact]
         public void Migration_OldDatabaseWithoutTrashColumns_IsUpgraded_AndSumsRecalculated()
         {
             string path = Fixtures.TempDbPath();

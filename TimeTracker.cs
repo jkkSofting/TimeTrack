@@ -833,6 +833,23 @@ public sealed partial class TimeTracker : IDisposable
         }
     }
 
+    /// <summary>Anzahl der aktiven (nicht im Papierkorb liegenden) Buchungen eines aktiven Projekts.</summary>
+    public int CountTimeEntries(string projektname)
+    {
+        if (string.IsNullOrWhiteSpace(projektname))
+            throw new ArgumentException("Projektname darf nicht leer sein.", nameof(projektname));
+
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = @"
+            SELECT COUNT(*) FROM time_entries te
+              JOIN projects p ON p.id = te.projekt_id
+             WHERE p.projektname = @n AND p.geloescht_am IS NULL AND te.geloescht_am IS NULL;";
+            cmd.Parameters.AddWithValue("@n", projektname);
+            return Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture);
+        }
+    }
+
     /// <summary>Alle Projekte im Papierkorb, zuletzt gelöschte zuerst. Die Buchungsanzahl zählt nur Buchungen, die mit dem Projekt zurückkommen (nicht einzeln gelöschte).</summary>
     public List<TrashedProjectRow> GetTrashedProjects()
     {
