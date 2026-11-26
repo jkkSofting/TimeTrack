@@ -102,6 +102,23 @@
                             ToolTip="Standardrundung ändern" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
+                        <!--  Umschalter Stunden: netto (wie gebucht) oder gerundet (SAP-Verrechnung)  -->
+                        <Border Margin="0,0,14,0" Style="{StaticResource SegmentBar}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton
+                                    Content="Netto"
+                                    GroupName="ProjectsHoursMode"
+                                    IsChecked="{Binding IsNettoSelected, Mode=TwoWay}"
+                                    Style="{StaticResource Segment}"
+                                    ToolTip="Tatsächlich gebuchte Zeit ohne Rundung" />
+                                <RadioButton
+                                    Content="Gerundet"
+                                    GroupName="ProjectsHoursMode"
+                                    IsChecked="{Binding ShowRoundedHours, Mode=TwoWay}"
+                                    Style="{StaticResource Segment}"
+                                    ToolTip="Jede Buchung auf die Rundung des Projekts aufgerundet, wie in der SAP-Verrechnung" />
+                            </StackPanel>
+                        </Border>
                         <TextBlock
                             Margin="0,0,10,0"
                             VerticalAlignment="Center"
@@ -212,11 +229,18 @@
                             Width="*"
                             Binding="{Binding Buchungen}"
                             Header="Buchungen" />
-                        <DataGridTextColumn
+                        <DataGridTemplateColumn
                             Width="*"
-                            Binding="{Binding Stunden, Converter={StaticResource HoursToHHmm}}"
                             Header="Stunden"
-                            SortMemberPath="Stunden" />
+                            SortMemberPath="StundenAnzeige">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock
+                                        Text="{Binding StundenAnzeige, Converter={StaticResource HoursToHHmm}}"
+                                        ToolTip="{Binding StundenTooltip}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                         <DataGridTemplateColumn
                             Width="Auto"
                             Header="Aktiv"
