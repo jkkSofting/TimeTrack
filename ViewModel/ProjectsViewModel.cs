@@ -74,18 +74,115 @@ namespace Zeitmanagement.ViewModel
             }
         }
 
-        /// <summary>Hinweis „3 inaktive Projekte ausgeblendet“; null, wenn nichts ausgeblendet ist.</summary>
-        public string HiddenInactiveText
+        /// <summary>Alte Bindung des Hinweises unter dem Titel; zeigt jetzt dieselbe Statuszeile wie <see cref="ListStatusText"/>.</summary>
+        public string HiddenInactiveText => ListStatusText;
+
+        // --- Filter-Panel (Typ, Kunde, Rundung, nur mit Buchungen) ---
+
+        /// <summary>Filterleiste auf der Seite ein-/ausgeklappt (nur für die Sitzung).</summary>
+        private bool _isFilterPanelOpen;
+        public bool IsFilterPanelOpen { get => _isFilterPanelOpen; set => SetProperty(ref _isFilterPanelOpen, value); }
+
+        private ProjectFilterCriteria _criteria = new ProjectFilterCriteria();   // Feld-Initialisierer, damit FilterProject vor dem ersten UpdateView nicht null sieht
+
+        // Typ (Segment)
+        private ProjectTypeFilter _typeFilter = ProjectTypeFilter.Alle;
+        public bool IsTypeAll    { get => _typeFilter == ProjectTypeFilter.Alle;   set { if (value) SetTypeFilter(ProjectTypeFilter.Alle); } }
+        public bool IsTypeIntern { get => _typeFilter == ProjectTypeFilter.Intern; set { if (value) SetTypeFilter(ProjectTypeFilter.Intern); } }
+        public bool IsTypeExtern { get => _typeFilter == ProjectTypeFilter.Extern; set { if (value) SetTypeFilter(ProjectTypeFilter.Extern); } }
+
+        private void SetTypeFilter(ProjectTypeFilter t)
         {
-            get
+            if (_typeFilter == t) return;
+            _typeFilter = t;
+            RaisePropertyChanged(nameof(IsTypeAll));
+            RaisePropertyChanged(nameof(IsTypeIntern));
+            RaisePropertyChanged(nameof(IsTypeExtern));
+            UpdateView();
+        }
+
+        // Kunde
+        public ObservableCollection<string> Customers { get; } = new ObservableCollection<string>();
+
+        private string _customerFilter = ProjectFilter.AllCustomers;
+
+        public string CustomerFilter
+        {
+            get => _customerFilter;
+            set
             {
-                if (ShowInactive) return null;
-
-                int hidden = Projects.Count(p => !p.QuickSelectAktiv && MatchesSearch(p));
-                if (hidden == 0) return null;
-
-                return hidden == 1 ? "1 inaktives Projekt ausgeblendet" : hidden + " inaktive Projekte ausgeblendet";
+                if (value == null) return;   // ComboBox schreibt null, wenn Customers neu aufgebaut wird; ignorieren, RebuildCustomers stellt die Auswahl wieder her
+                if (SetProperty(ref _customerFilter, value)) UpdateView();
             }
+        }
+
+        // Rundung
+        public ProjectRoundingChoice[] RoundingFilterChoices => ProjectFilter.RoundingChoices;
+
+        private ProjectRoundingChoice _selectedRoundingFilter = ProjectFilter.RoundingChoices[0];
+
+        public ProjectRoundingChoice SelectedRoundingFilter
+        {
+            get => _selectedRoundingFilter;
+            set { if (value != null && SetProperty(ref _selectedRoundingFilter, value)) UpdateView(); }
+        }
+
+        // Nur mit Buchungen
+        private bool _onlyWithBookings;
+
+        public bool OnlyWithBookings
+        {
+            get => _onlyWithBookings;
+            set { if (SetProperty(ref _onlyWithBookings, value)) UpdateView(); }
+        }
+
+        // Abgeleitet (nur lesen)
+        public int ActiveFilterCount => ProjectFilter.CountActive(_criteria);
+        public bool HasActiveFilters => ActiveFilterCount > 0;
+        public string FilterButtonText => ActiveFilterCount > 0 ? "Filter (" + ActiveFilterCount + ")" : "Filter";
+
+        /// <summary>Statuszeile unter dem Titel, z. B. „4 von 12 Projekten · 3 inaktive Projekte ausgeblendet“; null wenn nichts zu sagen ist.</summary>
+        public string ListStatusText { get; private set; }
+
+        /// <summary>Leerzustand der Tabelle, wenn Projekte da sind, aber alle Filter sie ausschließen; sonst null.</summary>
+        public string EmptyText { get; private set; }
+
+        public DelegateCommand ResetFilterPanelCommand { get; }
+
+        // Sortierung (Dropdown; setzt ProjectsView.SortDescriptions, überschreibt also die Spaltenkopf-Sortierung)
+        public ProjectSortOption[] SortChoices => ProjectSort.Choices;
+
+        private ProjectSortOption _selectedSort = ProjectSort.Choices[0];
+
+        public ProjectSortOption SelectedSort
+        {
+            get => _selectedSort;
+            set { if (value != null && SetProperty(ref _selectedSort, value)) ApplySort(); }
+        }
+
+        private bool _sortDescending;
+
+        public bool IsSortAscending  { get => !_sortDescending; set { if (value) SetSortDescending(false); } }
+        public bool IsSortDescending { get => _sortDescending;  set { if (value) SetSortDescending(true); } }
+
+        private void SetSortDescending(bool descending)
+        {
+            if (_sortDescending == descending) return;
+            _sortDescending = descending;
+            RaisePropertyChanged(nameof(IsSortAscending));
+            RaisePropertyChanged(nameof(IsSortDescending));
+            ApplySort();
+        }
+
+        private void ApplySort()
+        {
+            var descriptions = ProjectsView.SortDescriptions;
+            descriptions.Clear();
+
+            var property = ProjectSort.PropertyName(_selectedSort.Value);
+            if (property != null)
+                descriptions.Add(new SortDescription(property,
+                    _sortDescending ? ListSortDirection.Descending : ListSortDirection.Ascending));
         }
 
         /// <summary>Anzeige der globalen Standardrundung, z. B. „Standardrundung: 15 Minuten“.</summary>
@@ -164,6 +261,7 @@ namespace Zeitmanagement.ViewModel
 
             FilterProjectsCommand = new DelegateCommand(_ => FilterProjectsCommandExecute(null));
             ResetProjectsFilterCommand = new DelegateCommand(_ => ResetProjectsCommandExecute(null));
+            ResetFilterPanelCommand = new DelegateCommand(_ => ResetFilterPanel(), _ => HasActiveFilters);
 
             Refresh();
         }
@@ -260,14 +358,27 @@ namespace Zeitmanagement.ViewModel
                 // Hole Buchungen für dieses Projekt (falls du sie in der DB nicht schon aggregierst)
             }
 
+            RebuildCustomers();
             UpdateView();
         }
 
-        /// <summary>Wendet Suche und Inaktiv-Filter neu an und aktualisiert den Hinweis auf ausgeblendete Projekte.</summary>
+        /// <summary>Wendet Suche, Inaktiv- und Panel-Filter neu an und aktualisiert Statuszeile, Leerzustand und Filter-Zähler.</summary>
         private void UpdateView()
         {
+            _criteria = BuildCriteria();
             ProjectsView.Refresh();
+
+            var counts = ProjectFilter.Count(Projects, _criteria);
+            ListStatusText = ProjectFilter.StatusText(counts);
+            EmptyText = counts.Shown == 0 && Projects.Count > 0 ? "Keine Projekte passen zu den aktuellen Filtern." : null;
+
+            RaisePropertyChanged(nameof(ListStatusText));
             RaisePropertyChanged(nameof(HiddenInactiveText));
+            RaisePropertyChanged(nameof(EmptyText));
+            RaisePropertyChanged(nameof(ActiveFilterCount));
+            RaisePropertyChanged(nameof(HasActiveFilters));
+            RaisePropertyChanged(nameof(FilterButtonText));
+            ResetFilterPanelCommand?.RaiseCanExecuteChanged();
         }
 
         private void OnProjectItemChanged(object sender, PropertyChangedEventArgs e)
@@ -280,28 +391,7 @@ namespace Zeitmanagement.ViewModel
             _projectsChanged?.Invoke();
         }
 
-        private bool FilterProject(object obj)
-        {
-            var it = obj as ProjectItemVM;
-            if (it == null)
-                return false;
-
-            if (!ShowInactive && !it.QuickSelectAktiv)
-                return false;
-
-            return MatchesSearch(it);
-        }
-
-        private bool MatchesSearch(ProjectItemVM it)
-        {
-            if (string.IsNullOrWhiteSpace(SearchText))
-                return true;
-
-            var q = SearchText.Trim();
-            return (it.Projektname?.IndexOf(q, StringComparison.OrdinalIgnoreCase) ?? -1) >= 0
-                   || (it.Kunde?.IndexOf(q, StringComparison.OrdinalIgnoreCase) ?? -1) >= 0
-                   || (it.Kostentraeger?.IndexOf(q, StringComparison.OrdinalIgnoreCase) ?? -1) >= 0;
-        }
+        private bool FilterProject(object obj) => ProjectFilter.Matches(obj as ProjectItemVM, _criteria);
 
         // --- Delete ---
         private readonly IConfirmService _confirm = new MessageBoxConfirmService();
@@ -351,6 +441,43 @@ namespace Zeitmanagement.ViewModel
             _projectsChanged?.Invoke();
         }
 
+        // --- Filter-Panel ---
+        private void ResetFilterPanel()
+        {
+            _typeFilter = ProjectTypeFilter.Alle;
+            _customerFilter = ProjectFilter.AllCustomers;
+            _selectedRoundingFilter = ProjectFilter.RoundingChoices[0];
+            _onlyWithBookings = false;
+            RaisePropertyChanged(nameof(IsTypeAll));
+            RaisePropertyChanged(nameof(IsTypeIntern));
+            RaisePropertyChanged(nameof(IsTypeExtern));
+            RaisePropertyChanged(nameof(CustomerFilter));
+            RaisePropertyChanged(nameof(SelectedRoundingFilter));
+            RaisePropertyChanged(nameof(OnlyWithBookings));
+            UpdateView();   // nur EIN Refresh
+        }
+
+        private void RebuildCustomers()
+        {
+            var wanted = _customerFilter;
+            var list = ProjectFilter.BuildCustomerList(Projects.Select(p => p.Kunde));
+            Customers.Clear();
+            foreach (var c in list) Customers.Add(c);
+            // Auswahl bleibt, wenn der Kunde noch existiert (Zeitraumfilter kann ihn entfernen), sonst "Alle Kunden"
+            _customerFilter = list.Contains(wanted) ? wanted : ProjectFilter.AllCustomers;
+            RaisePropertyChanged(nameof(CustomerFilter));   // ComboBox neu auf den Wert setzen (Clear hat SelectedItem auf null gesetzt)
+        }
+
+        private ProjectFilterCriteria BuildCriteria() => new ProjectFilterCriteria
+        {
+            SearchText = SearchText,
+            ShowInactive = ShowInactive,
+            Type = _typeFilter,
+            Customer = _customerFilter,
+            Rounding = _selectedRoundingFilter.Value,
+            OnlyWithBookings = _onlyWithBookings
+        };
+
         // --- Filter ---
         private void ResetProjectsCommandExecute(object _)
         {
@@ -366,7 +493,7 @@ namespace Zeitmanagement.ViewModel
         }
     }
 
-    internal sealed class ProjectItemVM : BindableBase
+    internal sealed class ProjectItemVM : BindableBase, IProjectFilterItem
     {
         public string Projektname { get => _projektname; set => SetProperty(ref _projektname, value); }
         public string Kunde { get => _kunde; set => SetProperty(ref _kunde, value); }

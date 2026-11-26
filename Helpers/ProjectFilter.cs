@@ -8,7 +8,7 @@ namespace Zeitmanagement.Helpers
 
     internal enum ProjectRoundingFilter { Alle, Standard, Eigene, Aus }
 
-    /// <summary>Sortierung im Filter-Panel. Standard = keine eigene Sortierung (Spaltenkopf-Sortierung bleibt).</summary>
+    /// <summary>Sortierung im Filter-Panel. Standard = keine Sortierung; Spaltenkopf-Klicks sortieren dann wie gewohnt.</summary>
     internal enum ProjectSortChoice { Standard, Name, Kunde, Kostentraeger, Typ, Buchungen, Stunden }
 
     /// <summary>Was ein Projekt fuer den Filter preisgeben muss (vom ViewModel-Item implementiert, in Tests ersetzbar).</summary>
@@ -194,7 +194,7 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly ProjectSortOption[] Choices =
         {
-            new ProjectSortOption(ProjectSortChoice.Standard, "Sortieren: Spaltenkopf"),
+            new ProjectSortOption(ProjectSortChoice.Standard, "Spaltenkopf"),
             new ProjectSortOption(ProjectSortChoice.Name, "Name"),
             new ProjectSortOption(ProjectSortChoice.Kunde, "Kunde"),
             new ProjectSortOption(ProjectSortChoice.Kostentraeger, "Kostenträger"),
