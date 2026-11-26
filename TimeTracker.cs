@@ -89,44 +89,6 @@ public sealed partial class TimeTracker : IDisposable
             ";
             cmd.ExecuteNonQuery();
 
-            var sumExpr = @"
-                IFNULL(SUM(
-                    (julianday(datetime(datum || ' ' || endzeit)) -
-                     julianday(datetime(datum || ' ' || startzeit))) * 24.0
-                ), 0.0)
-            ";
-
-            cmd.CommandText = $@"
-            CREATE TRIGGER IF NOT EXISTS te_ai AFTER INSERT ON time_entries
-            BEGIN
-              UPDATE projects
-                 SET anzahl_stunden = (SELECT {sumExpr} FROM time_entries WHERE projekt_id = NEW.projekt_id)
-               WHERE id = NEW.projekt_id;
-            END;";
-            cmd.ExecuteNonQuery();
-
-            cmd.CommandText = $@"
-            CREATE TRIGGER IF NOT EXISTS te_au AFTER UPDATE ON time_entries
-            BEGIN
-              UPDATE projects
-                 SET anzahl_stunden = (SELECT {sumExpr} FROM time_entries WHERE projekt_id = NEW.projekt_id)
-               WHERE id = NEW.projekt_id;
-
-              UPDATE projects
-                 SET anzahl_stunden = (SELECT {sumExpr} FROM time_entries WHERE projekt_id = OLD.projekt_id)
-               WHERE id = OLD.projekt_id;
-            END;";
-            cmd.ExecuteNonQuery();
-
-            cmd.CommandText = $@"
-            CREATE TRIGGER IF NOT EXISTS te_ad AFTER DELETE ON time_entries
-            BEGIN
-              UPDATE projects
-                 SET anzahl_stunden = (SELECT {sumExpr} FROM time_entries WHERE projekt_id = OLD.projekt_id)
-               WHERE id = OLD.projekt_id;
-            END;";
-            cmd.ExecuteNonQuery();
-
             // Migration: Datenbanken vor der SAP-Verrechnung haben noch keine Spalte ist_extern
             cmd.CommandText = "SELECT COUNT(*) FROM pragma_table_info('projects') WHERE name = 'ist_extern';";
             if (Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) == 0)
@@ -161,6 +123,71 @@ public sealed partial class TimeTracker : IDisposable
                 cmd.CommandText = "ALTER TABLE projects ADD COLUMN rundung_global INTEGER NOT NULL DEFAULT 1;";
                 cmd.ExecuteNonQuery();
                 cmd.CommandText = "UPDATE projects SET rundung_global = 0 WHERE rundung_minuten > 0;";
+                cmd.ExecuteNonQuery();
+            }
+
+            // Migration: Papierkorb (Soft-Delete). geloescht_am = ISO-Zeitstempel (NULL = nicht gelöscht).
+            // Ein Projekt im Papierkorb behält seine Buchungen unmarkiert; nur einzeln gelöschte Buchungen tragen einen eigenen Marker.
+            bool trashColumnAdded = false;
+            cmd.CommandText = "SELECT COUNT(*) FROM pragma_table_info('projects') WHERE name = 'geloescht_am';";
+            if (Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) == 0)
+            {
+                cmd.CommandText = "ALTER TABLE projects ADD COLUMN geloescht_am TEXT NULL;";
+                cmd.ExecuteNonQuery();
+                trashColumnAdded = true;
+            }
+            cmd.CommandText = "SELECT COUNT(*) FROM pragma_table_info('time_entries') WHERE name = 'geloescht_am';";
+            if (Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) == 0)
+            {
+                cmd.CommandText = "ALTER TABLE time_entries ADD COLUMN geloescht_am TEXT NULL;";
+                cmd.ExecuteNonQuery();
+                trashColumnAdded = true;
+            }
+
+            // Summen-Trigger: Buchungen im Papierkorb zählen nicht zu anzahl_stunden. Immer neu angelegt (idempotent).
+            var sumExpr = @"
+                IFNULL(SUM(
+                    (julianday(datetime(datum || ' ' || endzeit)) -
+                     julianday(datetime(datum || ' ' || startzeit))) * 24.0
+                ), 0.0)
+            ";
+            cmd.CommandText = $@"
+            DROP TRIGGER IF EXISTS te_ai;
+            DROP TRIGGER IF EXISTS te_au;
+            DROP TRIGGER IF EXISTS te_ad;
+
+            CREATE TRIGGER te_ai AFTER INSERT ON time_entries
+            BEGIN
+              UPDATE projects
+                 SET anzahl_stunden = (SELECT {sumExpr} FROM time_entries WHERE projekt_id = NEW.projekt_id AND geloescht_am IS NULL)
+               WHERE id = NEW.projekt_id;
+            END;
+
+            CREATE TRIGGER te_au AFTER UPDATE ON time_entries
+            BEGIN
+              UPDATE projects
+                 SET anzahl_stunden = (SELECT {sumExpr} FROM time_entries WHERE projekt_id = NEW.projekt_id AND geloescht_am IS NULL)
+               WHERE id = NEW.projekt_id;
+
+              UPDATE projects
+                 SET anzahl_stunden = (SELECT {sumExpr} FROM time_entries WHERE projekt_id = OLD.projekt_id AND geloescht_am IS NULL)
+               WHERE id = OLD.projekt_id;
+            END;
+
+            CREATE TRIGGER te_ad AFTER DELETE ON time_entries
+            BEGIN
+              UPDATE projects
+                 SET anzahl_stunden = (SELECT {sumExpr} FROM time_entries WHERE projekt_id = OLD.projekt_id AND geloescht_am IS NULL)
+               WHERE id = OLD.projekt_id;
+            END;";
+            cmd.ExecuteNonQuery();
+
+            // Einmalige Neuberechnung der Summen beim Einführen der Spalten.
+            if (trashColumnAdded)
+            {
+                cmd.CommandText = $@"
+                UPDATE projects
+                   SET anzahl_stunden = (SELECT {sumExpr} FROM time_entries WHERE projekt_id = projects.id AND geloescht_am IS NULL);";
                 cmd.ExecuteNonQuery();
             }
 
@@ -236,8 +263,15 @@ public sealed partial class TimeTracker : IDisposable
         if (string.IsNullOrWhiteSpace(kunde)) throw new ArgumentException("leer", nameof(kunde));
         if (string.IsNullOrWhiteSpace(kostentraeger)) throw new ArgumentException("leer", nameof(kostentraeger));
 
+        using (var tx = _conn.BeginTransaction())
         using (var cmd = _conn.CreateCommand())
         {
+            cmd.Transaction = tx;
+
+            // Ein gleichnamiges Papierkorb-Projekt darf nie stillschweigend wiederbelebt/überschrieben werden: erst umbenennen.
+            RenameTrashedProjectWithName(cmd, projektname, " (gelöscht)");
+
+            cmd.Parameters.Clear();
             // SQLite ab 3.24.0: UPSERT via ON CONFLICT .. DO UPDATE
             cmd.CommandText =
             @"
@@ -259,9 +293,11 @@ public sealed partial class TimeTracker : IDisposable
             cmd.Parameters.AddWithValue("@rund", own);
             cmd.Parameters.AddWithValue("@glob", useGlobal ? 1 : 0);
             cmd.ExecuteNonQuery();
+            tx.Commit();
         }
     }
 
+    /// <summary>ENDGÜLTIGES Löschen eines Projekts samt Buchungen (egal ob im Papierkorb oder nicht). Für den Papierkorb siehe <see cref="MoveProjectToTrash"/>.</summary>
     public void DeleteProject(string projektname)
     {
         if (string.IsNullOrWhiteSpace(projektname))
@@ -304,7 +340,7 @@ public sealed partial class TimeTracker : IDisposable
 
         using (var cmd = _conn.CreateCommand())
         {
-            cmd.CommandText = "SELECT projektname, kunde, anzahl_stunden, kostentraeger, ist_extern, quickselect_aktiv, rundung_minuten, rundung_global FROM projects ORDER BY projektname;";
+            cmd.CommandText = "SELECT projektname, kunde, anzahl_stunden, kostentraeger, ist_extern, quickselect_aktiv, rundung_minuten, rundung_global FROM projects WHERE geloescht_am IS NULL ORDER BY projektname;";
             using (var r = cmd.ExecuteReader())
             {
                 while (r.Read())
@@ -339,7 +375,7 @@ public sealed partial class TimeTracker : IDisposable
 
         using (var cmd = _conn.CreateCommand())
         {
-            cmd.CommandText = "UPDATE projects SET quickselect_aktiv = @aktiv WHERE projektname = @name;";
+            cmd.CommandText = "UPDATE projects SET quickselect_aktiv = @aktiv WHERE projektname = @name AND geloescht_am IS NULL;";
             cmd.Parameters.AddWithValue("@aktiv", aktiv ? 1 : 0);
             cmd.Parameters.AddWithValue("@name", projektname);
             cmd.ExecuteNonQuery();
@@ -366,13 +402,20 @@ public sealed partial class TimeTracker : IDisposable
             cmd.Transaction = tx;
 
             // Sicherstellen, dass das Original existiert
-            cmd.CommandText = "SELECT id FROM projects WHERE projektname = @orig LIMIT 1;";
+            cmd.CommandText = "SELECT id FROM projects WHERE projektname = @orig AND geloescht_am IS NULL LIMIT 1;";
             cmd.Parameters.AddWithValue("@orig", originalProjektname);
             var o = cmd.ExecuteScalar();
             if (o == null || o == DBNull.Value)
             {
                 tx.Rollback();
                 throw new InvalidOperationException($"Projekt '{originalProjektname}' existiert nicht.");
+            }
+
+            // Ein Papierkorb-Projekt mit dem neuen Namen weicht aus (UNIQUE), statt die Umbenennung zu blockieren.
+            if (!string.Equals(originalProjektname, newProjektname, StringComparison.Ordinal))
+            {
+                cmd.Parameters.Clear();
+                RenameTrashedProjectWithName(cmd, newProjektname, " (gelöscht)");
             }
 
             // Optional: prüfen, ob der neue Name schon existiert (und nicht derselbe Datensatz ist)
@@ -512,7 +555,7 @@ public sealed partial class TimeTracker : IDisposable
             @"
             SELECT datum, startzeit, endzeit, beschreibung
               FROM time_entries
-             WHERE projekt_id = @pid
+             WHERE projekt_id = @pid AND geloescht_am IS NULL
              ORDER BY datum, startzeit;
             ";
             cmd.Parameters.AddWithValue("@pid", projectId);
@@ -542,7 +585,7 @@ public sealed partial class TimeTracker : IDisposable
             SELECT te.id, te.datum, te.startzeit, te.endzeit, te.beschreibung, p.projektname
               FROM time_entries te
               JOIN projects p ON p.id = te.projekt_id
-             WHERE te.datum = @d
+             WHERE te.datum = @d AND te.geloescht_am IS NULL AND p.geloescht_am IS NULL
              ORDER BY te.startzeit;";
             cmd.Parameters.AddWithValue("@d", d);
 
@@ -578,7 +621,7 @@ public sealed partial class TimeTracker : IDisposable
             SELECT te.id, te.datum, te.startzeit, te.endzeit, te.beschreibung, p.projektname, p.ist_extern, p.rundung_global, p.rundung_minuten
               FROM time_entries te
               JOIN projects p ON p.id = te.projekt_id
-             WHERE te.datum >= @from AND te.datum <= @to
+             WHERE te.datum >= @from AND te.datum <= @to AND te.geloescht_am IS NULL AND p.geloescht_am IS NULL
              ORDER BY te.datum, te.startzeit;";
             cmd.Parameters.AddWithValue("@from", fromInclusive.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
             cmd.Parameters.AddWithValue("@to", toInclusive.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
@@ -623,6 +666,8 @@ public sealed partial class TimeTracker : IDisposable
                         julianday(datetime(datum || ' ' || startzeit))) * 24.0) AS stunden
               FROM time_entries
              WHERE datum >= @from AND datum <= @to
+               AND geloescht_am IS NULL
+               AND projekt_id IN (SELECT id FROM projects WHERE geloescht_am IS NULL)
              GROUP BY datum;";
             cmd.Parameters.AddWithValue("@from", from);
             cmd.Parameters.AddWithValue("@to", to);
@@ -665,7 +710,7 @@ public sealed partial class TimeTracker : IDisposable
             cmd.Transaction = tx;
 
             // Alte Projekt-ID ermitteln, damit Trigger-Update auch für altes Projekt passiert (falls Projekt gewechselt)
-            cmd.CommandText = "SELECT projekt_id FROM time_entries WHERE id = @id;";
+            cmd.CommandText = "SELECT projekt_id FROM time_entries WHERE id = @id AND geloescht_am IS NULL;";
             cmd.Parameters.AddWithValue("@id", id);
             object oldPidObj = cmd.ExecuteScalar();
             if (oldPidObj == null || oldPidObj == DBNull.Value)
@@ -694,6 +739,7 @@ public sealed partial class TimeTracker : IDisposable
         }
     }
 
+    /// <summary>ENDGÜLTIGES Löschen einer Buchung (egal ob im Papierkorb oder nicht). Für den Papierkorb siehe <see cref="MoveTimeEntryToTrash"/>.</summary>
     public void DeleteTimeEntry(int id)
     {
         if (id <= 0) throw new ArgumentOutOfRangeException(nameof(id));
@@ -710,13 +756,300 @@ public sealed partial class TimeTracker : IDisposable
     }
 
 
+    // ---------- Papierkorb (Soft-Delete) ----------
+
+    private const string TrashTimeFormat = "yyyy-MM-ddTHH:mm:ss";
+
+    private static string TrashNow() => DateTime.Now.ToString(TrashTimeFormat, CultureInfo.InvariantCulture);
+
+    private static DateTime ParseTrashTime(string s)
+    {
+        DateTime d;
+        return DateTime.TryParseExact(s, TrashTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out d) ? d : DateTime.MinValue;
+    }
+
+    /// <summary>Liefert einen freien Projektnamen "name + suffix", bei Bedarf "name + (Zusatz 2)" usw. (projektname ist UNIQUE, Papierkorb zählt mit).</summary>
+    private static string FindFreeProjectName(SQLiteCommand cmd, string name, string suffix)
+    {
+        // suffix z. B. " (gelöscht)" -> Zähler-Variante " (gelöscht 2)"
+        string core = suffix.TrimEnd(')');
+        for (int i = 1; ; i++)
+        {
+            string candidate = i == 1 ? name + suffix : name + core + " " + i.ToString(CultureInfo.InvariantCulture) + ")";
+            cmd.Parameters.Clear();
+            cmd.CommandText = "SELECT COUNT(*) FROM projects WHERE projektname = @n;";
+            cmd.Parameters.AddWithValue("@n", candidate);
+            if (Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) == 0) return candidate;
+        }
+    }
+
+    /// <summary>Benennt ein Papierkorb-Projekt mit genau diesem Namen um (Platz machen für ein neues/umbenanntes/wiederhergestelltes Projekt). Läuft in der Transaktion des Aufrufers.</summary>
+    private static void RenameTrashedProjectWithName(SQLiteCommand cmd, string name, string suffix)
+    {
+        cmd.Parameters.Clear();
+        cmd.CommandText = "SELECT id FROM projects WHERE projektname = @n AND geloescht_am IS NOT NULL;";
+        cmd.Parameters.AddWithValue("@n", name);
+        var o = cmd.ExecuteScalar();
+        if (o == null || o == DBNull.Value) return;
+
+        int id = Convert.ToInt32(o, CultureInfo.InvariantCulture);
+        string free = FindFreeProjectName(cmd, name, suffix);
+        cmd.Parameters.Clear();
+        cmd.CommandText = "UPDATE projects SET projektname = @new WHERE id = @id;";
+        cmd.Parameters.AddWithValue("@new", free);
+        cmd.Parameters.AddWithValue("@id", id);
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Legt ein Projekt in den Papierkorb (Soft-Delete). Seine Buchungen bleiben unverändert und verschwinden mit ihm aus
+    /// allen Ansichten. Liefert false, wenn es kein aktives Projekt dieses Namens gibt.
+    /// </summary>
+    public bool MoveProjectToTrash(string projektname)
+    {
+        if (string.IsNullOrWhiteSpace(projektname))
+            throw new ArgumentException("Projektname darf nicht leer sein.", nameof(projektname));
+
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = "UPDATE projects SET geloescht_am = @t WHERE projektname = @n AND geloescht_am IS NULL;";
+            cmd.Parameters.AddWithValue("@t", TrashNow());
+            cmd.Parameters.AddWithValue("@n", projektname);
+            return cmd.ExecuteNonQuery() > 0;
+        }
+    }
+
+    /// <summary>Legt eine Buchung in den Papierkorb (Soft-Delete); die Projektsumme wird per Trigger angepasst. Liefert false, wenn es keine aktive Buchung mit dieser Id gibt.</summary>
+    public bool MoveTimeEntryToTrash(int id)
+    {
+        if (id <= 0) throw new ArgumentOutOfRangeException(nameof(id));
+
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = "UPDATE time_entries SET geloescht_am = @t WHERE id = @id AND geloescht_am IS NULL;";
+            cmd.Parameters.AddWithValue("@t", TrashNow());
+            cmd.Parameters.AddWithValue("@id", id);
+            return cmd.ExecuteNonQuery() > 0;
+        }
+    }
+
+    /// <summary>Alle Projekte im Papierkorb, zuletzt gelöschte zuerst. Die Buchungsanzahl zählt nur Buchungen, die mit dem Projekt zurückkommen (nicht einzeln gelöschte).</summary>
+    public List<TrashedProjectRow> GetTrashedProjects()
+    {
+        var result = new List<TrashedProjectRow>();
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = @"
+            SELECT p.projektname, p.kunde, p.kostentraeger,
+                   (SELECT COUNT(*) FROM time_entries te WHERE te.projekt_id = p.id AND te.geloescht_am IS NULL),
+                   p.geloescht_am
+              FROM projects p
+             WHERE p.geloescht_am IS NOT NULL
+             ORDER BY p.geloescht_am DESC, p.projektname;";
+            using (var r = cmd.ExecuteReader())
+            {
+                while (r.Read())
+                {
+                    result.Add(new TrashedProjectRow
+                    {
+                        Projektname = r.GetString(0),
+                        Kunde = r.GetString(1),
+                        Kostentraeger = r.GetString(2),
+                        AnzahlBuchungen = r.GetInt32(3),
+                        GeloeschtAm = ParseTrashTime(r.GetString(4))
+                    });
+                }
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Alle einzeln gelöschten Buchungen, zuletzt gelöschte zuerst. Buchungen eines Papierkorb-Projekts, die nicht
+    /// einzeln gelöscht wurden, erscheinen hier NICHT (sie gehören zum Projekt, siehe <see cref="GetTrashedProjects"/>).
+    /// </summary>
+    public List<TrashedTimeEntryRow> GetTrashedTimeEntries()
+    {
+        var result = new List<TrashedTimeEntryRow>();
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = @"
+            SELECT te.id, te.datum, te.startzeit, te.endzeit, te.beschreibung, p.projektname, te.geloescht_am, p.geloescht_am IS NOT NULL
+              FROM time_entries te
+              JOIN projects p ON p.id = te.projekt_id
+             WHERE te.geloescht_am IS NOT NULL
+             ORDER BY te.geloescht_am DESC, te.id DESC;";
+            using (var r = cmd.ExecuteReader())
+            {
+                while (r.Read())
+                {
+                    result.Add(new TrashedTimeEntryRow
+                    {
+                        Id = r.GetInt32(0),
+                        Datum = DateTime.ParseExact(r.GetString(1), "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                        Startzeit = r.GetString(2),
+                        Endzeit = r.GetString(3),
+                        Beschreibung = r.IsDBNull(4) ? null : r.GetString(4),
+                        Projektname = r.GetString(5),
+                        GeloeschtAm = ParseTrashTime(r.GetString(6)),
+                        ProjektGeloescht = r.GetInt32(7) != 0
+                    });
+                }
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Stellt ein Projekt aus dem Papierkorb samt seinen nicht einzeln gelöschten Buchungen wieder her. Einzeln gelöschte
+    /// Buchungen bleiben im Papierkorb. Ist der Name inzwischen von einem aktiven Projekt belegt, wird unter
+    /// "Name (wiederhergestellt)" (bei Bedarf "Name (wiederhergestellt 2)" usw.) wiederhergestellt.
+    /// Liefert den tatsächlichen Projektnamen, oder null, wenn kein solches Papierkorb-Projekt existiert.
+    /// </summary>
+    public string RestoreProject(string projektname)
+    {
+        if (string.IsNullOrWhiteSpace(projektname))
+            throw new ArgumentException("Projektname darf nicht leer sein.", nameof(projektname));
+
+        using (var tx = _conn.BeginTransaction())
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.Transaction = tx;
+            string result = RestoreProjectCore(cmd, projektname);
+            tx.Commit();
+            return result;
+        }
+    }
+
+    private static string RestoreProjectCore(SQLiteCommand cmd, string projektname)
+    {
+        cmd.Parameters.Clear();
+        cmd.CommandText = "SELECT id FROM projects WHERE projektname = @n AND geloescht_am IS NOT NULL;";
+        cmd.Parameters.AddWithValue("@n", projektname);
+        var o = cmd.ExecuteScalar();
+        if (o == null || o == DBNull.Value) return null;
+        int id = Convert.ToInt32(o, CultureInfo.InvariantCulture);
+
+        // Name belegt? Ein aktives Projekt kann denselben Namen nur tragen, wenn das Papierkorb-Projekt umbenannt wurde
+        // (dann ist der Name hier ohnehin ein anderer); projektname ist UNIQUE, also genügt: der Name gehört diesem Projekt.
+        // Konflikt entsteht nur, wenn der "Originalname" bereits wieder vergeben ist – das Papierkorb-Projekt trägt dann
+        // seinen Ausweichnamen. Ein Ausweichname " (gelöscht)" wird beim Wiederherstellen wieder entfernt, falls frei.
+        string target = projektname;
+        const string deletedSuffix = " (gelöscht)";
+        if (projektname.EndsWith(deletedSuffix, StringComparison.Ordinal))
+        {
+            string baseName = projektname.Substring(0, projektname.Length - deletedSuffix.Length);
+            if (baseName.Length > 0 && !ProjectNameExists(cmd, baseName)) target = baseName;
+            else if (baseName.Length > 0) target = FindFreeProjectName(cmd, baseName, " (wiederhergestellt)");
+        }
+
+        cmd.Parameters.Clear();
+        cmd.CommandText = "UPDATE projects SET projektname = @n, geloescht_am = NULL WHERE id = @id;";
+        cmd.Parameters.AddWithValue("@n", target);
+        cmd.Parameters.AddWithValue("@id", id);
+        cmd.ExecuteNonQuery();
+        return target;
+    }
+
+    private static bool ProjectNameExists(SQLiteCommand cmd, string name)
+    {
+        cmd.Parameters.Clear();
+        cmd.CommandText = "SELECT COUNT(*) FROM projects WHERE projektname = @n;";
+        cmd.Parameters.AddWithValue("@n", name);
+        return Convert.ToInt32(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) > 0;
+    }
+
+    /// <summary>
+    /// Stellt eine einzeln gelöschte Buchung wieder her. Liegt das Projekt der Buchung selbst im Papierkorb, wird das
+    /// Projekt MIT wiederhergestellt (inklusive seiner übrigen, nicht einzeln gelöschten Buchungen; Namenskonflikt wie bei
+    /// <see cref="RestoreProject"/>), damit die Buchung nicht unsichtbar bleibt.
+    /// Liefert den Namen des Projekts, zu dem die Buchung nun gehört, oder null, wenn die Buchung nicht im Papierkorb liegt.
+    /// </summary>
+    public string RestoreTimeEntry(int id)
+    {
+        if (id <= 0) throw new ArgumentOutOfRangeException(nameof(id));
+
+        using (var tx = _conn.BeginTransaction())
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.Transaction = tx;
+            cmd.CommandText = @"
+            SELECT p.projektname, p.geloescht_am IS NOT NULL
+              FROM time_entries te JOIN projects p ON p.id = te.projekt_id
+             WHERE te.id = @id AND te.geloescht_am IS NOT NULL;";
+            cmd.Parameters.AddWithValue("@id", id);
+            string name;
+            bool projectTrashed;
+            using (var r = cmd.ExecuteReader())
+            {
+                if (!r.Read()) { tx.Rollback(); return null; }
+                name = r.GetString(0);
+                projectTrashed = r.GetInt32(1) != 0;
+            }
+
+            if (projectTrashed) name = RestoreProjectCore(cmd, name);
+
+            cmd.Parameters.Clear();
+            cmd.CommandText = "UPDATE time_entries SET geloescht_am = NULL WHERE id = @id;";
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.ExecuteNonQuery();
+
+            tx.Commit();
+            return name;
+        }
+    }
+
+    /// <summary>Löscht ein Projekt aus dem Papierkorb endgültig (samt allen Buchungen). Aktive Projekte werden nicht angefasst. Liefert false, wenn nichts gelöscht wurde.</summary>
+    public bool PurgeProject(string projektname)
+    {
+        if (string.IsNullOrWhiteSpace(projektname))
+            throw new ArgumentException("Projektname darf nicht leer sein.", nameof(projektname));
+
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = "DELETE FROM projects WHERE projektname = @n AND geloescht_am IS NOT NULL;";
+            cmd.Parameters.AddWithValue("@n", projektname);
+            return cmd.ExecuteNonQuery() > 0;
+        }
+    }
+
+    /// <summary>Löscht eine einzeln gelöschte Buchung endgültig. Aktive Buchungen werden nicht angefasst. Liefert false, wenn nichts gelöscht wurde.</summary>
+    public bool PurgeTimeEntry(int id)
+    {
+        if (id <= 0) throw new ArgumentOutOfRangeException(nameof(id));
+
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = "DELETE FROM time_entries WHERE id = @id AND geloescht_am IS NOT NULL;";
+            cmd.Parameters.AddWithValue("@id", id);
+            return cmd.ExecuteNonQuery() > 0;
+        }
+    }
+
+    /// <summary>Leert den Papierkorb endgültig (Projekte samt Buchungen und einzeln gelöschte Buchungen). Liefert die Anzahl endgültig gelöschter Projekte plus Buchungen.</summary>
+    public int EmptyTrash()
+    {
+        using (var tx = _conn.BeginTransaction())
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.Transaction = tx;
+            int n = 0;
+            cmd.CommandText = "DELETE FROM time_entries WHERE geloescht_am IS NOT NULL;";
+            n += cmd.ExecuteNonQuery();
+            cmd.CommandText = "DELETE FROM projects WHERE geloescht_am IS NOT NULL;";
+            n += cmd.ExecuteNonQuery();
+            tx.Commit();
+            return n;
+        }
+    }
+
     // ---------- Helpers ----------
 
     private int GetProjectIdByName(string projektname)
     {
         using (var cmd = _conn.CreateCommand())
         {
-            cmd.CommandText = "SELECT id FROM projects WHERE projektname = @n LIMIT 1;";
+            cmd.CommandText = "SELECT id FROM projects WHERE projektname = @n AND geloescht_am IS NULL LIMIT 1;";
             cmd.Parameters.AddWithValue("@n", projektname);
             var o = cmd.ExecuteScalar();
             if (o == null || o == DBNull.Value) return -1;
@@ -772,6 +1105,31 @@ public sealed partial class TimeTracker : IDisposable
         public int RundungEigenMinuten { get; set; }
         /// <summary>true = das Projekt erbt die globale Standardrundung.</summary>
         public bool RundungGlobal { get; set; }
+    }
+
+    /// <summary>Ein Projekt im Papierkorb.</summary>
+    public class TrashedProjectRow
+    {
+        public string Projektname { get; set; }
+        public string Kunde { get; set; }
+        public string Kostentraeger { get; set; }
+        /// <summary>Anzahl der Buchungen, die mit dem Projekt zurückkommen (ohne einzeln gelöschte).</summary>
+        public int AnzahlBuchungen { get; set; }
+        public DateTime GeloeschtAm { get; set; }
+    }
+
+    /// <summary>Eine einzeln gelöschte Buchung im Papierkorb.</summary>
+    public class TrashedTimeEntryRow
+    {
+        public int Id { get; set; }
+        public DateTime Datum { get; set; }
+        public string Startzeit { get; set; }
+        public string Endzeit { get; set; }
+        public string Beschreibung { get; set; }
+        public string Projektname { get; set; }
+        public DateTime GeloeschtAm { get; set; }
+        /// <summary>true = das Projekt der Buchung liegt selbst im Papierkorb.</summary>
+        public bool ProjektGeloescht { get; set; }
     }
 
     public class TimeEntryRow

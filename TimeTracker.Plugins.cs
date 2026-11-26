@@ -105,7 +105,7 @@ public sealed partial class TimeTracker
         var result = new List<PluginProject>();
         using (var cmd = _conn.CreateCommand())
         {
-            cmd.CommandText = "SELECT id, projektname, kunde, kostentraeger, ist_extern FROM projects ORDER BY projektname;";
+            cmd.CommandText = "SELECT id, projektname, kunde, kostentraeger, ist_extern FROM projects WHERE geloescht_am IS NULL ORDER BY projektname;";
             using (var r = cmd.ExecuteReader())
             {
                 while (r.Read())
@@ -137,7 +137,7 @@ public sealed partial class TimeTracker
             SELECT te.id, te.datum, te.startzeit, te.endzeit, te.beschreibung, p.id, p.projektname, p.kostentraeger
               FROM time_entries te
               JOIN projects p ON p.id = te.projekt_id
-             WHERE te.datum >= @from AND te.datum <= @to
+             WHERE te.datum >= @from AND te.datum <= @to AND te.geloescht_am IS NULL AND p.geloescht_am IS NULL
              ORDER BY te.datum, te.startzeit, te.id;";
             cmd.Parameters.AddWithValue("@from", fromInclusive.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
             cmd.Parameters.AddWithValue("@to", toInclusive.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));

@@ -34,7 +34,7 @@ public sealed partial class TimeTracker
             SELECT m.auftragsnummer, m.auftraggeber_name, m.auftraggeber_block
               FROM export_project_meta m
               JOIN projects p ON p.id = m.projekt_id
-             WHERE p.projektname = @n;";
+             WHERE p.projektname = @n AND p.geloescht_am IS NULL;";
             cmd.Parameters.AddWithValue("@n", projektname);
 
             using (var r = cmd.ExecuteReader())

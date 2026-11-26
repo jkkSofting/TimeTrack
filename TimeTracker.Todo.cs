@@ -145,7 +145,7 @@ public sealed partial class TimeTracker
 
         using (var cmd = _conn.CreateCommand())
         {
-            cmd.CommandText = "SELECT id FROM projects WHERE projektname = @p;";
+            cmd.CommandText = "SELECT id FROM projects WHERE projektname = @p AND geloescht_am IS NULL;";
             cmd.Parameters.AddWithValue("@p", projektname);
             var o = cmd.ExecuteScalar();
             if (o == null || o == DBNull.Value)
@@ -503,7 +503,7 @@ public sealed partial class TimeTracker
               FROM todo_tickets t
               JOIN todo_columns c ON c.id = t.column_id
               JOIN projects p ON p.id = c.projekt_id
-             WHERE c.quickswitch = 1
+             WHERE c.quickswitch = 1 AND p.geloescht_am IS NULL
              ORDER BY p.projektname COLLATE NOCASE, t.titel COLLATE NOCASE, t.id;";
             using (var r = cmd.ExecuteReader())
             {
@@ -525,7 +525,7 @@ public sealed partial class TimeTracker
             cmd.CommandText = @"
             SELECT n.id, n.titel, n.text, p.projektname, n.created_utc, n.updated_utc
               FROM notes n
-              LEFT JOIN projects p ON p.id = n.projekt_id
+              LEFT JOIN projects p ON p.id = n.projekt_id AND p.geloescht_am IS NULL
              ORDER BY n.updated_utc DESC, n.id DESC;";
             using (var r = cmd.ExecuteReader())
             {
@@ -554,7 +554,7 @@ public sealed partial class TimeTracker
             var now = UtcNow();
             cmd.CommandText = @"
             INSERT INTO notes (titel, text, projekt_id, created_utc, updated_utc)
-                 VALUES (@t, @x, (SELECT id FROM projects WHERE projektname = @p), @now, @now);
+                 VALUES (@t, @x, (SELECT id FROM projects WHERE projektname = @p AND geloescht_am IS NULL), @now, @now);
             SELECT last_insert_rowid();";
             cmd.Parameters.AddWithValue("@t", titel ?? string.Empty);
             cmd.Parameters.AddWithValue("@x", text ?? string.Empty);
@@ -572,7 +572,7 @@ public sealed partial class TimeTracker
             UPDATE notes
                SET titel = @t,
                    text = @x,
-                   projekt_id = (SELECT id FROM projects WHERE projektname = @p),
+                   projekt_id = (SELECT id FROM projects WHERE projektname = @p AND geloescht_am IS NULL),
                    updated_utc = @now
              WHERE id = @id;";
             cmd.Parameters.AddWithValue("@t", titel ?? string.Empty);
