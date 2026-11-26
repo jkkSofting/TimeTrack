@@ -101,6 +101,8 @@
     <Compile Include="Helpers\ControllingImportService.cs" />
     <Compile Include="Helpers\ControllingModels.cs" />
     <Compile Include="Helpers\ControllingOverview.cs" />
+    <Compile Include="Helpers\ConfirmService.cs" />
+    <Compile Include="Helpers\MessageBoxConfirmService.cs" />
     <Compile Include="Helpers\CsvExporter.cs" />
     <Compile Include="Helpers\ExportFileName.cs" />
     <Compile Include="Helpers\ExportModels.cs" />
@@ -161,6 +163,7 @@
     <Compile Include="ViewModel\OverlayViewModelBase.cs" />
     <Compile Include="ViewModel\EntryEditOverlayViewModel.cs" />
     <Compile Include="ViewModel\TodoViewModel.cs" />
+    <Compile Include="ViewModel\TrashViewModel.cs" />
     <Compile Include="Views\CountUpTextblock.cs" />
     <Compile Include="Views\DashboardView.xaml.cs">
       <DependentUpon>DashboardView.xaml</DependentUpon>
@@ -222,6 +225,9 @@
     </Compile>
     <Compile Include="Views\TodoView.xaml.cs">
       <DependentUpon>TodoView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\TrashView.xaml.cs">
+      <DependentUpon>TrashView.xaml</DependentUpon>
     </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -299,6 +305,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\NotesView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\TrashView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

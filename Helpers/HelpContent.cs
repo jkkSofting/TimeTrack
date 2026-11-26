@@ -149,6 +149,17 @@ namespace Zeitmanagement.Helpers
                 "Das Diagramm-Symbol in einer Zeile öffnet das „Projektcontrolling“ mit dem Kostenträger des Projekts.",
                 "Das Dokument-Symbol in einer Zeile öffnet den „Tätigkeitsnachweis“ mit diesem Projekt."),
 
+            new HelpTopic("\uE74D", "Papierkorb", "Trash",
+                "Gelöschte Projekte und Buchungen wiederherstellen oder endgültig entfernen.",
+                "Löschen verschiebt ein Projekt oder eine Buchung zuerst in den Papierkorb. Vorher fragt TimeTrack nach; „Nein“ ist der Standard.",
+                "Ein Projekt im Papierkorb verschwindet samt seinen Buchungen aus allen Ansichten, Auswertungen und Summen.",
+                "Unter „Verwaltung“ → „Papierkorb“ gibt es zwei Tabs: Projekte und einzelne Buchungen. „Wiederherstellen“ bringt einen Eintrag zurück, „Endgültig löschen“ entfernt ihn für immer.",
+                "Stellst du ein Projekt wieder her, kommen seine Buchungen mit zurück – außer die, die du einzeln gelöscht hast. Die bleiben im Papierkorb.",
+                "Eine einzeln gelöschte Buchung, deren Projekt ebenfalls im Papierkorb liegt, stellt beim Wiederherstellen das Projekt mit wieder her.",
+                "Ist der Projektname inzwischen vergeben, erhält das wiederhergestellte Projekt den Zusatz „(wiederhergestellt)“. Ein Hinweis oben nennt den neuen Namen.",
+                "Wird eine laufende Buchung im Quick Switch gestoppt, deren Projekt im Papierkorb liegt, kann sie nicht gespeichert werden. TimeTrack meldet das. Stelle das Projekt wieder her und trage die Zeit bei Bedarf unter „Buchungen“ nach.",
+                "„Papierkorb leeren“ und „Endgültig löschen“ lassen sich nicht rückgängig machen. Auch dafür fragt TimeTrack vorher nach."),
+
             new HelpTopic("", "Einstellungen", "Settings",
                 "TimeTrack an dich anpassen. Das Design gilt sofort, alles andere nach „Speichern“.",
                 "Design: Motiv und Helligkeit (wie Windows, hell, dunkel) wählen. Saisonale Designs erscheinen rund um Halloween, Weihnachten und Ostern von selbst, wenn du das nicht abschaltest. Das Design „GTA VI“ (Vice-City-Look, hell und dunkel) bleibt dauerhaft auswählbar, erscheint automatisch aber nur einmalig vom 19.11. bis 30.11.2026. Das Design „Star Wars“ (Wüstensand oder tiefer Weltraum) erscheint automatisch nur am 4. Mai, bleibt aber jederzeit auswählbar.",

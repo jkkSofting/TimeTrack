@@ -620,6 +620,17 @@ namespace Zeitmanagement.ViewModel
                 selectedItem.End = BumpByOneMinute(selectedItem.End);
             }
 
+            // A project moved to the trash while a slot was running: AddTimeEntry would reject it with a
+            // misleading "bitte zuerst anlegen" message. Say what happened instead.
+            if (MainViewModel.DbInstance.GetTrashedProjects().Any(p => p.Projektname == selectedItem.SelectedProject))
+            {
+                MessageBox.Show(
+                    $"Das Projekt „{selectedItem.SelectedProject}“ liegt im Papierkorb. Die Buchung {selectedItem.Start}–{selectedItem.End} wurde daher nicht gespeichert.\n\n" +
+                    "Stelle das Projekt im Papierkorb wieder her und trage die Zeit bei Bedarf unter Buchungen nach.",
+                    "Buchung nicht gespeichert", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
                 MainViewModel.DbInstance.AddTimeEntry(DateTime.Today, selectedItem.Start, selectedItem.End, selectedItem.SelectedProject, selectedItem.BookingText);

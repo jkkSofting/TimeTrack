@@ -449,10 +449,15 @@ namespace Zeitmanagement.ViewModel
         }
 
         // --- Delete ---
-        /// <summary>Löscht die Buchung aus dem Bearbeiten-Overlay.</summary>
+        private readonly IConfirmService _confirm = new MessageBoxConfirmService();
+
+        /// <summary>Verschiebt die Buchung aus dem Bearbeiten-Overlay in den Papierkorb. Liefert false, wenn das Overlay offen bleiben soll.</summary>
         private bool DeleteEntry(EntryEditOverlayViewModel vm)
         {
-            MainViewModel.DbInstance.DeleteTimeEntry(vm.Id);
+            if (!_confirm.Confirm(ConfirmTexts.MoveEntryText(vm.Start, vm.End, vm.Projektname), ConfirmTexts.MoveEntryTitle))
+                return false;
+
+            MainViewModel.DbInstance.MoveTimeEntryToTrash(vm.Id);
             Refresh();
             return true;
         }

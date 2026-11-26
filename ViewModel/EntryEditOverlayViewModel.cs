@@ -36,7 +36,7 @@ namespace Zeitmanagement.ViewModel
             _save = save ?? throw new ArgumentNullException(nameof(save));
             _delete = delete ?? throw new ArgumentNullException(nameof(delete));
 
-            DangerText = "Löschen";
+            DangerText = "In den Papierkorb";
             DangerCommand = new DelegateCommand(_ => OnDelete());
         }
 
