@@ -53,6 +53,15 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.49.0", new DateTime(2026, 11, 26), "Papierkorb und aufgeräumte Projekte",
+                Neu("Neuer Papierkorb unter „Verwaltung“: Gelöschte Projekte und einzeln gelöschte Buchungen liegen dort, getrennt in zwei Tabs. Du kannst sie wiederherstellen oder endgültig löschen, und „Papierkorb leeren“ entfernt alles auf einmal."),
+                Neu("Ein Projekt im Papierkorb blendet seine Buchungen aus allen Ansichten und Summen aus. Stellst du es wieder her, kommen die Buchungen mit zurück – außer die, die du einzeln gelöscht hast."),
+                Neu("Eine einzeln gelöschte Buchung, deren Projekt ebenfalls im Papierkorb liegt, stellt beim Wiederherstellen das Projekt mit wieder her."),
+                Neu("Ist der Projektname beim Wiederherstellen inzwischen vergeben, erhält das Projekt den Zusatz „(wiederhergestellt)“. Ein Hinweis nennt den neuen Namen."),
+                Verbessert("Projekte und Buchungen löschst du jetzt in den Papierkorb: Vorher fragt TimeTrack nach, und „Nein“ ist der Standard. Der Knopf im Buchungs-Overlay heißt entsprechend „In den Papierkorb“."),
+                Verbessert("Endgültiges Löschen und „Papierkorb leeren“ fragen ebenfalls nach und lassen sich nicht rückgängig machen."),
+                Verbessert("Wird eine laufende Quick-Switch-Buchung gestoppt, deren Projekt inzwischen im Papierkorb liegt, erklärt TimeTrack das in einer Meldung, statt eine Buchung anzulegen, die es nicht gibt. Die Zeit geht in diesem Fall verloren; stelle das Projekt wieder her und trage sie unter „Buchungen“ nach.")),
+
             new ChangelogRelease("2026.48.0", new DateTime(2026, 11, 23), "Standardrundung, Overlays und nur eine Instanz",
                 Neu("TimeTrack läuft jetzt nur noch einmal: Startest du es ein zweites Mal – etwa über die Verknüpfung oder den Autostart –, wird das bereits laufende Fenster in den Vordergrund geholt und ein Hinweis eingeblendet, statt eine zweite Instanz zu öffnen. Lässt sich die laufende Instanz nicht erreichen, erklärt eine Meldung, was zu tun ist. So greifen nie zwei Instanzen gleichzeitig auf dieselbe Datenbank zu."),
                 Neu("Globale Standardrundung: Die SAP-Verrechnung rundet jede Buchung auf die nächste angefangene Zeiteinheit auf. Die Standardrundung gilt ab Werk für 15 Minuten und ist für alle Projekte gleich, die sie erben."),
