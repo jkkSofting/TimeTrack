@@ -53,6 +53,10 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
+            new ChangelogRelease("2026.49.0", new DateTime(2026, 11, 26), "Papierkorb und aufgeräumte Projekte",
+                Neu("Inaktive Projekte sind auf der Seite „Projekte“ jetzt standardmäßig ausgeblendet. Der Schalter „Inaktive anzeigen“ in der Kopfzeile blendet sie wieder ein; sie erscheinen dann ausgegraut, und ein Hinweis zählt die ausgeblendeten Projekte. Die Spalte „Quick Switch“ heißt jetzt „Aktiv“: Ein Projekt ist aktiv und im Quick Switch wählbar, oder inaktiv, dann wird es ausgeblendet und dort nicht angeboten. Buchungen bleiben in beiden Fällen unberührt."),
+                Neu("Auf der Seite „Projekte“ lassen sich die Stunden umschalten: „Netto“ zeigt die tatsächlich gebuchte Zeit, „Gerundet“ rundet jede Buchung auf die Rundung des Projekts auf, wie in der SAP-Verrechnung. Im gerundeten Modus nennt ein Tooltip an der Stundenzelle den Netto- und den gerundeten Wert. Die Wahl gilt bis zum Beenden des Programms.")),
+
             new ChangelogRelease("2026.48.0", new DateTime(2026, 11, 23), "Standardrundung, Overlays und nur eine Instanz",
                 Neu("TimeTrack läuft jetzt nur noch einmal: Startest du es ein zweites Mal – etwa über die Verknüpfung oder den Autostart –, wird das bereits laufende Fenster in den Vordergrund geholt und ein Hinweis eingeblendet, statt eine zweite Instanz zu öffnen. Lässt sich die laufende Instanz nicht erreichen, erklärt eine Meldung, was zu tun ist. So greifen nie zwei Instanzen gleichzeitig auf dieselbe Datenbank zu."),
                 Neu("Globale Standardrundung: Die SAP-Verrechnung rundet jede Buchung auf die nächste angefangene Zeiteinheit auf. Die Standardrundung gilt ab Werk für 15 Minuten und ist für alle Projekte gleich, die sie erben."),

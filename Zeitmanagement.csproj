@@ -123,6 +123,7 @@
     <Compile Include="Helpers\PenguinEasterEgg.cs" />
     <Compile Include="Helpers\PresentationDetector.cs" />
     <Compile Include="Helpers\ProjectControllingExcelReader.cs" />
+    <Compile Include="Helpers\ProjectHours.cs" />
     <Compile Include="Helpers\RoundingOptions.cs" />
     <Compile Include="Helpers\SafeFile.cs" />
     <Compile Include="Helpers\SapBookingCalculator.cs" />

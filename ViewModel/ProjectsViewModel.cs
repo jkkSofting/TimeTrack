@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
@@ -25,7 +26,65 @@ namespace Zeitmanagement.ViewModel
             set
             {
                 SetProperty(ref _searchText, value);
-                ProjectsView.Refresh();
+                UpdateView();
+            }
+        }
+
+        private bool _showInactive;
+
+        private bool _showRoundedHours;
+
+        /// <summary>
+        /// false = Stunden netto (tatsächlich gebucht), true = jede Buchung auf die Rundung des Projekts aufgerundet.
+        /// Gilt nur für die Anzeige und wird nur für die Sitzung gehalten.
+        /// </summary>
+        public bool ShowRoundedHours
+        {
+            get => _showRoundedHours;
+            set
+            {
+                if (!SetProperty(ref _showRoundedHours, value)) return;
+
+                foreach (var item in Projects)
+                    item.ZeigeGerundet = value;
+
+                RaisePropertyChanged(nameof(IsNettoSelected));
+                UpdateView();
+            }
+        }
+
+        /// <summary>Segment „Netto“ im Umschalter (Gegenstück zu <see cref="ShowRoundedHours"/>).</summary>
+        public bool IsNettoSelected
+        {
+            get => !_showRoundedHours;
+            set
+            {
+                if (value) ShowRoundedHours = false;
+            }
+        }
+
+        /// <summary>Zeigt auch inaktive Projekte (Schalter „Aktiv“ aus) an; standardmäßig sind sie ausgeblendet.</summary>
+        public bool ShowInactive
+        {
+            get => _showInactive;
+            set
+            {
+                if (SetProperty(ref _showInactive, value))
+                    UpdateView();
+            }
+        }
+
+        /// <summary>Hinweis „3 inaktive Projekte ausgeblendet“; null, wenn nichts ausgeblendet ist.</summary>
+        public string HiddenInactiveText
+        {
+            get
+            {
+                if (ShowInactive) return null;
+
+                int hidden = Projects.Count(p => !p.QuickSelectAktiv && MatchesSearch(p));
+                if (hidden == 0) return null;
+
+                return hidden == 1 ? "1 inaktives Projekt ausgeblendet" : hidden + " inaktive Projekte ausgeblendet";
             }
         }
 
@@ -132,6 +191,7 @@ namespace Zeitmanagement.ViewModel
                     var entries = MainViewModel.DbInstance.GetTimeEntriesForProject(p.Projektname);
                     int count = 0;
                     double hours = 0;
+                    var entryMinutes = new List<int>();
 
                     foreach (var entry in entries)
                     {
@@ -163,6 +223,7 @@ namespace Zeitmanagement.ViewModel
                             duration = duration.Add(TimeSpan.FromDays(1));
 
                         hours += duration.TotalHours;
+                        entryMinutes.Add(ProjectHours.ToMinutes(duration));
                         count++;
                     }
 
@@ -183,7 +244,9 @@ namespace Zeitmanagement.ViewModel
                         RundungGlobal = p.RundungGlobal,
                         QuickSelectAktiv = p.QuickSelectAktiv,
                         Buchungen = count,
-                        Stunden = Math.Round(hours, 2)
+                        Stunden = Math.Round(hours, 2),
+                        StundenGerundet = Math.Round(ProjectHours.RoundedHours(entryMinutes, p.RundungMinuten), 2),
+                        ZeigeGerundet = _showRoundedHours
                     };
 
                     // Subscribed only after the initializer, so loading doesn't write back to the DB.
@@ -197,7 +260,14 @@ namespace Zeitmanagement.ViewModel
                 // Hole Buchungen für dieses Projekt (falls du sie in der DB nicht schon aggregierst)
             }
 
+            UpdateView();
+        }
+
+        /// <summary>Wendet Suche und Inaktiv-Filter neu an und aktualisiert den Hinweis auf ausgeblendete Projekte.</summary>
+        private void UpdateView()
+        {
             ProjectsView.Refresh();
+            RaisePropertyChanged(nameof(HiddenInactiveText));
         }
 
         private void OnProjectItemChanged(object sender, PropertyChangedEventArgs e)
@@ -206,17 +276,26 @@ namespace Zeitmanagement.ViewModel
 
             var item = (ProjectItemVM)sender;
             MainViewModel.DbInstance.SetProjectQuickSelectActive(item.Projektname, item.QuickSelectAktiv);
+            UpdateView();
             _projectsChanged?.Invoke();
         }
 
         private bool FilterProject(object obj)
         {
-            if (string.IsNullOrWhiteSpace(SearchText))
-                return true;
-
             var it = obj as ProjectItemVM;
             if (it == null)
                 return false;
+
+            if (!ShowInactive && !it.QuickSelectAktiv)
+                return false;
+
+            return MatchesSearch(it);
+        }
+
+        private bool MatchesSearch(ProjectItemVM it)
+        {
+            if (string.IsNullOrWhiteSpace(SearchText))
+                return true;
 
             var q = SearchText.Trim();
             return (it.Projektname?.IndexOf(q, StringComparison.OrdinalIgnoreCase) ?? -1) >= 0
@@ -300,13 +379,25 @@ namespace Zeitmanagement.ViewModel
         /// <summary>Anzeige: „Standard (15 Minuten)“, „Aus“, „10 Minuten“.</summary>
         public string RundungText => RoundingOptions.LabelFor(_rundungGlobal, _rundungEigenMinuten, _globalRundungMinuten);
         public int Buchungen { get => _buchungen; set => SetProperty(ref _buchungen, value); }
-        public double Stunden { get => _stunden; set => SetProperty(ref _stunden, value); }
+        /// <summary>Stunden netto: die tatsächlich gebuchte Zeit ohne Rundung.</summary>
+        public double Stunden { get => _stunden; set { SetProperty(ref _stunden, value); RaisePropertyChanged(nameof(StundenAnzeige)); } }
+        /// <summary>Stunden, wenn jede Buchung auf die Rundung des Projekts aufgerundet wird (SAP-Verrechnung).</summary>
+        public double StundenGerundet { get => _stundenGerundet; set { SetProperty(ref _stundenGerundet, value); RaisePropertyChanged(nameof(StundenAnzeige)); RaisePropertyChanged(nameof(StundenTooltip)); } }
+        /// <summary>true = <see cref="StundenGerundet"/> anzeigen, sonst <see cref="Stunden"/>. Vom ViewModel für alle Zeilen gesetzt.</summary>
+        public bool ZeigeGerundet { get => _zeigeGerundet; set { SetProperty(ref _zeigeGerundet, value); RaisePropertyChanged(nameof(StundenAnzeige)); RaisePropertyChanged(nameof(StundenTooltip)); } }
+        /// <summary>Der angezeigte Stundenwert je nach Modus; zum Sortieren der Spalte „Stunden“.</summary>
+        public double StundenAnzeige => _zeigeGerundet ? _stundenGerundet : _stunden;
+        /// <summary>Tooltip der Stundenzelle: im gerundeten Modus bei eigener Rundung „netto X, gerundet Y“, sonst leer.</summary>
+        public string StundenTooltip => _zeigeGerundet && _rundungMinuten > 0
+            ? "netto " + _stunden.ToString("0.00") + ", gerundet " + _stundenGerundet.ToString("0.00")
+            : null;
 
         private string _projektname, _kunde, _kostentraeger;
         private int _buchungen, _rundungMinuten, _rundungEigenMinuten, _globalRundungMinuten;
         private bool _rundungGlobal;
         private bool _istExtern;
         private bool _quickSelectAktiv;
-        private double _stunden;
+        private bool _zeigeGerundet;
+        private double _stunden, _stundenGerundet;
     }
 }
