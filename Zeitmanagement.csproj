@@ -162,6 +162,7 @@
     <Compile Include="ViewModel\OverlayViewModelBase.cs" />
     <Compile Include="ViewModel\EntryEditOverlayViewModel.cs" />
     <Compile Include="ViewModel\TodoViewModel.cs" />
+    <Compile Include="ViewModel\TrashViewModel.cs" />
     <Compile Include="Views\CountUpTextblock.cs" />
     <Compile Include="Views\DashboardView.xaml.cs">
       <DependentUpon>DashboardView.xaml</DependentUpon>

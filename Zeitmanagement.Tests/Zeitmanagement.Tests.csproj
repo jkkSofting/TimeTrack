@@ -44,6 +44,8 @@
     <Compile Include="..\TimeTracker.Plugins.cs" Link="Linked\TimeTracker.Plugins.cs" />
     <Compile Include="..\TimeTracker.Todo.cs" Link="Linked\TimeTracker.Todo.cs" />
     <Compile Include="..\ViewModel\ListSync.cs" Link="Linked\ListSync.cs" />
+    <Compile Include="..\ViewModel\BaseViewModel.cs" Link="Linked\BaseViewModel.cs" />
+    <Compile Include="..\ViewModel\TrashViewModel.cs" Link="Linked\TrashViewModel.cs" />
     <Compile Include="..\ViewModel\OverlayService.cs" Link="Linked\OverlayService.cs" />
     <Compile Include="..\ViewModel\OverlayViewModelBase.cs" Link="Linked\OverlayViewModelBase.cs" />
     <Compile Include="..\ViewModel\RoundingChoice.cs" Link="Linked\RoundingChoice.cs" />
