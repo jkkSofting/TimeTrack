@@ -74,9 +74,6 @@ namespace Zeitmanagement.ViewModel
             }
         }
 
-        /// <summary>Alte Bindung des Hinweises unter dem Titel; zeigt jetzt dieselbe Statuszeile wie <see cref="ListStatusText"/>.</summary>
-        public string HiddenInactiveText => ListStatusText;
-
         // --- Filter-Panel (Typ, Kunde, Rundung, nur mit Buchungen) ---
 
         /// <summary>Filterleiste auf der Seite ein-/ausgeklappt (nur für die Sitzung).</summary>
@@ -373,7 +370,6 @@ namespace Zeitmanagement.ViewModel
             EmptyText = counts.Shown == 0 && Projects.Count > 0 ? "Keine Projekte passen zu den aktuellen Filtern." : null;
 
             RaisePropertyChanged(nameof(ListStatusText));
-            RaisePropertyChanged(nameof(HiddenInactiveText));
             RaisePropertyChanged(nameof(EmptyText));
             RaisePropertyChanged(nameof(ActiveFilterCount));
             RaisePropertyChanged(nameof(HasActiveFilters));

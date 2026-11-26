@@ -57,6 +57,14 @@
                         Style="{StaticResource Text.Icon}"
                         Text="&#xE721;" />
                 </Grid>
+                <ToggleButton
+                    Margin="8,0,0,0"
+                    local:Ui.Glyph="&#xE71C;"
+                    AutomationProperties.Name="Filterleiste ein- und ausblenden"
+                    Content="{Binding FilterButtonText}"
+                    IsChecked="{Binding IsFilterPanelOpen, Mode=TwoWay}"
+                    Style="{StaticResource Toggle.Accent}"
+                    ToolTip="Weitere Filter: Typ, Kunde, Rundung, nur Projekte mit Buchungen" />
                 <Button
                     Margin="8,0,0,0"
                     local:Ui.Glyph="&#xE72C;"
@@ -76,8 +84,8 @@
                 <TextBlock Style="{StaticResource Text.Subtitle}" Text="{Binding HeaderSubtitle}" />
                 <TextBlock
                     Style="{StaticResource Text.Muted}"
-                    Text="{Binding HiddenInactiveText}"
-                    Visibility="{Binding HiddenInactiveText, Converter={StaticResource NullToCollapsed}}" />
+                    Text="{Binding ListStatusText}"
+                    Visibility="{Binding ListStatusText, Converter={StaticResource NullToCollapsed}}" />
             </StackPanel>
         </DockPanel>
 
@@ -87,6 +95,7 @@
             Style="{StaticResource Card}">
             <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
@@ -155,14 +164,90 @@
                         <Button
                             Margin="6,0,0,0"
                             Command="{Binding ResetProjectsFilterCommand}"
-                            Content="Zurücksetzen"
-                            Style="{StaticResource Button.Ghost}" />
+                            Content="Zeitraum zurücksetzen"
+                            Style="{StaticResource Button.Ghost}"
+                            ToolTip="Löscht Von/Bis und zeigt wieder alle Buchungen" />
                     </StackPanel>
                 </DockPanel>
 
+                <!--  Weitere Filter (einklappbar; Schalter „Filter“ im Seitenkopf)  -->
+                <Border
+                    Grid.Row="1"
+                    Margin="0,12,0,0"
+                    Style="{StaticResource Inset}"
+                    Visibility="{Binding IsFilterPanelOpen, Converter={StaticResource BoolToVis}}">
+                    <DockPanel>
+                        <Button
+                            VerticalAlignment="Bottom"
+                            Command="{Binding ResetFilterPanelCommand}"
+                            Content="Filter zurücksetzen"
+                            DockPanel.Dock="Right"
+                            Style="{StaticResource Button.Ghost}" />
+                        <WrapPanel Orientation="Horizontal">
+                            <StackPanel Margin="0,0,20,0">
+                                <TextBlock Style="{StaticResource Text.Label}" Text="TYP" />
+                                <Border Margin="0,4,0,0" Style="{StaticResource SegmentBar}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <RadioButton Content="Alle" GroupName="ProjectsTypeFilter" IsChecked="{Binding IsTypeAll, Mode=TwoWay}" Style="{StaticResource Segment}" />
+                                        <RadioButton Content="Intern" GroupName="ProjectsTypeFilter" IsChecked="{Binding IsTypeIntern, Mode=TwoWay}" Style="{StaticResource Segment}" />
+                                        <RadioButton Content="Extern" GroupName="ProjectsTypeFilter" IsChecked="{Binding IsTypeExtern, Mode=TwoWay}" Style="{StaticResource Segment}" ToolTip="Nur Projekte, die der Kunde bezahlt" />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,20,0">
+                                <TextBlock Style="{StaticResource Text.Label}" Text="KUNDE" />
+                                <ComboBox
+                                    Width="200"
+                                    Margin="0,4,0,0"
+                                    AutomationProperties.Name="Nach Kunde filtern"
+                                    ItemsSource="{Binding Customers}"
+                                    SelectedItem="{Binding CustomerFilter, Mode=TwoWay}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,20,0">
+                                <TextBlock Style="{StaticResource Text.Label}" Text="RUNDUNG" />
+                                <ComboBox
+                                    Width="180"
+                                    Margin="0,4,0,0"
+                                    AutomationProperties.Name="Nach Rundung filtern"
+                                    DisplayMemberPath="Text"
+                                    ItemsSource="{Binding RoundingFilterChoices}"
+                                    SelectedItem="{Binding SelectedRoundingFilter, Mode=TwoWay}"
+                                    ToolTip="Filtert nach der Einstellung am Projekt, wie in der Spalte „Rundung“" />
+                            </StackPanel>
+                            <CheckBox
+                                Margin="0,18,20,0"
+                                VerticalAlignment="Center"
+                                Content="Nur Projekte mit Buchungen"
+                                IsChecked="{Binding OnlyWithBookings}"
+                                Style="{StaticResource Switch}"
+                                ToolTip="Blendet Projekte ohne Buchung aus (im gewählten Zeitraum, falls Von/Bis gesetzt ist)" />
+                            <StackPanel Margin="0,0,20,0">
+                                <TextBlock Style="{StaticResource Text.Label}" Text="SORTIEREN NACH" />
+                                <ComboBox
+                                    Width="180"
+                                    Margin="0,4,0,0"
+                                    AutomationProperties.Name="Sortieren nach"
+                                    DisplayMemberPath="Text"
+                                    ItemsSource="{Binding SortChoices}"
+                                    SelectedItem="{Binding SelectedSort, Mode=TwoWay}"
+                                    ToolTip="Sortiert die Liste. „Spaltenkopf“ lässt die Sortierung über die Spaltenköpfe zu." />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource Text.Label}" Text="REIHENFOLGE" />
+                                <Border Margin="0,4,0,0" Style="{StaticResource SegmentBar}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <RadioButton Content="Aufsteigend" GroupName="ProjectsSortDirection" IsChecked="{Binding IsSortAscending, Mode=TwoWay}" Style="{StaticResource Segment}" />
+                                        <RadioButton Content="Absteigend" GroupName="ProjectsSortDirection" IsChecked="{Binding IsSortDescending, Mode=TwoWay}" Style="{StaticResource Segment}" />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </WrapPanel>
+                    </DockPanel>
+                </Border>
+
                 <!--  Tabelle  -->
                 <DataGrid
-                    Grid.Row="1"
+                    Grid.Row="2"
                     Margin="0,16,0,0"
                     AutoGenerateColumns="False"
                     CanUserAddRows="False"
@@ -311,6 +396,16 @@
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
+
+                <TextBlock
+                    Grid.Row="2"
+                    Margin="0,56,0,0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    IsHitTestVisible="False"
+                    Style="{StaticResource Text.Muted}"
+                    Text="{Binding EmptyText}"
+                    Visibility="{Binding EmptyText, Converter={StaticResource NullToCollapsed}}" />
             </Grid>
         </Border>
     </Grid>
