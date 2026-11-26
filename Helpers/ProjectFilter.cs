@@ -9,7 +9,7 @@ namespace Zeitmanagement.Helpers
     internal enum ProjectRoundingFilter { Alle, Standard, Eigene, Aus }
 
     /// <summary>Sortierung im Filter-Panel. Standard = keine Sortierung; Spaltenkopf-Klicks sortieren dann wie gewohnt.</summary>
-    internal enum ProjectSortChoice { Standard, Name, Kunde, Kostentraeger, Typ, Buchungen, Stunden }
+    internal enum ProjectSortChoice { Standard, Name, Kunde, Kostentraeger, Typ, Buchungen, Stunden, Rundung, Aktiv }
 
     /// <summary>Was ein Projekt fuer den Filter preisgeben muss (vom ViewModel-Item implementiert, in Tests ersetzbar).</summary>
     internal interface IProjectFilterItem
@@ -200,7 +200,9 @@ namespace Zeitmanagement.Helpers
             new ProjectSortOption(ProjectSortChoice.Kostentraeger, "Kostenträger"),
             new ProjectSortOption(ProjectSortChoice.Typ, "Typ"),
             new ProjectSortOption(ProjectSortChoice.Buchungen, "Buchungen"),
-            new ProjectSortOption(ProjectSortChoice.Stunden, "Stunden")
+            new ProjectSortOption(ProjectSortChoice.Stunden, "Stunden"),
+            new ProjectSortOption(ProjectSortChoice.Rundung, "Rundung"),
+            new ProjectSortOption(ProjectSortChoice.Aktiv, "Aktiv")
         };
 
         /// <summary>Property-Name am ProjectItemVM fuer die Sortierung; null bei Standard (keine eigene Sortierung).</summary>
@@ -214,6 +216,8 @@ namespace Zeitmanagement.Helpers
                 case ProjectSortChoice.Typ: return "TypText";
                 case ProjectSortChoice.Buchungen: return "Buchungen";
                 case ProjectSortChoice.Stunden: return "StundenAnzeige";
+                case ProjectSortChoice.Rundung: return "RundungMinuten";
+                case ProjectSortChoice.Aktiv: return "QuickSelectAktiv";
                 default: return null;
             }
         }
