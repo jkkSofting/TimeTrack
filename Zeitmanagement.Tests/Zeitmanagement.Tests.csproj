@@ -78,6 +78,7 @@
     <Compile Include="..\Helpers\SafeFile.cs" Link="Linked\SafeFile.cs" />
     <Compile Include="..\Helpers\RoundingOptions.cs" Link="Linked\RoundingOptions.cs" />
     <Compile Include="..\Helpers\ProjectHours.cs" Link="Linked\ProjectHours.cs" />
+    <Compile Include="..\Helpers\ProjectFilter.cs" Link="Linked\ProjectFilter.cs" />
     <Compile Include="..\Helpers\SapBookingCalculator.cs" Link="Linked\SapBookingCalculator.cs" />
     <Compile Include="..\Helpers\PdfReportLayout.cs" Link="Linked\PdfReportLayout.cs" />
     <Compile Include="..\Helpers\ProjectControllingExcelReader.cs" Link="Linked\ProjectControllingExcelReader.cs" />
