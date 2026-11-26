@@ -13,6 +13,14 @@
 
     <UserControl.Resources>
         <local:DecimalHoursToHHmmConverter x:Key="HoursToHHmm" />
+        <Style x:Key="SegmentBar" TargetType="Border">
+            <Setter Property="Padding" Value="3" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Background" Value="{DynamicResource Theme.Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Theme.CardBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="{StaticResource ControlRadius}" />
+        </Style>
         <local:NullToVisibilityConverter x:Key="NullToCollapsed" />
     </UserControl.Resources>
 
