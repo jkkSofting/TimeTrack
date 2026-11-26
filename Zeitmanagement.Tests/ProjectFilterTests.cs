@@ -260,13 +260,16 @@ namespace Zeitmanagement.Tests
             Assert.Equal("TypText", ProjectSort.PropertyName(ProjectSortChoice.Typ));
             Assert.Equal("Buchungen", ProjectSort.PropertyName(ProjectSortChoice.Buchungen));
             Assert.Equal("StundenAnzeige", ProjectSort.PropertyName(ProjectSortChoice.Stunden));
+            Assert.Equal("RundungMinuten", ProjectSort.PropertyName(ProjectSortChoice.Rundung));
+            Assert.Equal("QuickSelectAktiv", ProjectSort.PropertyName(ProjectSortChoice.Aktiv));
         }
 
         [Fact]
         public void SortChoicesCoverEveryEnumValueOnce()
         {
             var values = ProjectSort.Choices.Select(c => c.Value).ToList();
-            Assert.Equal(7, values.Count);
+            Assert.Equal(9, values.Count);
+            Assert.Equal(System.Enum.GetValues(typeof(ProjectSortChoice)).Length, values.Count);
             Assert.Equal(values.Distinct().Count(), values.Count);
         }
     }

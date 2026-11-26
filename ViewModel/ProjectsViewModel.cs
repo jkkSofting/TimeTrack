@@ -177,9 +177,14 @@ namespace Zeitmanagement.ViewModel
             descriptions.Clear();
 
             var property = ProjectSort.PropertyName(_selectedSort.Value);
-            if (property != null)
-                descriptions.Add(new SortDescription(property,
-                    _sortDescending ? ListSortDirection.Descending : ListSortDirection.Ascending));
+            if (property == null) return;
+
+            descriptions.Add(new SortDescription(property,
+                _sortDescending ? ListSortDirection.Descending : ListSortDirection.Ascending));
+
+            // Sekundaer nach Name, damit gleiche Werte in stabiler Reihenfolge erscheinen.
+            if (property != "Projektname")
+                descriptions.Add(new SortDescription("Projektname", ListSortDirection.Ascending));
         }
 
         /// <summary>Anzeige der globalen Standardrundung, z. B. „Standardrundung: 15 Minuten“.</summary>
