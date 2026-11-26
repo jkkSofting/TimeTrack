@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace Zeitmanagement.Helpers
@@ -221,5 +222,18 @@ namespace Zeitmanagement.Helpers
                 default: return null;
             }
         }
+
+        /// <summary>Umkehrung von PropertyName: Auswahl zum Sortier-Property; Standard bei null/unbekannt (unbekannte Spalte).</summary>
+        public static ProjectSortChoice ChoiceFromProperty(string property)
+        {
+            foreach (var choice in (ProjectSortChoice[])Enum.GetValues(typeof(ProjectSortChoice)))
+                if (choice != ProjectSortChoice.Standard && PropertyName(choice) == property) return choice;
+            return ProjectSortChoice.Standard;
+        }
+
+        public static ListSortDirection Direction(bool descending)
+            => descending ? ListSortDirection.Descending : ListSortDirection.Ascending;
+
+        public static bool IsDescending(ListSortDirection direction) => direction == ListSortDirection.Descending;
     }
 }
