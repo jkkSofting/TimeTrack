@@ -59,6 +59,7 @@
     <Compile Include="..\Helpers\BackupHelper.cs" Link="Linked\BackupHelper.cs" />
     <Compile Include="..\Helpers\CarrierLabel.cs" Link="Linked\CarrierLabel.cs" />
     <Compile Include="..\Helpers\CarrierMatching.cs" Link="Linked\CarrierMatching.cs" />
+    <Compile Include="..\Helpers\ConfirmService.cs" Link="Linked\ConfirmService.cs" />
     <Compile Include="..\Helpers\ControllingModels.cs" Link="Linked\ControllingModels.cs" />
     <Compile Include="..\Helpers\ControllingChart.cs" Link="Linked\ControllingChart.cs" />
     <Compile Include="..\Helpers\ControllingImportService.cs" Link="Linked\ControllingImportService.cs" />
