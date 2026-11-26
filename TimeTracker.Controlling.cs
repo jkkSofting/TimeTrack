@@ -663,7 +663,7 @@ public sealed partial class TimeTracker
         var result = new List<LocalProjectInfo>();
         using (var cmd = _conn.CreateCommand())
         {
-            cmd.CommandText = "SELECT id, projektname, kunde, kostentraeger, ist_extern FROM projects ORDER BY projektname;";
+            cmd.CommandText = "SELECT id, projektname, kunde, kostentraeger, ist_extern FROM projects WHERE geloescht_am IS NULL ORDER BY projektname;";
             using (var r = cmd.ExecuteReader())
             {
                 while (r.Read())
@@ -701,7 +701,7 @@ public sealed partial class TimeTracker
                 }
 
                 cmd.CommandText =
-                    "SELECT id, projekt_id, datum, startzeit, endzeit, beschreibung FROM time_entries WHERE projekt_id IN (" +
+                    "SELECT id, projekt_id, datum, startzeit, endzeit, beschreibung FROM time_entries WHERE geloescht_am IS NULL AND projekt_id IN (" +
                     string.Join(",", names) + ") ORDER BY datum, startzeit, id;";
 
                 using (var r = cmd.ExecuteReader())
