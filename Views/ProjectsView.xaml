@@ -13,6 +13,7 @@
 
     <UserControl.Resources>
         <local:DecimalHoursToHHmmConverter x:Key="HoursToHHmm" />
+        <local:NullToVisibilityConverter x:Key="NullToCollapsed" />
     </UserControl.Resources>
 
     <Grid Style="{StaticResource Page}">
@@ -27,6 +28,13 @@
                 VerticalAlignment="Center"
                 DockPanel.Dock="Right"
                 Orientation="Horizontal">
+                <CheckBox
+                    Margin="0,0,20,0"
+                    VerticalAlignment="Center"
+                    Content="Inaktive anzeigen"
+                    IsChecked="{Binding ShowInactive}"
+                    Style="{StaticResource Switch}"
+                    ToolTip="Zeigt auch Projekte an, die aus sind (Spalte „Aktiv“). Sie sind dann ausgegraut und lassen sich wieder aktivieren." />
                 <Grid Width="280">
                     <TextBox
                         Padding="32,7,8,7"
@@ -58,6 +66,10 @@
             <StackPanel VerticalAlignment="Center">
                 <TextBlock Style="{StaticResource Text.PageTitle}" Text="Projekte" />
                 <TextBlock Style="{StaticResource Text.Subtitle}" Text="{Binding HeaderSubtitle}" />
+                <TextBlock
+                    Style="{StaticResource Text.Muted}"
+                    Text="{Binding HiddenInactiveText}"
+                    Visibility="{Binding HiddenInactiveText, Converter={StaticResource NullToCollapsed}}" />
             </StackPanel>
         </DockPanel>
 
@@ -131,6 +143,15 @@
                     CanUserAddRows="False"
                     IsReadOnly="True"
                     ItemsSource="{Binding ProjectsView}">
+                    <DataGrid.RowStyle>
+                        <Style BasedOn="{StaticResource {x:Type DataGridRow}}" TargetType="DataGridRow">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding QuickSelectAktiv}" Value="False">
+                                    <Setter Property="Opacity" Value="0.6" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
                     <DataGrid.Columns>
                         <DataGridTemplateColumn
                             Width="2*"
@@ -198,8 +219,13 @@
                             SortMemberPath="Stunden" />
                         <DataGridTemplateColumn
                             Width="Auto"
-                            Header="Quick Switch"
+                            Header="Aktiv"
                             SortMemberPath="QuickSelectAktiv">
+                            <DataGridTemplateColumn.HeaderStyle>
+                                <Style BasedOn="{StaticResource {x:Type DataGridColumnHeader}}" TargetType="DataGridColumnHeader">
+                                    <Setter Property="ToolTip" Value="Ein: Das Projekt ist aktiv und im Quick Switch wählbar. Aus: Es ist inaktiv, wird ausgeblendet und dort nicht angeboten. Bestehende Buchungen bleiben unberührt." />
+                                </Style>
+                            </DataGridTemplateColumn.HeaderStyle>
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <!--
@@ -211,7 +237,7 @@
                                         HorizontalAlignment="Center"
                                         IsChecked="{Binding QuickSelectAktiv, UpdateSourceTrigger=PropertyChanged}"
                                         Style="{StaticResource Switch}"
-                                        ToolTip="Ein: Das Projekt ist im Quick Switch wählbar. Aus: Es wird dort nicht angeboten. Bestehende Buchungen bleiben unberührt." />
+                                        ToolTip="Ein: Das Projekt ist aktiv und im Quick Switch wählbar. Aus: Es ist inaktiv, wird ausgeblendet und dort nicht angeboten. Bestehende Buchungen bleiben unberührt." />
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>

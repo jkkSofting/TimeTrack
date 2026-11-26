@@ -25,7 +25,34 @@ namespace Zeitmanagement.ViewModel
             set
             {
                 SetProperty(ref _searchText, value);
-                ProjectsView.Refresh();
+                UpdateView();
+            }
+        }
+
+        private bool _showInactive;
+
+        /// <summary>Zeigt auch inaktive Projekte (Schalter „Aktiv“ aus) an; standardmäßig sind sie ausgeblendet.</summary>
+        public bool ShowInactive
+        {
+            get => _showInactive;
+            set
+            {
+                if (SetProperty(ref _showInactive, value))
+                    UpdateView();
+            }
+        }
+
+        /// <summary>Hinweis „3 inaktive Projekte ausgeblendet“; null, wenn nichts ausgeblendet ist.</summary>
+        public string HiddenInactiveText
+        {
+            get
+            {
+                if (ShowInactive) return null;
+
+                int hidden = Projects.Count(p => !p.QuickSelectAktiv && MatchesSearch(p));
+                if (hidden == 0) return null;
+
+                return hidden == 1 ? "1 inaktives Projekt ausgeblendet" : hidden + " inaktive Projekte ausgeblendet";
             }
         }
 
@@ -197,7 +224,14 @@ namespace Zeitmanagement.ViewModel
                 // Hole Buchungen für dieses Projekt (falls du sie in der DB nicht schon aggregierst)
             }
 
+            UpdateView();
+        }
+
+        /// <summary>Wendet Suche und Inaktiv-Filter neu an und aktualisiert den Hinweis auf ausgeblendete Projekte.</summary>
+        private void UpdateView()
+        {
             ProjectsView.Refresh();
+            RaisePropertyChanged(nameof(HiddenInactiveText));
         }
 
         private void OnProjectItemChanged(object sender, PropertyChangedEventArgs e)
@@ -206,17 +240,26 @@ namespace Zeitmanagement.ViewModel
 
             var item = (ProjectItemVM)sender;
             MainViewModel.DbInstance.SetProjectQuickSelectActive(item.Projektname, item.QuickSelectAktiv);
+            UpdateView();
             _projectsChanged?.Invoke();
         }
 
         private bool FilterProject(object obj)
         {
-            if (string.IsNullOrWhiteSpace(SearchText))
-                return true;
-
             var it = obj as ProjectItemVM;
             if (it == null)
                 return false;
+
+            if (!ShowInactive && !it.QuickSelectAktiv)
+                return false;
+
+            return MatchesSearch(it);
+        }
+
+        private bool MatchesSearch(ProjectItemVM it)
+        {
+            if (string.IsNullOrWhiteSpace(SearchText))
+                return true;
 
             var q = SearchText.Trim();
             return (it.Projektname?.IndexOf(q, StringComparison.OrdinalIgnoreCase) ?? -1) >= 0
