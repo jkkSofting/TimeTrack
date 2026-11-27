@@ -53,7 +53,7 @@ namespace Zeitmanagement.Helpers
     {
         public static readonly IReadOnlyList<ChangelogRelease> Releases = new[]
         {
-            new ChangelogRelease("2026.49.0", new DateTime(2026, 11, 26), "Papierkorb und aufgeräumte Projekte",
+            new ChangelogRelease("2026.48.1", new DateTime(2026, 11, 27), "Papierkorb und aufgeräumte Projekte",
                 Neu("Inaktive Projekte sind auf der Seite „Projekte“ jetzt standardmäßig ausgeblendet. Der Schalter „Inaktive anzeigen“ in der Kopfzeile blendet sie wieder ein; sie erscheinen dann ausgegraut, und ein Hinweis zählt die ausgeblendeten Projekte. Die Spalte „Quick Switch“ heißt jetzt „Aktiv“: Ein Projekt ist aktiv und im Quick Switch wählbar, oder inaktiv, dann wird es ausgeblendet und dort nicht angeboten. Buchungen bleiben in beiden Fällen unberührt."),
                 Neu("Auf der Seite „Projekte“ lassen sich die Stunden umschalten: „Netto“ zeigt die tatsächlich gebuchte Zeit, „Gerundet“ rundet jede Buchung auf die Rundung des Projekts auf, wie in der SAP-Verrechnung. Im gerundeten Modus nennt ein Tooltip an der Stundenzelle den Netto- und den gerundeten Wert. Die Wahl gilt bis zum Beenden des Programms."),
                 Neu("Neuer Papierkorb unter „Verwaltung“: Gelöschte Projekte und einzeln gelöschte Buchungen liegen dort, getrennt in zwei Tabs. Du kannst sie wiederherstellen oder endgültig löschen, und „Papierkorb leeren“ entfernt alles auf einmal."),
